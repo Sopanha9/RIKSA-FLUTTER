@@ -23,7 +23,7 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
     if (_selected == null) return;
     await ref.read(localeProvider.notifier).setLocale(Locale(_selected!));
     if (mounted) {
-      context.go('/auth/login');
+      context.go('/province-select');
     }
   }
 
@@ -83,9 +83,23 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
               const Spacer(flex: 2),
 
               // Select button — disabled until a language is picked
-              ElevatedButton(
-                onPressed: _selected == null ? null : _confirmSelection,
-                child: const Text('Select'),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: _selected == null ? null : _confirmSelection,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF213A64),
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: const Color(0xFF213A64).withValues(alpha: 0.4),
+                    disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text('Select'),
+                ),
               ),
             ],
           ),

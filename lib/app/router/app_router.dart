@@ -7,6 +7,7 @@ import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/telegram_otp_screen.dart';
 import '../../features/auth/presentation/splash_animation_screen.dart';
 import '../../features/auth/presentation/language_select_screen.dart';
+import '../../features/auth/presentation/province_select_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -18,7 +19,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = authState is Authenticated;
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isPublicRoute = state.matchedLocation == '/splash' ||
-          state.matchedLocation == '/language-select';
+          state.matchedLocation == '/language-select' ||
+          state.matchedLocation == '/province-select';
 
       if (!isLoggedIn && !isAuthRoute && !isPublicRoute) return '/auth/login';
       if (isLoggedIn && isAuthRoute) return '/home';
@@ -32,6 +34,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/language-select',
         builder: (context, state) => const LanguageSelectScreen(),
+      ),
+      GoRoute(
+        path: '/province-select',
+        builder: (context, state) => const ProvinceSelectScreen(),
       ),
       GoRoute(
         path: '/auth/login',
