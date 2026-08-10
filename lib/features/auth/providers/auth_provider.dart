@@ -66,8 +66,13 @@ class AuthNotifier extends Notifier<AuthState> {
     final token = await storage.read(key: StorageKeys.accessToken);
     final userId = await storage.read(key: StorageKeys.userId);
     final username = await storage.read(key: StorageKeys.username);
+    final role = await storage.read(key: StorageKeys.role);
     if (token != null && token.isNotEmpty && userId != null && userId.isNotEmpty) {
-      state = Authenticated(userId: userId, username: username ?? '', role: 'USER');
+      state = Authenticated(
+        userId: userId,
+        username: username ?? '',
+        role: role != null && role.isNotEmpty ? role : 'USER',
+      );
     } else {
       state = const Unauthenticated();
     }
