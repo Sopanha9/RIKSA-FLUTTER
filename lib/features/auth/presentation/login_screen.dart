@@ -28,12 +28,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
-    await ref.read(authProvider.notifier).login(
-          username: _usernameCtrl.text.trim(),
-          password: _passwordCtrl.text,
-        );
+  void _handleLogin() {
+    ref.read(authProvider.notifier).continueAsDemoUser();
   }
 
   Future<void> _handleGoogleSignIn() async {
@@ -68,7 +64,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
@@ -90,14 +86,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 'Welcome Back',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1A1A1A),
+                      color: const Color(0xFF0F1419),
                     ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Sign in to continue your learning journey',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF8A8A8A),
+                      color: const Color(0xFF536471),
                     ),
               ),
               const SizedBox(height: 36),
@@ -114,7 +110,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Username',
                         hintText: 'Enter your username',
-                        prefixIcon: Icon(Icons.person_outline, color: Color(0xFF8A8A8A)),
+                        prefixIcon: Icon(Icons.person_outline, color: Color(0xFF536471)),
                       ),
                       textInputAction: TextInputAction.next,
                       validator: (v) {
@@ -132,11 +128,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       decoration: InputDecoration(
                         labelText: 'Password',
                         hintText: 'Enter your password',
-                        prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF8A8A8A)),
+                        prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF536471)),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                            color: const Color(0xFF8A8A8A),
+                            color: const Color(0xFF536471),
                           ),
                           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
@@ -163,6 +159,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     // Login button
                     ElevatedButton(
                       onPressed: authState is AuthLoading ? null : _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF22C55E),
+                        foregroundColor: Colors.white,
+                      ),
                       child: authState is AuthLoading
                           ? const SizedBox(
                               height: 20,
@@ -182,17 +182,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               // Divider
               Row(
                 children: [
-                  const Expanded(child: Divider(color: Color(0xFFE0DCD3))),
+                  const Expanded(child: Divider(color: Color(0xFFEFF3F4))),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
                       'or continue with',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: const Color(0xFF8A8A8A),
+                            color: const Color(0xFF536471),
                           ),
                     ),
                   ),
-                  const Expanded(child: Divider(color: Color(0xFFE0DCD3))),
+                  const Expanded(child: Divider(color: Color(0xFFEFF3F4))),
                 ],
               ),
               const SizedBox(height: 24),
@@ -218,7 +218,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Text(
                     "Don't have an account?",
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF8A8A8A),
+                          color: const Color(0xFF536471),
                         ),
                   ),
                   TextButton(

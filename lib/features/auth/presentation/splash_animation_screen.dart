@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/widgets/riksa_logo.dart';
+import '../providers/auth_provider.dart';
 
 /// Splash screen: Riksa logo fades in + scales up, then auto-navigates
-/// to the language selection screen after 2 seconds.
-class SplashAnimationScreen extends StatefulWidget {
+/// to onboarding after 2 seconds.
+class SplashAnimationScreen extends ConsumerStatefulWidget {
   const SplashAnimationScreen({super.key});
 
   @override
-  State<SplashAnimationScreen> createState() => _SplashAnimationScreenState();
+  ConsumerState<SplashAnimationScreen> createState() => _SplashAnimationScreenState();
 }
 
-class _SplashAnimationScreenState extends State<SplashAnimationScreen>
+class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fadeAnimation;
@@ -40,9 +43,20 @@ class _SplashAnimationScreenState extends State<SplashAnimationScreen>
     _controller.forward();
 
     // After fade-in (1.2s) + hold (0.8s) = 2.0s total, navigate
-    Future.delayed(const Duration(milliseconds: 2000), () {
+    Future.delayed(const Duration(milliseconds: 2000), () async {
       if (mounted) {
-        context.go('/language-select');
+        final auth = ref.read(authProvider);
+        final prefs = await SharedPreferences.getInstance();
+        if (!mounted) return;
+        String destination;
+        if (auth is Authenticated) {
+          destination = '/home';
+        } else if (prefs.getBool('riksa_intro_seen') ?? false) {
+          destination = '/auth/login';
+        } else {
+          destination = '/onboarding';
+        }
+        context.go(destination);
       }
     });
   }
@@ -56,7 +70,7 @@ class _SplashAnimationScreenState extends State<SplashAnimationScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F1EB),
+      backgroundColor: Colors.white,
       body: Center(
         child: AnimatedBuilder(
           animation: _controller,
@@ -78,7 +92,7 @@ class _SplashAnimationScreenState extends State<SplashAnimationScreen>
                 'Learn. Reflect. Grow.',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Color(0xFF8A8A8A),
+                  color: Color(0xFF536471),
                   fontWeight: FontWeight.w400,
                   letterSpacing: 1.2,
                 ),

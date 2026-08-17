@@ -85,6 +85,16 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  /// Temporary competition/demo entry point. Restore the normal [login] call
+  /// when the authentication experience is ready for production.
+  void continueAsDemoUser() {
+    state = const Authenticated(
+      userId: 'local-demo-user',
+      username: 'Learner',
+      role: 'USER',
+    );
+  }
+
   Future<void> register(RegisterRequest req) async {
     state = const AuthLoading();
     try {

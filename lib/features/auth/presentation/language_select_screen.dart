@@ -30,7 +30,7 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F1EB),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -49,7 +49,7 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1A1A1A),
+                      color: const Color(0xFF0F1419),
                     ),
               ),
               const SizedBox(height: 8),
@@ -57,7 +57,7 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
                 'ជ្រើសរើសភាសារបស់អ្នក',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF8A8A8A),
+                      color: const Color(0xFF536471),
                       fontSize: 16,
                     ),
               ),
@@ -85,6 +85,10 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
               // Select button — disabled until a language is picked
               ElevatedButton(
                 onPressed: _selected == null ? null : _confirmSelection,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF22C55E),
+                  foregroundColor: Colors.white,
+                ),
                 child: const Text('Select'),
               ),
             ],
@@ -137,14 +141,14 @@ class _LanguageCardState extends State<_LanguageCard> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected
-                ? const Color(0xFF1B4332)
-                : const Color(0xFFE0DCD3),
+                ? const Color(0xFF22C55E)
+                : const Color(0xFFCFD9DE),
             width: selected ? 2 : 1,
           ),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF1B4332).withValues(alpha: 0.12),
+                    color: const Color(0xFF22C55E).withValues(alpha: 0.12),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
@@ -179,7 +183,7 @@ class _LanguageCardState extends State<_LanguageCard> {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A1A),
+                    color: Color(0xFF0F1419),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -187,7 +191,7 @@ class _LanguageCardState extends State<_LanguageCard> {
                   widget.languageNameNative,
                   style: const TextStyle(
                     fontSize: 14,
-                    color: Color(0xFF8A8A8A),
+                    color: Color(0xFF536471),
                   ),
                 ),
               ],
@@ -202,11 +206,11 @@ class _LanguageCardState extends State<_LanguageCard> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: selected
-                      ? const Color(0xFF1B4332)
-                      : const Color(0xFFE0DCD3),
+                      ? const Color(0xFF22C55E)
+                      : const Color(0xFFCFD9DE),
                   width: 2,
                 ),
-                color: selected ? const Color(0xFF1B4332) : Colors.transparent,
+                color: selected ? const Color(0xFF22C55E) : Colors.transparent,
               ),
               child: selected
                   ? const Icon(Icons.check, color: Colors.white, size: 16)
