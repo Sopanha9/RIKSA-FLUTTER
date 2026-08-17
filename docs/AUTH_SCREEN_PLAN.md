@@ -1,9 +1,14 @@
 # Riksa Flutter Splash & Authentication Plan
 
-**Status:** Phase 1 and core password-auth UI implemented; backend-gated work remains  
+**Status:** Core password and social authentication implemented; provider setup remains
 **Prepared:** 2026-08-16  
 **Flutter app:** `riksa_app`  
 **Backend:** sibling repository `../riksa-api`
+
+> **2026-08-17 update:** Google login/automatic registration and real Telegram
+> OTP login/registration are now implemented in the app and sibling API. The
+> older social-auth blockers retained below describe the pre-implementation
+> audit. Follow `docs/SOCIAL_AUTH_SETUP.md` for the current provider setup.
 
 ### 2026-08-16 implementation checkpoint
 

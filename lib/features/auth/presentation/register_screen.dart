@@ -9,6 +9,7 @@ import '../data/auth_models.dart';
 import '../data/auth_validators.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_scaffold.dart';
+import '../widgets/social_auth_section.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -90,54 +91,77 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AuthHeader(
-              eyebrow: strings.registerEyebrow,
-              title: strings.registerTitle,
-              subtitle: strings.registerSubtitle,
-            ),
-            const SizedBox(height: 22),
-            _StepIndicator(step: _step, label: strings.stepOfTwo(_step + 1)),
-            const SizedBox(height: 18),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 260),
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(.04, 0),
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
-                ),
-              ),
-              child: _step == 0
-                  ? _BasicsStep(
-                      key: const ValueKey('basics'),
-                      formKey: _basicsKey,
-                      usernameController: _usernameController,
-                      displayNameController: _displayNameController,
-                      emailController: _emailController,
-                      onContinue: _continue,
-                    )
-                  : _SecurityStep(
-                      key: const ValueKey('security'),
-                      formKey: _securityKey,
-                      passwordController: _passwordController,
-                      confirmationController: _confirmPasswordController,
-                      obscurePassword: _obscurePassword,
-                      obscureConfirmation: _obscureConfirmation,
-                      loading: loading,
-                      error: error,
-                      onPasswordChanged: (_) => setState(() {}),
-                      onTogglePassword: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                      onToggleConfirmation: () => setState(
-                        () => _obscureConfirmation = !_obscureConfirmation,
-                      ),
-                      onSubmit: _submit,
+            AuthPanel(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    strings.registerTitle,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: AppTheme.onBackground,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -.4,
                     ),
+                  ),
+                  const SizedBox(height: 22),
+                  const SocialAuthSection(
+                    isRegistration: true,
+                    showDivider: false,
+                  ),
+                  const SizedBox(height: 18),
+                  AuthDivider(label: strings.orLabel),
+                  const SizedBox(height: 18),
+                  _StepIndicator(
+                    step: _step,
+                    label: strings.stepOfTwo(_step + 1),
+                  ),
+                  const SizedBox(height: 18),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 260),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(.04, 0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    ),
+                    child: _step == 0
+                        ? _BasicsStep(
+                            key: const ValueKey('basics'),
+                            formKey: _basicsKey,
+                            usernameController: _usernameController,
+                            displayNameController: _displayNameController,
+                            emailController: _emailController,
+                            onContinue: _continue,
+                          )
+                        : _SecurityStep(
+                            key: const ValueKey('security'),
+                            formKey: _securityKey,
+                            passwordController: _passwordController,
+                            confirmationController: _confirmPasswordController,
+                            obscurePassword: _obscurePassword,
+                            obscureConfirmation: _obscureConfirmation,
+                            loading: loading,
+                            error: error,
+                            onPasswordChanged: (_) => setState(() {}),
+                            onTogglePassword: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                            onToggleConfirmation: () => setState(
+                              () =>
+                                  _obscureConfirmation = !_obscureConfirmation,
+                            ),
+                            onSubmit: _submit,
+                          ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -213,98 +237,89 @@ class _BasicsStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
-    return AuthPanel(
-      child: Form(
-        key: formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              strings.accountBasics,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+    return Form(
+      key: formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            key: const Key('register_username'),
+            controller: usernameController,
+            autofillHints: const [AutofillHints.newUsername],
+            autocorrect: false,
+            enableSuggestions: false,
+            maxLength: 50,
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              labelText: strings.username,
+              hintText: strings.usernameHint,
+              prefixIcon: const Icon(Icons.alternate_email_rounded),
+              counterText: '',
             ),
-            const SizedBox(height: 18),
-            TextFormField(
-              key: const Key('register_username'),
-              controller: usernameController,
-              autofillHints: const [AutofillHints.newUsername],
-              autocorrect: false,
-              enableSuggestions: false,
-              maxLength: 50,
-              textInputAction: TextInputAction.next,
-              decoration: InputDecoration(
-                labelText: strings.username,
-                hintText: strings.usernameHint,
-                prefixIcon: const Icon(Icons.alternate_email_rounded),
-                counterText: '',
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return strings.requiredField;
-                }
-                if (!AuthValidators.isRegistrationUsername(value)) {
-                  return strings.usernameTooLong;
-                }
-                return null;
-              },
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return strings.requiredField;
+              }
+              if (!AuthValidators.isRegistrationUsername(value)) {
+                return strings.usernameTooLong;
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 14),
+          TextFormField(
+            key: const Key('register_display_name'),
+            controller: displayNameController,
+            autofillHints: const [AutofillHints.name],
+            maxLength: 100,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              labelText: strings.displayName,
+              hintText: strings.displayNameHint,
+              prefixIcon: const Icon(Icons.badge_outlined),
+              counterText: '',
             ),
-            const SizedBox(height: 14),
-            TextFormField(
-              key: const Key('register_display_name'),
-              controller: displayNameController,
-              autofillHints: const [AutofillHints.name],
-              maxLength: 100,
-              textCapitalization: TextCapitalization.words,
-              textInputAction: TextInputAction.next,
-              decoration: InputDecoration(
-                labelText: strings.displayName,
-                hintText: strings.displayNameHint,
-                prefixIcon: const Icon(Icons.badge_outlined),
-                counterText: '',
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return strings.requiredField;
-                }
-                if (!AuthValidators.isDisplayName(value)) {
-                  return strings.displayNameTooLong;
-                }
-                return null;
-              },
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return strings.requiredField;
+              }
+              if (!AuthValidators.isDisplayName(value)) {
+                return strings.displayNameTooLong;
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 14),
+          TextFormField(
+            key: const Key('register_email'),
+            controller: emailController,
+            autofillHints: const [AutofillHints.email],
+            keyboardType: TextInputType.emailAddress,
+            autocorrect: false,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) => onContinue(),
+            decoration: InputDecoration(
+              labelText: strings.email,
+              hintText: strings.emailHint,
+              prefixIcon: const Icon(Icons.mail_outline_rounded),
             ),
-            const SizedBox(height: 14),
-            TextFormField(
-              key: const Key('register_email'),
-              controller: emailController,
-              autofillHints: const [AutofillHints.email],
-              keyboardType: TextInputType.emailAddress,
-              autocorrect: false,
-              textInputAction: TextInputAction.done,
-              onFieldSubmitted: (_) => onContinue(),
-              decoration: InputDecoration(
-                labelText: strings.email,
-                hintText: strings.emailHint,
-                prefixIcon: const Icon(Icons.mail_outline_rounded),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return strings.requiredField;
-                }
-                if (!AuthValidators.isEmail(value)) return strings.invalidEmail;
-                return null;
-              },
-            ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              key: const Key('register_continue'),
-              onPressed: onContinue,
-              icon: const Icon(Icons.arrow_forward_rounded),
-              label: Text(strings.continueLabel),
-            ),
-          ],
-        ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return strings.requiredField;
+              }
+              if (!AuthValidators.isEmail(value)) return strings.invalidEmail;
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          FilledButton.icon(
+            key: const Key('register_continue'),
+            onPressed: onContinue,
+            icon: const Icon(Icons.arrow_forward_rounded),
+            label: Text(strings.continueLabel),
+          ),
+        ],
       ),
     );
   }
@@ -341,134 +356,101 @@ class _SecurityStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
-    return AuthPanel(
-      child: Form(
-        key: formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (error != null) ...[
-              AuthErrorBanner(message: error!),
-              const SizedBox(height: 16),
-            ],
-            Text(
-              strings.secureYourAccount,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 18),
-            TextFormField(
-              key: const Key('register_password'),
-              controller: passwordController,
-              enabled: !loading,
-              autofillHints: const [AutofillHints.newPassword],
-              obscureText: obscurePassword,
-              textInputAction: TextInputAction.next,
-              onChanged: onPasswordChanged,
-              decoration: InputDecoration(
-                labelText: strings.password,
-                hintText: strings.passwordHint,
-                prefixIcon: const Icon(Icons.lock_outline_rounded),
-                suffixIcon: IconButton(
-                  onPressed: onTogglePassword,
-                  icon: Icon(
-                    obscurePassword
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                  ),
-                  tooltip: obscurePassword
-                      ? strings.showPassword
-                      : strings.hidePassword,
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return strings.requiredField;
-                }
-                if (!AuthValidators.isStrongPassword(value)) {
-                  return strings.weakPassword;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            PasswordRequirements(password: passwordController.text),
+    return Form(
+      key: formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (error != null) ...[
+            AuthErrorBanner(message: error!),
             const SizedBox(height: 16),
-            TextFormField(
-              key: const Key('register_confirm_password'),
-              controller: confirmationController,
-              enabled: !loading,
-              autofillHints: const [AutofillHints.newPassword],
-              obscureText: obscureConfirmation,
-              textInputAction: TextInputAction.done,
-              onFieldSubmitted: (_) => onSubmit(),
-              decoration: InputDecoration(
-                labelText: strings.confirmPassword,
-                hintText: strings.confirmPasswordHint,
-                prefixIcon: const Icon(Icons.verified_user_outlined),
-                suffixIcon: IconButton(
-                  onPressed: onToggleConfirmation,
-                  icon: Icon(
-                    obscureConfirmation
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                  ),
-                  tooltip: obscureConfirmation
-                      ? strings.showPassword
-                      : strings.hidePassword,
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return strings.requiredField;
-                }
-                if (value != passwordController.text) {
-                  return strings.passwordsDoNotMatch;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 14),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 2),
-                  child: Icon(
-                    Icons.mark_email_read_outlined,
-                    size: 17,
-                    color: AppTheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    strings.registerEmailNote,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.muted,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            FilledButton(
-              key: const Key('register_submit'),
-              onPressed: loading ? null : onSubmit,
-              child: loading
-                  ? const SizedBox.square(
-                      dimension: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(strings.register),
-            ),
           ],
-        ),
+          TextFormField(
+            key: const Key('register_password'),
+            controller: passwordController,
+            enabled: !loading,
+            autofillHints: const [AutofillHints.newPassword],
+            obscureText: obscurePassword,
+            textInputAction: TextInputAction.next,
+            onChanged: onPasswordChanged,
+            decoration: InputDecoration(
+              labelText: strings.password,
+              hintText: strings.passwordHint,
+              prefixIcon: const Icon(Icons.lock_outline_rounded),
+              suffixIcon: IconButton(
+                onPressed: onTogglePassword,
+                icon: Icon(
+                  obscurePassword
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                ),
+                tooltip: obscurePassword
+                    ? strings.showPassword
+                    : strings.hidePassword,
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return strings.requiredField;
+              }
+              if (!AuthValidators.isStrongPassword(value)) {
+                return strings.weakPassword;
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          PasswordRequirements(password: passwordController.text),
+          const SizedBox(height: 16),
+          TextFormField(
+            key: const Key('register_confirm_password'),
+            controller: confirmationController,
+            enabled: !loading,
+            autofillHints: const [AutofillHints.newPassword],
+            obscureText: obscureConfirmation,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) => onSubmit(),
+            decoration: InputDecoration(
+              labelText: strings.confirmPassword,
+              hintText: strings.confirmPasswordHint,
+              prefixIcon: const Icon(Icons.verified_user_outlined),
+              suffixIcon: IconButton(
+                onPressed: onToggleConfirmation,
+                icon: Icon(
+                  obscureConfirmation
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                ),
+                tooltip: obscureConfirmation
+                    ? strings.showPassword
+                    : strings.hidePassword,
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return strings.requiredField;
+              }
+              if (value != passwordController.text) {
+                return strings.passwordsDoNotMatch;
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          FilledButton(
+            key: const Key('register_submit'),
+            onPressed: loading ? null : onSubmit,
+            child: loading
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(strings.register),
+          ),
+        ],
       ),
     );
   }

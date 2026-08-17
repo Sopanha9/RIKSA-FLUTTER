@@ -122,6 +122,9 @@ class AppLocalizationsKm extends AppLocalizations {
   String get orContinueWith => 'ឬ​បន្ត​ជាមួយ';
 
   @override
+  String get orLabel => 'ឬ';
+
+  @override
   String get signInWithGoogle => 'បន្ត​ជាមួយ Google';
 
   @override
@@ -209,6 +212,14 @@ class AppLocalizationsKm extends AppLocalizations {
   String get googleFailed => 'ការ​ចូល​តាម Google បរាជ័យ';
 
   @override
+  String get googleNotConfigured =>
+      'ការ​ចូល​តាម Google មិន​ទាន់​បាន​កំណត់​សម្រាប់​កំណែ​នេះ​ទេ។';
+
+  @override
+  String get googleUnsupported =>
+      'ប្រើ​ប៊ូតុង Google ដែល​កម្មវិធី​រុករក​ផ្តល់​ឱ្យ​ដើម្បី​បន្ត។';
+
+  @override
   String get otpSendFailed => 'មិន​អាច​ផ្ញើ​កូដ OTP បាន';
 
   @override
@@ -216,6 +227,33 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get otpSendSuccess => 'កូដ​បាន​ផ្ញើ​ទៅ Telegram របស់​អ្នក';
+
+  @override
+  String get telegramEyebrow => 'ចូលប្រើរហ័សដោយគ្មានពាក្យសម្ងាត់';
+
+  @override
+  String get telegramLoginTitle => 'ចូលជាមួយ Telegram';
+
+  @override
+  String get telegramLoginSubtitle =>
+      'បញ្ចូលលេខសម្គាល់ការជជែកពី Riksa bot ហើយយើងនឹងផ្ញើកូដប្រើតែម្តង។';
+
+  @override
+  String get telegramRegisterTitle => 'ចុះឈ្មោះជាមួយ Telegram';
+
+  @override
+  String get telegramRegisterSubtitle =>
+      'ជ្រើសរើសឈ្មោះ Riksa របស់អ្នក រួចផ្ទៀងផ្ទាត់គណនី Telegram ដោយកូដប្រើតែម្តង។';
+
+  @override
+  String get enterTelegramCode => 'បញ្ចូលកូដ Telegram របស់អ្នក';
+
+  @override
+  String get invalidTelegramChatId =>
+      'បញ្ចូលលេខសម្គាល់ការជជែក Telegram ជាលេខត្រឹមត្រូវ';
+
+  @override
+  String get invalidOtpCode => 'បញ្ចូលកូដ ៦ ខ្ទង់';
 
   @override
   String get languageEn => 'English';

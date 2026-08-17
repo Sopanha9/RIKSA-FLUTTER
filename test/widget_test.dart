@@ -69,6 +69,14 @@ void main() {
     expect(find.text('This field is required'), findsNWidgets(2));
   });
 
+  testWidgets('login exposes Google and Telegram fast auth', (tester) async {
+    await tester.pumpWidget(_testApp(const LoginScreen()));
+    await tester.pump();
+
+    expect(find.byKey(const Key('google_auth_button')), findsOneWidget);
+    expect(find.byKey(const Key('telegram_auth_button')), findsOneWidget);
+  });
+
   testWidgets('registration moves from basics to password step', (
     tester,
   ) async {

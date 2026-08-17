@@ -320,6 +320,12 @@ abstract class AppLocalizations {
   /// **'or continue with'**
   String get orContinueWith;
 
+  /// No description provided for @orLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get orLabel;
+
   /// No description provided for @signInWithGoogle.
   ///
   /// In en, this message translates to:
@@ -482,6 +488,18 @@ abstract class AppLocalizations {
   /// **'Google sign-in failed'**
   String get googleFailed;
 
+  /// No description provided for @googleNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in is not configured for this build yet.'**
+  String get googleNotConfigured;
+
+  /// No description provided for @googleUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the Google button provided by your browser to continue.'**
+  String get googleUnsupported;
+
   /// No description provided for @otpSendFailed.
   ///
   /// In en, this message translates to:
@@ -499,6 +517,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Code sent to your Telegram'**
   String get otpSendSuccess;
+
+  /// No description provided for @telegramEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast passwordless access'**
+  String get telegramEyebrow;
+
+  /// No description provided for @telegramLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in with Telegram'**
+  String get telegramLoginTitle;
+
+  /// No description provided for @telegramLoginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the chat ID from the Riksa bot and we’ll send a one-time code.'**
+  String get telegramLoginSubtitle;
+
+  /// No description provided for @telegramRegisterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Register with Telegram'**
+  String get telegramRegisterTitle;
+
+  /// No description provided for @telegramRegisterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your Riksa name, then verify your Telegram account with a one-time code.'**
+  String get telegramRegisterSubtitle;
+
+  /// No description provided for @enterTelegramCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your Telegram code'**
+  String get enterTelegramCode;
+
+  /// No description provided for @invalidTelegramChatId.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid numeric Telegram chat ID'**
+  String get invalidTelegramChatId;
+
+  /// No description provided for @invalidOtpCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code'**
+  String get invalidOtpCode;
 
   /// No description provided for @languageEn.
   ///

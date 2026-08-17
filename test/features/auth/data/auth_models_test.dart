@@ -29,6 +29,27 @@ void main() {
         {'identifier': '1081239995', 'code': '931293'},
       );
     });
+
+    test('Telegram login and registration payloads match backend', () {
+      expect(
+        TelegramAuthRequest(identifier: '1081239995', code: '931293').toJson(),
+        {'identifier': '1081239995', 'code': '931293'},
+      );
+      expect(
+        TelegramAuthRequest(
+          identifier: '1081239995',
+          code: '931293',
+          username: 'sophea',
+          displayName: 'Sok Sophea',
+        ).toJson(),
+        {
+          'identifier': '1081239995',
+          'code': '931293',
+          'username': 'sophea',
+          'displayName': 'Sok Sophea',
+        },
+      );
+    });
   });
 
   test('AuthUser parses the current /auth/me response', () {

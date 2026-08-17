@@ -6,6 +6,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/splash_animation_screen.dart';
 import '../../features/auth/presentation/language_select_screen.dart';
+import '../../features/auth/presentation/telegram_otp_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/blog/presentation/blog_detail_screen.dart';
 import '../../features/blog/presentation/blog_feed_screen.dart';
@@ -59,6 +60,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/auth/telegram',
+        builder: (context, state) => TelegramOtpScreen(
+          isRegistration: state.uri.queryParameters['register'] == 'true',
+        ),
       ),
       GoRoute(path: '/home', builder: (context, state) => const HomeShell()),
       GoRoute(

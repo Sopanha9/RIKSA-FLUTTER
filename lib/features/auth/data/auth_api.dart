@@ -30,6 +30,13 @@ class AuthApi {
     });
   }
 
+  Future<AuthResponse> telegramAuth(TelegramAuthRequest req) async {
+    return _guard(() async {
+      final res = await _client.dio.post('/auth/telegram', data: req.toJson());
+      return AuthResponse.fromJson(_json(res.data));
+    });
+  }
+
   Future<OtpResult> sendOtp(OtpSendRequest req) async {
     return _guard(() async {
       final res = await _client.dio.post('/auth/otp/send', data: req.toJson());

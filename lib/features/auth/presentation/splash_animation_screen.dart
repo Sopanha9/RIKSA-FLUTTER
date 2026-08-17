@@ -44,7 +44,7 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
       end: 1,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
     _controller.forward();
-    Future<void>.delayed(const Duration(milliseconds: 1450), () {
+    Future<void>.delayed(const Duration(milliseconds: 1500), () {
       if (!mounted) return;
       setState(() => _minimumTimeElapsed = true);
       _scheduleDestination();

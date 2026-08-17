@@ -7,7 +7,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/storage/session_store.dart';
 import '../data/auth_api.dart';
+import '../data/google_auth_client.dart';
 import '../data/auth_models.dart';
+
+final googleAuthClientProvider = Provider<GoogleAuthClient>((ref) {
+  return GoogleAuthClient.instance;
+});
 
 /// Provides the platform-backed encrypted token store.
 final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
@@ -73,6 +78,7 @@ class AuthUnavailable extends AuthState {
 
 class AuthNotifier extends Notifier<AuthState> {
   StreamSubscription<void>? _sessionExpiredSubscription;
+  StreamSubscription<GoogleAuthEvent>? _googleAuthSubscription;
   Future<void>? _bootstrapOperation;
 
   @override
@@ -81,7 +87,17 @@ class AuthNotifier extends Notifier<AuthState> {
     _sessionExpiredSubscription = client.sessionExpired.listen((_) {
       state = const Unauthenticated();
     });
-    ref.onDispose(() => _sessionExpiredSubscription?.cancel());
+    _googleAuthSubscription = ref.read(googleAuthClientProvider).events.listen((
+      event,
+    ) {
+      if (event is GoogleAuthToken) {
+        unawaited(googleSignIn(idToken: event.idToken));
+      }
+    });
+    ref.onDispose(() {
+      _sessionExpiredSubscription?.cancel();
+      _googleAuthSubscription?.cancel();
+    });
     unawaited(bootstrap());
     return const AuthInitial();
   }
@@ -164,6 +180,16 @@ class AuthNotifier extends Notifier<AuthState> {
       final response = await ref
           .read(authApiProvider)
           .googleAuth(GoogleAuthRequest(idToken: idToken));
+      await _completeAuthentication(response);
+    } catch (error) {
+      await _handleAuthenticationFailure(error);
+    }
+  }
+
+  Future<void> telegramSignIn(TelegramAuthRequest request) async {
+    state = const AuthLoading();
+    try {
+      final response = await ref.read(authApiProvider).telegramAuth(request);
       await _completeAuthentication(response);
     } catch (error) {
       await _handleAuthenticationFailure(error);

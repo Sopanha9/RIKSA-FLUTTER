@@ -36,6 +36,7 @@ class DioClient {
     '/auth/refresh',
     '/auth/logout',
     '/auth/google',
+    '/auth/telegram',
     '/auth/otp/send',
     '/auth/otp/verify',
     '/auth/forgot-password',

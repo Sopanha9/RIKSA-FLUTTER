@@ -122,6 +122,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orContinueWith => 'or continue with';
 
   @override
+  String get orLabel => 'OR';
+
+  @override
   String get signInWithGoogle => 'Continue with Google';
 
   @override
@@ -208,6 +211,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get googleFailed => 'Google sign-in failed';
 
   @override
+  String get googleNotConfigured =>
+      'Google sign-in is not configured for this build yet.';
+
+  @override
+  String get googleUnsupported =>
+      'Use the Google button provided by your browser to continue.';
+
+  @override
   String get otpSendFailed => 'Failed to send OTP code';
 
   @override
@@ -215,6 +226,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get otpSendSuccess => 'Code sent to your Telegram';
+
+  @override
+  String get telegramEyebrow => 'Fast passwordless access';
+
+  @override
+  String get telegramLoginTitle => 'Log in with Telegram';
+
+  @override
+  String get telegramLoginSubtitle =>
+      'Enter the chat ID from the Riksa bot and we’ll send a one-time code.';
+
+  @override
+  String get telegramRegisterTitle => 'Register with Telegram';
+
+  @override
+  String get telegramRegisterSubtitle =>
+      'Choose your Riksa name, then verify your Telegram account with a one-time code.';
+
+  @override
+  String get enterTelegramCode => 'Enter your Telegram code';
+
+  @override
+  String get invalidTelegramChatId => 'Enter a valid numeric Telegram chat ID';
+
+  @override
+  String get invalidOtpCode => 'Enter the 6-digit code';
 
   @override
   String get languageEn => 'English';

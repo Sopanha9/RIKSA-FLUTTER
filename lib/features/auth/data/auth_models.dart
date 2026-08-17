@@ -155,6 +155,31 @@ class GoogleAuthRequest {
   };
 }
 
+/// Exchanges a Telegram-delivered one-time code for a Riksa session.
+///
+/// Registration details are supplied only from the Telegram registration
+/// route. Returning users need only their Telegram chat ID and OTP.
+class TelegramAuthRequest {
+  TelegramAuthRequest({
+    required this.identifier,
+    required this.code,
+    this.username,
+    this.displayName,
+  });
+
+  final String identifier;
+  final String code;
+  final String? username;
+  final String? displayName;
+
+  Map<String, dynamic> toJson() => {
+    'identifier': identifier,
+    'code': code,
+    if (username != null) 'username': username,
+    if (displayName != null) 'displayName': displayName,
+  };
+}
+
 class OtpSendRequest {
   OtpSendRequest({required this.identifier});
 
