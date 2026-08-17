@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 /// Riksa app theme.
-/// Background color: F5F1EB (warm off-white / paper)
+/// Riksa Neo-Khmer: warm paper, deep green, and a restrained rose accent.
 class AppTheme {
   AppTheme._();
 
-  static const Color background = Color(0xFFF5F1EB);
+  static const Color background = Color(0xFFF7F5F1);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color primary = Color(0xFF1B4332); // deep green
   static const Color primaryContainer = Color(0xFF2D6A4F);
@@ -34,7 +34,14 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: background,
-      fontFamily: null, // system default
+      fontFamily: null,
+      visualDensity: VisualDensity.standard,
+      splashFactory: InkSparkle.splashFactory,
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: primary,
+        selectionColor: Color(0x332D6A4F),
+        selectionHandleColor: primary,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: background,
         foregroundColor: onBackground,
@@ -44,36 +51,53 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 17,
+        ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(17),
           borderSide: const BorderSide(color: outline),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(17),
           borderSide: const BorderSide(color: outline),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(17),
           borderSide: const BorderSide(color: primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(17),
           borderSide: const BorderSide(color: error),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(17),
           borderSide: const BorderSide(color: error, width: 1.5),
         ),
         labelStyle: const TextStyle(color: muted, fontSize: 14),
         hintStyle: const TextStyle(color: muted, fontSize: 14),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: onPrimary,
+          disabledBackgroundColor: primary.withValues(alpha: .38),
+          minimumSize: const Size.fromHeight(54),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(17),
+          ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primary,
           foregroundColor: onPrimary,
           minimumSize: const Size.fromHeight(52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(17),
+          ),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           elevation: 0,
         ),
@@ -84,7 +108,9 @@ class AppTheme {
           foregroundColor: onBackground,
           minimumSize: const Size.fromHeight(52),
           side: const BorderSide(color: outline),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(17),
+          ),
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
         ),
       ),

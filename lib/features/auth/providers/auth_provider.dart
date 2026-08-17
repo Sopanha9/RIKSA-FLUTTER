@@ -1,153 +1,235 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/network/dio_client.dart';
+import '../../../core/storage/session_store.dart';
 import '../data/auth_api.dart';
 import '../data/auth_models.dart';
 
-/// Provides a singleton [FlutterSecureStorage].
+/// Provides the platform-backed encrypted token store.
 final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
   return const FlutterSecureStorage();
 });
 
-/// Provides the singleton [DioClient].
-final dioClientProvider = Provider<DioClient>((ref) {
-  final storage = ref.watch(secureStorageProvider);
-  return DioClient(storage);
+final sessionStoreProvider = Provider<SessionStore>((ref) {
+  return SessionStore(ref.watch(secureStorageProvider));
 });
 
-/// Provides the singleton [AuthApi].
+final dioClientProvider = Provider<DioClient>((ref) {
+  final client = DioClient(ref.watch(sessionStoreProvider));
+  ref.onDispose(client.dispose);
+  return client;
+});
+
 final authApiProvider = Provider<AuthApi>((ref) {
   return AuthApi(ref.watch(dioClientProvider));
 });
 
-/// Auth state as a simple sealed union via a base class.
 @immutable
 sealed class AuthState {
   const AuthState();
 }
 
+/// The app is checking secure storage and, when needed, validating `/auth/me`.
 class AuthInitial extends AuthState {
   const AuthInitial();
 }
 
+/// A user-triggered login or registration request is in flight.
 class AuthLoading extends AuthState {
   const AuthLoading();
 }
 
 class Authenticated extends AuthState {
-  const Authenticated({required this.userId, required this.username, required this.role});
-  final String userId;
-  final String username;
-  final String role;
+  const Authenticated(this.user);
+
+  final AuthUser user;
+  String get userId => user.id;
+  String get username => user.username;
+  String get role => user.role;
 }
 
 class Unauthenticated extends AuthState {
   const Unauthenticated();
 }
 
-/// Restored after re-login flow (e.g. after Telegram OTP verification).
+/// A form request failed. The user stays on the current auth screen.
 class AuthError extends AuthState {
   const AuthError(this.message);
+
   final String message;
 }
 
-/// Session info loaded from secure storage on app start.
+/// A saved session exists, but it could not be checked because the service or
+/// connection is temporarily unavailable. Tokens are deliberately retained.
+class AuthUnavailable extends AuthState {
+  const AuthUnavailable(this.message);
+
+  final String message;
+}
+
 class AuthNotifier extends Notifier<AuthState> {
+  StreamSubscription<void>? _sessionExpiredSubscription;
+  Future<void>? _bootstrapOperation;
+
   @override
   AuthState build() {
-    _restoreSession();
+    final client = ref.read(dioClientProvider);
+    _sessionExpiredSubscription = client.sessionExpired.listen((_) {
+      state = const Unauthenticated();
+    });
+    ref.onDispose(() => _sessionExpiredSubscription?.cancel());
+    unawaited(bootstrap());
     return const AuthInitial();
   }
 
-  Future<void> _restoreSession() async {
-    final storage = ref.read(secureStorageProvider);
-    final token = await storage.read(key: StorageKeys.accessToken);
-    final userId = await storage.read(key: StorageKeys.userId);
-    final username = await storage.read(key: StorageKeys.username);
-    final role = await storage.read(key: StorageKeys.role);
-    if (token != null && token.isNotEmpty && userId != null && userId.isNotEmpty) {
-      state = Authenticated(
-        userId: userId,
-        username: username ?? '',
-        role: role != null && role.isNotEmpty ? role : 'USER',
-      );
-    } else {
+  Future<void> bootstrap({bool force = false}) {
+    if (!force && _bootstrapOperation != null) return _bootstrapOperation!;
+
+    late final Future<void> operation;
+    operation = _performBootstrap().whenComplete(() {
+      if (identical(_bootstrapOperation, operation)) {
+        _bootstrapOperation = null;
+      }
+    });
+    _bootstrapOperation = operation;
+    return operation;
+  }
+
+  Future<void> _performBootstrap() async {
+    state = const AuthInitial();
+    final client = ref.read(dioClientProvider);
+    if (!await client.hasSession()) {
+      // Remove a half-written session if only one token survived.
+      await client.clearSession();
       state = const Unauthenticated();
+      return;
+    }
+
+    try {
+      final user = await ref.read(authApiProvider).getProfile();
+      _requireProfile(user);
+      state = Authenticated(user);
+    } on AuthFailure catch (failure) {
+      if (failure.kind == AuthFailureKind.network ||
+          failure.kind == AuthFailureKind.rateLimited ||
+          failure.kind == AuthFailureKind.server) {
+        state = AuthUnavailable(failure.message);
+      } else {
+        await client.clearSession();
+        state = const Unauthenticated();
+      }
+    } on FormatException {
+      await client.clearSession();
+      state = const Unauthenticated();
+    } catch (error) {
+      if (kDebugMode) debugPrint('Auth bootstrap failed: $error');
+      state = const AuthUnavailable(
+        'We could not check your saved session. Please try again.',
+      );
     }
   }
 
-  Future<void> login({required String username, required String password}) async {
+  Future<void> login({
+    required String username,
+    required String password,
+  }) async {
     state = const AuthLoading();
     try {
-      final api = ref.read(authApiProvider);
-      final res = await api.login(LoginRequest(username: username, password: password));
-      await ref.read(dioClientProvider).persistSession(res.toJson());
-      state = Authenticated(userId: res.userId, username: res.username, role: res.role);
-    } catch (e) {
-      state = AuthError(_msg(e));
+      final response = await ref
+          .read(authApiProvider)
+          .login(LoginRequest(username: username, password: password));
+      await _completeAuthentication(response);
+    } catch (error) {
+      await _handleAuthenticationFailure(error);
     }
   }
 
-  Future<void> register(RegisterRequest req) async {
+  Future<void> register(RegisterRequest request) async {
     state = const AuthLoading();
     try {
-      final api = ref.read(authApiProvider);
-      final res = await api.register(req);
-      await ref.read(dioClientProvider).persistSession(res.toJson());
-      state = Authenticated(userId: res.userId, username: res.username, role: res.role);
-    } catch (e) {
-      state = AuthError(_msg(e));
+      final response = await ref.read(authApiProvider).register(request);
+      await _completeAuthentication(response);
+    } catch (error) {
+      await _handleAuthenticationFailure(error);
     }
   }
 
   Future<void> googleSignIn({required String idToken}) async {
     state = const AuthLoading();
     try {
-      final api = ref.read(authApiProvider);
-      final res = await api.googleAuth(GoogleAuthRequest(idToken: idToken));
-      await ref.read(dioClientProvider).persistSession(res.toJson());
-      state = Authenticated(userId: res.userId, username: res.username, role: res.role);
-    } catch (e) {
-      state = AuthError(_msg(e));
+      final response = await ref
+          .read(authApiProvider)
+          .googleAuth(GoogleAuthRequest(idToken: idToken));
+      await _completeAuthentication(response);
+    } catch (error) {
+      await _handleAuthenticationFailure(error);
     }
+  }
+
+  Future<void> _completeAuthentication(AuthResponse response) async {
+    final client = ref.read(dioClientProvider);
+    try {
+      await client.persistSession(response.toJson());
+      final user = await ref.read(authApiProvider).getProfile();
+      _requireProfile(user);
+      state = Authenticated(user);
+    } on AuthFailure catch (failure) {
+      if (failure.kind == AuthFailureKind.network ||
+          failure.kind == AuthFailureKind.rateLimited ||
+          failure.kind == AuthFailureKind.server) {
+        // Keep the freshly issued token pair. Splash can retry profile
+        // hydration without forcing the user to submit credentials again.
+        state = AuthUnavailable(failure.message);
+        return;
+      }
+      await client.clearSession();
+      rethrow;
+    } catch (error) {
+      // An issued session that cannot hydrate a valid profile must not leave the
+      // app in an ambiguous partially signed-in state.
+      await client.clearSession();
+      rethrow;
+    }
+  }
+
+  void _requireProfile(AuthUser user) {
+    if (user.id.isEmpty || user.username.isEmpty) {
+      throw const FormatException('The server returned an incomplete profile.');
+    }
+  }
+
+  Future<void> _handleAuthenticationFailure(Object error) async {
+    if (error is AuthFailure) {
+      state = AuthError(error.message);
+      return;
+    }
+    if (kDebugMode) debugPrint('Auth request failed: $error');
+    state = const AuthError('Something went wrong. Please try again.');
   }
 
   Future<void> logout() async {
-    final storage = ref.read(secureStorageProvider);
-    final refreshToken = await storage.read(key: StorageKeys.refreshToken);
-    if (refreshToken != null) {
-      try {
+    final client = ref.read(dioClientProvider);
+    final refreshToken = await client.getRefreshToken();
+    await client.clearSession();
+    state = const Unauthenticated();
+    try {
+      if (refreshToken != null && refreshToken.isNotEmpty) {
         await ref.read(authApiProvider).logout(refreshToken);
-      } catch (_) {
-        // Best effort; clear local session regardless.
       }
+    } catch (_) {
+      // Server revocation is best-effort. Local logout must always finish.
     }
-    await ref.read(dioClientProvider).clearSession();
-    state = const Unauthenticated();
   }
 
-  /// After successful Telegram OTP verification, we still need a session.
-  /// The backend's verify endpoint returns `{verified, message}` — not an
-  /// AuthResponse. For now, users must set a password after OTP-only login
-  /// (a follow-up backend endpoint). This method is a hook for that flow.
-  void setAuthenticated(AuthResponse res) {
-    ref.read(dioClientProvider).persistSession(res.toJson());
-    state = Authenticated(userId: res.userId, username: res.username, role: res.role);
-  }
-
-  void reset() {
-    state = const Unauthenticated();
-  }
-
-  String _msg(Object e) {
-    if (e is AuthFailure) return e.message;
-    if (kDebugMode) {
-      debugPrint('Auth error: $e');
-    }
-    return 'Something went wrong';
+  void clearError() {
+    if (state is AuthError) state = const Unauthenticated();
   }
 }
 
-final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);

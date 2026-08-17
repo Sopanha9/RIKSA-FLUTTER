@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
-import '../../features/auth/presentation/telegram_otp_screen.dart';
 import '../../features/auth/presentation/splash_animation_screen.dart';
 import '../../features/auth/presentation/language_select_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
@@ -13,22 +12,35 @@ import '../../features/blog/presentation/blog_feed_screen.dart';
 import '../../features/blog/presentation/create_blog_post_screen.dart';
 import '../../features/blog/presentation/my_posts_screen.dart';
 
-final goRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+final _authRouterRefreshProvider = Provider<ValueNotifier<AuthState>>((ref) {
+  final refresh = ValueNotifier<AuthState>(ref.read(authProvider));
+  ref.listen<AuthState>(authProvider, (previous, next) {
+    refresh.value = next;
+  });
+  ref.onDispose(refresh.dispose);
+  return refresh;
+});
 
-  return GoRouter(
-    // TODO(dev-preview): revert to '/splash' once the backend is available.
-    initialLocation: '/blog',
+final goRouterProvider = Provider<GoRouter>((ref) {
+  final authRefresh = ref.watch(_authRouterRefreshProvider);
+
+  final router = GoRouter(
+    initialLocation: '/splash',
     redirect: (context, state) {
+      final authState = authRefresh.value;
       final isLoggedIn = authState is Authenticated;
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
-      // TODO(dev-preview): remove the '/blog' bypass once the backend is available.
-      final isPublicRoute = state.matchedLocation == '/splash' ||
-          state.matchedLocation == '/language-select' ||
-          state.matchedLocation.startsWith('/blog');
+      final isSplash = state.matchedLocation == '/splash';
+      final isLanguage = state.matchedLocation == '/language-select';
+      final isPublicRoute = isSplash || isLanguage || isAuthRoute;
+
+      if ((authState is AuthInitial || authState is AuthUnavailable) &&
+          !isSplash) {
+        return '/splash';
+      }
 
       if (!isLoggedIn && !isAuthRoute && !isPublicRoute) return '/auth/login';
-      if (isLoggedIn && isAuthRoute) return '/home';
+      if (isLoggedIn && (isAuthRoute || isLanguage)) return '/home';
       return null;
     },
     routes: [
@@ -48,14 +60,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/auth/register',
         builder: (context, state) => const RegisterScreen(),
       ),
-      GoRoute(
-        path: '/auth/telegram-otp',
-        builder: (context, state) => const TelegramOtpScreen(),
-      ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const HomeShell(),
-      ),
+      GoRoute(path: '/home', builder: (context, state) => const HomeShell()),
       GoRoute(
         path: '/blog',
         builder: (context, state) => const BlogFeedScreen(),
@@ -75,6 +80,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+  ref.onDispose(router.dispose);
+  return router;
 });
 
 /// Temporary home shell — will be replaced by the full app shell later.
@@ -100,7 +107,10 @@ class HomeShell extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Riksa', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800)),
+            const Text(
+              'Riksa',
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
+            ),
             const SizedBox(height: 8),
             Text('Welcome, $username'),
             const SizedBox(height: 24),

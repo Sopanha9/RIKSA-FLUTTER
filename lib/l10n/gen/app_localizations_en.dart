@@ -18,10 +18,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginSubtitle => 'Sign in to continue your learning journey';
 
   @override
+  String get loginEyebrow => 'Your learning space';
+
+  @override
   String get registerTitle => 'Create Account';
 
   @override
   String get registerSubtitle => 'Join Riksa and start learning today';
+
+  @override
+  String get registerEyebrow => 'Start your streak';
+
+  @override
+  String get accountBasics => 'Account basics';
+
+  @override
+  String get secureYourAccount => 'Secure your account';
+
+  @override
+  String stepOfTwo(int step) {
+    return 'Step $step of 2';
+  }
 
   @override
   String get username => 'Username';
@@ -34,6 +51,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordHint => 'Enter your password';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
+
+  @override
+  String get confirmPasswordHint => 'Enter your password again';
+
+  @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
+  String get passwordEightCharacters => '8+ characters';
+
+  @override
+  String get passwordUppercase => 'Uppercase';
+
+  @override
+  String get passwordLowercase => 'Lowercase';
+
+  @override
+  String get passwordNumber => 'Number';
 
   @override
   String get email => 'Email';
@@ -58,6 +99,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get register => 'Register';
+
+  @override
+  String get continueLabel => 'Continue';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get tryAgain => 'Try again';
+
+  @override
+  String get useAnotherAccount => 'Use another account';
+
+  @override
+  String get readyToLearn => 'Ready to learn';
+
+  @override
+  String get preparingYourSpace => 'Preparing your space';
 
   @override
   String get orContinueWith => 'or continue with';
@@ -120,6 +179,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get weakPassword =>
       'Password must be 8+ chars with upper, lower, and digit';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get displayNameTooLong =>
+      'Display name must be 100 characters or fewer';
+
+  @override
+  String get usernameTooLong => 'Username must be between 3 and 50 characters';
+
+  @override
+  String get signInSecureNote =>
+      'Your session stays protected and refreshes automatically.';
+
+  @override
+  String get registerEmailNote =>
+      'You can verify your email later from your profile.';
 
   @override
   String get loginFailed => 'Login failed. Check your credentials.';

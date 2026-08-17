@@ -116,6 +116,12 @@ abstract class AppLocalizations {
   /// **'Sign in to continue your learning journey'**
   String get loginSubtitle;
 
+  /// No description provided for @loginEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Your learning space'**
+  String get loginEyebrow;
+
   /// No description provided for @registerTitle.
   ///
   /// In en, this message translates to:
@@ -127,6 +133,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join Riksa and start learning today'**
   String get registerSubtitle;
+
+  /// No description provided for @registerEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Start your streak'**
+  String get registerEyebrow;
+
+  /// No description provided for @accountBasics.
+  ///
+  /// In en, this message translates to:
+  /// **'Account basics'**
+  String get accountBasics;
+
+  /// No description provided for @secureYourAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure your account'**
+  String get secureYourAccount;
+
+  /// No description provided for @stepOfTwo.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of 2'**
+  String stepOfTwo(int step);
 
   /// No description provided for @username.
   ///
@@ -151,6 +181,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter your password'**
   String get passwordHint;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get confirmPassword;
+
+  /// No description provided for @confirmPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password again'**
+  String get confirmPasswordHint;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
+
+  /// No description provided for @passwordEightCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'8+ characters'**
+  String get passwordEightCharacters;
+
+  /// No description provided for @passwordUppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'Uppercase'**
+  String get passwordUppercase;
+
+  /// No description provided for @passwordLowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowercase'**
+  String get passwordLowercase;
+
+  /// No description provided for @passwordNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get passwordNumber;
 
   /// No description provided for @email.
   ///
@@ -199,6 +277,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Register'**
   String get register;
+
+  /// No description provided for @continueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueLabel;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// No description provided for @useAnotherAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Use another account'**
+  String get useAnotherAccount;
+
+  /// No description provided for @readyToLearn.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to learn'**
+  String get readyToLearn;
+
+  /// No description provided for @preparingYourSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your space'**
+  String get preparingYourSpace;
 
   /// No description provided for @orContinueWith.
   ///
@@ -319,6 +433,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password must be 8+ chars with upper, lower, and digit'**
   String get weakPassword;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @displayNameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name must be 100 characters or fewer'**
+  String get displayNameTooLong;
+
+  /// No description provided for @usernameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be between 3 and 50 characters'**
+  String get usernameTooLong;
+
+  /// No description provided for @signInSecureNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session stays protected and refreshes automatically.'**
+  String get signInSecureNote;
+
+  /// No description provided for @registerEmailNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can verify your email later from your profile.'**
+  String get registerEmailNote;
 
   /// No description provided for @loginFailed.
   ///

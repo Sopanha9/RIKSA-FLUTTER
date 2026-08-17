@@ -18,10 +18,27 @@ class AppLocalizationsKm extends AppLocalizations {
   String get loginSubtitle => 'ចូលប្រើប្រាស់ដើម្បីបន្តការសិក្សារបស់អ្នក';
 
   @override
+  String get loginEyebrow => 'កន្លែងសិក្សារបស់អ្នក';
+
+  @override
   String get registerTitle => 'បង្កើត​គណនី';
 
   @override
   String get registerSubtitle => 'ចូលរួម Riksa និងចាប់ផ្ដើមសិក្សាថ្ងៃនេះ';
+
+  @override
+  String get registerEyebrow => 'ចាប់ផ្ដើមការសិក្សាបន្តបន្ទាប់';
+
+  @override
+  String get accountBasics => 'ព័ត៌មានគណនី';
+
+  @override
+  String get secureYourAccount => 'ការពារគណនីរបស់អ្នក';
+
+  @override
+  String stepOfTwo(int step) {
+    return 'ជំហានទី $step នៃ ២';
+  }
 
   @override
   String get username => 'ឈ្មោះ​អ្នក​ប្រើ';
@@ -34,6 +51,30 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get passwordHint => 'បញ្ចូលពាក្យសម្ងាត់';
+
+  @override
+  String get confirmPassword => 'បញ្ជាក់​ពាក្យ​សម្ងាត់';
+
+  @override
+  String get confirmPasswordHint => 'បញ្ចូលពាក្យសម្ងាត់ម្ដងទៀត';
+
+  @override
+  String get showPassword => 'បង្ហាញពាក្យសម្ងាត់';
+
+  @override
+  String get hidePassword => 'លាក់ពាក្យសម្ងាត់';
+
+  @override
+  String get passwordEightCharacters => '៨ តួអក្សរឡើងទៅ';
+
+  @override
+  String get passwordUppercase => 'អក្សរធំ';
+
+  @override
+  String get passwordLowercase => 'អក្សរតូច';
+
+  @override
+  String get passwordNumber => 'លេខ';
 
   @override
   String get email => 'អ៊ីមែល';
@@ -58,6 +99,24 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get register => 'ចុះ​ឈ្មោះ';
+
+  @override
+  String get continueLabel => 'បន្ត';
+
+  @override
+  String get back => 'ត្រឡប់ក្រោយ';
+
+  @override
+  String get tryAgain => 'ព្យាយាមម្ដងទៀត';
+
+  @override
+  String get useAnotherAccount => 'ប្រើគណនីផ្សេង';
+
+  @override
+  String get readyToLearn => 'ត្រៀមរៀន';
+
+  @override
+  String get preparingYourSpace => 'កំពុងរៀបចំកន្លែងសិក្សា';
 
   @override
   String get orContinueWith => 'ឬ​បន្ត​ជាមួយ';
@@ -122,6 +181,23 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get weakPassword =>
       'ពាក្យ​សម្ងាត់​ត្រូវ​មាន ៨ តួ​អក្សរ​ឡើង​ទៅ​មាន​អក្សរ​ធំ អក្សរ​តូច និង​លេខ';
+
+  @override
+  String get passwordsDoNotMatch => 'ពាក្យសម្ងាត់មិនត្រូវគ្នា';
+
+  @override
+  String get displayNameTooLong => 'ឈ្មោះបង្ហាញត្រូវមានមិនលើសពី ១០០ តួអក្សរ';
+
+  @override
+  String get usernameTooLong => 'ឈ្មោះអ្នកប្រើត្រូវមានពី ៣ ដល់ ៥០ តួអក្សរ';
+
+  @override
+  String get signInSecureNote =>
+      'សម័យចូលប្រើរបស់អ្នកត្រូវបានការពារ និងបន្តដោយស្វ័យប្រវត្តិ។';
+
+  @override
+  String get registerEmailNote =>
+      'អ្នកអាចផ្ទៀងផ្ទាត់អ៊ីមែលពេលក្រោយក្នុងប្រវត្តិរូប។';
 
   @override
   String get loginFailed => 'ការ​ចូល​បរាជ័យ។ ពិនិត្យ​ព័ត៌មាន​របស់​អ្នក។';

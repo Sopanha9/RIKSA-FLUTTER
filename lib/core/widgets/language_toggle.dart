@@ -11,7 +11,7 @@ class LanguageToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, _) {
-        final locale = ref.watch(localeProvider);
+        final locale = ref.watch(localeProvider).locale;
         return Container(
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
@@ -25,14 +25,16 @@ class LanguageToggle extends StatelessWidget {
               _Chip(
                 label: 'EN',
                 selected: locale.languageCode == 'en',
-                onTap: () =>
-                    ref.read(localeProvider.notifier).setLocale(const Locale('en')),
+                onTap: () => ref
+                    .read(localeProvider.notifier)
+                    .setLocale(const Locale('en')),
               ),
               _Chip(
                 label: 'ខ្មែរ',
                 selected: locale.languageCode == 'km',
-                onTap: () =>
-                    ref.read(localeProvider.notifier).setLocale(const Locale('km')),
+                onTap: () => ref
+                    .read(localeProvider.notifier)
+                    .setLocale(const Locale('km')),
               ),
             ],
           ),
@@ -68,7 +70,9 @@ class _Chip extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+            color: selected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface,
             fontSize: 13,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
           ),
