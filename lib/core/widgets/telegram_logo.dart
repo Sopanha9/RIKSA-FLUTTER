@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Telegram logo from asset.
 class TelegramLogo extends StatelessWidget {
-  const TelegramLogo({super.key, this.size = 22, this.color});
+  const TelegramLogo({super.key, this.size = 32, this.color});
 
   final double size;
   final Color? color;

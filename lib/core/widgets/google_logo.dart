@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Google "G" logo from asset.
 class GoogleLogo extends StatelessWidget {
-  const GoogleLogo({super.key, this.size = 22});
+  const GoogleLogo({super.key, this.size = 32});
 
   final double size;
 
