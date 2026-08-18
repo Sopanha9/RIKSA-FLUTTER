@@ -12,6 +12,9 @@ import '../../features/setup/presentation/profile_setup_screen.dart';
 import '../../features/setup/presentation/identity_setup_screen.dart';
 import '../../features/setup/providers/profile_setup_provider.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../features/home/presentation/home_screen.dart';
+import '../../features/blog/presentation/blog_screen.dart';
+import '../../features/blog/presentation/blog_details_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -101,7 +104,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/home',
-        builder: (context, state) => const HomeShell(),
+        builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/blog',
+        builder: (context, state) => const BlogScreen(),
+      ),
+      GoRoute(
+        path: '/blog/details',
+        builder: (context, state) => const BlogDetailsScreen(),
       ),
     ],
   );
