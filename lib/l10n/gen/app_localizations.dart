@@ -902,6 +902,18 @@ abstract class AppLocalizations {
   /// **'Home'**
   String get home;
 
+  /// No description provided for @learn.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get learn;
+
+  /// No description provided for @leaderboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaderboard'**
+  String get leaderboard;
+
   /// No description provided for @logout.
   ///
   /// In en, this message translates to:
@@ -913,6 +925,288 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading...'**
   String get loading;
+
+  /// No description provided for @learningHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Find your next lesson'**
+  String get learningHeadline;
+
+  /// No description provided for @learningSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your grade, subject, and level to learn at your pace.'**
+  String get learningSubtitle;
+
+  /// No description provided for @gradeFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade'**
+  String get gradeFilter;
+
+  /// No description provided for @subjectFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get subjectFilter;
+
+  /// No description provided for @difficultyFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Difficulty'**
+  String get difficultyFilter;
+
+  /// No description provided for @allGrades.
+  ///
+  /// In en, this message translates to:
+  /// **'All grades'**
+  String get allGrades;
+
+  /// No description provided for @gradeNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade {grade}'**
+  String gradeNumber(int grade);
+
+  /// No description provided for @gradeDataPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade {grade} is selected. Until lessons receive grade tags from the API, ungraded lessons remain visible.'**
+  String gradeDataPending(int grade);
+
+  /// No description provided for @allSubjects.
+  ///
+  /// In en, this message translates to:
+  /// **'All subjects'**
+  String get allSubjects;
+
+  /// No description provided for @allLevels.
+  ///
+  /// In en, this message translates to:
+  /// **'All levels'**
+  String get allLevels;
+
+  /// No description provided for @recommendedLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended lessons'**
+  String get recommendedLessons;
+
+  /// No description provided for @doneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'done'**
+  String get doneLabel;
+
+  /// No description provided for @completedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completedLabel;
+
+  /// No description provided for @generalSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get generalSubject;
+
+  /// No description provided for @difficultyEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy'**
+  String get difficultyEasy;
+
+  /// No description provided for @difficultyMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get difficultyMedium;
+
+  /// No description provided for @difficultyHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard'**
+  String get difficultyHard;
+
+  /// No description provided for @difficultyDifficult.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get difficultyDifficult;
+
+  /// No description provided for @exerciseCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {No exercises} =1 {1 exercise} other {{count} exercises}}'**
+  String exerciseCount(int count);
+
+  /// No description provided for @baseXpLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Base {xp} XP'**
+  String baseXpLabel(int xp);
+
+  /// No description provided for @lessonLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load lessons'**
+  String get lessonLoadFailed;
+
+  /// No description provided for @noLessonsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No lessons found'**
+  String get noLessonsFound;
+
+  /// No description provided for @noLessonsForFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another grade, subject, or difficulty.'**
+  String get noLessonsForFilters;
+
+  /// No description provided for @accountSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Account settings'**
+  String get accountSettings;
+
+  /// No description provided for @riksaLearner.
+  ///
+  /// In en, this message translates to:
+  /// **'RIKSA Learner'**
+  String get riksaLearner;
+
+  /// No description provided for @memberSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Member since {date}'**
+  String memberSince(String date);
+
+  /// No description provided for @verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get verified;
+
+  /// No description provided for @notVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get notVerified;
+
+  /// No description provided for @accountRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Account role'**
+  String get accountRole;
+
+  /// No description provided for @totalXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Total XP'**
+  String get totalXp;
+
+  /// No description provided for @currentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak'**
+  String get currentStreak;
+
+  /// No description provided for @achievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get achievements;
+
+  /// No description provided for @currentRank.
+  ///
+  /// In en, this message translates to:
+  /// **'Current rank'**
+  String get currentRank;
+
+  /// No description provided for @startingTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting tier'**
+  String get startingTier;
+
+  /// No description provided for @highestRankReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You’ve reached the highest available rank.'**
+  String get highestRankReached;
+
+  /// No description provided for @xpUntilNextRank.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP until {tier}'**
+  String xpUntilNextRank(int xp, String tier);
+
+  /// No description provided for @earned.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned'**
+  String get earned;
+
+  /// No description provided for @recentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get recentActivity;
+
+  /// No description provided for @noAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements and their progress will appear here.'**
+  String get noAchievements;
+
+  /// No description provided for @noRecentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Your XP activity will appear here as you learn.'**
+  String get noRecentActivity;
+
+  /// No description provided for @profileLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load your learning profile.'**
+  String get profileLoadFailed;
+
+  /// No description provided for @lessonCompletionReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson completed'**
+  String get lessonCompletionReward;
+
+  /// No description provided for @achievementReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievement reward'**
+  String get achievementReward;
+
+  /// No description provided for @streakReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak reward'**
+  String get streakReward;
+
+  /// No description provided for @rankReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank reward'**
+  String get rankReward;
+
+  /// No description provided for @welcomeBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome bonus'**
+  String get welcomeBonus;
+
+  /// No description provided for @xpReward.
+  ///
+  /// In en, this message translates to:
+  /// **'XP reward'**
+  String get xpReward;
 }
 
 class _AppLocalizationsDelegate

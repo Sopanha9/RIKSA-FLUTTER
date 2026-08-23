@@ -291,35 +291,36 @@ class _PrimaryReactionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = selected ? Colors.white : AppColors.brandPrimaryPressed;
+    final colors = Theme.of(context).colorScheme;
+    final foreground = selected
+        ? AppColors.brandPrimaryHover
+        : colors.onSurfaceVariant;
     return Semantics(
       button: true,
       selected: selected,
       child: Material(
-        color: selected
-            ? AppColors.brandPrimary
-            : AppColors.brandPrimary.withValues(alpha: .11),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(999),
         child: InkWell(
           borderRadius: BorderRadius.circular(999),
           onTap: onPressed,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   selected ? Icons.thumb_up_rounded : Icons.thumb_up_outlined,
-                  size: 18,
+                  size: 19,
                   color: foreground,
                 ),
-                const SizedBox(width: 7),
+                const SizedBox(width: 6),
                 Text(
                   _compactCount(count),
                   style: TextStyle(
                     color: foreground,
                     fontSize: 13,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],

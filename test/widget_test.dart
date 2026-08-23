@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:riksa_app/app/router/app_router.dart';
 import 'package:riksa_app/core/providers/locale_provider.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/auth/presentation/login_screen.dart';
 import 'package:riksa_app/features/auth/presentation/register_screen.dart';
 import 'package:riksa_app/features/auth/presentation/splash_animation_screen.dart';
+import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
@@ -30,6 +32,22 @@ class _TestLocaleNotifier extends LocaleNotifier {
 class _UnavailableAuthNotifier extends AuthNotifier {
   @override
   AuthState build() => const AuthUnavailable('Service unavailable');
+}
+
+class _AuthenticatedAuthNotifier extends AuthNotifier {
+  @override
+  AuthState build() => Authenticated(
+    AuthUser(
+      id: 'user-1',
+      username: 'sophea',
+      displayName: 'Sok Sophea',
+      email: 'sophea@example.com',
+      emailVerified: true,
+      phoneVerified: false,
+      role: 'USER',
+      createdAt: DateTime.utc(2026),
+    ),
+  );
 }
 
 Widget _testApp(Widget child) {
@@ -65,6 +83,20 @@ void main() {
     final second = container.read(goRouterProvider);
 
     expect(identical(first, second), isTrue);
+  });
+
+  test('root path has a safe redirect route', () {
+    final container = ProviderContainer(
+      overrides: [authProvider.overrideWith(_AuthenticatedAuthNotifier.new)],
+    );
+    addTearDown(container.dispose);
+
+    final router = container.read(goRouterProvider);
+    final rootRoute = router.configuration.routes
+        .whereType<GoRoute>()
+        .singleWhere((route) => route.path == '/');
+
+    expect(rootRoute.redirect, isNotNull);
   });
 
   testWidgets('login renders stable inline validation errors', (tester) async {

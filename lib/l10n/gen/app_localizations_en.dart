@@ -461,8 +461,178 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home => 'Home';
 
   @override
+  String get learn => 'Learn';
+
+  @override
+  String get leaderboard => 'Leaderboard';
+
+  @override
   String get logout => 'Log Out';
 
   @override
   String get loading => 'Loading...';
+
+  @override
+  String get learningHeadline => 'Find your next lesson';
+
+  @override
+  String get learningSubtitle =>
+      'Choose your grade, subject, and level to learn at your pace.';
+
+  @override
+  String get gradeFilter => 'Grade';
+
+  @override
+  String get subjectFilter => 'Subject';
+
+  @override
+  String get difficultyFilter => 'Difficulty';
+
+  @override
+  String get allGrades => 'All grades';
+
+  @override
+  String gradeNumber(int grade) {
+    return 'Grade $grade';
+  }
+
+  @override
+  String gradeDataPending(int grade) {
+    return 'Grade $grade is selected. Until lessons receive grade tags from the API, ungraded lessons remain visible.';
+  }
+
+  @override
+  String get allSubjects => 'All subjects';
+
+  @override
+  String get allLevels => 'All levels';
+
+  @override
+  String get recommendedLessons => 'Recommended lessons';
+
+  @override
+  String get doneLabel => 'done';
+
+  @override
+  String get completedLabel => 'Completed';
+
+  @override
+  String get generalSubject => 'General';
+
+  @override
+  String get difficultyEasy => 'Easy';
+
+  @override
+  String get difficultyMedium => 'Medium';
+
+  @override
+  String get difficultyHard => 'Hard';
+
+  @override
+  String get difficultyDifficult => 'Advanced';
+
+  @override
+  String exerciseCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count exercises',
+      one: '1 exercise',
+      zero: 'No exercises',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String baseXpLabel(int xp) {
+    return 'Base $xp XP';
+  }
+
+  @override
+  String get lessonLoadFailed => 'We couldn’t load lessons';
+
+  @override
+  String get noLessonsFound => 'No lessons found';
+
+  @override
+  String get noLessonsForFilters =>
+      'Try another grade, subject, or difficulty.';
+
+  @override
+  String get accountSettings => 'Account settings';
+
+  @override
+  String get riksaLearner => 'RIKSA Learner';
+
+  @override
+  String memberSince(String date) {
+    return 'Member since $date';
+  }
+
+  @override
+  String get verified => 'Verified';
+
+  @override
+  String get notVerified => 'Not verified';
+
+  @override
+  String get accountRole => 'Account role';
+
+  @override
+  String get totalXp => 'Total XP';
+
+  @override
+  String get currentStreak => 'Current streak';
+
+  @override
+  String get achievements => 'Achievements';
+
+  @override
+  String get currentRank => 'Current rank';
+
+  @override
+  String get startingTier => 'Starting tier';
+
+  @override
+  String get highestRankReached => 'You’ve reached the highest available rank.';
+
+  @override
+  String xpUntilNextRank(int xp, String tier) {
+    return '$xp XP until $tier';
+  }
+
+  @override
+  String get earned => 'Earned';
+
+  @override
+  String get recentActivity => 'Recent activity';
+
+  @override
+  String get noAchievements =>
+      'Achievements and their progress will appear here.';
+
+  @override
+  String get noRecentActivity =>
+      'Your XP activity will appear here as you learn.';
+
+  @override
+  String get profileLoadFailed => 'We couldn’t load your learning profile.';
+
+  @override
+  String get lessonCompletionReward => 'Lesson completed';
+
+  @override
+  String get achievementReward => 'Achievement reward';
+
+  @override
+  String get streakReward => 'Streak reward';
+
+  @override
+  String get rankReward => 'Rank reward';
+
+  @override
+  String get welcomeBonus => 'Welcome bonus';
+
+  @override
+  String get xpReward => 'XP reward';
 }

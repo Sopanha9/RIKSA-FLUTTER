@@ -14,10 +14,12 @@ import '../../features/blog/presentation/blog_detail_screen.dart';
 import '../../features/blog/presentation/blog_feed_screen.dart';
 import '../../features/blog/presentation/create_blog_post_screen.dart';
 import '../../features/blog/presentation/my_posts_screen.dart';
+import '../../features/learning/presentation/lesson_catalog_screen.dart';
 import '../../features/social/presentation/social_feed_screen.dart';
 import '../../features/social/presentation/compose_community_post_screen.dart';
 import '../../features/social/presentation/social_post_detail_screen.dart';
 import '../../features/userProfile/presentation/profile_setup_overview_screen.dart';
+import '../../features/userProfile/presentation/user_profile_screen.dart';
 
 final _authRouterRefreshProvider = Provider<ValueNotifier<AuthState>>((ref) {
   final refresh = ValueNotifier<AuthState>(ref.read(authProvider));
@@ -54,6 +56,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(path: '/', redirect: (context, state) => '/home'),
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashAnimationScreen(),
@@ -89,6 +92,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SocialFeedScreen(),
       ),
       GoRoute(
+        path: '/learn',
+        builder: (context, state) => const LessonCatalogScreen(),
+      ),
+      GoRoute(
         path: '/community/create',
         builder: (context, state) => ComposeCommunityPostScreen(
           isQuestion: state.uri.queryParameters['type'] == 'question',
@@ -98,6 +105,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/community/posts/:id',
         builder: (context, state) =>
             SocialPostDetailScreen(postId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const UserProfileScreen(),
       ),
       GoRoute(
         path: '/profile/setup',

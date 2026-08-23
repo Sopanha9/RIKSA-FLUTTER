@@ -75,5 +75,18 @@ void main() {
     await tester.tap(find.text('A useful study loop'));
 
     expect(opened, isTrue);
+
+    final reaction = find.byKey(const ValueKey('react-post-1'));
+    final reactionMaterials = tester.widgetList<Material>(
+      find.descendant(of: reaction, matching: find.byType(Material)),
+    );
+    expect(reactionMaterials, isNotEmpty);
+    expect(
+      reactionMaterials.every(
+        (material) => material.color == Colors.transparent,
+      ),
+      isTrue,
+      reason: 'The like action should not render a filled pill background.',
+    );
   });
 }

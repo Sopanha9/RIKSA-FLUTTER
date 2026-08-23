@@ -440,8 +440,170 @@ class AppLocalizationsKm extends AppLocalizations {
   String get home => 'ទំព័រ​ដើម';
 
   @override
+  String get learn => 'រៀន';
+
+  @override
+  String get leaderboard => 'តារាងចំណាត់ថ្នាក់';
+
+  @override
   String get logout => 'ចេញ';
 
   @override
   String get loading => 'កំពុង​ផ្ទុក...';
+
+  @override
+  String get learningHeadline => 'ស្វែងរកមេរៀនបន្ទាប់របស់អ្នក';
+
+  @override
+  String get learningSubtitle =>
+      'ជ្រើសរើសថ្នាក់ មុខវិជ្ជា និងកម្រិត ដើម្បីរៀនតាមល្បឿនរបស់អ្នក។';
+
+  @override
+  String get gradeFilter => 'ថ្នាក់';
+
+  @override
+  String get subjectFilter => 'មុខវិជ្ជា';
+
+  @override
+  String get difficultyFilter => 'កម្រិត';
+
+  @override
+  String get allGrades => 'គ្រប់ថ្នាក់';
+
+  @override
+  String gradeNumber(int grade) {
+    return 'ថ្នាក់ទី $grade';
+  }
+
+  @override
+  String gradeDataPending(int grade) {
+    return 'បានជ្រើសរើសថ្នាក់ទី $grade។ រហូតដល់ API បន្ថែមស្លាកថ្នាក់ យើងនៅតែបង្ហាញមេរៀនដែលមិនទាន់កំណត់ថ្នាក់។';
+  }
+
+  @override
+  String get allSubjects => 'គ្រប់មុខវិជ្ជា';
+
+  @override
+  String get allLevels => 'គ្រប់កម្រិត';
+
+  @override
+  String get recommendedLessons => 'មេរៀនដែលណែនាំ';
+
+  @override
+  String get doneLabel => 'រួច';
+
+  @override
+  String get completedLabel => 'បានបញ្ចប់';
+
+  @override
+  String get generalSubject => 'ទូទៅ';
+
+  @override
+  String get difficultyEasy => 'ងាយ';
+
+  @override
+  String get difficultyMedium => 'មធ្យម';
+
+  @override
+  String get difficultyHard => 'ពិបាក';
+
+  @override
+  String get difficultyDifficult => 'កម្រិតខ្ពស់';
+
+  @override
+  String exerciseCount(int count) {
+    return 'លំហាត់ $count';
+  }
+
+  @override
+  String baseXpLabel(int xp) {
+    return '$xp XP មូលដ្ឋាន';
+  }
+
+  @override
+  String get lessonLoadFailed => 'យើងមិនអាចផ្ទុកមេរៀនបានទេ';
+
+  @override
+  String get noLessonsFound => 'រកមិនឃើញមេរៀន';
+
+  @override
+  String get noLessonsForFilters =>
+      'សាកល្បងជ្រើសរើសថ្នាក់ មុខវិជ្ជា ឬកម្រិតផ្សេង។';
+
+  @override
+  String get accountSettings => 'ការកំណត់គណនី';
+
+  @override
+  String get riksaLearner => 'អ្នកសិក្សា RIKSA';
+
+  @override
+  String memberSince(String date) {
+    return 'សមាជិកតាំងពី $date';
+  }
+
+  @override
+  String get verified => 'បានផ្ទៀងផ្ទាត់';
+
+  @override
+  String get notVerified => 'មិនទាន់ផ្ទៀងផ្ទាត់';
+
+  @override
+  String get accountRole => 'តួនាទីគណនី';
+
+  @override
+  String get totalXp => 'XP សរុប';
+
+  @override
+  String get currentStreak => 'ការសិក្សាបន្ត';
+
+  @override
+  String get achievements => 'សមិទ្ធផល';
+
+  @override
+  String get currentRank => 'ចំណាត់ថ្នាក់បច្ចុប្បន្ន';
+
+  @override
+  String get startingTier => 'កម្រិតចាប់ផ្តើម';
+
+  @override
+  String get highestRankReached => 'អ្នកបានឈានដល់ចំណាត់ថ្នាក់ខ្ពស់បំផុត។';
+
+  @override
+  String xpUntilNextRank(int xp, String tier) {
+    return 'ត្រូវការ $xp XP ទៀតដើម្បីឡើងទៅ $tier';
+  }
+
+  @override
+  String get earned => 'ទទួលបាន';
+
+  @override
+  String get recentActivity => 'សកម្មភាពថ្មីៗ';
+
+  @override
+  String get noAchievements => 'សមិទ្ធផល និងវឌ្ឍនភាពរបស់អ្នកនឹងបង្ហាញនៅទីនេះ។';
+
+  @override
+  String get noRecentActivity =>
+      'សកម្មភាព XP របស់អ្នកនឹងបង្ហាញនៅទីនេះពេលអ្នកសិក្សា។';
+
+  @override
+  String get profileLoadFailed => 'យើងមិនអាចផ្ទុកប្រវត្តិសិក្សារបស់អ្នកបានទេ។';
+
+  @override
+  String get lessonCompletionReward => 'បានបញ្ចប់មេរៀន';
+
+  @override
+  String get achievementReward => 'រង្វាន់សមិទ្ធផល';
+
+  @override
+  String get streakReward => 'រង្វាន់ការសិក្សាបន្ត';
+
+  @override
+  String get rankReward => 'រង្វាន់ចំណាត់ថ្នាក់';
+
+  @override
+  String get welcomeBonus => 'រង្វាន់ស្វាគមន៍';
+
+  @override
+  String get xpReward => 'រង្វាន់ XP';
 }

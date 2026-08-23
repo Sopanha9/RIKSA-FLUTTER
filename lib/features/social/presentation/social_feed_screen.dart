@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_bottom_navigation_bar.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../blog/data/blog_models.dart';
@@ -29,22 +31,61 @@ class SocialFeedScreen extends ConsumerStatefulWidget {
 class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
   late final ScrollController _scrollController;
   _SocialSection _section = _SocialSection.feed;
+  int? _bottomNavigationIndex;
+  bool? _bottomNavigationCollapsed;
+  double? _lastNavigationScrollOffset;
+  double? _navigationDirectionTravel;
+  ScrollDirection? _trackedNavigationDirection;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_loadMoreNearEdge);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _scrollController.hasClients) {
+        _lastNavigationScrollOffset = _scrollController.position.pixels;
+      }
+    });
   }
 
   void _loadMoreNearEdge() {
     if (!_scrollController.hasClients) return;
-    if (_scrollController.position.extentAfter < 520) {
+    final position = _scrollController.position;
+    _updateBottomNavigationFromScroll(position);
+    if (position.extentAfter < 520) {
       if (_section == _SocialSection.feed) {
         ref.read(socialFeedProvider.notifier).loadMore();
       } else {
         ref.read(blogFeedProvider.notifier).loadMore();
       }
     }
+  }
+
+  void _updateBottomNavigationFromScroll(ScrollPosition position) {
+    final currentOffset = position.pixels;
+    final previousOffset = _lastNavigationScrollOffset ?? currentOffset;
+    _lastNavigationScrollOffset = currentOffset;
+    final delta = currentOffset - previousOffset;
+    final direction = position.userScrollDirection;
+    final isScrollingDown = direction == ScrollDirection.reverse && delta > 0;
+    final isScrollingUp = direction == ScrollDirection.forward && delta < 0;
+    if ((!isScrollingDown && !isScrollingUp) || delta.abs() < .1) return;
+
+    if (_trackedNavigationDirection != direction) {
+      _trackedNavigationDirection = direction;
+      _navigationDirectionTravel = 0;
+    }
+    _navigationDirectionTravel =
+        (_navigationDirectionTravel ?? 0) + delta.abs();
+    if ((_navigationDirectionTravel ?? 0) < 18) return;
+
+    _navigationDirectionTravel = 0;
+    _setBottomNavigationCollapsed(isScrollingDown);
+  }
+
+  void _setBottomNavigationCollapsed(bool collapsed) {
+    if ((_bottomNavigationCollapsed ?? false) == collapsed) return;
+    setState(() => _bottomNavigationCollapsed = collapsed);
   }
 
   @override
@@ -69,12 +110,29 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
         : const <SocialCategory>[];
 
     return Scaffold(
+      extendBody: true,
       drawer: _CommunityDrawer(
         categories: categories,
         selectedSection: _section,
         selectedCategoryId: selectedCategory,
         onSectionSelected: _selectDrawerSection,
         onCategorySelected: _selectDrawerCategory,
+      ),
+      bottomNavigationBar: RiksaBottomNavigationBar(
+        currentIndex: _bottomNavigationIndex ?? 2,
+        collapsed: _bottomNavigationCollapsed ?? false,
+        onSelected: (index) {
+          if (index == 1) {
+            context.go('/learn');
+            return;
+          }
+          if (index == 4) {
+            context.go('/profile');
+            return;
+          }
+          setState(() => _bottomNavigationIndex = index);
+        },
+        onCollapsedTap: () => _setBottomNavigationCollapsed(false),
       ),
       body: RefreshIndicator(
         color: AppColors.brandPrimary,
@@ -88,16 +146,18 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            _CommunityAppBar(
-              selectedSection: _section,
-              onSectionSelected: _selectSection,
-              onCreate: _showCreateMenu,
+            _CommunityAppBar(onCreate: _showCreateMenu),
+            SliverToBoxAdapter(
+              child: _FeedSectionTabs(
+                selected: _section,
+                onSelected: _selectSection,
+              ),
             ),
             if (_section == _SocialSection.feed)
               ..._contentSlivers(state)
             else
               ..._blogSlivers(blogState!),
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            const SliverToBoxAdapter(child: SizedBox(height: 118)),
           ],
         ),
       ),
@@ -311,14 +371,8 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
 }
 
 class _CommunityAppBar extends ConsumerWidget {
-  const _CommunityAppBar({
-    required this.selectedSection,
-    required this.onSectionSelected,
-    required this.onCreate,
-  });
+  const _CommunityAppBar({required this.onCreate});
 
-  final _SocialSection selectedSection;
-  final ValueChanged<_SocialSection> onSectionSelected;
   final VoidCallback onCreate;
 
   @override
@@ -332,14 +386,8 @@ class _CommunityAppBar extends ConsumerWidget {
       titleSpacing: 2,
       leadingWidth: 64,
       automaticallyImplyLeading: false,
-      backgroundColor: theme.colorScheme.surface.withValues(alpha: .82),
+      backgroundColor: theme.colorScheme.surface,
       surfaceTintColor: Colors.transparent,
-      flexibleSpace: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: const SizedBox.expand(),
-        ),
-      ),
       leading: Builder(
         builder: (context) => Padding(
           padding: const EdgeInsetsDirectional.only(start: 14),
@@ -387,13 +435,6 @@ class _CommunityAppBar extends ConsumerWidget {
           ),
         ),
       ],
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(64),
-        child: _GlassSectionTabs(
-          selected: selectedSection,
-          onSelected: onSectionSelected,
-        ),
-      ),
     );
   }
 }
@@ -458,21 +499,20 @@ class _GlassIconButton extends StatelessWidget {
   }
 }
 
-class _GlassSectionTabs extends StatefulWidget {
-  const _GlassSectionTabs({required this.selected, required this.onSelected});
+class _FeedSectionTabs extends StatefulWidget {
+  const _FeedSectionTabs({required this.selected, required this.onSelected});
 
   final _SocialSection selected;
   final ValueChanged<_SocialSection> onSelected;
 
   @override
-  State<_GlassSectionTabs> createState() => _GlassSectionTabsState();
+  State<_FeedSectionTabs> createState() => _FeedSectionTabsState();
 }
 
-class _GlassSectionTabsState extends State<_GlassSectionTabs> {
-  static const _gap = 12.0;
+class _FeedSectionTabsState extends State<_FeedSectionTabs> {
+  static const _gap = 8.0;
   _SocialSection? _pressedSection;
   _SocialSection? _visualSelected;
-  int _selectionChange = 0;
 
   _SocialSection get _effectiveVisualSelected =>
       _visualSelected ?? widget.selected;
@@ -484,7 +524,7 @@ class _GlassSectionTabsState extends State<_GlassSectionTabs> {
   }
 
   @override
-  void didUpdateWidget(covariant _GlassSectionTabs oldWidget) {
+  void didUpdateWidget(covariant _FeedSectionTabs oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.selected != oldWidget.selected &&
         widget.selected != _effectiveVisualSelected) {
@@ -500,15 +540,8 @@ class _GlassSectionTabsState extends State<_GlassSectionTabs> {
 
   void _activate(_SocialSection section) {
     if (_effectiveVisualSelected != section) {
-      final change = ++_selectionChange;
       setState(() => _visualSelected = section);
-      Future<void>.delayed(const Duration(milliseconds: 280), () {
-        if (mounted &&
-            change == _selectionChange &&
-            widget.selected != section) {
-          widget.onSelected(section);
-        }
-      });
+      widget.onSelected(section);
     }
     Future<void>.delayed(const Duration(milliseconds: 70), () {
       if (mounted && _pressedSection == section) {
@@ -520,169 +553,37 @@ class _GlassSectionTabsState extends State<_GlassSectionTabs> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final inactiveColor = theme.brightness == Brightness.dark
-        ? colors.surfaceContainer
-        : colors.surface.withValues(alpha: .96);
     final visualSelected = _effectiveVisualSelected;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
       child: SizedBox(
-        height: 48,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final pillWidth = (constraints.maxWidth - _gap) / 2;
-            return Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned.fill(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _PressScale(
-                          pressed: _pressedSection == _SocialSection.feed,
-                          child: _InactiveTabSurface(
-                            backgroundColor: inactiveColor,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: _gap),
-                      Expanded(
-                        child: _PressScale(
-                          pressed: _pressedSection == _SocialSection.blog,
-                          child: _InactiveTabSurface(
-                            backgroundColor: inactiveColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                AnimatedPositioned(
-                  key: const ValueKey('active-section-pill'),
-                  duration: const Duration(milliseconds: 280),
-                  curve: const Cubic(.18, 1.32, .32, 1),
-                  top: 0,
-                  bottom: 0,
-                  left: visualSelected == _SocialSection.feed
-                      ? 0
-                      : pillWidth + _gap,
-                  width: pillWidth,
-                  child: IgnorePointer(
-                    child: _PressScale(
-                      pressed: _pressedSection == visualSelected,
-                      child: const _ActiveTabSurface(),
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: Row(
-                    children: [
-                      _SectionTab(
-                        key: const ValueKey('my-feed-tab'),
-                        label: l10n.myFeed,
-                        icon: Icons.dynamic_feed_outlined,
-                        selected: visualSelected == _SocialSection.feed,
-                        pressed: _pressedSection == _SocialSection.feed,
-                        onPressChanged: (pressed) =>
-                            _setPressed(_SocialSection.feed, pressed),
-                        onTap: () => _activate(_SocialSection.feed),
-                      ),
-                      const SizedBox(width: _gap),
-                      _SectionTab(
-                        key: const ValueKey('blog-tab'),
-                        label: l10n.blog,
-                        icon: Icons.auto_stories_outlined,
-                        selected: visualSelected == _SocialSection.blog,
-                        pressed: _pressedSection == _SocialSection.blog,
-                        onPressChanged: (pressed) =>
-                            _setPressed(_SocialSection.blog, pressed),
-                        onTap: () => _activate(_SocialSection.blog),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _InactiveTabSurface extends StatelessWidget {
-  const _InactiveTabSurface({required this.backgroundColor});
-
-  final Color backgroundColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: colors.outlineVariant.withValues(alpha: .34)),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: .055),
-            blurRadius: 9,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActiveTabSurface extends StatelessWidget {
-  const _ActiveTabSurface();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color.lerp(Colors.white, AppColors.brandPrimaryHover, .68)!,
-            Color.lerp(
-              AppColors.brandPrimaryHover,
-              AppColors.brandPrimaryPressed,
-              .28,
-            )!,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: .24)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.brandPrimaryPressed.withValues(alpha: .16),
-            blurRadius: 13,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: FractionallySizedBox(
-          widthFactor: .78,
-          child: Container(
-            margin: const EdgeInsets.only(top: 2),
-            height: 1.5,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(999),
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withValues(alpha: 0),
-                  Colors.white.withValues(alpha: .72),
-                  Colors.white.withValues(alpha: 0),
-                ],
+        height: 32,
+        child: SingleChildScrollView(
+          key: const ValueKey('feed-section-scroll'),
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _SectionTab(
+                key: const ValueKey('my-feed-tab'),
+                label: l10n.myFeed,
+                selected: visualSelected == _SocialSection.feed,
+                pressed: _pressedSection == _SocialSection.feed,
+                onPressChanged: (pressed) =>
+                    _setPressed(_SocialSection.feed, pressed),
+                onTap: () => _activate(_SocialSection.feed),
               ),
-            ),
+              const SizedBox(width: _gap),
+              _SectionTab(
+                key: const ValueKey('blog-tab'),
+                label: l10n.blog,
+                selected: visualSelected == _SocialSection.blog,
+                pressed: _pressedSection == _SocialSection.blog,
+                onPressChanged: (pressed) =>
+                    _setPressed(_SocialSection.blog, pressed),
+                onTap: () => _activate(_SocialSection.blog),
+              ),
+            ],
           ),
         ),
       ),
@@ -711,7 +612,6 @@ class _SectionTab extends StatelessWidget {
   const _SectionTab({
     super.key,
     required this.label,
-    required this.icon,
     required this.selected,
     required this.pressed,
     required this.onPressChanged,
@@ -719,7 +619,6 @@ class _SectionTab extends StatelessWidget {
   });
 
   final String label;
-  final IconData icon;
   final bool selected;
   final bool pressed;
   final ValueChanged<bool> onPressChanged;
@@ -729,42 +628,50 @@ class _SectionTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final foreground = selected ? Colors.white : colors.onSurfaceVariant;
+    final foreground = selected
+        ? AppColors.brandPrimaryHover
+        : colors.onSurfaceVariant.withValues(alpha: .72);
+    final border = selected
+        ? AppColors.brandPrimaryHover
+        : colors.outlineVariant.withValues(alpha: .78);
 
-    return Expanded(
+    return Semantics(
+      button: true,
+      selected: selected,
       child: _PressScale(
         pressed: pressed,
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOutCubic,
+          height: 32,
+          decoration: BoxDecoration(
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(999),
-            onTapDown: (_) => onPressChanged(true),
-            onTapCancel: () => onPressChanged(false),
-            onTap: onTap,
-            child: Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TweenAnimationBuilder<Color?>(
-                    duration: const Duration(milliseconds: 280),
+            border: Border.all(color: border),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(999),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(999),
+              onTapDown: (_) => onPressChanged(true),
+              onTapCancel: () => onPressChanged(false),
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Center(
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 150),
                     curve: Curves.easeOutCubic,
-                    tween: ColorTween(end: foreground),
-                    builder: (context, color, _) =>
-                        Icon(icon, size: 18, color: color),
-                  ),
-                  const SizedBox(width: 8),
-                  AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 280),
-                    curve: Curves.easeOutCubic,
-                    style: theme.textTheme.labelLarge!.copyWith(
+                    style: theme.textTheme.labelMedium!.copyWith(
                       color: foreground,
-                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
                     ),
-                    child: Text(label),
+                    child: Text(label, maxLines: 1),
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -917,10 +824,12 @@ class _CommunityDrawerState extends ConsumerState<_CommunityDrawer> {
     final displayName = user?.displayName.trim().isNotEmpty == true
         ? user!.displayName
         : user?.username ?? 'RIKSA Learner';
-    final initial = displayName.isEmpty ? 'R' : displayName[0].toUpperCase();
+    final initial = displayName.isEmpty
+        ? user?.username.substring(0, 1).toUpperCase() ?? 'U'
+        : displayName[0].toUpperCase();
 
     return Drawer(
-      width: MediaQuery.sizeOf(context).width.clamp(280, 344).toDouble(),
+      width: MediaQuery.sizeOf(context).width.clamp(180, 270).toDouble(),
       backgroundColor: Colors.transparent,
       elevation: 0,
       child: ClipRRect(

@@ -126,6 +126,23 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('RIKSA'), findsOneWidget);
+    for (var index = 0; index < 5; index++) {
+      expect(find.byKey(ValueKey('bottom-nav-item-$index')), findsOneWidget);
+    }
+    final bottomActiveCircle = find.byKey(
+      const ValueKey('bottom-nav-active-circle'),
+    );
+    final communityCircleX = tester.getTopLeft(bottomActiveCircle).dx;
+    await tester.tap(find.byKey(const ValueKey('bottom-nav-item-0')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 90));
+    final movingCircleX = tester.getTopLeft(bottomActiveCircle).dx;
+    expect(movingCircleX, lessThan(communityCircleX));
+    await tester.pumpAndSettle();
+    final homeCircleX = tester.getTopLeft(bottomActiveCircle).dx;
+    expect(homeCircleX, lessThan(movingCircleX));
+    await tester.tap(find.byKey(const ValueKey('bottom-nav-item-2')));
+    await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('community-drawer-button')),
       findsOneWidget,
@@ -138,6 +155,14 @@ void main() {
     expect(find.text('7'), findsOneWidget);
     expect(find.text('My Feed'), findsOneWidget);
     expect(find.text('Blog'), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('my-feed-tab'))).height,
+      lessThanOrEqualTo(32),
+    );
+    expect(
+      tester.getSize(find.byKey(const ValueKey('my-feed-tab'))).width,
+      lessThan(135),
+    );
     expect(find.text('For you'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('top-learners-spotlight')),
@@ -147,6 +172,31 @@ void main() {
     expect(find.byKey(const ValueKey('top-learners-view-all')), findsOneWidget);
     expect(find.text('The two-minute recall habit'), findsOneWidget);
     expect(find.byKey(const ValueKey('react-post-1')), findsOneWidget);
+
+    final navigationMorph = find.byKey(const ValueKey('bottom-nav-morph'));
+    tester.view.physicalSize = const Size(430, 700);
+    await tester.pumpAndSettle();
+    final expandedNavigationWidth = tester.getSize(navigationMorph).width;
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -80));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(navigationMorph).width, closeTo(58, .1));
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 80));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSize(navigationMorph).width,
+      closeTo(expandedNavigationWidth, .1),
+    );
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -80));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(navigationMorph).width, closeTo(58, .1));
+    await tester.tap(find.byKey(const ValueKey('bottom-nav-item-0')));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSize(navigationMorph).width,
+      closeTo(expandedNavigationWidth, .1),
+    );
+    tester.view.physicalSize = const Size(430, 932);
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('community-drawer-button')));
     await tester.pumpAndSettle();
@@ -167,16 +217,36 @@ void main() {
     Navigator.of(tester.element(find.byType(Drawer))).pop();
     await tester.pumpAndSettle();
 
-    final activePill = find.byKey(const ValueKey('active-section-pill'));
-    final feedPillX = tester.getTopLeft(activePill).dx;
+    final sectionScroll = find.byKey(const ValueKey('feed-section-scroll'));
+    expect(sectionScroll, findsOneWidget);
+    expect(
+      find.descendant(of: sectionScroll, matching: find.byType(Icon)),
+      findsNothing,
+    );
+
+    BoxDecoration tabDecoration(Finder tab) {
+      final container = tester.widget<AnimatedContainer>(
+        find.descendant(of: tab, matching: find.byType(AnimatedContainer)),
+      );
+      return container.decoration! as BoxDecoration;
+    }
+
+    final feedTab = find.byKey(const ValueKey('my-feed-tab'));
+    final blogTab = find.byKey(const ValueKey('blog-tab'));
+    expect(
+      (tabDecoration(feedTab).border! as Border).top.color,
+      AppColors.brandPrimaryHover,
+    );
     await tester.tap(find.byKey(const ValueKey('blog-tab')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 90));
-    final movingPillX = tester.getTopLeft(activePill).dx;
-    expect(movingPillX, greaterThan(feedPillX));
     await tester.pumpAndSettle();
-    final blogPillX = tester.getTopLeft(activePill).dx;
-    expect(blogPillX, greaterThan(movingPillX));
+    expect(
+      (tabDecoration(blogTab).border! as Border).top.color,
+      AppColors.brandPrimaryHover,
+    );
+    expect(
+      (tabDecoration(feedTab).border! as Border).top.color,
+      isNot(AppColors.brandPrimaryHover),
+    );
     expect(find.text('How curiosity improves learning'), findsOneWidget);
     expect(find.text('The two-minute recall habit'), findsNothing);
 
