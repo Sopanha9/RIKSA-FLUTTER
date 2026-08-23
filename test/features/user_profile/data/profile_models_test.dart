@@ -52,4 +52,19 @@ void main() {
     expect(page.hasNextPage, isTrue);
     expect(page.endCursor, 'cursor-1');
   });
+
+  test('parses country and province leaderboard positions', () {
+    final rank = LeaderboardRank.fromJson({
+      'countryRank': 12,
+      'countryScore': 1520,
+      'countryTier': 'GOLD',
+      'provinceRank': 3,
+      'provinceScore': 1520,
+      'provinceTier': 'GOLD',
+    });
+
+    expect(rank.countryRank, 12);
+    expect(rank.provinceRank, 3);
+    expect(rank.countryTier, 'GOLD');
+  });
 }

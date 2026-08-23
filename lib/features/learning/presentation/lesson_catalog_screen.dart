@@ -79,11 +79,20 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
         currentIndex: 1,
         collapsed: _navigationCollapsed,
         onSelected: (index) {
-          if (index == 2) context.go('/home');
+          if (index == 0) {
+            ref.invalidate(socialFeedProvider);
+            context.go('/home');
+          }
+          if (index == 2) {
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(SnackBar(content: Text(l10n.aiTutorComingSoon)));
+          }
           if (index == 4) context.go('/profile');
         },
         onCollapsedTap: () {
-          setState(() => _navigationCollapsed = false);
+          ref.invalidate(socialFeedProvider);
+          context.go('/home');
         },
       ),
       body: RefreshIndicator(

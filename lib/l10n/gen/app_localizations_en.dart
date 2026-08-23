@@ -635,4 +635,114 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get xpReward => 'XP reward';
+
+  @override
+  String get myPosts => 'My Posts';
+
+  @override
+  String get leaderboardRank => 'Leaderboard Rank';
+
+  @override
+  String get noPostsYet => 'Your community posts will appear here.';
+
+  @override
+  String get countryRank => 'Cambodia rank';
+
+  @override
+  String get provinceRank => 'Province rank';
+
+  @override
+  String get unranked => 'Not ranked yet';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get editProfile => 'Edit Profile';
+
+  @override
+  String get notificationPreferences => 'Notification preferences';
+
+  @override
+  String get notificationPreferencesHint => 'Learning and community reminders';
+
+  @override
+  String get darkMode => 'Dark mode';
+
+  @override
+  String get darkModeHint => 'Use RIKSA\'s dark appearance';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get helpAndLegal => 'Help & legal';
+
+  @override
+  String get faq => 'FAQ';
+
+  @override
+  String get termsOfService => 'Terms of Service';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get fullName => 'Full name';
+
+  @override
+  String get bio => 'Bio';
+
+  @override
+  String get gender => 'Gender';
+
+  @override
+  String get genderUnspecified => 'Prefer not to say';
+
+  @override
+  String get saveChanges => 'Save Changes';
+
+  @override
+  String get changesSaved => 'Your profile was updated.';
+
+  @override
+  String get profileSaveFailed =>
+      'We couldn’t save your profile. Please try again.';
+
+  @override
+  String get deleteAccount => 'Delete Account';
+
+  @override
+  String get deleteAccountTitle => 'Delete your RIKSA account?';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'This would permanently remove your learning history, XP, achievements, and posts. Continue?';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get deleteUnavailable =>
+      'Account deletion is not available from the API yet. Contact RIKSA support for help.';
+
+  @override
+  String get accountIdentifiersReadOnly =>
+      'Email, phone, and username are secured account identifiers and cannot currently be changed here.';
+
+  @override
+  String get chooseAvatar => 'Choose an avatar';
+
+  @override
+  String get notProvided => 'Not provided';
+
+  @override
+  String get supportDocumentUnavailable =>
+      'This document will be available here after the RIKSA support content is published.';
+
+  @override
+  String get aiTutor => 'AI Tutor';
+
+  @override
+  String get aiTutorComingSoon => 'RIKSA AI Tutor is coming soon.';
 }

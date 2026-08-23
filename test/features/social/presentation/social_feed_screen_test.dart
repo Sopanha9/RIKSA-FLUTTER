@@ -55,12 +55,25 @@ final _blogPost = BlogPost(
 );
 
 class _FeedNotifier extends SocialFeedNotifier {
+  int loadCalls = 0;
+
   @override
   SocialFeedState build() => SocialFeedLoaded(
     categories: const [_category],
     posts: [_post],
     hasNextPage: false,
   );
+
+  @override
+  Future<void> load({String? categoryId}) async {
+    loadCalls += 1;
+    state = SocialFeedLoaded(
+      categories: const [_category],
+      posts: [_post],
+      hasNextPage: false,
+      selectedCategoryId: categoryId,
+    );
+  }
 }
 
 class _AuthNotifier extends AuthNotifier {
@@ -132,17 +145,29 @@ void main() {
     final bottomActiveCircle = find.byKey(
       const ValueKey('bottom-nav-active-circle'),
     );
-    final communityCircleX = tester.getTopLeft(bottomActiveCircle).dx;
-    await tester.tap(find.byKey(const ValueKey('bottom-nav-item-0')));
+    final homeCircleX = tester.getTopLeft(bottomActiveCircle).dx;
+    await tester.tap(find.byKey(const ValueKey('bottom-nav-item-3')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 90));
     final movingCircleX = tester.getTopLeft(bottomActiveCircle).dx;
-    expect(movingCircleX, lessThan(communityCircleX));
+    expect(movingCircleX, greaterThan(homeCircleX));
     await tester.pumpAndSettle();
-    final homeCircleX = tester.getTopLeft(bottomActiveCircle).dx;
-    expect(homeCircleX, lessThan(movingCircleX));
+    final leaderboardCircleX = tester.getTopLeft(bottomActiveCircle).dx;
+    expect(leaderboardCircleX, greaterThan(movingCircleX));
+    await tester.tap(find.byKey(const ValueKey('bottom-nav-item-0')));
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(bottomActiveCircle).dx, closeTo(homeCircleX, .1));
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(SocialFeedScreen)),
+    );
+    expect(
+      (container.read(socialFeedProvider.notifier) as _FeedNotifier).loadCalls,
+      1,
+    );
     await tester.tap(find.byKey(const ValueKey('bottom-nav-item-2')));
     await tester.pumpAndSettle();
+    expect(find.text('RIKSA AI Tutor is coming soon.'), findsOneWidget);
+    expect(tester.getTopLeft(bottomActiveCircle).dx, closeTo(homeCircleX, .1));
     expect(
       find.byKey(const ValueKey('community-drawer-button')),
       findsOneWidget,

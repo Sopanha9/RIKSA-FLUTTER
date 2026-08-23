@@ -52,19 +52,25 @@ class SocialApi {
 
   Future<SocialFeedPage> feed({
     String? categoryId,
+    String? authorId,
     String? cursor,
     int limit = 20,
   }) async {
     final data = await _query(
       '''
-      query Feed(\$categoryId: UUID, \$cursor: UUID, \$limit: Int!) {
-        feed(categoryId: \$categoryId, cursor: \$cursor, limit: \$limit) {
+      query Feed(\$categoryId: UUID, \$authorId: UUID, \$cursor: UUID, \$limit: Int!) {
+        feed(categoryId: \$categoryId, authorId: \$authorId, cursor: \$cursor, limit: \$limit) {
           edges { $_postFields }
           pageInfo { hasNextPage endCursor }
         }
       }
       ''',
-      variables: {'categoryId': categoryId, 'cursor': cursor, 'limit': limit},
+      variables: {
+        'categoryId': categoryId,
+        'authorId': authorId,
+        'cursor': cursor,
+        'limit': limit,
+      },
     );
     return SocialFeedPage.fromJson(
       (data['feed'] as Map).cast<String, dynamic>(),

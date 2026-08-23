@@ -16,6 +16,13 @@ final communityStreakProvider = FutureProvider<CommunityStreak>((ref) {
   return ref.watch(socialApiProvider).streak();
 });
 
+final userPostsProvider = FutureProvider.family<SocialFeedPage, String>((
+  ref,
+  userId,
+) {
+  return ref.watch(socialApiProvider).feed(authorId: userId, limit: 50);
+});
+
 sealed class SocialFeedState {
   const SocialFeedState();
 }

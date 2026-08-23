@@ -19,6 +19,8 @@ import '../../features/social/presentation/social_feed_screen.dart';
 import '../../features/social/presentation/compose_community_post_screen.dart';
 import '../../features/social/presentation/social_post_detail_screen.dart';
 import '../../features/userProfile/presentation/profile_setup_overview_screen.dart';
+import '../../features/userProfile/presentation/profile_settings_screen.dart';
+import '../../features/userProfile/presentation/edit_profile_screen.dart';
 import '../../features/userProfile/presentation/user_profile_screen.dart';
 
 final _authRouterRefreshProvider = Provider<ValueNotifier<AuthState>>((ref) {
@@ -109,6 +111,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const UserProfileScreen(),
+      ),
+      GoRoute(
+        path: '/profile/settings',
+        builder: (context, state) => const ProfileSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/profile/edit',
+        builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
         path: '/profile/setup',

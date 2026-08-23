@@ -9,8 +9,8 @@ class AppColors {
   AppColors._();
 
   static const brandPrimary = Color.fromARGB(255, 64, 73, 67);
-  static const brandPrimaryHover = Color(0xFF16A34A);
-  static const brandPrimaryPressed = Color(0xFF15803D);
+  static const brandPrimaryHover = Color.fromARGB(240, 23, 232, 96);
+  static const brandPrimaryPressed = Color.fromARGB(255, 81, 72, 81);
   static const brandAccent = Color(0xFF1D9BF0);
 
   static const lightCanvas = Color(0xFFFFFFFF);

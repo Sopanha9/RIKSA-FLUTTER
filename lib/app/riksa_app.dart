@@ -6,6 +6,7 @@ import '../l10n/gen/app_localizations.dart';
 
 import 'router/app_router.dart';
 import '../core/providers/locale_provider.dart';
+import '../core/providers/theme_mode_provider.dart';
 import '../core/theme/app_theme.dart';
 
 class RiksaApp extends ConsumerWidget {
@@ -14,6 +15,7 @@ class RiksaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider).locale;
+    final themeMode = ref.watch(themeModeProvider);
     final router = ref.watch(goRouterProvider);
 
     return MaterialApp.router(
@@ -21,7 +23,7 @@ class RiksaApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      themeMode: themeMode,
       locale: locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,

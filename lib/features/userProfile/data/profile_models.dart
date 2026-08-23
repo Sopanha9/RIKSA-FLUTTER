@@ -145,3 +145,31 @@ class ProfileDashboardData {
   int get earnedAchievementCount =>
       achievements.where((achievement) => achievement.earned).length;
 }
+
+class LeaderboardRank {
+  const LeaderboardRank({
+    required this.countryRank,
+    required this.countryScore,
+    this.countryTier,
+    this.provinceRank,
+    this.provinceScore,
+    this.provinceTier,
+  });
+
+  final int countryRank;
+  final int countryScore;
+  final String? countryTier;
+  final int? provinceRank;
+  final int? provinceScore;
+  final String? provinceTier;
+
+  factory LeaderboardRank.fromJson(Map<String, dynamic> json) =>
+      LeaderboardRank(
+        countryRank: (json['countryRank'] as num?)?.toInt() ?? 0,
+        countryScore: (json['countryScore'] as num?)?.toInt() ?? 0,
+        countryTier: json['countryTier'] as String?,
+        provinceRank: (json['provinceRank'] as num?)?.toInt(),
+        provinceScore: (json['provinceScore'] as num?)?.toInt(),
+        provinceTier: json['provinceTier'] as String?,
+      );
+}

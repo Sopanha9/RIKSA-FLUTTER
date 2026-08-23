@@ -34,4 +34,16 @@ class ProfileApi {
       (response.data as Map).cast<String, dynamic>(),
     );
   }
+
+  Future<LeaderboardRank> leaderboardRank({String? provinceId}) async {
+    final queryParameters = <String, dynamic>{};
+    if (provinceId != null) queryParameters['scopeId'] = provinceId;
+    final response = await _client.dio.get(
+      '/leaderboard/me',
+      queryParameters: queryParameters,
+    );
+    return LeaderboardRank.fromJson(
+      (response.data as Map).cast<String, dynamic>(),
+    );
+  }
 }

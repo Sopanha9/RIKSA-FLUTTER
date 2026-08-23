@@ -119,11 +119,19 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
         onCategorySelected: _selectDrawerCategory,
       ),
       bottomNavigationBar: RiksaBottomNavigationBar(
-        currentIndex: _bottomNavigationIndex ?? 2,
+        currentIndex: _bottomNavigationIndex ?? 0,
         collapsed: _bottomNavigationCollapsed ?? false,
         onSelected: (index) {
+          if (index == 0) {
+            _returnHomeAndRefresh();
+            return;
+          }
           if (index == 1) {
             context.go('/learn');
+            return;
+          }
+          if (index == 2) {
+            _showAiComingSoon();
             return;
           }
           if (index == 4) {
@@ -132,7 +140,7 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
           }
           setState(() => _bottomNavigationIndex = index);
         },
-        onCollapsedTap: () => _setBottomNavigationCollapsed(false),
+        onCollapsedTap: _returnHomeAndRefresh,
       ),
       body: RefreshIndicator(
         color: AppColors.brandPrimary,
@@ -331,12 +339,37 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
       ..showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
   }
 
+  void _showAiComingSoon() {
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l10n.aiTutorComingSoon)));
+  }
+
   void _selectSection(_SocialSection section) {
     if (_section == section) return;
     setState(() => _section = section);
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(0);
     }
+  }
+
+  Future<void> _returnHomeAndRefresh() async {
+    if (mounted) {
+      setState(() {
+        _section = _SocialSection.feed;
+        _bottomNavigationIndex = 0;
+        _bottomNavigationCollapsed = false;
+      });
+    }
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+      );
+    }
+    await ref.read(socialFeedProvider.notifier).load();
   }
 
   void _selectDrawerSection(_SocialSection section) {

@@ -606,4 +606,114 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get xpReward => 'រង្វាន់ XP';
+
+  @override
+  String get myPosts => 'ការបង្ហោះរបស់ខ្ញុំ';
+
+  @override
+  String get leaderboardRank => 'ចំណាត់ថ្នាក់តារាងពិន្ទុ';
+
+  @override
+  String get noPostsYet => 'ការបង្ហោះក្នុងសហគមន៍របស់អ្នកនឹងបង្ហាញនៅទីនេះ។';
+
+  @override
+  String get countryRank => 'ចំណាត់ថ្នាក់កម្ពុជា';
+
+  @override
+  String get provinceRank => 'ចំណាត់ថ្នាក់ខេត្ត';
+
+  @override
+  String get unranked => 'មិនទាន់មានចំណាត់ថ្នាក់';
+
+  @override
+  String get settings => 'ការកំណត់';
+
+  @override
+  String get editProfile => 'កែប្រែប្រវត្តិរូប';
+
+  @override
+  String get notificationPreferences => 'ការជូនដំណឹង';
+
+  @override
+  String get notificationPreferencesHint => 'រំលឹកអំពីការសិក្សា និងសហគមន៍';
+
+  @override
+  String get darkMode => 'មុខងារងងឹត';
+
+  @override
+  String get darkModeHint => 'ប្រើរូបរាងងងឹតរបស់ RIKSA';
+
+  @override
+  String get language => 'ភាសា';
+
+  @override
+  String get helpAndLegal => 'ជំនួយ និងច្បាប់';
+
+  @override
+  String get faq => 'សំណួរញឹកញាប់';
+
+  @override
+  String get termsOfService => 'លក្ខខណ្ឌប្រើប្រាស់';
+
+  @override
+  String get privacyPolicy => 'គោលការណ៍ឯកជនភាព';
+
+  @override
+  String get fullName => 'ឈ្មោះពេញ';
+
+  @override
+  String get bio => 'ប្រវត្តិខ្លី';
+
+  @override
+  String get gender => 'ភេទ';
+
+  @override
+  String get genderUnspecified => 'មិនចង់បញ្ជាក់';
+
+  @override
+  String get saveChanges => 'រក្សាទុកការផ្លាស់ប្តូរ';
+
+  @override
+  String get changesSaved => 'ប្រវត្តិរូបរបស់អ្នកត្រូវបានកែប្រែ។';
+
+  @override
+  String get profileSaveFailed =>
+      'យើងមិនអាចរក្សាទុកប្រវត្តិរូបបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get deleteAccount => 'លុបគណនី';
+
+  @override
+  String get deleteAccountTitle => 'លុបគណនី RIKSA របស់អ្នកមែនទេ?';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'វានឹងលុបប្រវត្តិសិក្សា XP សមិទ្ធផល និងការបង្ហោះរបស់អ្នកជាអចិន្ត្រៃយ៍។ បន្តទេ?';
+
+  @override
+  String get cancel => 'បោះបង់';
+
+  @override
+  String get deleteUnavailable =>
+      'API មិនទាន់គាំទ្រការលុបគណនីទេ។ សូមទាក់ទងក្រុមគាំទ្រ RIKSA។';
+
+  @override
+  String get accountIdentifiersReadOnly =>
+      'អ៊ីមែល លេខទូរស័ព្ទ និងឈ្មោះអ្នកប្រើ គឺជាព័ត៌មានសុវត្ថិភាពដែលមិនអាចកែប្រែនៅទីនេះបានទេ។';
+
+  @override
+  String get chooseAvatar => 'ជ្រើសរើសរូបតំណាង';
+
+  @override
+  String get notProvided => 'មិនបានផ្តល់';
+
+  @override
+  String get supportDocumentUnavailable =>
+      'ឯកសារនេះនឹងមាននៅទីនេះ បន្ទាប់ពីខ្លឹមសារជំនួយ RIKSA ត្រូវបានផ្សព្វផ្សាយ។';
+
+  @override
+  String get aiTutor => 'គ្រូ AI';
+
+  @override
+  String get aiTutorComingSoon => 'គ្រូ AI របស់ RIKSA នឹងមកដល់ឆាប់ៗនេះ។';
 }

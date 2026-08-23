@@ -24,3 +24,9 @@ final profileDashboardProvider = FutureProvider<ProfileDashboardData>((
     activities: activityPage.activities,
   );
 });
+
+final profileRankProvider = FutureProvider<LeaderboardRank>((ref) {
+  final auth = ref.watch(authProvider);
+  final provinceId = auth is Authenticated ? auth.user.provinceId : null;
+  return ref.watch(profileApiProvider).leaderboardRank(provinceId: provinceId);
+});

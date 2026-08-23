@@ -99,6 +99,13 @@ class AuthApi {
     });
   }
 
+  Future<AuthUser> updateProfile(UpdateProfileRequest request) async {
+    return _guard(() async {
+      final res = await _client.dio.put('/auth/me', data: request.toJson());
+      return AuthUser.fromJson(_json(res.data));
+    });
+  }
+
   Future<T> _guard<T>(Future<T> Function() request) async {
     try {
       return await request();

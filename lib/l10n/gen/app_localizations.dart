@@ -1207,6 +1207,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'XP reward'**
   String get xpReward;
+
+  /// No description provided for @myPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'My Posts'**
+  String get myPosts;
+
+  /// No description provided for @leaderboardRank.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaderboard Rank'**
+  String get leaderboardRank;
+
+  /// No description provided for @noPostsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your community posts will appear here.'**
+  String get noPostsYet;
+
+  /// No description provided for @countryRank.
+  ///
+  /// In en, this message translates to:
+  /// **'Cambodia rank'**
+  String get countryRank;
+
+  /// No description provided for @provinceRank.
+  ///
+  /// In en, this message translates to:
+  /// **'Province rank'**
+  String get provinceRank;
+
+  /// No description provided for @unranked.
+  ///
+  /// In en, this message translates to:
+  /// **'Not ranked yet'**
+  String get unranked;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// No description provided for @notificationPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification preferences'**
+  String get notificationPreferences;
+
+  /// No description provided for @notificationPreferencesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning and community reminders'**
+  String get notificationPreferencesHint;
+
+  /// No description provided for @darkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark mode'**
+  String get darkMode;
+
+  /// No description provided for @darkModeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use RIKSA\'s dark appearance'**
+  String get darkModeHint;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @helpAndLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & legal'**
+  String get helpAndLegal;
+
+  /// No description provided for @faq.
+  ///
+  /// In en, this message translates to:
+  /// **'FAQ'**
+  String get faq;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @fullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get fullName;
+
+  /// No description provided for @bio.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get bio;
+
+  /// No description provided for @gender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get gender;
+
+  /// No description provided for @genderUnspecified.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer not to say'**
+  String get genderUnspecified;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
+
+  /// No description provided for @changesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile was updated.'**
+  String get changesSaved;
+
+  /// No description provided for @profileSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t save your profile. Please try again.'**
+  String get profileSaveFailed;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your RIKSA account?'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'This would permanently remove your learning history, XP, achievements, and posts. Continue?'**
+  String get deleteAccountConfirmation;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @deleteUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion is not available from the API yet. Contact RIKSA support for help.'**
+  String get deleteUnavailable;
+
+  /// No description provided for @accountIdentifiersReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Email, phone, and username are secured account identifiers and cannot currently be changed here.'**
+  String get accountIdentifiersReadOnly;
+
+  /// No description provided for @chooseAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an avatar'**
+  String get chooseAvatar;
+
+  /// No description provided for @notProvided.
+  ///
+  /// In en, this message translates to:
+  /// **'Not provided'**
+  String get notProvided;
+
+  /// No description provided for @supportDocumentUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This document will be available here after the RIKSA support content is published.'**
+  String get supportDocumentUnavailable;
+
+  /// No description provided for @aiTutor.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Tutor'**
+  String get aiTutor;
+
+  /// No description provided for @aiTutorComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'RIKSA AI Tutor is coming soon.'**
+  String get aiTutorComingSoon;
 }
 
 class _AppLocalizationsDelegate

@@ -94,6 +94,30 @@ class AuthUser {
   }
 }
 
+class UpdateProfileRequest {
+  const UpdateProfileRequest({
+    this.displayName,
+    this.bio,
+    this.gender,
+    this.provinceId,
+    this.avatarUrl,
+  });
+
+  final String? displayName;
+  final String? bio;
+  final String? gender;
+  final String? provinceId;
+  final String? avatarUrl;
+
+  Map<String, dynamic> toJson() => {
+    if (displayName != null) 'displayName': displayName,
+    if (bio != null) 'bio': bio,
+    if (gender != null) 'gender': gender,
+    if (provinceId != null) 'provinceId': provinceId,
+    if (avatarUrl != null) 'avatarUrl': avatarUrl,
+  };
+}
+
 class ProvinceOption {
   const ProvinceOption({
     required this.id,

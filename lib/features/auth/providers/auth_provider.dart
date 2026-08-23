@@ -262,6 +262,20 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  Future<bool> updateProfile(UpdateProfileRequest request) async {
+    final current = state;
+    if (current is! Authenticated) return false;
+    try {
+      final user = await ref.read(authApiProvider).updateProfile(request);
+      _requireProfile(user);
+      state = Authenticated(user);
+      return true;
+    } catch (error) {
+      if (kDebugMode) debugPrint('Profile update failed: $error');
+      return false;
+    }
+  }
+
   Future<void> _handleAuthenticationFailure(Object error) async {
     if (error is AuthFailure) {
       state = AuthError(error.message);

@@ -24,8 +24,8 @@ class RiksaBottomNavigationBar extends StatelessWidget {
       _RiksaNavigationItem(label: l10n.home, icon: Icons.home_outlined),
       _RiksaNavigationItem(label: l10n.learn, icon: Icons.school_outlined),
       _RiksaNavigationItem(
-        label: l10n.community,
-        icon: Icons.groups_2_outlined,
+        label: l10n.aiTutor,
+        icon: Icons.auto_awesome_outlined,
       ),
       _RiksaNavigationItem(
         label: l10n.leaderboard,

@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
+import 'package:riksa_app/features/social/data/social_models.dart';
+import 'package:riksa_app/features/social/providers/social_feed_provider.dart';
 import 'package:riksa_app/features/userProfile/data/profile_models.dart';
 import 'package:riksa_app/features/userProfile/presentation/user_profile_screen.dart';
 import 'package:riksa_app/features/userProfile/providers/profile_provider.dart';
@@ -60,6 +62,30 @@ const _dashboard = ProfileDashboardData(
   ],
 );
 
+final _post = SocialPost(
+  id: 'post-1',
+  title: 'A simple way to remember quadratic formulas',
+  content: 'Connect each term to the shape of the graph.',
+  reactionCount: 12,
+  commentCount: 3,
+  shareCount: 1,
+  author: const SocialAuthor(
+    id: 'user-1',
+    username: 'sophea',
+    displayName: 'Sok Sophea',
+    avatarUrl: '',
+  ),
+  category: const SocialCategory(
+    id: 'math',
+    name: 'Mathematics',
+    slug: 'mathematics',
+    memberCount: 100,
+    joined: true,
+  ),
+  createdAt: DateTime.utc(2026, 8, 23),
+  updatedAt: DateTime.utc(2026, 8, 23),
+);
+
 void main() {
   testWidgets('renders real profile and gamification data without overflow', (
     tester,
@@ -74,6 +100,20 @@ void main() {
         overrides: [
           authProvider.overrideWith(_AuthNotifier.new),
           profileDashboardProvider.overrideWith((ref) async => _dashboard),
+          userPostsProvider.overrideWith(
+            (ref, userId) async =>
+                SocialFeedPage(posts: [_post], hasNextPage: false),
+          ),
+          profileRankProvider.overrideWith(
+            (ref) async => const LeaderboardRank(
+              countryRank: 12,
+              countryScore: 1520,
+              countryTier: 'GOLD',
+              provinceRank: 3,
+              provinceScore: 1520,
+              provinceTier: 'GOLD',
+            ),
+          ),
         ],
         child: MaterialApp(
           theme: AppTheme.light,
@@ -96,14 +136,20 @@ void main() {
     expect(find.byKey(const ValueKey('profile-total-xp')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-streak')), findsOneWidget);
     expect(find.text('Gold'), findsOneWidget);
+    expect(find.text('My Posts'), findsOneWidget);
+    expect(
+      find.text('A simple way to remember quadratic formulas'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('profile-achievements-tab')));
+    await tester.pumpAndSettle();
     expect(find.text('Week Warrior'), findsOneWidget);
 
-    await tester.scrollUntilVisible(
-      find.text('Lesson completed'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('+30 XP'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('profile-rank-tab')));
+    await tester.pumpAndSettle();
+    expect(find.text('#12'), findsOneWidget);
+    expect(find.text('#3'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
