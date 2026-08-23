@@ -70,6 +70,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Home 1'), findsOneWidget);
     expect(persistentNavigation, findsOneWidget);
+
+    final navigationMorph = find.byKey(const ValueKey('bottom-nav-morph'));
+    expect(tester.getSize(navigationMorph).width, greaterThan(300));
+
+    await tester.drag(
+      find.byKey(const ValueKey('scroll-Home')),
+      const Offset(0, -420),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getSize(navigationMorph).width, 58);
+
+    await tester.drag(
+      find.byKey(const ValueKey('scroll-Home')),
+      const Offset(0, 260),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getSize(navigationMorph).width, greaterThan(300));
   });
 }
 
@@ -99,12 +116,19 @@ class _StatefulTabState extends State<_StatefulTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: FilledButton(
-          key: ValueKey('increment-${widget.label}'),
-          onPressed: () => setState(() => _count += 1),
-          child: Text('${widget.label} $_count'),
-        ),
+      body: ListView(
+        key: ValueKey('scroll-${widget.label}'),
+        padding: const EdgeInsets.only(top: 280),
+        children: [
+          Center(
+            child: FilledButton(
+              key: ValueKey('increment-${widget.label}'),
+              onPressed: () => setState(() => _count += 1),
+              child: Text('${widget.label} $_count'),
+            ),
+          ),
+          const SizedBox(height: 900),
+        ],
       ),
     );
   }
