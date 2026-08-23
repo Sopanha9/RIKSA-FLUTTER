@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_models.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -272,46 +274,130 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       context: context,
       backgroundColor: ProfilePalette.panel(context),
       showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 4, 18, 22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.chooseAvatar,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 280,
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 5,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                  ),
-                  itemCount: 30,
-                  itemBuilder: (context, index) {
-                    final path = '/avatars/avatar-${index + 1}.png';
-                    return InkWell(
-                      borderRadius: BorderRadius.circular(999),
-                      onTap: () => Navigator.of(sheetContext).pop(path),
-                      child: RiksaProfileAvatar(
-                        user: user,
-                        radius: 26,
-                        avatarPath: path,
+      isScrollControlled: true,
+      builder: (sheetContext) => FractionallySizedBox(
+        heightFactor: .72,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 4, 18, 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.chooseAvatar,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
-                    );
-                  },
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ProfilePalette.greenSoft(context),
+                        borderRadius: AppRadii.smallBorder,
+                      ),
+                      child: const Text(
+                        'Humation',
+                        style: TextStyle(
+                          color: ProfilePalette.green,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 5),
+                Text(
+                  l10n.humationAvatarSubtitle,
+                  style: TextStyle(
+                    color: ProfilePalette.muted(context),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: GridView.builder(
+                    key: const ValueKey('humation-avatar-grid'),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          mainAxisSpacing: 11,
+                          crossAxisSpacing: 11,
+                        ),
+                    itemCount: humationAvatarCount,
+                    itemBuilder: (context, index) {
+                      final path = humationAvatarValue(index);
+                      final selected = path == _avatarPath;
+                      return Semantics(
+                        button: true,
+                        selected: selected,
+                        label: '${l10n.chooseAvatar} ${index + 1}',
+                        child: Material(
+                          color: selected
+                              ? ProfilePalette.greenSoft(context)
+                              : ProfilePalette.panelSoft(context),
+                          clipBehavior: Clip.antiAlias,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: AppRadii.mediumBorder,
+                            side: BorderSide(
+                              color: selected
+                                  ? ProfilePalette.green
+                                  : ProfilePalette.border(context),
+                              width: selected ? 2 : 1,
+                            ),
+                          ),
+                          child: InkWell(
+                            key: ValueKey('humation-avatar-option-$index'),
+                            onTap: () => Navigator.of(sheetContext).pop(path),
+                            child: Stack(
+                              children: [
+                                Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5),
+                                    child: RiksaAvatarImage(
+                                      value: path,
+                                      label: user.displayName,
+                                      size: 66,
+                                      backgroundColor: Colors.transparent,
+                                      foregroundColor: ProfilePalette.text(
+                                        context,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (selected)
+                                  const PositionedDirectional(
+                                    top: 5,
+                                    end: 5,
+                                    child: CircleAvatar(
+                                      radius: 9,
+                                      backgroundColor: ProfilePalette.green,
+                                      child: Icon(
+                                        Icons.check_rounded,
+                                        size: 13,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

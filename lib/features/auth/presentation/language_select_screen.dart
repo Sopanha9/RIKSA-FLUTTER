@@ -148,7 +148,7 @@ class _LanguageCard extends StatelessWidget {
       selected: isSelected,
       label: languageName,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadii.mediumBorder,
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
@@ -156,7 +156,7 @@ class _LanguageCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
             color: isSelected ? colors.primaryContainer : colors.surface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppRadii.mediumBorder,
             border: Border.all(
               color: isSelected ? colors.primary : colors.outlineVariant,
               width: isSelected ? 1.5 : 1,

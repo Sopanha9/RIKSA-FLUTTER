@@ -74,7 +74,7 @@ class AuthHeader extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
           decoration: BoxDecoration(
             color: AppTheme.primary.withValues(alpha: .08),
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: AppRadii.smallBorder,
           ),
           child: Text(
             eyebrow.toUpperCase(),
@@ -120,7 +120,7 @@ class AuthPanel extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: .96),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: AppRadii.largeBorder,
         border: Border.all(color: Colors.white),
         boxShadow: [
           BoxShadow(
@@ -176,7 +176,7 @@ class AuthErrorBanner extends StatelessWidget {
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.error.withValues(alpha: .08),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadii.mediumBorder,
           border: Border.all(
             color: Theme.of(context).colorScheme.error.withValues(alpha: .22),
           ),
@@ -254,7 +254,7 @@ class _Requirement extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: met ? .1 : .06),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: AppRadii.fullBorder,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -287,7 +287,7 @@ class _GlassTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: AppRadii.largeBorder,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
@@ -295,7 +295,7 @@ class _GlassTopBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: .72),
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: AppRadii.largeBorder,
             border: Border.all(color: Colors.white.withValues(alpha: .92)),
           ),
           child: Row(
@@ -325,7 +325,7 @@ class _AuthBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: const Color(0xFFF7F5F1),
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: Stack(
         children: [
           Positioned(

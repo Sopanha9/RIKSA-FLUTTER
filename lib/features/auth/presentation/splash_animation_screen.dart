@@ -92,7 +92,7 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
     final unavailable = auth is AuthUnavailable ? auth : null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9FB),
+      backgroundColor: AppColors.lightCanvas,
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -202,14 +202,14 @@ class _EditionBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: AppRadii.fullBorder,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: .72),
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: AppRadii.fullBorder,
             border: Border.all(color: Colors.white.withValues(alpha: .9)),
           ),
           child: const Text(
@@ -296,7 +296,7 @@ class _BootstrapIndicator extends StatelessWidget {
             width: 92,
             child: LinearProgressIndicator(
               minHeight: 3,
-              borderRadius: BorderRadius.circular(99),
+              borderRadius: AppRadii.fullBorder,
               backgroundColor: AppTheme.primary.withValues(alpha: .08),
               color: ready ? AppTheme.secondary : AppTheme.primary,
             ),
@@ -340,7 +340,7 @@ class _OfflineActions extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: .9),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppRadii.mediumBorder,
         border: Border.all(color: AppTheme.outline),
       ),
       child: Column(

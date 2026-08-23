@@ -596,6 +596,42 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0 {0 days} =1 {1 day} other {{count} days}}'**
   String streakDays(int count);
 
+  /// No description provided for @streakTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get streakTitle;
+
+  /// No description provided for @streakSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn every day to keep your streak growing.'**
+  String get streakSubtitle;
+
+  /// No description provided for @bestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Best streak'**
+  String get bestStreak;
+
+  /// No description provided for @lastTracked.
+  ///
+  /// In en, this message translates to:
+  /// **'Last tracked'**
+  String get lastTracked;
+
+  /// No description provided for @noTrackedDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No learning activity has been recorded yet.'**
+  String get noTrackedDate;
+
+  /// No description provided for @activityCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity calendar'**
+  String get activityCalendar;
+
   /// No description provided for @createCommunityContent.
   ///
   /// In en, this message translates to:
@@ -691,6 +727,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'For you'**
   String get forYou;
+
+  /// No description provided for @official.
+  ///
+  /// In en, this message translates to:
+  /// **'Official'**
+  String get official;
 
   /// No description provided for @topLearnersThisWeek.
   ///
@@ -1393,6 +1435,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose an avatar'**
   String get chooseAvatar;
+
+  /// No description provided for @humationAvatarSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a hand-drawn character for your RIKSA profile.'**
+  String get humationAvatarSubtitle;
 
   /// No description provided for @notProvided.
   ///

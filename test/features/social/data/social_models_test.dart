@@ -48,12 +48,23 @@ void main() {
       'currentMilestoneName': 'Week Warrior',
       'nextMilestoneName': 'Two Week Streak',
       'daysToNext': 7,
+      'lastTrackedDate': '2026-08-22',
+      'activityDates': ['2026-08-20', '2026-08-21', '2026-08-22'],
     });
 
     expect(streak.current, 7);
     expect(streak.highest, 12);
     expect(streak.nextMilestoneName, 'Two Week Streak');
     expect(streak.daysToNext, 7);
+    expect(streak.lastTrackedDate, DateTime(2026, 8, 22));
+    expect(streak.activityDates, hasLength(3));
+    expect(streak.activityDates!.last, DateTime(2026, 8, 22));
+  });
+
+  test('CommunityStreak normalizes missing legacy activity history', () {
+    const streak = CommunityStreak(current: 3, highest: 5, activityDates: null);
+
+    expect(streak.activityDates ?? const <DateTime>[], isEmpty);
   });
 
   test('SocialCommentPage parses a discussion page', () {

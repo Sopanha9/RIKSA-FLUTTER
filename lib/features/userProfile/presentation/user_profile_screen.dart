@@ -1,11 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/widgets/riksa_bottom_navigation_bar.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_api.dart';
 import '../../auth/data/auth_models.dart';
@@ -30,44 +29,10 @@ class UserProfileScreen extends ConsumerStatefulWidget {
 class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   final _scrollController = ScrollController();
   _ProfileTab _tab = _ProfileTab.posts;
-  bool _navigationCollapsed = false;
-  double _directionTravel = 0;
-  double? _lastOffset;
-  ScrollDirection? _trackedDirection;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients) return;
-    final position = _scrollController.position;
-    final current = position.pixels;
-    final delta = current - (_lastOffset ?? current);
-    _lastOffset = current;
-    final direction = position.userScrollDirection;
-    final down = direction == ScrollDirection.reverse && delta > 0;
-    final up = direction == ScrollDirection.forward && delta < 0;
-    if ((!down && !up) || delta.abs() < .1) return;
-    if (_trackedDirection != direction) {
-      _trackedDirection = direction;
-      _directionTravel = 0;
-    }
-    _directionTravel += delta.abs();
-    if (_directionTravel < 18) return;
-    _directionTravel = 0;
-    if (_navigationCollapsed != down) {
-      setState(() => _navigationCollapsed = down);
-    }
-  }
 
   @override
   void dispose() {
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -80,27 +45,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
     return Scaffold(
       backgroundColor: ProfilePalette.canvas(context),
-      extendBody: true,
-      bottomNavigationBar: RiksaBottomNavigationBar(
-        currentIndex: 4,
-        collapsed: _navigationCollapsed,
-        onSelected: (index) {
-          if (index == 0) {
-            ref.invalidate(socialFeedProvider);
-            context.go('/home');
-          }
-          if (index == 1) context.go('/learn');
-          if (index == 2) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(content: Text(l10n.aiTutorComingSoon)));
-          }
-        },
-        onCollapsedTap: () {
-          ref.invalidate(socialFeedProvider);
-          context.go('/home');
-        },
-      ),
       body: RefreshIndicator(
         color: ProfilePalette.green,
         onRefresh: () async {
@@ -170,7 +114,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 118)),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
         ),
       ),
@@ -210,7 +154,7 @@ class _ProfileHeader extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: ProfilePalette.panelSoft(context),
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: AppRadii.fullBorder,
                   border: Border.all(color: ProfilePalette.border(context)),
                 ),
                 child: Row(
@@ -406,7 +350,7 @@ class _TabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Expanded(
     child: InkWell(
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: AppRadii.fullBorder,
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
@@ -415,7 +359,7 @@ class _TabButton extends StatelessWidget {
           color: selected
               ? ProfilePalette.greenSoft(context)
               : ProfilePalette.panel(context),
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: AppRadii.fullBorder,
           border: Border.all(
             color: selected
                 ? ProfilePalette.green
@@ -546,12 +490,12 @@ class _AchievementTile extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: ProfilePalette.greenSoft(context),
+                color: AppColors.gamificationOrangeSoft,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.workspace_premium_rounded,
-                color: ProfilePalette.green,
+                color: AppColors.gamificationOrange,
               ),
             ),
             const Spacer(),

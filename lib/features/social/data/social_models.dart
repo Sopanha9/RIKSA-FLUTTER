@@ -7,6 +7,8 @@ class CommunityStreak {
     this.currentMilestoneName,
     this.nextMilestoneName,
     this.daysToNext = 0,
+    this.lastTrackedDate,
+    this.activityDates,
   });
 
   final int current;
@@ -14,15 +16,71 @@ class CommunityStreak {
   final String? currentMilestoneName;
   final String? nextMilestoneName;
   final int daysToNext;
+  final DateTime? lastTrackedDate;
+  final List<DateTime>? activityDates;
 
-  factory CommunityStreak.fromJson(Map<String, dynamic> json) =>
-      CommunityStreak(
-        current: (json['currentStreak'] as num?)?.toInt() ?? 0,
-        highest: (json['highestStreak'] as num?)?.toInt() ?? 0,
-        currentMilestoneName: json['currentMilestoneName'] as String?,
-        nextMilestoneName: json['nextMilestoneName'] as String?,
-        daysToNext: (json['daysToNext'] as num?)?.toInt() ?? 0,
-      );
+  factory CommunityStreak.fromJson(Map<String, dynamic> json) {
+    final activityValues =
+        json['activityDates'] ?? json['activeDates'] ?? json['streakDates'];
+    final activityDates = activityValues is List
+        ? activityValues.map(_streakDate).whereType<DateTime>().toList()
+        : const <DateTime>[];
+    final explicitLastDate = _streakDate(
+      json['lastTrackedDate'] ??
+          json['lastActivityDate'] ??
+          json['lastStreakDate'],
+    );
+    final latestActivityDate = activityDates.isEmpty
+        ? null
+        : activityDates.reduce((a, b) => a.isAfter(b) ? a : b);
+
+    return CommunityStreak(
+      current: (json['currentStreak'] as num?)?.toInt() ?? 0,
+      highest: (json['highestStreak'] as num?)?.toInt() ?? 0,
+      currentMilestoneName: json['currentMilestoneName'] as String?,
+      nextMilestoneName: json['nextMilestoneName'] as String?,
+      daysToNext: (json['daysToNext'] as num?)?.toInt() ?? 0,
+      lastTrackedDate: explicitLastDate ?? latestActivityDate,
+      activityDates: activityDates,
+    );
+  }
+
+  CommunityStreak withActivityDates(Iterable<DateTime> dates) {
+    final combined = <DateTime>{
+      ...(activityDates ?? const <DateTime>[]).map(_normalizeStreakDate),
+      ...dates.map(_normalizeStreakDate),
+    }.toList()..sort();
+    final newest = combined.isEmpty ? null : combined.last;
+    final effectiveLastDate = switch ((lastTrackedDate, newest)) {
+      (final existing?, final candidate?) =>
+        existing.isAfter(candidate) ? existing : candidate,
+      (final existing?, null) => existing,
+      (null, final candidate?) => candidate,
+      (null, null) => null,
+    };
+    return CommunityStreak(
+      current: current,
+      highest: highest,
+      currentMilestoneName: currentMilestoneName,
+      nextMilestoneName: nextMilestoneName,
+      daysToNext: daysToNext,
+      lastTrackedDate: effectiveLastDate,
+      activityDates: combined,
+    );
+  }
+}
+
+DateTime? _streakDate(Object? value) {
+  if (value == null) return null;
+  final parsed = DateTime.tryParse(value.toString());
+  if (parsed == null) return null;
+  final local = parsed.toLocal();
+  return DateTime(local.year, local.month, local.day);
+}
+
+DateTime _normalizeStreakDate(DateTime value) {
+  final local = value.toLocal();
+  return DateTime(local.year, local.month, local.day);
 }
 
 enum SocialReaction {

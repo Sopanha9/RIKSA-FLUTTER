@@ -40,8 +40,9 @@ class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
   Widget build(BuildContext context) {
     final feedState = ref.watch(blogFeedProvider);
     final categoriesAsync = ref.watch(blogCategoriesProvider);
-    final selectedCategoryId =
-        feedState is BlogFeedLoaded ? feedState.categoryId : null;
+    final selectedCategoryId = feedState is BlogFeedLoaded
+        ? feedState.categoryId
+        : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -79,40 +80,37 @@ class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
 
   Widget _buildBody(BlogFeedState feedState) {
     return switch (feedState) {
-      BlogFeedLoading() =>
-        const Center(child: CircularProgressIndicator()),
+      BlogFeedLoading() => const Center(child: CircularProgressIndicator()),
       BlogFeedError(:final message) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: AppTheme.muted),
-                ),
-                const SizedBox(height: 16),
-                OutlinedButton(
-                  onPressed: () => ref.read(blogFeedProvider.notifier).load(),
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppTheme.muted),
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton(
+                onPressed: () => ref.read(blogFeedProvider.notifier).load(),
+                child: const Text('Retry'),
+              ),
+            ],
           ),
         ),
+      ),
       BlogFeedLoaded(:final posts, :final hasMore, :final isLoadingMore) =>
         posts.isEmpty
             ? Center(
                 child: Text(
                   'No posts yet',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: AppTheme.muted),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppTheme.muted),
                 ),
               )
             : ListView.builder(
@@ -213,7 +211,7 @@ class _Chip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: selected ? AppTheme.primary : AppTheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: AppRadii.mediumBorder,
           border: Border.all(
             color: selected ? AppTheme.primary : AppTheme.outline,
           ),
@@ -245,7 +243,7 @@ class _PostCard extends ConsumerWidget {
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadii.smallBorder,
           border: Border.all(color: AppTheme.outline),
         ),
         child: Column(
@@ -269,29 +267,27 @@ class _PostCard extends ConsumerWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.onBackground,
-                        ),
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.onBackground,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     post.content,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: AppTheme.muted),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: AppTheme.muted),
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       Text(
                         DateFormat.yMMMd().format(post.createdAt),
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: AppTheme.muted),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: AppTheme.muted),
                       ),
                       const SizedBox(width: 12),
                       const Icon(
@@ -302,10 +298,9 @@ class _PostCard extends ConsumerWidget {
                       const SizedBox(width: 4),
                       Text(
                         '${post.viewCount}',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: AppTheme.muted),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: AppTheme.muted),
                       ),
                       const Spacer(),
                       GestureDetector(
@@ -326,9 +321,7 @@ class _PostCard extends ConsumerWidget {
                             const SizedBox(width: 4),
                             Text(
                               '${post.likeCount}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     color: post.liked
                                         ? AppTheme.secondary

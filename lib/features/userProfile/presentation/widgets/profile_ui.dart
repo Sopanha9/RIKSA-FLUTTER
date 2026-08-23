@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/network/api_config.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../auth/data/auth_models.dart';
 
 class ProfilePalette {
   ProfilePalette._();
 
   static const green = AppColors.brandPrimaryHover;
-  static const streak = Color(0xFFFF8A3D);
-  static const xp = Color(0xFFE8A900);
+  static const streak = AppColors.gamificationOrange;
+  static const xp = AppColors.gamificationGold;
 
   static Color canvas(BuildContext context) =>
-      Theme.of(context).colorScheme.surface;
+      Theme.of(context).scaffoldBackgroundColor;
 
   static Color panel(BuildContext context) =>
       Theme.of(context).colorScheme.surfaceContainerLow;
@@ -31,14 +31,6 @@ class ProfilePalette {
 
   static Color greenSoft(BuildContext context) =>
       Theme.of(context).colorScheme.primaryContainer;
-}
-
-String? profileAssetUrl(String? value) {
-  final path = value?.trim();
-  if (path == null || path.isEmpty) return null;
-  final uri = Uri.tryParse(path);
-  if (uri?.hasScheme == true) return path;
-  return '${ApiConfig.baseUrl}${path.startsWith('/') ? path : '/$path'}';
 }
 
 String readableProfileName(String value) => value
@@ -65,7 +57,6 @@ class RiksaProfileAvatar extends StatelessWidget {
     final name = user.displayName.trim().isEmpty
         ? user.username
         : user.displayName.trim();
-    final url = profileAssetUrl(avatarPath ?? user.avatarUrl);
     return Container(
       width: radius * 2,
       height: radius * 2,
@@ -80,19 +71,12 @@ class RiksaProfileAvatar extends StatelessWidget {
           ),
         ],
       ),
-      child: CircleAvatar(
-        radius: radius - 4,
+      child: RiksaAvatarImage(
+        value: avatarPath ?? user.avatarUrl,
+        label: name,
+        size: (radius - 3) * 2,
         backgroundColor: ProfilePalette.panelSoft(context),
-        foregroundImage: url == null ? null : NetworkImage(url),
-        onForegroundImageError: url == null ? null : (_, _) {},
-        child: Text(
-          name.isEmpty ? 'R' : name.characters.first.toUpperCase(),
-          style: TextStyle(
-            color: ProfilePalette.text(context),
-            fontSize: radius * .55,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
+        foregroundColor: ProfilePalette.text(context),
       ),
     );
   }
@@ -108,7 +92,7 @@ class ProfilePanel extends StatelessWidget {
   Widget build(BuildContext context) => Material(
     color: ProfilePalette.panel(context),
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: AppRadii.mediumBorder,
       side: BorderSide(color: ProfilePalette.border(context)),
     ),
     clipBehavior: Clip.antiAlias,

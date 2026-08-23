@@ -1,0 +1,12 @@
+{
+  "name": "riksa-humation-avatar-generator",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node generate_avatars.mjs"
+  },
+  "dependencies": {
+    "@humation/assets-humation-1": "1.0.1",
+    "@humation/core": "1.0.1"
+  }
+}

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../providers/social_feed_provider.dart';
 
@@ -67,29 +68,35 @@ class _ComposeCommunityPostScreenState
       ),
       body: Stack(
         children: [
-          const Positioned(
+          Positioned(
             right: -90,
             top: -70,
-            child: _AmbientOrb(color: Color(0x3322C55E), size: 240),
+            child: _AmbientOrb(
+              color: AppColors.brandPrimaryHover.withValues(alpha: .16),
+              size: 240,
+            ),
           ),
-          const Positioned(
+          Positioned(
             left: -80,
             bottom: -70,
-            child: _AmbientOrb(color: Color(0x331D9BF0), size: 220),
+            child: _AmbientOrb(
+              color: AppColors.brandAccent.withValues(alpha: .14),
+              size: 220,
+            ),
           ),
           SafeArea(
             top: false,
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: AppRadii.largeBorder,
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surface.withValues(alpha: .78),
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: AppRadii.largeBorder,
                       border: Border.all(
                         color: theme.colorScheme.outlineVariant.withValues(
                           alpha: .65,
@@ -108,7 +115,7 @@ class _ComposeCommunityPostScreenState
                               gradient: const LinearGradient(
                                 colors: [Color(0xFF34443A), Color(0xFF5E7164)],
                               ),
-                              borderRadius: BorderRadius.circular(17),
+                              borderRadius: AppRadii.mediumBorder,
                             ),
                             child: Icon(
                               widget.isQuestion

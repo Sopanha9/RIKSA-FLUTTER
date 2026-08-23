@@ -92,61 +92,57 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _error!,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(color: AppTheme.muted),
-                        ),
-                        const SizedBox(height: 16),
-                        OutlinedButton(
-                          onPressed: () => _load(page: 0),
-                          child: const Text('Retry'),
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: AppTheme.muted),
                     ),
-                  ),
-                )
-              : _posts.isEmpty
-                  ? Center(
-                      child: Text(
-                        'You have not written any posts yet',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(color: AppTheme.muted),
+                    const SizedBox(height: 16),
+                    OutlinedButton(
+                      onPressed: () => _load(page: 0),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : _posts.isEmpty
+          ? Center(
+              child: Text(
+                'You have not written any posts yet',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppTheme.muted),
+              ),
+            )
+          : ListView.builder(
+              controller: _scrollCtrl,
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+              itemCount: _posts.length + (_hasMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == _posts.length) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                    )
-                  : ListView.builder(
-                      controller: _scrollCtrl,
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                      itemCount: _posts.length + (_hasMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == _posts.length) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-                        return _MyPostTile(post: _posts[index]);
-                      },
                     ),
+                  );
+                }
+                return _MyPostTile(post: _posts[index]);
+              },
+            ),
     );
   }
 }
@@ -163,7 +159,7 @@ class _MyPostTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadii.mediumBorder,
         border: Border.all(color: AppTheme.outline),
       ),
       child: Column(
@@ -177,9 +173,9 @@ class _MyPostTile extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.onBackground,
-                      ),
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.onBackground,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -189,10 +185,9 @@ class _MyPostTile extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             DateFormat.yMMMd().format(post.createdAt),
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: AppTheme.muted),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppTheme.muted),
           ),
           if (post.status == BlogStatus.rejected &&
               (post.rejectionReason?.isNotEmpty ?? false)) ...[
@@ -202,14 +197,13 @@ class _MyPostTile extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: AppTheme.error.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppRadii.smallBorder,
               ),
               child: Text(
                 post.rejectionReason!,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: AppTheme.error),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppTheme.error),
               ),
             ),
           ],
@@ -235,7 +229,7 @@ class _StatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppRadii.smallBorder,
       ),
       child: Text(
         label,

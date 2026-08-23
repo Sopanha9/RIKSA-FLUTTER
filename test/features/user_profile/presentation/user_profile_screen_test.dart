@@ -131,7 +131,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Sok Sophea'), findsOneWidget);
+    expect(find.text('Sok Sophea'), findsNWidgets(2));
     expect(find.text('@sophea'), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-total-xp')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-streak')), findsOneWidget);

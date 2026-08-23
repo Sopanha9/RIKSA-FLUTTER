@@ -77,7 +77,7 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: colors.primaryContainer,
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: AppRadii.mediumBorder,
                 ),
                 child: Icon(
                   Icons.location_on_rounded,
@@ -223,13 +223,13 @@ class _ProvinceTile extends StatelessWidget {
       selected: selected,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadii.mediumBorder,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
           decoration: BoxDecoration(
             color: selected ? colors.primaryContainer : colors.surface,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: AppRadii.mediumBorder,
             border: Border.all(
               color: selected ? colors.primary : colors.outline,
               width: selected ? 1.5 : 1,

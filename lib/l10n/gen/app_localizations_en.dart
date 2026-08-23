@@ -278,6 +278,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get streakTitle => 'Streak';
+
+  @override
+  String get streakSubtitle => 'Learn every day to keep your streak growing.';
+
+  @override
+  String get bestStreak => 'Best streak';
+
+  @override
+  String get lastTracked => 'Last tracked';
+
+  @override
+  String get noTrackedDate => 'No learning activity has been recorded yet.';
+
+  @override
+  String get activityCalendar => 'Activity calendar';
+
+  @override
   String get createCommunityContent => 'Create in Community';
 
   @override
@@ -328,6 +346,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forYou => 'For you';
+
+  @override
+  String get official => 'Official';
 
   @override
   String get topLearnersThisWeek => 'Top Learners This Week';
@@ -732,6 +753,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chooseAvatar => 'Choose an avatar';
+
+  @override
+  String get humationAvatarSubtitle =>
+      'Pick a hand-drawn character for your RIKSA profile.';
 
   @override
   String get notProvided => 'Not provided';

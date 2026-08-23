@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/data/auth_api.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../userProfile/providers/profile_provider.dart';
 import '../data/social_api.dart';
 import '../data/social_models.dart';
 
@@ -12,8 +13,23 @@ final socialApiProvider = Provider<SocialApi>((ref) {
   return SocialApi(ref.watch(dioClientProvider));
 });
 
-final communityStreakProvider = FutureProvider<CommunityStreak>((ref) {
-  return ref.watch(socialApiProvider).streak();
+final communityStreakProvider = FutureProvider<CommunityStreak>((ref) async {
+  final streak = await ref.watch(socialApiProvider).streak();
+  if (streak.lastTrackedDate != null ||
+      (streak.activityDates?.isNotEmpty ?? false)) {
+    return streak;
+  }
+
+  // The streak summary endpoint currently omits dates. Use real XP activity as
+  // a non-blocking history fallback until the endpoint exposes them directly.
+  try {
+    final activity = await ref.watch(profileApiProvider).xpActivity(limit: 50);
+    return streak.withActivityDates(
+      activity.activities.map((item) => item.createdAt).whereType<DateTime>(),
+    );
+  } on Object {
+    return streak;
+  }
 });
 
 final userPostsProvider = FutureProvider.family<SocialFeedPage, String>((

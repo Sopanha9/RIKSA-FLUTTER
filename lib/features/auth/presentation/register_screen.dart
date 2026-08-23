@@ -196,7 +196,7 @@ class _StepIndicator extends StatelessWidget {
       children: [
         Expanded(
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(99),
+            borderRadius: AppRadii.fullBorder,
             child: LinearProgressIndicator(
               value: step == 0 ? .5 : 1,
               minHeight: 6,

@@ -82,6 +82,7 @@ flutter:
   assets:
     - assets/images/logos/
     - assets/images/profile/
+    - assets/images/avatars/humation/
     - assets/images/splashScreen/
 
   fonts:

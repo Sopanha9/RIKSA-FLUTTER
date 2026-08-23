@@ -139,35 +139,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('RIKSA'), findsOneWidget);
-    for (var index = 0; index < 5; index++) {
-      expect(find.byKey(ValueKey('bottom-nav-item-$index')), findsOneWidget);
-    }
-    final bottomActiveCircle = find.byKey(
-      const ValueKey('bottom-nav-active-circle'),
-    );
-    final homeCircleX = tester.getTopLeft(bottomActiveCircle).dx;
-    await tester.tap(find.byKey(const ValueKey('bottom-nav-item-3')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 90));
-    final movingCircleX = tester.getTopLeft(bottomActiveCircle).dx;
-    expect(movingCircleX, greaterThan(homeCircleX));
-    await tester.pumpAndSettle();
-    final leaderboardCircleX = tester.getTopLeft(bottomActiveCircle).dx;
-    expect(leaderboardCircleX, greaterThan(movingCircleX));
-    await tester.tap(find.byKey(const ValueKey('bottom-nav-item-0')));
-    await tester.pumpAndSettle();
-    expect(tester.getTopLeft(bottomActiveCircle).dx, closeTo(homeCircleX, .1));
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(SocialFeedScreen)),
-    );
-    expect(
-      (container.read(socialFeedProvider.notifier) as _FeedNotifier).loadCalls,
-      1,
-    );
-    await tester.tap(find.byKey(const ValueKey('bottom-nav-item-2')));
-    await tester.pumpAndSettle();
-    expect(find.text('RIKSA AI Tutor is coming soon.'), findsOneWidget);
-    expect(tester.getTopLeft(bottomActiveCircle).dx, closeTo(homeCircleX, .1));
+    expect(find.byKey(const ValueKey('bottom-nav-morph')), findsNothing);
     expect(
       find.byKey(const ValueKey('community-drawer-button')),
       findsOneWidget,
@@ -190,43 +162,48 @@ void main() {
     );
     expect(find.text('For you'), findsOneWidget);
     expect(
+      find.byKey(const ValueKey('category-filter-for-you')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('category-filter-category-1')),
+      findsOneWidget,
+    );
+    expect(
       find.byKey(const ValueKey('top-learners-spotlight')),
       findsOneWidget,
     );
+    final spotlight = tester.widget<Container>(
+      find.byKey(const ValueKey('top-learners-spotlight')),
+    );
+    expect((spotlight.decoration! as BoxDecoration).gradient, isNotNull);
     expect(find.text('Top Learners This Week'), findsOneWidget);
     expect(find.byKey(const ValueKey('top-learners-view-all')), findsOneWidget);
+    expect(find.text('View All'), findsNothing);
     expect(find.text('The two-minute recall habit'), findsOneWidget);
     expect(find.byKey(const ValueKey('react-post-1')), findsOneWidget);
-
-    final navigationMorph = find.byKey(const ValueKey('bottom-nav-morph'));
-    tester.view.physicalSize = const Size(430, 700);
-    await tester.pumpAndSettle();
-    final expandedNavigationWidth = tester.getSize(navigationMorph).width;
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -80));
-    await tester.pumpAndSettle();
-    expect(tester.getSize(navigationMorph).width, closeTo(58, .1));
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, 80));
-    await tester.pumpAndSettle();
-    expect(
-      tester.getSize(navigationMorph).width,
-      closeTo(expandedNavigationWidth, .1),
-    );
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -80));
-    await tester.pumpAndSettle();
-    expect(tester.getSize(navigationMorph).width, closeTo(58, .1));
-    await tester.tap(find.byKey(const ValueKey('bottom-nav-item-0')));
-    await tester.pumpAndSettle();
-    expect(
-      tester.getSize(navigationMorph).width,
-      closeTo(expandedNavigationWidth, .1),
-    );
-    tester.view.physicalSize = const Size(430, 932);
-    await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('community-drawer-button')));
     await tester.pumpAndSettle();
     expect(find.text('@sophea'), findsOneWidget);
     expect(find.text('Set up profile'), findsOneWidget);
+    final profileHero = tester.widget<Container>(
+      find.byKey(const ValueKey('drawer-profile-hero')),
+    );
+    expect(
+      (profileHero.decoration! as BoxDecoration).borderRadius,
+      AppRadii.largeBorder,
+    );
+    final activeFeedRow = tester.widget<Material>(
+      find.byKey(const ValueKey('drawer-nav-My Feed')),
+    );
+    expect(activeFeedRow.borderRadius, AppRadii.mediumBorder);
+    expect(activeFeedRow.color, AppColors.brandPrimary.withValues(alpha: .12));
+    final activeAccent = tester.widget<AnimatedContainer>(
+      find.byKey(const ValueKey('drawer-accent-My Feed')),
+    );
+    expect(activeAccent.constraints?.maxWidth, 4);
+    expect(activeAccent.constraints?.maxHeight, 28);
     expect(
       find.byKey(const ValueKey('drawer-category-category-1')),
       findsNothing,
@@ -260,17 +237,17 @@ void main() {
     final blogTab = find.byKey(const ValueKey('blog-tab'));
     expect(
       (tabDecoration(feedTab).border! as Border).top.color,
-      AppColors.brandPrimaryHover,
+      AppColors.brandPrimary,
     );
     await tester.tap(find.byKey(const ValueKey('blog-tab')));
     await tester.pumpAndSettle();
     expect(
       (tabDecoration(blogTab).border! as Border).top.color,
-      AppColors.brandPrimaryHover,
+      AppColors.brandPrimary,
     );
     expect(
       (tabDecoration(feedTab).border! as Border).top.color,
-      isNot(AppColors.brandPrimaryHover),
+      isNot(AppColors.brandPrimary),
     );
     expect(find.text('How curiosity improves learning'), findsOneWidget);
     expect(find.text('The two-minute recall habit'), findsNothing);

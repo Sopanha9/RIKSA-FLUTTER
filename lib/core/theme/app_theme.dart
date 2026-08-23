@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// RIKSA's semantic color system, mirrored from the Figma variable collection.
+/// RIKSA's semantic color system.
 ///
 /// Feature code should normally consume [Theme.of] / [ColorScheme] rather than
 /// these constants directly. The named tokens remain available for accents
@@ -8,32 +8,66 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const brandPrimary = Color.fromARGB(255, 64, 73, 67);
-  static const brandPrimaryHover = Color.fromARGB(240, 23, 232, 96);
-  static const brandPrimaryPressed = Color.fromARGB(255, 81, 72, 81);
-  static const brandAccent = Color(0xFF1D9BF0);
+  // Brand green is for navigation, controls, links, and active states.
+  static const brandPrimary = Color(0xFF16A34A);
+  static const brandPrimaryHover = Color(0xFF22C55E);
+  static const brandPrimaryPressed = Color(0xFF166534);
+  static const brandAccent = Color(0xFF2E7D32);
+  static const brandSoft = Color(0xFFDCFCE7);
 
-  static const lightCanvas = Color(0xFFFFFFFF);
-  static const lightSubtle = Color(0xFFF7F9F9);
-  static const lightTextPrimary = Color(0xFF0F1419);
-  static const lightTextSecondary = Color(0xFF536471);
-  static const lightTextTertiary = Color(0xFF8B98A5);
-  static const lightBorder = Color(0xFFEFF3F4);
-  static const lightBorderStrong = Color(0xFFCFD9DE);
+  // Orange is intentionally reserved for streaks, XP, and achievements.
+  static const gamificationOrange = Color(0xFFF97316);
+  static const gamificationOrangePressed = Color(0xFFC2410C);
+  static const gamificationOrangeSoft = Color(0xFFFFF1E8);
+  static const gamificationGold = Color(0xFFF59E0B);
+  static const gamificationGoldSoft = Color(0xFFFFF7D6);
 
-  static const darkCanvas = Color(0xFF000000);
-  static const darkSubtle = Color(0xFF080808);
-  static const darkElevated = Color(0xFF16181C);
-  static const darkTextPrimary = Color(0xFFE7E9EA);
-  static const darkTextSecondary = Color(0xFF71767B);
-  static const darkBorder = Color(0xFF2F3336);
+  static const neutralInk = Color(0xFF1A1A1A);
+  static const lightCanvas = Color(0xFFFAFAFA);
+  static const lightSurface = Color(0xFFFFFFFF);
+  static const lightSubtle = Color(0xFFF3F4F6);
+  static const lightTextPrimary = neutralInk;
+  static const lightTextSecondary = Color(0xFF6B7280);
+  static const lightTextTertiary = Color(0xFF9CA3AF);
+  static const lightBorder = Color(0xFFE5E7EB);
+  static const lightBorderStrong = Color(0xFFD1D5DB);
 
-  static const success = Color(0xFF00BA7C);
-  static const warning = Color(0xFFFFD400);
-  static const error = Color(0xFFF91880);
+  static const darkCanvas = Color(0xFF111827);
+  static const darkSubtle = Color(0xFF1F2937);
+  static const darkElevated = Color(0xFF18212F);
+  static const darkTextPrimary = Color(0xFFF9FAFB);
+  static const darkTextSecondary = Color(0xFF9CA3AF);
+  static const darkBorder = Color(0xFF374151);
+
+  static const success = brandPrimary;
+  static const warning = gamificationGold;
+  static const error = Color(0xFFDC2626);
   static const info = brandAccent;
   static const socialRepost = success;
   static const socialLike = error;
+}
+
+/// Corner-radius scale used by component role rather than component size.
+class AppRadii {
+  AppRadii._();
+
+  static const double small = 8;
+  static const double medium = 14;
+  static const double large = 24;
+  static const double full = 9999;
+
+  static const BorderRadius smallBorder = BorderRadius.all(
+    Radius.circular(small),
+  );
+  static const BorderRadius mediumBorder = BorderRadius.all(
+    Radius.circular(medium),
+  );
+  static const BorderRadius largeBorder = BorderRadius.all(
+    Radius.circular(large),
+  );
+  static const BorderRadius fullBorder = BorderRadius.all(
+    Radius.circular(full),
+  );
 }
 
 /// RIKSA application themes built from the Figma light and dark variables.
@@ -42,9 +76,9 @@ class AppTheme {
 
   // Backward-compatible aliases while older screens migrate to ColorScheme.
   static const Color background = AppColors.lightCanvas;
-  static const Color surface = AppColors.lightCanvas;
+  static const Color surface = AppColors.lightSurface;
   static const Color primary = AppColors.brandPrimary;
-  static const Color primaryContainer = AppColors.brandPrimaryHover;
+  static const Color primaryContainer = AppColors.brandSoft;
   static const Color onPrimary = Colors.white;
   static const Color secondary = AppColors.brandAccent;
   static const Color onBackground = AppColors.lightTextPrimary;
@@ -57,7 +91,7 @@ class AppTheme {
   static ThemeData get light => _theme(
     brightness: Brightness.light,
     canvas: AppColors.lightCanvas,
-    surface: AppColors.lightCanvas,
+    surface: AppColors.lightSurface,
     surfaceContainer: AppColors.lightSubtle,
     foreground: AppColors.lightTextPrimary,
     mutedForeground: AppColors.lightTextSecondary,
@@ -91,21 +125,19 @@ class AppTheme {
       brightness: brightness,
       primary: AppColors.brandPrimary,
       onPrimary: Colors.white,
-      primaryContainer: isDark
-          ? const Color(0xFF062E24)
-          : const Color(0xFFE7F9F2),
+      primaryContainer: isDark ? const Color(0xFF14532D) : AppColors.brandSoft,
       onPrimaryContainer: isDark
-          ? AppColors.darkTextPrimary
-          : AppColors.brandPrimaryPressed,
+          ? const Color(0xFFBBF7D0)
+          : const Color(0xFF14532D),
       secondary: AppColors.brandAccent,
       onSecondary: Colors.white,
       secondaryContainer: isDark
-          ? const Color(0xFF08263A)
-          : const Color(0xFFE8F5FD),
+          ? const Color(0xFF163C23)
+          : const Color(0xFFE8F5E9),
       onSecondaryContainer: isDark
           ? AppColors.darkTextPrimary
-          : const Color(0xFF0C5E91),
-      tertiary: AppColors.success,
+          : const Color(0xFF14532D),
+      tertiary: AppColors.gamificationOrange,
       onTertiary: Colors.white,
       error: AppColors.error,
       onError: Colors.white,
@@ -121,20 +153,16 @@ class AppTheme {
       outline: border,
       outlineVariant: borderStrong,
       shadow: Colors.black,
-      scrim: isDark ? const Color(0x995B7083) : const Color(0x66000000),
+      scrim: isDark ? const Color(0x99111827) : const Color(0x66000000),
       inverseSurface: isDark
           ? AppColors.lightBorder
           : AppColors.lightTextPrimary,
       onInverseSurface: isDark ? AppColors.lightTextPrimary : Colors.white,
-      inversePrimary: AppColors.brandPrimary,
+      inversePrimary: AppColors.brandPrimaryHover,
     );
 
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-    );
-    final inputShape = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-    );
+    final shape = RoundedRectangleBorder(borderRadius: AppRadii.mediumBorder);
+    final inputShape = OutlineInputBorder(borderRadius: AppRadii.mediumBorder);
 
     return ThemeData(
       useMaterial3: true,
@@ -149,7 +177,7 @@ class AppTheme {
       ).textTheme.apply(bodyColor: foreground, displayColor: foreground),
       textSelectionTheme: const TextSelectionThemeData(
         cursorColor: AppColors.brandPrimary,
-        selectionColor: Color(0x3322C55E),
+        selectionColor: Color(0x5516A34A),
         selectionHandleColor: AppColors.brandPrimary,
       ),
       appBarTheme: AppBarTheme(
@@ -167,11 +195,11 @@ class AppTheme {
         shape: shape.copyWith(side: BorderSide(color: border)),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: surface,
+        backgroundColor: surfaceContainer,
         selectedColor: AppColors.brandPrimary,
         disabledColor: border,
         side: BorderSide(color: borderStrong),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.fullBorder),
         labelStyle: TextStyle(color: foreground, fontWeight: FontWeight.w600),
         secondaryLabelStyle: const TextStyle(
           color: Colors.white,

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/locale_provider.dart';
+import '../theme/app_theme.dart';
 
 /// Compact animated language selector used on authentication screens.
 class LanguageToggle extends ConsumerWidget {
@@ -35,7 +36,7 @@ class LanguageToggle extends ConsumerWidget {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: AppRadii.fullBorder,
         border: Border.all(color: theme.colorScheme.outline),
       ),
       child: Stack(
@@ -50,7 +51,7 @@ class LanguageToggle extends ConsumerWidget {
               height: _height,
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: AppRadii.fullBorder,
                 boxShadow: [
                   BoxShadow(
                     color: theme.colorScheme.primary.withValues(alpha: .18),
@@ -118,7 +119,7 @@ class _LanguageSegment extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: AppRadii.fullBorder,
             child: Center(
               child: AnimatedDefaultTextStyle(
                 duration: duration,

@@ -124,6 +124,21 @@ void main() {
     expect(find.text('sophea@example.com'), findsOneWidget);
     expect(find.text('012345678'), findsOneWidget);
 
+    await tester.tap(find.byKey(const ValueKey('edit-avatar')));
+    await tester.pumpAndSettle();
+    expect(find.text('Humation'), findsOneWidget);
+    expect(find.byKey(const ValueKey('humation-avatar-grid')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('humation-avatar-option-0')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('humation-avatar-option-0')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('humation-avatar-avatar-01.svg')),
+      findsOneWidget,
+    );
+
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('delete-account')),
       320,

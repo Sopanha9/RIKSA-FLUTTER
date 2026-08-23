@@ -1,11 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 import 'package:riksa_app/features/social/presentation/widgets/social_post_card.dart';
+import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 void main() {
+  test('derives stable, varied avatar colors from the author seed', () {
+    expect(socialAvatarPalette('bopha'), socialAvatarPalette('bopha'));
+    expect(socialAvatarPalette('bopha'), isNot(socialAvatarPalette('sokha')));
+  });
+
+  test('recognizes the reserved RIKSA admin account', () {
+    expect(
+      isOfficialRiksaAuthor(
+        const SocialAuthor(
+          id: 'admin-1',
+          username: 'riksa.admin',
+          displayName: 'Riksa Admin',
+          avatarUrl: '',
+        ),
+      ),
+      isTrue,
+    );
+    expect(
+      isOfficialRiksaAuthor(
+        const SocialAuthor(
+          id: 'user-1',
+          username: 'riksa.student',
+          displayName: 'Riksa Student',
+          avatarUrl: '',
+        ),
+      ),
+      isFalse,
+    );
+  });
+
   test('maps core RIKSA categories to compact metadata prefixes', () {
     const cases = <String, String>{
       'Mathematics': 'math/',
@@ -37,6 +69,13 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('km')],
         home: Scaffold(
           body: SingleChildScrollView(
             child: SocialPostCard(
@@ -49,8 +88,8 @@ void main() {
                 shareCount: 2,
                 author: const SocialAuthor(
                   id: 'user-1',
-                  username: 'sophea',
-                  displayName: 'Sok Sophea',
+                  username: 'riksa.admin',
+                  displayName: 'Riksa Admin',
                   avatarUrl: '',
                 ),
                 category: const SocialCategory(
@@ -75,6 +114,11 @@ void main() {
     await tester.tap(find.text('A useful study loop'));
 
     expect(opened, isTrue);
+    expect(
+      find.byKey(const ValueKey('official-account-badge')),
+      findsOneWidget,
+    );
+    expect(find.text('Official'), findsOneWidget);
 
     final reaction = find.byKey(const ValueKey('react-post-1'));
     final reactionMaterials = tester.widgetList<Material>(

@@ -108,8 +108,8 @@ class _NavigationSurface extends StatelessWidget {
           height: 58,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: const Color(0xFF151B18),
-              borderRadius: BorderRadius.circular(999),
+              color: AppColors.neutralInk,
+              borderRadius: AppRadii.largeBorder,
               border: Border.all(color: Colors.white.withValues(alpha: .07)),
               boxShadow: [
                 BoxShadow(
@@ -161,7 +161,7 @@ class _NavigationSurface extends StatelessWidget {
                   items[effectiveIndex].icon,
                   key: ValueKey(effectiveIndex),
                   size: collapsed ? 24 : 27,
-                  color: const Color(0xFF0B1710),
+                  color: Colors.white,
                 ),
               ),
             ),

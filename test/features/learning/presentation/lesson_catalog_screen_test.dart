@@ -51,7 +51,16 @@ void main() {
         overrides: [
           lessonCatalogProvider.overrideWith(_CatalogNotifier.new),
           communityStreakProvider.overrideWith(
-            (ref) async => const CommunityStreak(current: 7, highest: 12),
+            (ref) async => CommunityStreak(
+              current: 7,
+              highest: 12,
+              lastTrackedDate: DateTime(2026, 8, 22),
+              activityDates: [
+                DateTime(2026, 8, 20),
+                DateTime(2026, 8, 21),
+                DateTime(2026, 8, 22),
+              ],
+            ),
           ),
         ],
         child: MaterialApp(
@@ -85,5 +94,14 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Derivatives & Tangent Lines'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('learning-streak-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('streak-details-sheet')), findsOneWidget);
+    expect(find.text('Current streak'), findsOneWidget);
+    expect(find.text('Best streak'), findsOneWidget);
+    expect(find.text('Last tracked'), findsOneWidget);
+    expect(find.text('Aug 22, 2026'), findsOneWidget);
   });
 }

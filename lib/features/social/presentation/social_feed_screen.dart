@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/riksa_bottom_navigation_bar.dart';
+import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../blog/data/blog_models.dart';
@@ -18,6 +17,7 @@ import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
 import 'social_post_detail_screen.dart';
 import 'widgets/social_post_card.dart';
+import 'widgets/streak_details_sheet.dart';
 
 enum _SocialSection { feed, blog }
 
@@ -31,27 +31,16 @@ class SocialFeedScreen extends ConsumerStatefulWidget {
 class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
   late final ScrollController _scrollController;
   _SocialSection _section = _SocialSection.feed;
-  int? _bottomNavigationIndex;
-  bool? _bottomNavigationCollapsed;
-  double? _lastNavigationScrollOffset;
-  double? _navigationDirectionTravel;
-  ScrollDirection? _trackedNavigationDirection;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_loadMoreNearEdge);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _scrollController.hasClients) {
-        _lastNavigationScrollOffset = _scrollController.position.pixels;
-      }
-    });
   }
 
   void _loadMoreNearEdge() {
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
-    _updateBottomNavigationFromScroll(position);
     if (position.extentAfter < 520) {
       if (_section == _SocialSection.feed) {
         ref.read(socialFeedProvider.notifier).loadMore();
@@ -59,33 +48,6 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
         ref.read(blogFeedProvider.notifier).loadMore();
       }
     }
-  }
-
-  void _updateBottomNavigationFromScroll(ScrollPosition position) {
-    final currentOffset = position.pixels;
-    final previousOffset = _lastNavigationScrollOffset ?? currentOffset;
-    _lastNavigationScrollOffset = currentOffset;
-    final delta = currentOffset - previousOffset;
-    final direction = position.userScrollDirection;
-    final isScrollingDown = direction == ScrollDirection.reverse && delta > 0;
-    final isScrollingUp = direction == ScrollDirection.forward && delta < 0;
-    if ((!isScrollingDown && !isScrollingUp) || delta.abs() < .1) return;
-
-    if (_trackedNavigationDirection != direction) {
-      _trackedNavigationDirection = direction;
-      _navigationDirectionTravel = 0;
-    }
-    _navigationDirectionTravel =
-        (_navigationDirectionTravel ?? 0) + delta.abs();
-    if ((_navigationDirectionTravel ?? 0) < 18) return;
-
-    _navigationDirectionTravel = 0;
-    _setBottomNavigationCollapsed(isScrollingDown);
-  }
-
-  void _setBottomNavigationCollapsed(bool collapsed) {
-    if ((_bottomNavigationCollapsed ?? false) == collapsed) return;
-    setState(() => _bottomNavigationCollapsed = collapsed);
   }
 
   @override
@@ -110,37 +72,12 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
         : const <SocialCategory>[];
 
     return Scaffold(
-      extendBody: true,
       drawer: _CommunityDrawer(
         categories: categories,
         selectedSection: _section,
         selectedCategoryId: selectedCategory,
         onSectionSelected: _selectDrawerSection,
         onCategorySelected: _selectDrawerCategory,
-      ),
-      bottomNavigationBar: RiksaBottomNavigationBar(
-        currentIndex: _bottomNavigationIndex ?? 0,
-        collapsed: _bottomNavigationCollapsed ?? false,
-        onSelected: (index) {
-          if (index == 0) {
-            _returnHomeAndRefresh();
-            return;
-          }
-          if (index == 1) {
-            context.go('/learn');
-            return;
-          }
-          if (index == 2) {
-            _showAiComingSoon();
-            return;
-          }
-          if (index == 4) {
-            context.go('/profile');
-            return;
-          }
-          setState(() => _bottomNavigationIndex = index);
-        },
-        onCollapsedTap: _returnHomeAndRefresh,
       ),
       body: RefreshIndicator(
         color: AppColors.brandPrimary,
@@ -165,7 +102,7 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
               ..._contentSlivers(state)
             else
               ..._blogSlivers(blogState!),
-            const SliverToBoxAdapter(child: SizedBox(height: 118)),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
         ),
       ),
@@ -339,37 +276,12 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
       ..showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
   }
 
-  void _showAiComingSoon() {
-    final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(l10n.aiTutorComingSoon)));
-  }
-
   void _selectSection(_SocialSection section) {
     if (_section == section) return;
     setState(() => _section = section);
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(0);
     }
-  }
-
-  Future<void> _returnHomeAndRefresh() async {
-    if (mounted) {
-      setState(() {
-        _section = _SocialSection.feed;
-        _bottomNavigationIndex = 0;
-        _bottomNavigationCollapsed = false;
-      });
-    }
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-      );
-    }
-    await ref.read(socialFeedProvider.notifier).load();
   }
 
   void _selectDrawerSection(_SocialSection section) {
@@ -588,7 +500,7 @@ class _FeedSectionTabsState extends State<_FeedSectionTabs> {
     final l10n = AppLocalizations.of(context)!;
     final visualSelected = _effectiveVisualSelected;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
       child: SizedBox(
         height: 32,
         child: SingleChildScrollView(
@@ -662,10 +574,10 @@ class _SectionTab extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final foreground = selected
-        ? AppColors.brandPrimaryHover
-        : colors.onSurfaceVariant.withValues(alpha: .72);
+        ? Colors.white
+        : colors.onSurfaceVariant.withValues(alpha: .82);
     final border = selected
-        ? AppColors.brandPrimaryHover
+        ? AppColors.brandPrimary
         : colors.outlineVariant.withValues(alpha: .78);
 
     return Semantics(
@@ -678,16 +590,16 @@ class _SectionTab extends StatelessWidget {
           curve: Curves.easeOutCubic,
           height: 32,
           decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
+            color: selected ? AppColors.brandPrimary : colors.surfaceContainer,
+            borderRadius: AppRadii.fullBorder,
             border: Border.all(color: border),
           ),
           child: Material(
             color: Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: AppRadii.fullBorder,
             clipBehavior: Clip.antiAlias,
             child: InkWell(
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: AppRadii.fullBorder,
               onTapDown: (_) => onPressChanged(true),
               onTapCancel: () => onPressChanged(false),
               onTap: onTap,
@@ -725,7 +637,7 @@ class _StreakPill extends StatelessWidget {
     final value = streak.value;
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: AppRadii.fullBorder,
         boxShadow: [
           BoxShadow(
             color: theme.colorScheme.shadow.withValues(alpha: .1),
@@ -735,25 +647,29 @@ class _StreakPill extends StatelessWidget {
         ],
       ),
       child: Material(
-        color: const Color(0xFFFFF1E8),
-        borderRadius: BorderRadius.circular(999),
+        color: AppColors.gamificationOrangeSoft,
+        borderRadius: AppRadii.fullBorder,
         child: InkWell(
-          borderRadius: BorderRadius.circular(999),
-          onTap: value == null ? null : () => _showDetails(context, value),
+          borderRadius: AppRadii.fullBorder,
+          onTap: value == null
+              ? null
+              : () => showStreakDetailsSheet(context, value),
           child: Container(
             height: 44,
             constraints: const BoxConstraints(minWidth: 62),
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: const Color(0xFFFFD7BC)),
+              borderRadius: AppRadii.fullBorder,
+              border: Border.all(
+                color: AppColors.gamificationOrange.withValues(alpha: .28),
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(
                   Icons.local_fire_department_rounded,
-                  color: Color(0xFFF26B2D),
+                  color: AppColors.gamificationOrange,
                   size: 21,
                 ),
                 const SizedBox(width: 4),
@@ -767,51 +683,13 @@ class _StreakPill extends StatelessWidget {
                   Text(
                     '${value?.current ?? 0}',
                     style: theme.textTheme.labelLarge?.copyWith(
-                      color: const Color(0xFF9B3D12),
+                      color: AppColors.gamificationOrangePressed,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  void _showDetails(BuildContext context, CommunityStreak value) {
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 6, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.local_fire_department_rounded,
-              size: 48,
-              color: Color(0xFFF26B2D),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.streakDays(value.current),
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              value.nextMilestoneName == null
-                  ? l10n.communitySubtitle
-                  : '${value.daysToNext} • ${value.nextMilestoneName}',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -857,9 +735,6 @@ class _CommunityDrawerState extends ConsumerState<_CommunityDrawer> {
     final displayName = user?.displayName.trim().isNotEmpty == true
         ? user!.displayName
         : user?.username ?? 'RIKSA Learner';
-    final initial = displayName.isEmpty
-        ? user?.username.substring(0, 1).toUpperCase() ?? 'U'
-        : displayName[0].toUpperCase();
 
     return Drawer(
       width: MediaQuery.sizeOf(context).width.clamp(180, 270).toDouble(),
@@ -867,8 +742,8 @@ class _CommunityDrawerState extends ConsumerState<_CommunityDrawer> {
       elevation: 0,
       child: ClipRRect(
         borderRadius: const BorderRadiusDirectional.only(
-          topEnd: Radius.circular(28),
-          bottomEnd: Radius.circular(28),
+          topEnd: Radius.circular(AppRadii.large),
+          bottomEnd: Radius.circular(AppRadii.large),
         ),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
@@ -879,6 +754,7 @@ class _CommunityDrawerState extends ConsumerState<_CommunityDrawer> {
                 padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
                 children: [
                   Container(
+                    key: const ValueKey('drawer-profile-hero'),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
@@ -886,25 +762,17 @@ class _CommunityDrawerState extends ConsumerState<_CommunityDrawer> {
                         end: Alignment.bottomRight,
                         colors: [Color(0xFFE8F8F1), Color(0xFFEAF4FC)],
                       ),
-                      borderRadius: BorderRadius.circular(22),
+                      borderRadius: AppRadii.largeBorder,
                       border: Border.all(color: const Color(0xFFD7E7E0)),
                     ),
                     child: Row(
                       children: [
-                        CircleAvatar(
-                          radius: 25,
+                        RiksaAvatarImage(
+                          value: user?.avatarUrl,
+                          label: displayName,
+                          size: 50,
                           backgroundColor: AppColors.brandPrimary,
-                          foregroundImage:
-                              user?.avatarUrl?.trim().isNotEmpty == true
-                              ? NetworkImage(user!.avatarUrl!)
-                              : null,
-                          child: Text(
-                            initial,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
+                          foregroundColor: Colors.white,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -936,6 +804,7 @@ class _CommunityDrawerState extends ConsumerState<_CommunityDrawer> {
                   ),
                   const SizedBox(height: 16),
                   _SingleDestinationAccordion(
+                    key: const ValueKey('drawer-feed-row'),
                     icon: Icons.dynamic_feed_outlined,
                     label: l10n.myFeed,
                     destinationLabel: l10n.forYou,
@@ -956,6 +825,7 @@ class _CommunityDrawerState extends ConsumerState<_CommunityDrawer> {
                   ),
                   const SizedBox(height: 4),
                   _SingleDestinationAccordion(
+                    key: const ValueKey('drawer-blog-row'),
                     icon: Icons.auto_stories_outlined,
                     label: l10n.blog,
                     destinationLabel: l10n.viewAll,
@@ -974,6 +844,7 @@ class _CommunityDrawerState extends ConsumerState<_CommunityDrawer> {
                   ),
                   const SizedBox(height: 4),
                   _SingleDestinationAccordion(
+                    key: const ValueKey('drawer-profile-row'),
                     icon: Icons.person_outline_rounded,
                     label: l10n.setUpProfile,
                     destinationLabel: l10n.profile,
@@ -1062,26 +933,28 @@ class _DrawerNavigationTile extends StatelessWidget {
       expanded: expanded,
       selected: selected,
       child: Material(
+        key: ValueKey('drawer-nav-$label'),
         color: selected
             ? AppColors.brandPrimary.withValues(alpha: .12)
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: AppRadii.mediumBorder,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: AppRadii.mediumBorder,
           onTap: onTap,
           child: SizedBox(
             height: 50,
             child: Row(
               children: [
                 AnimatedContainer(
+                  key: ValueKey('drawer-accent-$label'),
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeInOut,
                   width: 4,
                   height: selected ? 28 : 0,
                   decoration: BoxDecoration(
                     color: AppColors.brandPrimaryPressed,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: AppRadii.smallBorder,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1120,6 +993,7 @@ class _DrawerNavigationTile extends StatelessWidget {
 
 class _SingleDestinationAccordion extends StatelessWidget {
   const _SingleDestinationAccordion({
+    super.key,
     required this.icon,
     required this.label,
     required this.destinationLabel,
@@ -1280,9 +1154,9 @@ class _DrawerCategoryItem extends StatelessWidget {
         color: selected
             ? AppColors.brandPrimary.withValues(alpha: .12)
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: AppRadii.smallBorder,
         child: InkWell(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: AppRadii.smallBorder,
           onTap: onTap,
           child: SizedBox(
             height: 42,
@@ -1295,7 +1169,7 @@ class _DrawerCategoryItem extends StatelessWidget {
                   height: selected ? 24 : 0,
                   decoration: BoxDecoration(
                     color: AppColors.brandPrimaryPressed,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: AppRadii.smallBorder,
                   ),
                 ),
                 const SizedBox(width: 13),
@@ -1338,7 +1212,7 @@ class _DrawerTile extends StatelessWidget {
     final theme = Theme.of(context);
     final color = foregroundColor ?? theme.colorScheme.onSurface;
     return ListTile(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      shape: const RoundedRectangleBorder(borderRadius: AppRadii.mediumBorder),
       leading: Icon(icon, color: color),
       title: Text(
         label,
@@ -1359,7 +1233,9 @@ class _CreateMenuSheet extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+      borderRadius: const BorderRadius.vertical(
+        top: Radius.circular(AppRadii.large),
+      ),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
         child: Container(
@@ -1371,7 +1247,9 @@ class _CreateMenuSheet extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             color: theme.colorScheme.surface.withValues(alpha: .94),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadii.large),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1383,7 +1261,7 @@ class _CreateMenuSheet extends StatelessWidget {
                   height: 4,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(99),
+                    borderRadius: AppRadii.fullBorder,
                   ),
                 ),
               ),
@@ -1438,9 +1316,9 @@ class _CreateOption extends StatelessWidget {
     final theme = Theme.of(context);
     return Material(
       color: theme.colorScheme.surfaceContainer.withValues(alpha: .72),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: AppRadii.mediumBorder,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppRadii.mediumBorder,
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(15),
@@ -1451,7 +1329,7 @@ class _CreateOption extends StatelessWidget {
                 height: 46,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: .12),
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: AppRadii.smallBorder,
                 ),
                 child: Icon(icon, color: color),
               ),
@@ -1498,7 +1376,7 @@ class _GlassBlogCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 14),
       child: Material(
         color: theme.colorScheme.surfaceContainer.withValues(alpha: .64),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: AppRadii.mediumBorder,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () => context.push('/blog/${post.id}'),
@@ -1507,7 +1385,7 @@ class _GlassBlogCard extends StatelessWidget {
               border: Border.all(
                 color: theme.colorScheme.outlineVariant.withValues(alpha: .62),
               ),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: AppRadii.mediumBorder,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1632,30 +1510,28 @@ class _TopLearnersSpotlight extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
     final learners = _SpotlightLearner.fromPosts(posts).take(6).toList();
 
     return Container(
       key: const ValueKey('top-learners-spotlight'),
-      margin: const EdgeInsets.fromLTRB(16, 7, 16, 13),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 22),
+      padding: const EdgeInsets.all(19),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: isDark
-              ? const [Color(0xFF102C24), Color(0xFF1D3024)]
-              : const [Color(0xFFE5F6EF), Color(0xFFF3F6DC)],
+          colors: theme.brightness == Brightness.dark
+              ? [colors.primaryContainer.withValues(alpha: .72), colors.surface]
+              : [AppColors.brandSoft, colors.surface],
+          stops: const [0, .9],
         ),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: AppColors.brandPrimary.withValues(alpha: isDark ? .34 : .14),
-        ),
+        borderRadius: AppRadii.largeBorder,
+        border: Border.all(color: AppColors.brandPrimary.withValues(alpha: .2)),
         boxShadow: [
           BoxShadow(
-            color: colors.shadow.withValues(alpha: .07),
-            blurRadius: 24,
-            offset: const Offset(0, 9),
+            color: AppColors.brandPrimary.withValues(alpha: .11),
+            blurRadius: 28,
+            offset: const Offset(0, 11),
           ),
         ],
       ),
@@ -1668,11 +1544,13 @@ class _TopLearnersSpotlight extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.brandPrimary,
-                  borderRadius: BorderRadius.circular(999),
+                  color: AppColors.gamificationOrangeSoft,
+                  shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.brandPrimary.withValues(alpha: .2),
+                      color: AppColors.gamificationOrange.withValues(
+                        alpha: .18,
+                      ),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -1681,16 +1559,50 @@ class _TopLearnersSpotlight extends StatelessWidget {
                 child: const Icon(
                   Icons.emoji_events_rounded,
                   size: 21,
-                  color: Colors.white,
+                  color: AppColors.gamificationOrange,
                 ),
               ),
               const SizedBox(width: 11),
               Expanded(
-                child: Text(
-                  l10n.topLearnersThisWeek,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -.2,
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Semantics(
+                    button: true,
+                    label: '${l10n.topLearnersThisWeek}, ${l10n.viewAll}',
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: AppRadii.smallBorder,
+                      child: InkWell(
+                        key: const ValueKey('top-learners-view-all'),
+                        borderRadius: AppRadii.smallBorder,
+                        onTap: onViewAll,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 7),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  l10n.topLearnersThisWeek,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -.2,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 3),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                size: 22,
+                                color: colors.onSurfaceVariant,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -1705,29 +1617,6 @@ class _TopLearnersSpotlight extends StatelessWidget {
               separatorBuilder: (_, _) => const SizedBox(width: 10),
               itemBuilder: (context, index) =>
                   _SpotlightLearnerCard(learner: learners[index]),
-            ),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            height: 42,
-            child: Material(
-              color: AppColors.brandPrimary,
-              borderRadius: BorderRadius.circular(999),
-              child: InkWell(
-                key: const ValueKey('top-learners-view-all'),
-                borderRadius: BorderRadius.circular(999),
-                onTap: onViewAll,
-                child: Center(
-                  child: Text(
-                    l10n.viewAll,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ),
             ),
           ),
         ],
@@ -1751,12 +1640,17 @@ class _SpotlightLearnerCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: colors.surface.withValues(alpha: .82),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppRadii.mediumBorder,
         border: Border.all(color: colors.surface.withValues(alpha: .72)),
       ),
       child: Row(
         children: [
-          _SpotlightAvatar(imageUrl: learner.avatarUrl, label: learner.name),
+          SocialAuthorAvatar(
+            imageUrl: learner.avatarUrl,
+            label: learner.name,
+            seed: learner.username.isEmpty ? learner.id : learner.username,
+            size: 48,
+          ),
           const SizedBox(width: 11),
           Expanded(
             child: Column(
@@ -1780,7 +1674,7 @@ class _SpotlightLearnerCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.brandPrimary.withValues(alpha: .1),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: AppRadii.smallBorder,
                   ),
                   child: Text(
                     learner.subject,
@@ -1823,34 +1717,6 @@ class _SpotlightLearnerCard extends StatelessWidget {
   }
 }
 
-class _SpotlightAvatar extends StatelessWidget {
-  const _SpotlightAvatar({required this.imageUrl, required this.label});
-
-  final String imageUrl;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final initial = label.trim().isEmpty ? 'R' : label.trim()[0].toUpperCase();
-    return CircleAvatar(
-      radius: 24,
-      backgroundColor: colors.primaryContainer,
-      foregroundImage: imageUrl.trim().isEmpty ? null : NetworkImage(imageUrl),
-      onForegroundImageError: imageUrl.trim().isEmpty
-          ? null
-          : (exception, stackTrace) {},
-      child: Text(
-        initial,
-        style: TextStyle(
-          color: colors.onPrimaryContainer,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    );
-  }
-}
-
 class _TopLearnersSheet extends StatelessWidget {
   const _TopLearnersSheet({required this.learners});
 
@@ -1886,12 +1752,16 @@ class _TopLearnersSheet extends StatelessWidget {
                   return ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: AppRadii.mediumBorder,
                     ),
                     tileColor: theme.colorScheme.surfaceContainerLow,
-                    leading: _SpotlightAvatar(
+                    leading: SocialAuthorAvatar(
                       imageUrl: learner.avatarUrl,
                       label: learner.name,
+                      seed: learner.username.isEmpty
+                          ? learner.id
+                          : learner.username,
+                      size: 48,
                     ),
                     title: Text(
                       learner.name,
@@ -1933,21 +1803,25 @@ class _CategoryFilters extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 7),
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 7),
       child: SizedBox(
-        height: 42,
+        height: 40,
         child: ListView(
           scrollDirection: Axis.horizontal,
           children: [
             _CategoryFilterPill(
+              key: const ValueKey('category-filter-for-you'),
               label: l10n.forYou,
+              icon: Icons.auto_awesome_rounded,
               selected: selectedCategoryId == null,
               onTap: () => onSelected(null),
             ),
             for (final category in categories) ...[
               const SizedBox(width: 10),
               _CategoryFilterPill(
+                key: ValueKey('category-filter-${category.id}'),
                 label: category.name,
+                icon: _categoryIcon(category),
                 selected: selectedCategoryId == category.id,
                 onTap: () => onSelected(category.id),
               ),
@@ -1961,12 +1835,15 @@ class _CategoryFilters extends StatelessWidget {
 
 class _CategoryFilterPill extends StatelessWidget {
   const _CategoryFilterPill({
+    super.key,
     required this.label,
+    required this.icon,
     required this.selected,
     required this.onTap,
   });
 
   final String label;
+  final IconData icon;
   final bool selected;
   final VoidCallback onTap;
 
@@ -1976,33 +1853,64 @@ class _CategoryFilterPill extends StatelessWidget {
     return Material(
       color: selected
           ? AppColors.brandPrimary
-          : theme.colorScheme.surfaceContainer.withValues(alpha: .72),
-      borderRadius: BorderRadius.circular(999),
+          : Color.alphaBlend(
+              AppColors.brandPrimary.withValues(alpha: .055),
+              theme.colorScheme.surface,
+            ),
+      borderRadius: AppRadii.fullBorder,
       child: InkWell(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: AppRadii.fullBorder,
         onTap: onTap,
         child: Container(
           alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 17),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: AppRadii.fullBorder,
             border: Border.all(
               color: selected
                   ? AppColors.brandPrimary
                   : theme.colorScheme.outlineVariant.withValues(alpha: .48),
             ),
           ),
-          child: Text(
-            label,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: selected ? Colors.white : theme.colorScheme.onSurface,
-              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 15,
+                color: selected ? Colors.white : AppColors.brandPrimaryPressed,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: selected ? Colors.white : theme.colorScheme.onSurface,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+}
+
+IconData _categoryIcon(SocialCategory category) {
+  final value = '${category.name} ${category.slug}'.toLowerCase();
+  if (value.contains('biology')) return Icons.biotech_rounded;
+  if (value.contains('chem')) return Icons.science_rounded;
+  if (value.contains('math')) return Icons.calculate_rounded;
+  if (value.contains('computer') || value.contains('tech')) {
+    return Icons.code_rounded;
+  }
+  if (value.contains('physics') || value.contains('astronomy')) {
+    return Icons.public_rounded;
+  }
+  if (value.contains('language') || value.contains('english')) {
+    return Icons.translate_rounded;
+  }
+  return Icons.local_library_rounded;
 }
 
 class _FeedMessage extends StatelessWidget {
@@ -2097,7 +2005,7 @@ class _FeedSkeleton extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: color,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: AppRadii.mediumBorder,
             ),
           ),
         ),

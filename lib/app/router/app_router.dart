@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/ai/presentation/ai_tutor_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/splash_animation_screen.dart';
@@ -21,7 +22,9 @@ import '../../features/social/presentation/social_post_detail_screen.dart';
 import '../../features/userProfile/presentation/profile_setup_overview_screen.dart';
 import '../../features/userProfile/presentation/profile_settings_screen.dart';
 import '../../features/userProfile/presentation/edit_profile_screen.dart';
+import '../../features/userProfile/presentation/leaderboard_screen.dart';
 import '../../features/userProfile/presentation/user_profile_screen.dart';
+import 'app_shell.dart';
 
 final _authRouterRefreshProvider = Provider<ValueNotifier<AuthState>>((ref) {
   final refresh = ValueNotifier<AuthState>(ref.read(authProvider));
@@ -89,61 +92,93 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           isRegistration: state.uri.queryParameters['register'] == 'true',
         ),
       ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const SocialFeedScreen(),
-      ),
-      GoRoute(
-        path: '/learn',
-        builder: (context, state) => const LessonCatalogScreen(),
-      ),
-      GoRoute(
-        path: '/community/create',
-        builder: (context, state) => ComposeCommunityPostScreen(
-          isQuestion: state.uri.queryParameters['type'] == 'question',
-        ),
-      ),
-      GoRoute(
-        path: '/community/posts/:id',
-        builder: (context, state) =>
-            SocialPostDetailScreen(postId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const UserProfileScreen(),
-      ),
-      GoRoute(
-        path: '/profile/settings',
-        builder: (context, state) => const ProfileSettingsScreen(),
-      ),
-      GoRoute(
-        path: '/profile/edit',
-        builder: (context, state) => const EditProfileScreen(),
-      ),
-      GoRoute(
-        path: '/profile/setup',
-        builder: (context, state) => ProfileSetupOverviewScreen(
-          // The following avatar form is a separate Figma frame and is not yet
-          // implemented. Keep navigation safe until that screen lands.
-          onSetUpProfile: () => context.go('/home'),
-        ),
-      ),
-      GoRoute(
-        path: '/blog',
-        builder: (context, state) => const BlogFeedScreen(),
-      ),
-      GoRoute(
-        path: '/blog/create',
-        builder: (context, state) => const CreateBlogPostScreen(),
-      ),
-      GoRoute(
-        path: '/blog/my-posts',
-        builder: (context, state) => const MyPostsScreen(),
-      ),
-      GoRoute(
-        path: '/blog/:id',
-        builder: (context, state) =>
-            BlogDetailScreen(id: state.pathParameters['id']!),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const SocialFeedScreen(),
+              ),
+              GoRoute(
+                path: '/community/create',
+                builder: (context, state) => ComposeCommunityPostScreen(
+                  isQuestion: state.uri.queryParameters['type'] == 'question',
+                ),
+              ),
+              GoRoute(
+                path: '/community/posts/:id',
+                builder: (context, state) =>
+                    SocialPostDetailScreen(postId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: '/blog',
+                builder: (context, state) => const BlogFeedScreen(),
+              ),
+              GoRoute(
+                path: '/blog/create',
+                builder: (context, state) => const CreateBlogPostScreen(),
+              ),
+              GoRoute(
+                path: '/blog/my-posts',
+                builder: (context, state) => const MyPostsScreen(),
+              ),
+              GoRoute(
+                path: '/blog/:id',
+                builder: (context, state) =>
+                    BlogDetailScreen(id: state.pathParameters['id']!),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/learn',
+                builder: (context, state) => const LessonCatalogScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/ai',
+                builder: (context, state) => const AiTutorScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/leaderboard',
+                builder: (context, state) => const LeaderboardScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const UserProfileScreen(),
+              ),
+              GoRoute(
+                path: '/profile/settings',
+                builder: (context, state) => const ProfileSettingsScreen(),
+              ),
+              GoRoute(
+                path: '/profile/edit',
+                builder: (context, state) => const EditProfileScreen(),
+              ),
+              GoRoute(
+                path: '/profile/setup',
+                builder: (context, state) => ProfileSetupOverviewScreen(
+                  onSetUpProfile: () => context.go('/home'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     ],
   );

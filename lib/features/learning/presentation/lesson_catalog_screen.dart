@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/riksa_bottom_navigation_bar.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../social/presentation/widgets/streak_details_sheet.dart';
 import '../../social/providers/social_feed_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/lesson_catalog_provider.dart';
@@ -20,10 +18,6 @@ class LessonCatalogScreen extends ConsumerStatefulWidget {
 
 class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
   late final ScrollController _scrollController;
-  bool _navigationCollapsed = false;
-  double _directionTravel = 0;
-  double? _lastOffset;
-  ScrollDirection? _trackedDirection;
 
   @override
   void initState() {
@@ -36,26 +30,6 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
     final position = _scrollController.position;
     if (position.extentAfter < 420) {
       ref.read(lessonCatalogProvider.notifier).loadMore();
-    }
-
-    final current = position.pixels;
-    final previous = _lastOffset ?? current;
-    _lastOffset = current;
-    final delta = current - previous;
-    final direction = position.userScrollDirection;
-    final down = direction == ScrollDirection.reverse && delta > 0;
-    final up = direction == ScrollDirection.forward && delta < 0;
-    if ((!down && !up) || delta.abs() < .1) return;
-
-    if (_trackedDirection != direction) {
-      _trackedDirection = direction;
-      _directionTravel = 0;
-    }
-    _directionTravel += delta.abs();
-    if (_directionTravel < 18) return;
-    _directionTravel = 0;
-    if (_navigationCollapsed != down) {
-      setState(() => _navigationCollapsed = down);
     }
   }
 
@@ -70,33 +44,13 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(lessonCatalogProvider);
-    final streak = ref.watch(communityStreakProvider).value?.current ?? 0;
+    final streakState = ref.watch(communityStreakProvider);
+    final streak = streakState.value;
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      extendBody: true,
-      bottomNavigationBar: RiksaBottomNavigationBar(
-        currentIndex: 1,
-        collapsed: _navigationCollapsed,
-        onSelected: (index) {
-          if (index == 0) {
-            ref.invalidate(socialFeedProvider);
-            context.go('/home');
-          }
-          if (index == 2) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(content: Text(l10n.aiTutorComingSoon)));
-          }
-          if (index == 4) context.go('/profile');
-        },
-        onCollapsedTap: () {
-          ref.invalidate(socialFeedProvider);
-          context.go('/home');
-        },
-      ),
       body: RefreshIndicator(
-        color: AppColors.brandPrimaryHover,
+        color: AppColors.brandPrimary,
         onRefresh: ref.read(lessonCatalogProvider.notifier).load,
         child: CustomScrollView(
           key: const PageStorageKey('learning-catalog-scroll'),
@@ -112,29 +66,44 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
               actions: [
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: 16),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 13,
-                        vertical: 8,
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.local_fire_department_rounded,
-                            size: 19,
-                            color: Color(0xFFF97316),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            '$streak',
-                            style: const TextStyle(fontWeight: FontWeight.w800),
-                          ),
-                        ],
+                  child: Material(
+                    color: AppColors.gamificationOrangeSoft,
+                    borderRadius: AppRadii.fullBorder,
+                    child: InkWell(
+                      key: const ValueKey('learning-streak-button'),
+                      onTap: streak == null
+                          ? null
+                          : () => showStreakDetailsSheet(context, streak),
+                      borderRadius: AppRadii.fullBorder,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 13,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.local_fire_department_rounded,
+                              size: 19,
+                              color: AppColors.gamificationOrange,
+                            ),
+                            const SizedBox(width: 5),
+                            if (streakState.isLoading)
+                              const SizedBox.square(
+                                dimension: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            else
+                              Text(
+                                '${streak?.current ?? 0}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -193,7 +162,7 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
               ),
             ),
             ..._lessonSlivers(context, state),
-            const SliverToBoxAdapter(child: SizedBox(height: 116)),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
         ),
       ),
@@ -276,13 +245,13 @@ class _LearningOverview extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFEAF8EF), Color(0xFFCFF2DA)],
+          colors: [Color(0xFFF0FDF4), AppColors.brandSoft],
         ),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFB7E7C6)),
+        borderRadius: AppRadii.largeBorder,
+        border: Border.all(color: const Color(0xFFBBF7D0)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.brandPrimaryPressed.withValues(alpha: .09),
+            color: AppColors.brandPrimary.withValues(alpha: .10),
             blurRadius: 26,
             offset: const Offset(0, 12),
           ),
@@ -299,7 +268,7 @@ class _LearningOverview extends StatelessWidget {
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w900,
                     height: 1.08,
-                    color: const Color(0xFF123C20),
+                    color: AppColors.neutralInk,
                   ),
                 ),
                 const SizedBox(height: 9),
@@ -307,7 +276,7 @@ class _LearningOverview extends StatelessWidget {
                   l10n.learningSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     height: 1.45,
-                    color: const Color(0xFF42634B),
+                    color: AppColors.lightTextSecondary,
                   ),
                 ),
               ],
@@ -324,7 +293,7 @@ class _LearningOverview extends StatelessWidget {
                   strokeWidth: 8,
                   strokeCap: StrokeCap.round,
                   backgroundColor: Colors.white.withValues(alpha: .72),
-                  color: AppColors.brandPrimaryHover,
+                  color: AppColors.brandPrimary,
                 ),
                 Column(
                   mainAxisSize: MainAxisSize.min,
@@ -334,7 +303,7 @@ class _LearningOverview extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 21,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF123C20),
+                        color: AppColors.neutralInk,
                       ),
                     ),
                     Text(
@@ -342,7 +311,7 @@ class _LearningOverview extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF42634B),
+                        color: AppColors.lightTextSecondary,
                       ),
                     ),
                   ],
@@ -534,27 +503,25 @@ class _FilterPill extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: AppRadii.fullBorder,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 190),
           curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             color: selected
-                ? AppColors.brandPrimaryHover
-                : Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(999),
+                ? AppColors.brandPrimary
+                : Theme.of(context).colorScheme.surfaceContainer,
+            borderRadius: AppRadii.fullBorder,
             border: Border.all(
               color: selected
-                  ? AppColors.brandPrimaryHover
+                  ? AppColors.brandPrimary
                   : Theme.of(context).colorScheme.outlineVariant,
             ),
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: AppColors.brandPrimaryPressed.withValues(
-                        alpha: .16,
-                      ),
+                      color: AppColors.brandPrimary.withValues(alpha: .18),
                       blurRadius: 12,
                       offset: const Offset(0, 5),
                     ),
@@ -591,12 +558,12 @@ class _LessonCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {},
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: AppRadii.mediumBorder,
         child: Ink(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: palette.background,
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: AppRadii.mediumBorder,
             border: Border.all(color: palette.border),
           ),
           child: Column(
@@ -608,7 +575,7 @@ class _LessonCard extends StatelessWidget {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .78),
+                      color: palette.overlay,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -638,8 +605,8 @@ class _LessonCard extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.brandPrimaryHover,
-                        borderRadius: BorderRadius.circular(999),
+                        color: AppColors.brandPrimary,
+                        borderRadius: AppRadii.smallBorder,
                       ),
                       child: Row(
                         children: [
@@ -667,8 +634,8 @@ class _LessonCard extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .72),
-                        borderRadius: BorderRadius.circular(999),
+                        color: palette.overlay,
+                        borderRadius: AppRadii.smallBorder,
                       ),
                       child: Text(
                         _difficultyLabel(l10n, lesson.difficulty!),
@@ -742,7 +709,7 @@ class _LessonCard extends StatelessWidget {
                     width: 43,
                     height: 43,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .86),
+                      color: palette.overlay,
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: palette.foreground.withValues(alpha: .14),
@@ -785,7 +752,7 @@ class _CatalogMessage extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 44, color: AppColors.brandPrimaryHover),
+          Icon(icon, size: 44, color: AppColors.brandPrimary),
           const SizedBox(height: 14),
           Text(
             title,
@@ -838,19 +805,22 @@ IconData _categoryIcon(String category) {
 
 const _cardPalettes = <_LessonCardPalette>[
   _LessonCardPalette(
-    background: Color(0xFFE5F3EA),
-    border: Color(0xFFCDE6D5),
-    foreground: Color(0xFF173F25),
+    background: AppColors.lightSurface,
+    border: AppColors.lightBorder,
+    foreground: AppColors.neutralInk,
+    overlay: AppColors.lightSubtle,
   ),
   _LessonCardPalette(
-    background: Color(0xFFF1EEE3),
-    border: Color(0xFFE4DECC),
-    foreground: Color(0xFF3D3A25),
+    background: Color(0xFFF0FDF4),
+    border: Color(0xFFBBF7D0),
+    foreground: Color(0xFF14532D),
+    overlay: AppColors.lightSurface,
   ),
   _LessonCardPalette(
-    background: Color(0xFFEDF4EC),
-    border: Color(0xFFD8E7D5),
-    foreground: Color(0xFF29452B),
+    background: AppColors.lightSubtle,
+    border: AppColors.lightBorder,
+    foreground: AppColors.neutralInk,
+    overlay: AppColors.lightSurface,
   ),
 ];
 
@@ -859,9 +829,11 @@ class _LessonCardPalette {
     required this.background,
     required this.border,
     required this.foreground,
+    required this.overlay,
   });
 
   final Color background;
   final Color border;
   final Color foreground;
+  final Color overlay;
 }

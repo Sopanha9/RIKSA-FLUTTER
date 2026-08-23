@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../data/social_api.dart';
 import '../data/social_models.dart';
@@ -271,7 +272,7 @@ class _PostBody extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: AppRadii.mediumBorder,
         border: Border.all(color: colors.outline),
         boxShadow: [
           BoxShadow(
@@ -290,7 +291,7 @@ class _PostBody extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: colors.primaryContainer,
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: AppRadii.smallBorder,
             ),
             child: Text(
               post.category.name,
@@ -321,7 +322,7 @@ class _PostBody extends StatelessWidget {
           if (post.hasMedia) ...[
             const SizedBox(height: 16),
             ClipRRect(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: AppRadii.mediumBorder,
               child: Image.network(
                 post.mediaUrl!,
                 width: double.infinity,
@@ -430,7 +431,7 @@ class _CommentCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.surfaceContainerLow,
         border: Border.all(color: colors.outline),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: AppRadii.mediumBorder,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -489,22 +490,12 @@ class _Avatar extends StatelessWidget {
     final label = author.displayName.isEmpty
         ? author.username
         : author.displayName;
-    return CircleAvatar(
-      radius: radius,
+    return RiksaAvatarImage(
+      value: author.avatarUrl,
+      label: label,
+      size: radius * 2,
       backgroundColor: colors.primaryContainer,
-      foregroundImage: author.avatarUrl.trim().isEmpty
-          ? null
-          : NetworkImage(author.avatarUrl),
-      onForegroundImageError: author.avatarUrl.trim().isEmpty
-          ? null
-          : (exception, stackTrace) {},
-      child: Text(
-        label.trim().isEmpty ? 'R' : label.trim()[0].toUpperCase(),
-        style: TextStyle(
-          color: colors.onPrimaryContainer,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
+      foregroundColor: colors.onPrimaryContainer,
     );
   }
 }
@@ -527,7 +518,7 @@ class _DetailAction extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final color = selected ? AppColors.brandPrimary : colors.onSurfaceVariant;
     return InkWell(
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: AppRadii.fullBorder,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -535,7 +526,7 @@ class _DetailAction extends StatelessWidget {
           color: selected
               ? color.withValues(alpha: .12)
               : colors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: AppRadii.fullBorder,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -565,7 +556,7 @@ class _CountBadge extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.primaryContainer,
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: AppRadii.smallBorder,
     ),
     child: Text('$count', style: const TextStyle(fontWeight: FontWeight.w800)),
   );
@@ -581,7 +572,7 @@ class _EmptyComments extends StatelessWidget {
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: AppRadii.mediumBorder,
     ),
     child: Column(
       children: [

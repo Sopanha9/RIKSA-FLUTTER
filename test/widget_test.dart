@@ -99,6 +99,20 @@ void main() {
     expect(rootRoute.redirect, isNotNull);
   });
 
+  test('authenticated destinations live in one five-branch shell', () {
+    final container = ProviderContainer(
+      overrides: [authProvider.overrideWith(_AuthenticatedAuthNotifier.new)],
+    );
+    addTearDown(container.dispose);
+
+    final router = container.read(goRouterProvider);
+    final shell = router.configuration.routes
+        .whereType<StatefulShellRoute>()
+        .single;
+
+    expect(shell.branches, hasLength(5));
+  });
+
   testWidgets('login renders stable inline validation errors', (tester) async {
     await tester.pumpWidget(_testApp(const LoginScreen()));
     await tester.ensureVisible(find.byKey(const Key('login_submit')));

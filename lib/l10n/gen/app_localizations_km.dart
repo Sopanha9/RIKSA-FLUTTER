@@ -273,6 +273,25 @@ class AppLocalizationsKm extends AppLocalizations {
   }
 
   @override
+  String get streakTitle => 'ការសិក្សាបន្ត';
+
+  @override
+  String get streakSubtitle =>
+      'រៀនរាល់ថ្ងៃ ដើម្បីបន្តការសិក្សារបស់អ្នកឱ្យកាន់តែប្រសើរ។';
+
+  @override
+  String get bestStreak => 'ការសិក្សាបន្តល្អបំផុត';
+
+  @override
+  String get lastTracked => 'បានកត់ត្រាចុងក្រោយ';
+
+  @override
+  String get noTrackedDate => 'មិនទាន់មានសកម្មភាពសិក្សាដែលបានកត់ត្រាទេ។';
+
+  @override
+  String get activityCalendar => 'ប្រតិទិនសកម្មភាព';
+
+  @override
   String get createCommunityContent => 'បង្កើតក្នុងសហគមន៍';
 
   @override
@@ -321,6 +340,9 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get forYou => 'សម្រាប់អ្នក';
+
+  @override
+  String get official => 'ផ្លូវការ';
 
   @override
   String get topLearnersThisWeek => 'អ្នកសិក្សាឆ្នើមប្រចាំសប្តាហ៍';
@@ -703,6 +725,10 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get chooseAvatar => 'ជ្រើសរើសរូបតំណាង';
+
+  @override
+  String get humationAvatarSubtitle =>
+      'ជ្រើសរើសតួអង្គគូរដោយដៃសម្រាប់ប្រវត្តិរូប RIKSA របស់អ្នក។';
 
   @override
   String get notProvided => 'មិនបានផ្តល់';

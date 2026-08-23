@@ -4,19 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../core/theme/app_theme.dart';
+
 /// Entry screen for the four-step profile setup flow.
 ///
-/// This reproduces Figma frame `123:295`. The frame currently uses raw legacy
-/// colors rather than the RIKSA Light/Dark variable collections, so its values
-/// are intentionally kept local until the design is migrated to tokens.
+/// This reproduces Figma frame `123:295` with the shared RIKSA color tokens.
 class ProfileSetupOverviewScreen extends StatelessWidget {
   const ProfileSetupOverviewScreen({super.key, required this.onSetUpProfile});
 
   final VoidCallback onSetUpProfile;
 
-  static const _background = Color(0xFFF9F9FB);
-  static const _primary = Color(0xFF5C54D8);
-  static const _text = Color(0xFF1A1A1A);
+  static const _background = AppColors.lightCanvas;
+  static const _primary = AppColors.brandPrimary;
+  static const _text = AppColors.neutralInk;
 
   static const _steps = <({String title, String description})>[
     (
@@ -103,7 +103,7 @@ class ProfileSetupOverviewScreen extends StatelessWidget {
                                   backgroundColor: _primary,
                                   foregroundColor: _background,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: AppRadii.mediumBorder,
                                   ),
                                   textStyle: const TextStyle(
                                     fontFamily: 'Poppins',
