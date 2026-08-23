@@ -262,6 +262,170 @@ class AppLocalizationsKm extends AppLocalizations {
   String get languageKm => 'ខ្មែរ';
 
   @override
+  String get community => 'សហគមន៍';
+
+  @override
+  String get myFeed => 'មតិព័ត៌មានរបស់ខ្ញុំ';
+
+  @override
+  String streakDays(int count) {
+    return '$count ថ្ងៃ';
+  }
+
+  @override
+  String get createCommunityContent => 'បង្កើតក្នុងសហគមន៍';
+
+  @override
+  String get createPost => 'បង្កើតការបង្ហោះ';
+
+  @override
+  String get createPostSubtitle => 'ចែករំលែកគំនិត មេរៀន ឬធនធានមានប្រយោជន៍។';
+
+  @override
+  String get askCommunity => 'សួរសហគមន៍';
+
+  @override
+  String get askCommunitySubtitle => 'សុំជំនួយពីអ្នកសិក្សាផ្សេងទៀត។';
+
+  @override
+  String get chooseCommunity => 'ជ្រើសរើសសហគមន៍';
+
+  @override
+  String get postTitleLabel => 'ចំណងជើងការបង្ហោះ';
+
+  @override
+  String get questionTitleLabel => 'តើអ្នកចង់សួរអ្វី?';
+
+  @override
+  String get detailsLabel => 'បន្ថែមព័ត៌មានលម្អិត';
+
+  @override
+  String get publish => 'បោះពុម្ពផ្សាយ';
+
+  @override
+  String get publishFailed =>
+      'យើងមិនអាចបោះពុម្ពផ្សាយបានទេ។ សូមពិនិត្យខ្លឹមសារ ហើយព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get noCommunities => 'មិនទាន់មានសហគមន៍ទេ។';
+
+  @override
+  String get blogEmptyMessage => 'អត្ថបទថ្មីៗពីសហគមន៍ RIKSA នឹងបង្ហាញនៅទីនេះ។';
+
+  @override
+  String get communityHeadline => 'រៀនជាមួយគ្នា។ ចែករំលែកអ្វីដែលអ្នកយល់។';
+
+  @override
+  String get communitySubtitle =>
+      'សួរសំណួរ ចែករំលែកគំនិតមានប្រយោជន៍ និងអបអរវឌ្ឍនភាពជាមួយអ្នកសិក្សា RIKSA។';
+
+  @override
+  String get forYou => 'សម្រាប់អ្នក';
+
+  @override
+  String get popularCommunities => 'សហគមន៍ពេញនិយម';
+
+  @override
+  String membersLabel(int count) {
+    return 'សមាជិក $count នាក់';
+  }
+
+  @override
+  String get join => 'ចូលរួម';
+
+  @override
+  String get joined => 'បានចូលរួម';
+
+  @override
+  String get feedEmptyTitle => 'មតិព័ត៌មានសហគមន៍របស់អ្នករួចរាល់';
+
+  @override
+  String get feedEmptyMessage =>
+      'ការបង្ហោះពីសហគមន៍នេះនឹងបង្ហាញនៅទីនេះ ពេលអ្នកសិក្សាចាប់ផ្ដើមចែករំលែក។';
+
+  @override
+  String get feedErrorTitle => 'យើងមិនអាចផ្ទុកសហគមន៍បានទេ';
+
+  @override
+  String get loadMore => 'ផ្ទុកបន្ថែម';
+
+  @override
+  String get copiedLink => 'បានចម្លងតំណការបង្ហោះ';
+
+  @override
+  String get actionFailed => 'សកម្មភាពនេះមិនបានសម្រេចទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get postDetail => 'ព័ត៌មានលម្អិតនៃការបង្ហោះ';
+
+  @override
+  String get discussion => 'ការពិភាក្សា';
+
+  @override
+  String get addComment => 'ចូលរួមក្នុងការពិភាក្សា';
+
+  @override
+  String get sendComment => 'ផ្ញើមតិយោបល់';
+
+  @override
+  String get commentFailed =>
+      'យើងមិនអាចបន្ថែមមតិយោបល់របស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get noComments => 'មិនទាន់មានមតិយោបល់ទេ។ ចាប់ផ្ដើមការសន្ទនា។';
+
+  @override
+  String get postUnavailable => 'មិនអាចមើលការបង្ហោះបាន';
+
+  @override
+  String get postUnavailableMessage =>
+      'ការបង្ហោះនេះអាចត្រូវបានលុប ឬលែងអាចមើលឃើញ។';
+
+  @override
+  String get profile => 'ប្រវត្តិរូប';
+
+  @override
+  String get blog => 'ប្លុក';
+
+  @override
+  String get setUpProfile => 'រៀបចំប្រវត្តិរូប';
+
+  @override
+  String get onboardingTitle => 'កសាងអនាគតដ៏ប្រសើរជាមួយសហគមន៍អ្នកសិក្សា';
+
+  @override
+  String get onboardingLearningBody =>
+      'ស្វែងយល់ពីការអប់រំប្រកបដោយគុណភាព បទពិសោធន៍សិក្សាទំនើប និងចំណេះដឹងដែលរីកចម្រើនជាមួយអ្នក។';
+
+  @override
+  String get onboardingAchievementBody =>
+      'បន្តការសិក្សាប្រចាំថ្ងៃ អបអរវឌ្ឍនភាព និងប្រែក្លាយជ័យជម្នះតូចៗទៅជាកម្លាំងចលករ។';
+
+  @override
+  String get onboardingCommunityBody =>
+      'រៀនជាមួយសហគមន៍ដែលគាំទ្រ ចែករំលែកគំនិត ឆ្លើយសំណួរ និងរីកចម្រើនជាមួយគ្នា។';
+
+  @override
+  String get selectProvinceTitle => 'ជ្រើសរើសខេត្តរបស់អ្នក';
+
+  @override
+  String get selectProvinceSubtitle =>
+      'ខេត្តរបស់អ្នកជួយកំណត់សហគមន៍ក្នុងតំបន់ និងចំណាត់ថ្នាក់តាមខេត្ត។ ព័ត៌មាននេះនឹងត្រូវរក្សាទុកដោយសុវត្ថិភាពក្នុងប្រវត្តិរូប បន្ទាប់ពីអ្នកចូលគណនី។';
+
+  @override
+  String get searchProvince => 'ស្វែងរកខេត្ត';
+
+  @override
+  String get noProvinceResults => 'រកមិនឃើញខេត្តដែលត្រូវនឹងការស្វែងរកទេ។';
+
+  @override
+  String get provinceLoadFailed => 'យើងមិនអាចផ្ទុកបញ្ជីខេត្តបានទេ។';
+
+  @override
+  String get provinceSaveFailed =>
+      'យើងមិនអាចរក្សាទុកខេត្តរបស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
   String get home => 'ទំព័រ​ដើម';
 
   @override

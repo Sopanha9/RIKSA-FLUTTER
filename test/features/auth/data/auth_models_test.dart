@@ -66,11 +66,25 @@ void main() {
       'phoneVerified': true,
       'role': 'USER',
       'countryId': 'KH',
+      'provinceId': '00000000-0000-0000-0000-000000000015',
       'createdAt': '2026-08-16T10:00:00+07:00',
     });
 
     expect(user.username, 'sophea');
     expect(user.phoneVerified, isTrue);
+    expect(user.provinceId, '00000000-0000-0000-0000-000000000015');
     expect(user.createdAt, DateTime.utc(2026, 8, 16, 3));
+  });
+
+  test('ProvinceOption parses Khmer and Latin province names', () {
+    final province = ProvinceOption.fromJson({
+      'id': '00000000-0000-0000-0000-000000000015',
+      'nameKhmer': 'ភ្នំពេញ',
+      'nameLatin': 'Phnom Penh',
+    });
+
+    expect(province.id, '00000000-0000-0000-0000-000000000015');
+    expect(province.nameKhmer, 'ភ្នំពេញ');
+    expect(province.nameLatin, 'Phnom Penh');
   });
 }

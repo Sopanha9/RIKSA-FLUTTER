@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/network/dio_client.dart';
+import '../../../core/providers/locale_provider.dart';
 import '../../../core/storage/session_store.dart';
 import '../data/auth_api.dart';
 import '../data/google_auth_client.dart';
@@ -31,6 +32,10 @@ final dioClientProvider = Provider<DioClient>((ref) {
 
 final authApiProvider = Provider<AuthApi>((ref) {
   return AuthApi(ref.watch(dioClientProvider));
+});
+
+final provinceOptionsProvider = FutureProvider<List<ProvinceOption>>((ref) {
+  return ref.watch(authApiProvider).listProvinces();
 });
 
 @immutable
@@ -126,7 +131,7 @@ class AuthNotifier extends Notifier<AuthState> {
     }
 
     try {
-      final user = await ref.read(authApiProvider).getProfile();
+      final user = await _hydrateProfile();
       _requireProfile(user);
       state = Authenticated(user);
     } on AuthFailure catch (failure) {
@@ -200,7 +205,7 @@ class AuthNotifier extends Notifier<AuthState> {
     final client = ref.read(dioClientProvider);
     try {
       await client.persistSession(response.toJson());
-      final user = await ref.read(authApiProvider).getProfile();
+      final user = await _hydrateProfile();
       _requireProfile(user);
       state = Authenticated(user);
     } on AuthFailure catch (failure) {
@@ -225,6 +230,35 @@ class AuthNotifier extends Notifier<AuthState> {
   void _requireProfile(AuthUser user) {
     if (user.id.isEmpty || user.username.isEmpty) {
       throw const FormatException('The server returned an incomplete profile.');
+    }
+  }
+
+  Future<AuthUser> _hydrateProfile() async {
+    final api = ref.read(authApiProvider);
+    var user = await api.getProfile();
+    final pendingProvinceId = ref.read(localeProvider).pendingProvinceId;
+    if (pendingProvinceId != null && pendingProvinceId.isNotEmpty) {
+      user = await api.updateProvince(pendingProvinceId);
+      await ref.read(localeProvider.notifier).completeOnboarding();
+    }
+    return user;
+  }
+
+  Future<bool> saveProvinceSelection(String provinceId) async {
+    final current = state;
+    await ref.read(localeProvider.notifier).savePendingProvince(provinceId);
+    if (current is! Authenticated) return true;
+
+    state = const AuthLoading();
+    try {
+      final user = await ref.read(authApiProvider).updateProvince(provinceId);
+      _requireProfile(user);
+      await ref.read(localeProvider.notifier).completeOnboarding();
+      state = Authenticated(user);
+      return true;
+    } catch (error) {
+      state = current;
+      return false;
     }
   }
 

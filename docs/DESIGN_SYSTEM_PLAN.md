@@ -209,41 +209,101 @@ copy review.
 
 ## 7. Color system
 
-The palette keeps the current warm paper + deep green identity and introduces
-high-energy accents with strict semantic roles.
+This section is the implementation source of truth for the local Figma color
+variables. It was read directly from the RIKSA file on 2026-08-22 rather than
+inferred from swatches or screenshots.
 
-### Core semantic tokens
+Source: [RIKSA Figma file](https://www.figma.com/design/yiWpNChkoVOF8gdcrM75aJ/RIKSA?node-id=0-1&view=variables).
 
-| Token | Light | Dark | Foreground | Use |
-|---|---:|---:|---:|---|
-| `canvas` | `#FFF8EE` | `#0D1511` | `ink` | App background |
-| `surface` | `#FFFFFF` | `#151F1A` | `ink` | Cards, reading pages, fields |
-| `surfaceRaised` | `#F3F5EF` | `#1C2A23` | `ink` | Sheets, selected containers |
-| `ink` | `#17211B` | `#F2F7F3` | — | Primary text/icons |
-| `inkMuted` | `#59655E` | `#A9B8AF` | — | Secondary text |
-| `outline` | `#D5DED8` | `#35473D` | — | Borders and separators |
-| `primary` | `#18533D` | `#82DDAA` | light: white; dark: dark canvas | Main CTA, active navigation |
-| `spark` | `#C8F560` | `#D6FF76` | dark ink | Selection, highlight, fresh energy |
-| `gold` | `#F2B544` | `#FFC857` | dark ink | XP, rank, achievement only |
-| `indigo` | `#5B62D6` | `#A9ACFF` | light: white; dark: dark canvas | Learning and knowledge |
-| `coral` | `#E85D4A` | `#FF9385` | dark ink | Streak and high-energy moments |
-| `success` | `#147D56` | `#71D6A7` | light: white; dark: dark canvas | Correct, complete, positive |
-| `error` | `#B3261E` | `#FFB4AB` | light: white; dark: dark canvas | Errors and destructive actions |
+Figma currently stores light and dark as two separate, single-mode collections:
 
-The primary text/background pairs above were checked at or above WCAG AA for
-normal text. Accent color alone never communicates status.
+- `RIKSA Light` — 41 color variables in mode `Light`.
+- `RIKSA Dark` — 41 color variables in mode `Dark`.
+
+The collections use matching token names but no cross-collection aliases and no
+Web, Android, or iOS code syntax. When these tokens are moved into code, keep one
+semantic API with light/dark values rather than duplicating token names.
+
+### Brand and background
+
+| Figma variable | Light | Dark |
+|---|---:|---:|
+| `brand/primary` | `#22C55E` | `#22C55E` |
+| `brand/primary-hover` | `#16A34A` | `#16A34A` |
+| `brand/primary-pressed` | `#15803D` | `#15803D` |
+| `brand/secondary` | `#0F1419` | `#E7E9EA` |
+| `brand/accent` | `#1D9BF0` | `#1D9BF0` |
+| `background/canvas` | `#FFFFFF` | `#000000` |
+| `background/surface` | `#FFFFFF` | `#000000` |
+| `background/subtle` | `#F7F9F9` | `#080808` |
+| `background/elevated` | `#FFFFFF` | `#16181C` |
+| `background/inverse` | `#0F1419` | `#EFF3F4` |
+
+### Text, borders, and icons
+
+| Figma variable | Light | Dark |
+|---|---:|---:|
+| `text/primary` | `#0F1419` | `#E7E9EA` |
+| `text/secondary` | `#536471` | `#71767B` |
+| `text/tertiary` | `#8B98A5` | `#536471` |
+| `text/inverse` | `#FFFFFF` | `#0F1419` |
+| `text/link` | `#1D9BF0` | `#1D9BF0` |
+| `text/disabled` | `#8B98A5` | `#536471` |
+| `border/default` | `#EFF3F4` | `#2F3336` |
+| `border/strong` | `#CFD9DE` | `#536471` |
+| `border/focus` | `#22C55E` | `#22C55E` |
+| `border/disabled` | `#EFF3F4` | `#2F3336` |
+| `icon/primary` | `#0F1419` | `#E7E9EA` |
+| `icon/secondary` | `#536471` | `#71767B` |
+| `icon/inverse` | `#FFFFFF` | `#0F1419` |
+
+### State and social feedback
+
+| Figma variable | Light | Dark |
+|---|---:|---:|
+| `state/success` | `#00BA7C` | `#00BA7C` |
+| `state/success-bg` | `#E7F9F2` | `#062E24` |
+| `state/warning` | `#FFD400` | `#FFD400` |
+| `state/warning-bg` | `#FFF8CC` | `#332B00` |
+| `state/error` | `#F91880` | `#F91880` |
+| `state/error-bg` | `#FDE8F2` | `#330C22` |
+| `state/info` | `#1D9BF0` | `#1D9BF0` |
+| `state/info-bg` | `#E8F5FD` | `#08263A` |
+| `social/repost` | `#00BA7C` | `#00BA7C` |
+| `social/like` | `#F91880` | `#F91880` |
+
+### Actions and overlay
+
+| Figma variable | Light | Dark |
+|---|---:|---:|
+| `action/primary-bg` | `#22C55E` | `#22C55E` |
+| `action/primary-text` | `#FFFFFF` | `#FFFFFF` |
+| `action/secondary-bg` | `#FFFFFF` | `#000000` |
+| `action/secondary-text` | `#0F1419` | `#E7E9EA` |
+| `action/ghost-hover` | `#F7F9F9` | `#16181C` |
+| `action/disabled-bg` | `#EFF3F4` | `#2F3336` |
+| `action/disabled-text` | `#8B98A5` | `#71767B` |
+| `overlay/scrim` | `#00000066` | `#5B708366` |
+
+### Current implementation gap
+
+Figma frame `123:295` (“Set up your profile”) is not bound to either variable
+collection. It uses raw legacy values: `#5C54D8` for the primary action and step
+markers, `#F9F9FB` for the canvas and inverse text, and `#1A1A1A` for body text.
+The Flutter implementation preserves those values for visual fidelity. The
+design should be migrated to `brand/primary`, `background/canvas`, and
+`text/primary` before the screen is switched to the shared app theme.
 
 ### Color rules
 
-- Green is the brand/action color; gold is earned, not a generic button color.
-- Spark/lime always uses dark foreground text.
-- Use one feature accent per screen, normally covering less than 15% of the
-  visible area.
-- Gradients are reserved for progress heroes, completion, and rank moments.
-- Province colors appear in identity chips, crests, and leaderboard highlights,
-  not as competing page themes.
-- Dark mode uses designed surfaces and recolored illustrations, not simple color
-  inversion.
+- Use semantic names in widgets; do not reference palette hex values outside a
+  central theme/token layer, except for documented unbound legacy frames.
+- State background tokens always accompany their corresponding state foreground.
+- `overlay/scrim` includes alpha (`66`, approximately 40%).
+- A Figma variable value is not proof of accessible contrast. Validate every
+  foreground/background pairing used by a component against WCAG 2.2.
+- Dark mode uses the explicit dark collection values; it is not a computed
+  inversion of light mode.
 
 ## 8. Typography
 

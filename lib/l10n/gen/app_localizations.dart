@@ -578,6 +578,306 @@ abstract class AppLocalizations {
   /// **'ខ្មែរ'**
   String get languageKm;
 
+  /// No description provided for @community.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get community;
+
+  /// No description provided for @myFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'My Feed'**
+  String get myFeed;
+
+  /// No description provided for @streakDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {0 days} =1 {1 day} other {{count} days}}'**
+  String streakDays(int count);
+
+  /// No description provided for @createCommunityContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Create in Community'**
+  String get createCommunityContent;
+
+  /// No description provided for @createPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a post'**
+  String get createPost;
+
+  /// No description provided for @createPostSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share an idea, lesson, or useful resource.'**
+  String get createPostSubtitle;
+
+  /// No description provided for @askCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the community'**
+  String get askCommunity;
+
+  /// No description provided for @askCommunitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get help from learners who have been there.'**
+  String get askCommunitySubtitle;
+
+  /// No description provided for @chooseCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a community'**
+  String get chooseCommunity;
+
+  /// No description provided for @postTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Post title'**
+  String get postTitleLabel;
+
+  /// No description provided for @questionTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'What do you want to ask?'**
+  String get questionTitleLabel;
+
+  /// No description provided for @detailsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add details'**
+  String get detailsLabel;
+
+  /// No description provided for @publish.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get publish;
+
+  /// No description provided for @publishFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t publish this yet. Check your content and try again.'**
+  String get publishFailed;
+
+  /// No description provided for @noCommunities.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities are not available yet.'**
+  String get noCommunities;
+
+  /// No description provided for @blogEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh stories from the RIKSA community will appear here.'**
+  String get blogEmptyMessage;
+
+  /// No description provided for @communityHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn together. Share what clicks.'**
+  String get communityHeadline;
+
+  /// No description provided for @communitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask questions, swap useful ideas, and celebrate progress with learners across RIKSA.'**
+  String get communitySubtitle;
+
+  /// No description provided for @forYou.
+  ///
+  /// In en, this message translates to:
+  /// **'For you'**
+  String get forYou;
+
+  /// No description provided for @popularCommunities.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular communities'**
+  String get popularCommunities;
+
+  /// No description provided for @membersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {No members} =1 {1 member} other {{count} members}}'**
+  String membersLabel(int count);
+
+  /// No description provided for @join.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get join;
+
+  /// No description provided for @joined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get joined;
+
+  /// No description provided for @feedEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your community feed is ready'**
+  String get feedEmptyTitle;
+
+  /// No description provided for @feedEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts from this community will appear here as learners start sharing.'**
+  String get feedEmptyMessage;
+
+  /// No description provided for @feedErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load the community'**
+  String get feedErrorTitle;
+
+  /// No description provided for @loadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get loadMore;
+
+  /// No description provided for @copiedLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Post link copied'**
+  String get copiedLink;
+
+  /// No description provided for @actionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That action didn’t go through. Try again.'**
+  String get actionFailed;
+
+  /// No description provided for @postDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Post detail'**
+  String get postDetail;
+
+  /// No description provided for @discussion.
+  ///
+  /// In en, this message translates to:
+  /// **'Discussion'**
+  String get discussion;
+
+  /// No description provided for @addComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to the discussion'**
+  String get addComment;
+
+  /// No description provided for @sendComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Send comment'**
+  String get sendComment;
+
+  /// No description provided for @commentFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t add your comment. Please try again.'**
+  String get commentFailed;
+
+  /// No description provided for @noComments.
+  ///
+  /// In en, this message translates to:
+  /// **'No comments yet. Start the conversation.'**
+  String get noComments;
+
+  /// No description provided for @postUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Post unavailable'**
+  String get postUnavailable;
+
+  /// No description provided for @postUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This post may have been removed or is no longer visible.'**
+  String get postUnavailableMessage;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @blog.
+  ///
+  /// In en, this message translates to:
+  /// **'Blog'**
+  String get blog;
+
+  /// No description provided for @setUpProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up profile'**
+  String get setUpProfile;
+
+  /// No description provided for @onboardingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Build a Better Future with a Community of Learners'**
+  String get onboardingTitle;
+
+  /// No description provided for @onboardingLearningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover quality education, modern learning experiences, and knowledge that grows with you.'**
+  String get onboardingLearningBody;
+
+  /// No description provided for @onboardingAchievementBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your streak alive, celebrate progress, and turn every small win into momentum.'**
+  String get onboardingAchievementBody;
+
+  /// No description provided for @onboardingCommunityBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn with a supportive community that shares ideas, answers questions, and grows together.'**
+  String get onboardingCommunityBody;
+
+  /// No description provided for @selectProvinceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your province'**
+  String get selectProvinceTitle;
+
+  /// No description provided for @selectProvinceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your province personalizes local communities and provincial rankings. It will be saved securely to your profile after you sign in.'**
+  String get selectProvinceSubtitle;
+
+  /// No description provided for @searchProvince.
+  ///
+  /// In en, this message translates to:
+  /// **'Search provinces'**
+  String get searchProvince;
+
+  /// No description provided for @noProvinceResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No provinces match your search.'**
+  String get noProvinceResults;
+
+  /// No description provided for @provinceLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load the provinces.'**
+  String get provinceLoadFailed;
+
+  /// No description provided for @provinceSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t save your province. Please try again.'**
+  String get provinceSaveFailed;
+
   /// No description provided for @home.
   ///
   /// In en, this message translates to:

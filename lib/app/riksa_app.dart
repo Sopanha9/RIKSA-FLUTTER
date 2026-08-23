@@ -20,6 +20,8 @@ class RiksaApp extends ConsumerWidget {
       title: 'Riksa',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system,
       locale: locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,

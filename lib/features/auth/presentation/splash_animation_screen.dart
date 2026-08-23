@@ -64,6 +64,11 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
       if (!mounted) return;
       if (!locale.hasSelection) {
         context.go('/language-select');
+      } else if (!locale.hasViewedOnboarding) {
+        context.go('/onboarding');
+      } else if (!locale.hasCompletedOnboarding &&
+          locale.pendingProvinceId == null) {
+        context.go('/province-select');
       } else if (auth is Authenticated) {
         context.go('/home');
       } else {

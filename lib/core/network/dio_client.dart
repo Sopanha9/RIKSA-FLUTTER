@@ -42,6 +42,7 @@ class DioClient {
     '/auth/forgot-password',
     '/auth/reset-password',
     '/auth/verify-email',
+    '/auth/provinces',
   };
 
   Dio _build() {

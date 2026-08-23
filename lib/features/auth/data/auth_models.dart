@@ -41,10 +41,6 @@ class AuthResponse {
 }
 
 /// The signed-in user's profile returned by `GET /auth/me`.
-///
-/// Province intentionally is not represented yet because the current backend
-/// response does not expose it. Province onboarding remains feature-gated until
-/// that contract is added.
 class AuthUser {
   const AuthUser({
     required this.id,
@@ -59,6 +55,7 @@ class AuthUser {
     this.gender,
     this.phoneNumber,
     this.countryId,
+    this.provinceId,
     this.createdAt,
   });
 
@@ -74,6 +71,7 @@ class AuthUser {
   final bool phoneVerified;
   final String role;
   final String? countryId;
+  final String? provinceId;
   final DateTime? createdAt;
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
@@ -90,9 +88,28 @@ class AuthUser {
       phoneVerified: json['phoneVerified'] as bool? ?? false,
       role: json['role'] as String? ?? 'USER',
       countryId: json['countryId'] as String?,
+      provinceId: json['provinceId']?.toString(),
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
     );
   }
+}
+
+class ProvinceOption {
+  const ProvinceOption({
+    required this.id,
+    required this.nameKhmer,
+    required this.nameLatin,
+  });
+
+  final String id;
+  final String nameKhmer;
+  final String nameLatin;
+
+  factory ProvinceOption.fromJson(Map<String, dynamic> json) => ProvinceOption(
+    id: json['id']?.toString() ?? '',
+    nameKhmer: json['nameKhmer'] as String? ?? '',
+    nameLatin: json['nameLatin'] as String? ?? '',
+  );
 }
 
 class LoginRequest {

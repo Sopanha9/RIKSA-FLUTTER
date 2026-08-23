@@ -6,12 +6,18 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/splash_animation_screen.dart';
 import '../../features/auth/presentation/language_select_screen.dart';
+import '../../features/auth/presentation/onboarding_splash_screen.dart';
+import '../../features/auth/presentation/province_select_screen.dart';
 import '../../features/auth/presentation/telegram_otp_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/blog/presentation/blog_detail_screen.dart';
 import '../../features/blog/presentation/blog_feed_screen.dart';
 import '../../features/blog/presentation/create_blog_post_screen.dart';
 import '../../features/blog/presentation/my_posts_screen.dart';
+import '../../features/social/presentation/social_feed_screen.dart';
+import '../../features/social/presentation/compose_community_post_screen.dart';
+import '../../features/social/presentation/social_post_detail_screen.dart';
+import '../../features/userProfile/presentation/profile_setup_overview_screen.dart';
 
 final _authRouterRefreshProvider = Provider<ValueNotifier<AuthState>>((ref) {
   final refresh = ValueNotifier<AuthState>(ref.read(authProvider));
@@ -33,7 +39,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isSplash = state.matchedLocation == '/splash';
       final isLanguage = state.matchedLocation == '/language-select';
-      final isPublicRoute = isSplash || isLanguage || isAuthRoute;
+      final isOnboarding = state.matchedLocation == '/onboarding';
+      final isProvince = state.matchedLocation == '/province-select';
+      final isPublicRoute =
+          isSplash || isLanguage || isOnboarding || isProvince || isAuthRoute;
 
       if ((authState is AuthInitial || authState is AuthUnavailable) &&
           !isSplash) {
@@ -54,6 +63,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LanguageSelectScreen(),
       ),
       GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingSplashScreen(),
+      ),
+      GoRoute(
+        path: '/province-select',
+        builder: (context, state) => const ProvinceSelectScreen(),
+      ),
+      GoRoute(
         path: '/auth/login',
         builder: (context, state) => const LoginScreen(),
       ),
@@ -67,7 +84,29 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           isRegistration: state.uri.queryParameters['register'] == 'true',
         ),
       ),
-      GoRoute(path: '/home', builder: (context, state) => const HomeShell()),
+      GoRoute(
+        path: '/home',
+        builder: (context, state) => const SocialFeedScreen(),
+      ),
+      GoRoute(
+        path: '/community/create',
+        builder: (context, state) => ComposeCommunityPostScreen(
+          isQuestion: state.uri.queryParameters['type'] == 'question',
+        ),
+      ),
+      GoRoute(
+        path: '/community/posts/:id',
+        builder: (context, state) =>
+            SocialPostDetailScreen(postId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/profile/setup',
+        builder: (context, state) => ProfileSetupOverviewScreen(
+          // The following avatar form is a separate Figma frame and is not yet
+          // implemented. Keep navigation safe until that screen lands.
+          onSetUpProfile: () => context.go('/home'),
+        ),
+      ),
       GoRoute(
         path: '/blog',
         builder: (context, state) => const BlogFeedScreen(),
@@ -90,50 +129,3 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   ref.onDispose(router.dispose);
   return router;
 });
-
-/// Temporary home shell — will be replaced by the full app shell later.
-class HomeShell extends ConsumerWidget {
-  const HomeShell({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-    final username = authState is Authenticated ? authState.username : '';
-
-    return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            onPressed: () => ref.read(authProvider.notifier).logout(),
-            icon: const Icon(Icons.logout),
-            tooltip: 'Log Out',
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Riksa',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            Text('Welcome, $username'),
-            const SizedBox(height: 24),
-            const Text(
-              'App shell coming soon',
-              style: TextStyle(color: Color(0xFF8A8A8A)),
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: () => context.push('/blog'),
-              icon: const Icon(Icons.article_outlined),
-              label: const Text('Blog'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

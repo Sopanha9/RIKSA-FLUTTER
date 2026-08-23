@@ -260,6 +260,186 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageKm => 'ខ្មែរ';
 
   @override
+  String get community => 'Community';
+
+  @override
+  String get myFeed => 'My Feed';
+
+  @override
+  String streakDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+      zero: '0 days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get createCommunityContent => 'Create in Community';
+
+  @override
+  String get createPost => 'Create a post';
+
+  @override
+  String get createPostSubtitle => 'Share an idea, lesson, or useful resource.';
+
+  @override
+  String get askCommunity => 'Ask the community';
+
+  @override
+  String get askCommunitySubtitle =>
+      'Get help from learners who have been there.';
+
+  @override
+  String get chooseCommunity => 'Choose a community';
+
+  @override
+  String get postTitleLabel => 'Post title';
+
+  @override
+  String get questionTitleLabel => 'What do you want to ask?';
+
+  @override
+  String get detailsLabel => 'Add details';
+
+  @override
+  String get publish => 'Publish';
+
+  @override
+  String get publishFailed =>
+      'We couldn’t publish this yet. Check your content and try again.';
+
+  @override
+  String get noCommunities => 'Communities are not available yet.';
+
+  @override
+  String get blogEmptyMessage =>
+      'Fresh stories from the RIKSA community will appear here.';
+
+  @override
+  String get communityHeadline => 'Learn together. Share what clicks.';
+
+  @override
+  String get communitySubtitle =>
+      'Ask questions, swap useful ideas, and celebrate progress with learners across RIKSA.';
+
+  @override
+  String get forYou => 'For you';
+
+  @override
+  String get popularCommunities => 'Popular communities';
+
+  @override
+  String membersLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+      zero: 'No members',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get join => 'Join';
+
+  @override
+  String get joined => 'Joined';
+
+  @override
+  String get feedEmptyTitle => 'Your community feed is ready';
+
+  @override
+  String get feedEmptyMessage =>
+      'Posts from this community will appear here as learners start sharing.';
+
+  @override
+  String get feedErrorTitle => 'We couldn’t load the community';
+
+  @override
+  String get loadMore => 'Load more';
+
+  @override
+  String get copiedLink => 'Post link copied';
+
+  @override
+  String get actionFailed => 'That action didn’t go through. Try again.';
+
+  @override
+  String get postDetail => 'Post detail';
+
+  @override
+  String get discussion => 'Discussion';
+
+  @override
+  String get addComment => 'Add to the discussion';
+
+  @override
+  String get sendComment => 'Send comment';
+
+  @override
+  String get commentFailed => 'We couldn’t add your comment. Please try again.';
+
+  @override
+  String get noComments => 'No comments yet. Start the conversation.';
+
+  @override
+  String get postUnavailable => 'Post unavailable';
+
+  @override
+  String get postUnavailableMessage =>
+      'This post may have been removed or is no longer visible.';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get blog => 'Blog';
+
+  @override
+  String get setUpProfile => 'Set up profile';
+
+  @override
+  String get onboardingTitle =>
+      'Build a Better Future with a Community of Learners';
+
+  @override
+  String get onboardingLearningBody =>
+      'Discover quality education, modern learning experiences, and knowledge that grows with you.';
+
+  @override
+  String get onboardingAchievementBody =>
+      'Keep your streak alive, celebrate progress, and turn every small win into momentum.';
+
+  @override
+  String get onboardingCommunityBody =>
+      'Learn with a supportive community that shares ideas, answers questions, and grows together.';
+
+  @override
+  String get selectProvinceTitle => 'Select your province';
+
+  @override
+  String get selectProvinceSubtitle =>
+      'Your province personalizes local communities and provincial rankings. It will be saved securely to your profile after you sign in.';
+
+  @override
+  String get searchProvince => 'Search provinces';
+
+  @override
+  String get noProvinceResults => 'No provinces match your search.';
+
+  @override
+  String get provinceLoadFailed => 'We couldn’t load the provinces.';
+
+  @override
+  String get provinceSaveFailed =>
+      'We couldn’t save your province. Please try again.';
+
+  @override
   String get home => 'Home';
 
   @override
