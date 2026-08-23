@@ -348,14 +348,20 @@ class _OfflineActions extends StatelessWidget {
           Text(message, textAlign: TextAlign.center),
           const SizedBox(height: 12),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextButton(
-                onPressed: onUseAnotherAccount,
-                child: Text(anotherAccountLabel),
+              Expanded(
+                child: TextButton(
+                  onPressed: onUseAnotherAccount,
+                  child: Text(anotherAccountLabel),
+                ),
               ),
               const SizedBox(width: 8),
-              FilledButton(onPressed: onRetry, child: Text(retryLabel)),
+              Expanded(
+                child: FilledButton(
+                  onPressed: onRetry,
+                  child: Text(retryLabel),
+                ),
+              ),
             ],
           ),
         ],

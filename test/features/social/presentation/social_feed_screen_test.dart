@@ -139,6 +139,12 @@ void main() {
     expect(find.text('My Feed'), findsOneWidget);
     expect(find.text('Blog'), findsOneWidget);
     expect(find.text('For you'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('top-learners-spotlight')),
+      findsOneWidget,
+    );
+    expect(find.text('Top Learners This Week'), findsOneWidget);
+    expect(find.byKey(const ValueKey('top-learners-view-all')), findsOneWidget);
     expect(find.text('The two-minute recall habit'), findsOneWidget);
     expect(find.byKey(const ValueKey('react-post-1')), findsOneWidget);
 
@@ -146,11 +152,31 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('@sophea'), findsOneWidget);
     expect(find.text('Set up profile'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('drawer-category-category-1')),
+      findsNothing,
+    );
+    await tester.tap(find.byKey(const ValueKey('community-accordion')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 120));
+    expect(
+      find.byKey(const ValueKey('drawer-category-category-1')),
+      findsOneWidget,
+    );
+    await tester.pumpAndSettle();
     Navigator.of(tester.element(find.byType(Drawer))).pop();
     await tester.pumpAndSettle();
 
+    final activePill = find.byKey(const ValueKey('active-section-pill'));
+    final feedPillX = tester.getTopLeft(activePill).dx;
     await tester.tap(find.byKey(const ValueKey('blog-tab')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 90));
+    final movingPillX = tester.getTopLeft(activePill).dx;
+    expect(movingPillX, greaterThan(feedPillX));
     await tester.pumpAndSettle();
+    final blogPillX = tester.getTopLeft(activePill).dx;
+    expect(blogPillX, greaterThan(movingPillX));
     expect(find.text('How curiosity improves learning'), findsOneWidget);
     expect(find.text('The two-minute recall habit'), findsNothing);
 

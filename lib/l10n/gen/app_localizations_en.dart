@@ -330,6 +330,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forYou => 'For you';
 
   @override
+  String get topLearnersThisWeek => 'Top Learners This Week';
+
+  @override
+  String get viewAll => 'View All';
+
+  @override
+  String upvotesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count upvotes',
+      one: '1 upvote',
+      zero: '0 upvotes',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get popularCommunities => 'Popular communities';
 
   @override

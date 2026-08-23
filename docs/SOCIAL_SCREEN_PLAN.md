@@ -127,7 +127,7 @@ job resets lapsed streaks. Milestones: 1/3/7/14/30/60/90/365 days.
 │ └─────────────┴───────────────┘ │
 │ For You│Tech│STEM│History│...   │
 │ ┌─────────────────────────────┐ │
-│ │ Author · community          │ │
+│ │ Author/community          │ │
 │ │ Post title                  │ │
 │ │ excerpt...           [img]  │ │
 │ │ ↑ 12       💬 5       📤 2  │ │

@@ -323,6 +323,17 @@ class AppLocalizationsKm extends AppLocalizations {
   String get forYou => 'សម្រាប់អ្នក';
 
   @override
+  String get topLearnersThisWeek => 'អ្នកសិក្សាឆ្នើមប្រចាំសប្តាហ៍';
+
+  @override
+  String get viewAll => 'មើលទាំងអស់';
+
+  @override
+  String upvotesCount(int count) {
+    return 'ការគាំទ្រ $count';
+  }
+
+  @override
   String get popularCommunities => 'សហគមន៍ពេញនិយម';
 
   @override

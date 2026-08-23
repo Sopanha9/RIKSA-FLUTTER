@@ -692,6 +692,24 @@ abstract class AppLocalizations {
   /// **'For you'**
   String get forYou;
 
+  /// No description provided for @topLearnersThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Learners This Week'**
+  String get topLearnersThisWeek;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View All'**
+  String get viewAll;
+
+  /// No description provided for @upvotesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {0 upvotes} =1 {1 upvote} other {{count} upvotes}}'**
+  String upvotesCount(int count);
+
   /// No description provided for @popularCommunities.
   ///
   /// In en, this message translates to:

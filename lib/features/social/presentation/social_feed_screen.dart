@@ -72,8 +72,9 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
       drawer: _CommunityDrawer(
         categories: categories,
         selectedSection: _section,
-        onSectionSelected: _selectSection,
-        onMembershipTap: _toggleMembership,
+        selectedCategoryId: selectedCategory,
+        onSectionSelected: _selectDrawerSection,
+        onCategorySelected: _selectDrawerCategory,
       ),
       body: RefreshIndicator(
         color: AppColors.brandPrimary,
@@ -128,6 +129,13 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
                 ref.read(socialFeedProvider.notifier).selectCategory(id),
           ),
         ),
+        if (posts.isNotEmpty)
+          SliverToBoxAdapter(
+            child: _TopLearnersSpotlight(
+              posts: posts,
+              onViewAll: () => _showTopLearners(posts),
+            ),
+          ),
         if (posts.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
@@ -246,11 +254,14 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
     }
   }
 
-  Future<void> _toggleMembership(String categoryId) async {
-    final success = await ref
-        .read(socialFeedProvider.notifier)
-        .toggleCategoryMembership(categoryId);
-    if (!success && mounted) _showFailure();
+  void _showTopLearners(List<SocialPost> posts) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) =>
+          _TopLearnersSheet(learners: _SpotlightLearner.fromPosts(posts)),
+    );
   }
 
   void _showFailure() {
@@ -266,6 +277,18 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(0);
     }
+  }
+
+  void _selectDrawerSection(_SocialSection section) {
+    _selectSection(section);
+    if (section == _SocialSection.feed) {
+      ref.read(socialFeedProvider.notifier).selectCategory(null);
+    }
+  }
+
+  void _selectDrawerCategory(String categoryId) {
+    _selectSection(_SocialSection.feed);
+    ref.read(socialFeedProvider.notifier).selectCategory(categoryId);
   }
 
   Future<void> _showCreateMenu() async {
@@ -394,28 +417,39 @@ class _GlassIconButton extends StatelessWidget {
     final theme = Theme.of(context);
     return Tooltip(
       message: tooltip,
-      child: Material(
-        color: isPrimary
-            ? AppColors.brandPrimary
-            : theme.colorScheme.surfaceContainer.withValues(alpha: .72),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-          side: BorderSide(
-            color: isPrimary
-                ? AppColors.brandPrimary
-                : theme.colorScheme.outlineVariant.withValues(alpha: .65),
-          ),
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.shadow.withValues(alpha: .12),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(15),
-          onTap: onPressed,
-          child: SizedBox(
-            width: 42,
-            height: 42,
-            child: Icon(
-              icon,
-              size: 23,
-              color: isPrimary ? Colors.white : theme.colorScheme.onSurface,
+        child: Material(
+          color: isPrimary
+              ? AppColors.brandPrimary
+              : theme.colorScheme.surface.withValues(alpha: .94),
+          shape: CircleBorder(
+            side: BorderSide(
+              color: isPrimary
+                  ? AppColors.brandPrimary
+                  : theme.colorScheme.outlineVariant.withValues(alpha: .52),
+            ),
+          ),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onPressed,
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Icon(
+                icon,
+                size: 23,
+                color: isPrimary ? Colors.white : theme.colorScheme.onSurface,
+              ),
             ),
           ),
         ),
@@ -424,54 +458,251 @@ class _GlassIconButton extends StatelessWidget {
   }
 }
 
-class _GlassSectionTabs extends StatelessWidget {
+class _GlassSectionTabs extends StatefulWidget {
   const _GlassSectionTabs({required this.selected, required this.onSelected});
 
   final _SocialSection selected;
   final ValueChanged<_SocialSection> onSelected;
 
   @override
+  State<_GlassSectionTabs> createState() => _GlassSectionTabsState();
+}
+
+class _GlassSectionTabsState extends State<_GlassSectionTabs> {
+  static const _gap = 12.0;
+  _SocialSection? _pressedSection;
+  _SocialSection? _visualSelected;
+  int _selectionChange = 0;
+
+  _SocialSection get _effectiveVisualSelected =>
+      _visualSelected ?? widget.selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _visualSelected = widget.selected;
+  }
+
+  @override
+  void didUpdateWidget(covariant _GlassSectionTabs oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selected != oldWidget.selected &&
+        widget.selected != _effectiveVisualSelected) {
+      _visualSelected = widget.selected;
+    }
+  }
+
+  void _setPressed(_SocialSection section, bool pressed) {
+    final next = pressed ? section : null;
+    if (_pressedSection == next) return;
+    setState(() => _pressedSection = next);
+  }
+
+  void _activate(_SocialSection section) {
+    if (_effectiveVisualSelected != section) {
+      final change = ++_selectionChange;
+      setState(() => _visualSelected = section);
+      Future<void>.delayed(const Duration(milliseconds: 280), () {
+        if (mounted &&
+            change == _selectionChange &&
+            widget.selected != section) {
+          widget.onSelected(section);
+        }
+      });
+    }
+    Future<void>.delayed(const Duration(milliseconds: 70), () {
+      if (mounted && _pressedSection == section) {
+        setState(() => _pressedSection = null);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final inactiveColor = theme.brightness == Brightness.dark
+        ? colors.surfaceContainer
+        : colors.surface.withValues(alpha: .96);
+    final visualSelected = _effectiveVisualSelected;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            height: 48,
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainer.withValues(alpha: .68),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: .6),
-              ),
-            ),
-            child: Row(
+      child: SizedBox(
+        height: 48,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final pillWidth = (constraints.maxWidth - _gap) / 2;
+            return Stack(
+              clipBehavior: Clip.none,
               children: [
-                _SectionTab(
-                  key: const ValueKey('my-feed-tab'),
-                  label: l10n.myFeed,
-                  icon: Icons.dynamic_feed_outlined,
-                  selected: selected == _SocialSection.feed,
-                  onTap: () => onSelected(_SocialSection.feed),
+                Positioned.fill(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _PressScale(
+                          pressed: _pressedSection == _SocialSection.feed,
+                          child: _InactiveTabSurface(
+                            backgroundColor: inactiveColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: _gap),
+                      Expanded(
+                        child: _PressScale(
+                          pressed: _pressedSection == _SocialSection.blog,
+                          child: _InactiveTabSurface(
+                            backgroundColor: inactiveColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 4),
-                _SectionTab(
-                  key: const ValueKey('blog-tab'),
-                  label: l10n.blog,
-                  icon: Icons.auto_stories_outlined,
-                  selected: selected == _SocialSection.blog,
-                  onTap: () => onSelected(_SocialSection.blog),
+                AnimatedPositioned(
+                  key: const ValueKey('active-section-pill'),
+                  duration: const Duration(milliseconds: 280),
+                  curve: const Cubic(.18, 1.32, .32, 1),
+                  top: 0,
+                  bottom: 0,
+                  left: visualSelected == _SocialSection.feed
+                      ? 0
+                      : pillWidth + _gap,
+                  width: pillWidth,
+                  child: IgnorePointer(
+                    child: _PressScale(
+                      pressed: _pressedSection == visualSelected,
+                      child: const _ActiveTabSurface(),
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: Row(
+                    children: [
+                      _SectionTab(
+                        key: const ValueKey('my-feed-tab'),
+                        label: l10n.myFeed,
+                        icon: Icons.dynamic_feed_outlined,
+                        selected: visualSelected == _SocialSection.feed,
+                        pressed: _pressedSection == _SocialSection.feed,
+                        onPressChanged: (pressed) =>
+                            _setPressed(_SocialSection.feed, pressed),
+                        onTap: () => _activate(_SocialSection.feed),
+                      ),
+                      const SizedBox(width: _gap),
+                      _SectionTab(
+                        key: const ValueKey('blog-tab'),
+                        label: l10n.blog,
+                        icon: Icons.auto_stories_outlined,
+                        selected: visualSelected == _SocialSection.blog,
+                        pressed: _pressedSection == _SocialSection.blog,
+                        onPressChanged: (pressed) =>
+                            _setPressed(_SocialSection.blog, pressed),
+                        onTap: () => _activate(_SocialSection.blog),
+                      ),
+                    ],
+                  ),
                 ),
               ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _InactiveTabSurface extends StatelessWidget {
+  const _InactiveTabSurface({required this.backgroundColor});
+
+  final Color backgroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: colors.outlineVariant.withValues(alpha: .34)),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(alpha: .055),
+            blurRadius: 9,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActiveTabSurface extends StatelessWidget {
+  const _ActiveTabSurface();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.lerp(Colors.white, AppColors.brandPrimaryHover, .68)!,
+            Color.lerp(
+              AppColors.brandPrimaryHover,
+              AppColors.brandPrimaryPressed,
+              .28,
+            )!,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: .24)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.brandPrimaryPressed.withValues(alpha: .16),
+            blurRadius: 13,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: FractionallySizedBox(
+          widthFactor: .78,
+          child: Container(
+            margin: const EdgeInsets.only(top: 2),
+            height: 1.5,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withValues(alpha: 0),
+                  Colors.white.withValues(alpha: .72),
+                  Colors.white.withValues(alpha: 0),
+                ],
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PressScale extends StatelessWidget {
+  const _PressScale({required this.pressed, required this.child});
+
+  final bool pressed;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: pressed ? .95 : 1,
+      duration: Duration(milliseconds: pressed ? 110 : 150),
+      curve: pressed ? Curves.easeOutCubic : Curves.easeOutBack,
+      child: child,
     );
   }
 }
@@ -482,45 +713,60 @@ class _SectionTab extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.selected,
+    required this.pressed,
+    required this.onPressChanged,
     required this.onTap,
   });
 
   final String label;
   final IconData icon;
   final bool selected;
+  final bool pressed;
+  final ValueChanged<bool> onPressChanged;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final foreground = selected ? Colors.white : colors.onSurfaceVariant;
+
     return Expanded(
-      child: Material(
-        color: selected ? theme.colorScheme.surface : Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: selected
-                    ? AppColors.brandPrimaryPressed
-                    : theme.colorScheme.onSurfaceVariant,
+      child: _PressScale(
+        pressed: pressed,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTapDown: (_) => onPressChanged(true),
+            onTapCancel: () => onPressChanged(false),
+            onTap: onTap,
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TweenAnimationBuilder<Color?>(
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOutCubic,
+                    tween: ColorTween(end: foreground),
+                    builder: (context, color, _) =>
+                        Icon(icon, size: 18, color: color),
+                  ),
+                  const SizedBox(width: 8),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOutCubic,
+                    style: theme.textTheme.labelLarge!.copyWith(
+                      color: foreground,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                    ),
+                    child: Text(label),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: selected
-                      ? theme.colorScheme.onSurface
-                      : theme.colorScheme.onSurfaceVariant,
-                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -537,44 +783,56 @@ class _StreakPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final value = streak.value;
-    return Material(
-      color: const Color(0xFFFFF1E8),
-      borderRadius: BorderRadius.circular(15),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(15),
-        onTap: value == null ? null : () => _showDetails(context, value),
-        child: Container(
-          height: 42,
-          constraints: const BoxConstraints(minWidth: 58),
-          padding: const EdgeInsets.symmetric(horizontal: 11),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: const Color(0xFFFFD7BC)),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: .1),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.local_fire_department_rounded,
-                color: Color(0xFFF26B2D),
-                size: 21,
-              ),
-              const SizedBox(width: 4),
-              if (streak.isLoading)
-                const SizedBox(
-                  width: 13,
-                  height: 13,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              else
-                Text(
-                  '${value?.current ?? 0}',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: const Color(0xFF9B3D12),
-                    fontWeight: FontWeight.w900,
-                  ),
+        ],
+      ),
+      child: Material(
+        color: const Color(0xFFFFF1E8),
+        borderRadius: BorderRadius.circular(999),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: value == null ? null : () => _showDetails(context, value),
+          child: Container(
+            height: 44,
+            constraints: const BoxConstraints(minWidth: 62),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: const Color(0xFFFFD7BC)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.local_fire_department_rounded,
+                  color: Color(0xFFF26B2D),
+                  size: 21,
                 ),
-            ],
+                const SizedBox(width: 4),
+                if (streak.isLoading)
+                  const SizedBox(
+                    width: 13,
+                    height: 13,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  Text(
+                    '${value?.current ?? 0}',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: const Color(0xFF9B3D12),
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -620,21 +878,38 @@ class _StreakPill extends StatelessWidget {
   }
 }
 
-class _CommunityDrawer extends ConsumerWidget {
+enum _DrawerAccordionSection { feed, blog, profile, community }
+
+class _CommunityDrawer extends ConsumerStatefulWidget {
   const _CommunityDrawer({
     required this.categories,
     required this.selectedSection,
+    required this.selectedCategoryId,
     required this.onSectionSelected,
-    required this.onMembershipTap,
+    required this.onCategorySelected,
   });
 
   final List<SocialCategory> categories;
   final _SocialSection selectedSection;
+  final String? selectedCategoryId;
   final ValueChanged<_SocialSection> onSectionSelected;
-  final ValueChanged<String> onMembershipTap;
+  final ValueChanged<String> onCategorySelected;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_CommunityDrawer> createState() => _CommunityDrawerState();
+}
+
+class _CommunityDrawerState extends ConsumerState<_CommunityDrawer> {
+  _DrawerAccordionSection? _expandedSection;
+
+  void _toggleSection(_DrawerAccordionSection section) {
+    setState(() {
+      _expandedSection = _expandedSection == section ? null : section;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final auth = ref.watch(authProvider);
@@ -718,77 +993,75 @@ class _CommunityDrawer extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _DrawerTile(
+                  _SingleDestinationAccordion(
                     icon: Icons.dynamic_feed_outlined,
                     label: l10n.myFeed,
-                    selected: selectedSection == _SocialSection.feed,
-                    onTap: () {
+                    destinationLabel: l10n.forYou,
+                    expanded: _expandedSection == _DrawerAccordionSection.feed,
+                    parentSelected:
+                        _expandedSection == null &&
+                        widget.selectedSection == _SocialSection.feed &&
+                        widget.selectedCategoryId == null,
+                    destinationSelected:
+                        widget.selectedSection == _SocialSection.feed &&
+                        widget.selectedCategoryId == null,
+                    onToggle: () =>
+                        _toggleSection(_DrawerAccordionSection.feed),
+                    onDestinationTap: () {
                       Navigator.pop(context);
-                      onSectionSelected(_SocialSection.feed);
+                      widget.onSectionSelected(_SocialSection.feed);
                     },
                   ),
-                  _DrawerTile(
+                  const SizedBox(height: 4),
+                  _SingleDestinationAccordion(
                     icon: Icons.auto_stories_outlined,
                     label: l10n.blog,
-                    selected: selectedSection == _SocialSection.blog,
-                    onTap: () {
+                    destinationLabel: l10n.viewAll,
+                    expanded: _expandedSection == _DrawerAccordionSection.blog,
+                    parentSelected:
+                        _expandedSection == null &&
+                        widget.selectedSection == _SocialSection.blog,
+                    destinationSelected:
+                        widget.selectedSection == _SocialSection.blog,
+                    onToggle: () =>
+                        _toggleSection(_DrawerAccordionSection.blog),
+                    onDestinationTap: () {
                       Navigator.pop(context);
-                      onSectionSelected(_SocialSection.blog);
+                      widget.onSectionSelected(_SocialSection.blog);
                     },
                   ),
-                  _DrawerTile(
+                  const SizedBox(height: 4),
+                  _SingleDestinationAccordion(
                     icon: Icons.person_outline_rounded,
                     label: l10n.setUpProfile,
-                    onTap: () {
+                    destinationLabel: l10n.profile,
+                    expanded:
+                        _expandedSection == _DrawerAccordionSection.profile,
+                    parentSelected: false,
+                    destinationSelected: false,
+                    onToggle: () =>
+                        _toggleSection(_DrawerAccordionSection.profile),
+                    onDestinationTap: () {
                       Navigator.pop(context);
                       context.push('/profile/setup');
                     },
                   ),
-                  if (categories.isNotEmpty) ...[
-                    const SizedBox(height: 14),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        l10n.community,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    for (final category in categories.take(6))
-                      ListTile(
-                        dense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                        ),
-                        leading: CircleAvatar(
-                          radius: 16,
-                          backgroundColor: theme.colorScheme.primaryContainer,
-                          child: Text(
-                            category.name.isEmpty
-                                ? '#'
-                                : category.name[0].toUpperCase(),
-                            style: const TextStyle(fontWeight: FontWeight.w800),
-                          ),
-                        ),
-                        title: Text(
-                          category.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: Icon(
-                          category.joined
-                              ? Icons.check_circle_rounded
-                              : Icons.add_circle_outline_rounded,
-                          color: category.joined
-                              ? AppColors.brandPrimaryPressed
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
-                        onTap: () => onMembershipTap(category.id),
-                      ),
-                  ],
+                  const SizedBox(height: 4),
+                  _CommunityAccordion(
+                    expanded:
+                        _expandedSection == _DrawerAccordionSection.community,
+                    parentSelected:
+                        _expandedSection == null &&
+                        widget.selectedCategoryId != null,
+                    categories: widget.categories.take(6).toList(),
+                    selectedCategoryId: widget.selectedCategoryId,
+                    onToggle: () =>
+                        _toggleSection(_DrawerAccordionSection.community),
+                    onCategorySelected: (categoryId) {
+                      Navigator.pop(context);
+                      widget.onCategorySelected(categoryId);
+                    },
+                  ),
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 12),
                     child: Divider(),
@@ -819,19 +1092,303 @@ class _CommunityDrawer extends ConsumerWidget {
   }
 }
 
-class _DrawerTile extends StatelessWidget {
-  const _DrawerTile({
+class _DrawerNavigationTile extends StatelessWidget {
+  const _DrawerNavigationTile({
+    super.key,
     required this.icon,
     required this.label,
     required this.onTap,
     this.selected = false,
-    this.foregroundColor,
+    this.expanded = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
   final bool selected;
+  final bool expanded;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final foreground = selected
+        ? AppColors.brandPrimaryPressed
+        : colors.onSurface;
+    return Semantics(
+      button: true,
+      expanded: expanded,
+      selected: selected,
+      child: Material(
+        color: selected
+            ? AppColors.brandPrimary.withValues(alpha: .12)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(999),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onTap,
+          child: SizedBox(
+            height: 50,
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeInOut,
+                  width: 4,
+                  height: selected ? 28 : 0,
+                  decoration: BoxDecoration(
+                    color: AppColors.brandPrimaryPressed,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Icon(icon, size: 22, color: foreground),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: foreground,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+                    ),
+                  ),
+                ),
+                AnimatedRotation(
+                  turns: expanded ? .5 : 0,
+                  duration: const Duration(milliseconds: 230),
+                  curve: Curves.easeInOut,
+                  child: Icon(
+                    Icons.expand_more_rounded,
+                    size: 22,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(width: 13),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SingleDestinationAccordion extends StatelessWidget {
+  const _SingleDestinationAccordion({
+    required this.icon,
+    required this.label,
+    required this.destinationLabel,
+    required this.expanded,
+    required this.parentSelected,
+    required this.destinationSelected,
+    required this.onToggle,
+    required this.onDestinationTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String destinationLabel;
+  final bool expanded;
+  final bool parentSelected;
+  final bool destinationSelected;
+  final VoidCallback onToggle;
+  final VoidCallback onDestinationTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _DrawerNavigationTile(
+          icon: icon,
+          label: label,
+          expanded: expanded,
+          selected: parentSelected,
+          onTap: onToggle,
+        ),
+        ClipRect(
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 230),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: expanded
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 5, bottom: 3),
+                    child: Container(
+                      margin: const EdgeInsetsDirectional.only(start: 27),
+                      decoration: BoxDecoration(
+                        border: BorderDirectional(
+                          start: BorderSide(
+                            color: colors.outlineVariant.withValues(alpha: .7),
+                          ),
+                        ),
+                      ),
+                      child: _DrawerCategoryItem(
+                        label: destinationLabel,
+                        selected: destinationSelected,
+                        onTap: onDestinationTap,
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CommunityAccordion extends StatelessWidget {
+  const _CommunityAccordion({
+    required this.expanded,
+    required this.parentSelected,
+    required this.categories,
+    required this.selectedCategoryId,
+    required this.onToggle,
+    required this.onCategorySelected,
+  });
+
+  final bool expanded;
+  final bool parentSelected;
+  final List<SocialCategory> categories;
+  final String? selectedCategoryId;
+  final VoidCallback onToggle;
+  final ValueChanged<String> onCategorySelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = Theme.of(context).colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _DrawerNavigationTile(
+          key: const ValueKey('community-accordion'),
+          icon: Icons.groups_2_outlined,
+          label: l10n.community,
+          expanded: expanded,
+          selected: parentSelected,
+          onTap: onToggle,
+        ),
+        ClipRect(
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 230),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: expanded
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 5, bottom: 3),
+                    child: Container(
+                      margin: const EdgeInsetsDirectional.only(start: 27),
+                      decoration: BoxDecoration(
+                        border: BorderDirectional(
+                          start: BorderSide(
+                            color: colors.outlineVariant.withValues(alpha: .7),
+                          ),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final category in categories)
+                            _DrawerCategoryItem(
+                              key: ValueKey('drawer-category-${category.id}'),
+                              label: category.name,
+                              selected: selectedCategoryId == category.id,
+                              onTap: () => onCategorySelected(category.id),
+                            ),
+                        ],
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DrawerCategoryItem extends StatelessWidget {
+  const _DrawerCategoryItem({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final foreground = selected
+        ? AppColors.brandPrimaryPressed
+        : colors.onSurfaceVariant;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: 9, end: 2, bottom: 2),
+      child: Material(
+        color: selected
+            ? AppColors.brandPrimary.withValues(alpha: .12)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(999),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onTap,
+          child: SizedBox(
+            height: 42,
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeInOut,
+                  width: 3,
+                  height: selected ? 24 : 0,
+                  decoration: BoxDecoration(
+                    color: AppColors.brandPrimaryPressed,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: foreground,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DrawerTile extends StatelessWidget {
+  const _DrawerTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.foregroundColor,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
   final Color? foregroundColor;
 
   @override
@@ -840,8 +1397,6 @@ class _DrawerTile extends StatelessWidget {
     final color = foregroundColor ?? theme.colorScheme.onSurface;
     return ListTile(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      selected: selected,
-      selectedTileColor: theme.colorScheme.primaryContainer,
       leading: Icon(icon, color: color),
       title: Text(
         label,
@@ -1083,6 +1638,344 @@ class _GlassBlogCard extends StatelessWidget {
   }
 }
 
+class _SpotlightLearner {
+  const _SpotlightLearner({
+    required this.id,
+    required this.name,
+    required this.username,
+    required this.avatarUrl,
+    required this.subject,
+    required this.score,
+  });
+
+  final String id;
+  final String name;
+  final String username;
+  final String avatarUrl;
+  final String subject;
+  final int score;
+
+  static List<_SpotlightLearner> fromPosts(List<SocialPost> posts) {
+    final byAuthor = <String, _SpotlightLearner>{};
+    for (final post in posts) {
+      final author = post.author;
+      final id = author.id.isEmpty ? author.username : author.id;
+      final current = byAuthor[id];
+      final displayName = author.displayName.trim().isEmpty
+          ? author.username
+          : author.displayName;
+      byAuthor[id] = _SpotlightLearner(
+        id: id,
+        name: displayName,
+        username: author.username,
+        avatarUrl: author.avatarUrl,
+        subject: current?.subject ?? post.category.name,
+        score: (current?.score ?? 0) + post.reactionCount,
+      );
+    }
+    final learners = byAuthor.values.toList()
+      ..sort((a, b) => b.score.compareTo(a.score));
+    return learners;
+  }
+}
+
+class _TopLearnersSpotlight extends StatelessWidget {
+  const _TopLearnersSpotlight({required this.posts, required this.onViewAll});
+
+  final List<SocialPost> posts;
+  final VoidCallback onViewAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final learners = _SpotlightLearner.fromPosts(posts).take(6).toList();
+
+    return Container(
+      key: const ValueKey('top-learners-spotlight'),
+      margin: const EdgeInsets.fromLTRB(16, 7, 16, 13),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? const [Color(0xFF102C24), Color(0xFF1D3024)]
+              : const [Color(0xFFE5F6EF), Color(0xFFF3F6DC)],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: AppColors.brandPrimary.withValues(alpha: isDark ? .34 : .14),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(alpha: .07),
+            blurRadius: 24,
+            offset: const Offset(0, 9),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.brandPrimary,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.brandPrimary.withValues(alpha: .2),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.emoji_events_rounded,
+                  size: 21,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Text(
+                  l10n.topLearnersThisWeek,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          SizedBox(
+            height: 112,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: learners.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
+              itemBuilder: (context, index) =>
+                  _SpotlightLearnerCard(learner: learners[index]),
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 42,
+            child: Material(
+              color: AppColors.brandPrimary,
+              borderRadius: BorderRadius.circular(999),
+              child: InkWell(
+                key: const ValueKey('top-learners-view-all'),
+                borderRadius: BorderRadius.circular(999),
+                onTap: onViewAll,
+                child: Center(
+                  child: Text(
+                    l10n.viewAll,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SpotlightLearnerCard extends StatelessWidget {
+  const _SpotlightLearnerCard({required this.learner});
+
+  final _SpotlightLearner learner;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Container(
+      width: 218,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.surface.withValues(alpha: .82),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.surface.withValues(alpha: .72)),
+      ),
+      child: Row(
+        children: [
+          _SpotlightAvatar(imageUrl: learner.avatarUrl, label: learner.name),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  learner.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Container(
+                  constraints: const BoxConstraints(maxWidth: 122),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandPrimary.withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    learner.subject,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppColors.brandPrimaryPressed,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.thumb_up_alt_rounded,
+                      size: 14,
+                      color: AppColors.brandPrimaryPressed,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        l10n.upvotesCount(learner.score),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SpotlightAvatar extends StatelessWidget {
+  const _SpotlightAvatar({required this.imageUrl, required this.label});
+
+  final String imageUrl;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final initial = label.trim().isEmpty ? 'R' : label.trim()[0].toUpperCase();
+    return CircleAvatar(
+      radius: 24,
+      backgroundColor: colors.primaryContainer,
+      foregroundImage: imageUrl.trim().isEmpty ? null : NetworkImage(imageUrl),
+      onForegroundImageError: imageUrl.trim().isEmpty
+          ? null
+          : (exception, stackTrace) {},
+      child: Text(
+        initial,
+        style: TextStyle(
+          color: colors.onPrimaryContainer,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _TopLearnersSheet extends StatelessWidget {
+  const _TopLearnersSheet({required this.learners});
+
+  final List<_SpotlightLearner> learners;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return FractionallySizedBox(
+      heightFactor: .72,
+      child: SafeArea(
+        top: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 8, 22, 14),
+              child: Text(
+                l10n.topLearnersThisWeek,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+                itemCount: learners.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final learner = learners[index];
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    tileColor: theme.colorScheme.surfaceContainerLow,
+                    leading: _SpotlightAvatar(
+                      imageUrl: learner.avatarUrl,
+                      label: learner.name,
+                    ),
+                    title: Text(
+                      learner.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    subtitle: Text(learner.subject),
+                    trailing: Text(
+                      l10n.upvotesCount(learner.score),
+                      style: const TextStyle(
+                        color: AppColors.brandPrimaryPressed,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _CategoryFilters extends StatelessWidget {
   const _CategoryFilters({
     required this.categories,
@@ -1097,42 +1990,71 @@ class _CategoryFilters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            height: 50,
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainer.withValues(alpha: .58),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: .55),
-              ),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 7),
+      child: SizedBox(
+        height: 42,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          children: [
+            _CategoryFilterPill(
+              label: l10n.forYou,
+              selected: selectedCategoryId == null,
+              onTap: () => onSelected(null),
             ),
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                ChoiceChip(
-                  label: Text(l10n.forYou),
-                  selected: selectedCategoryId == null,
-                  showCheckmark: false,
-                  onSelected: (_) => onSelected(null),
-                ),
-                for (final category in categories) ...[
-                  const SizedBox(width: 8),
-                  ChoiceChip(
-                    label: Text(category.name),
-                    selected: selectedCategoryId == category.id,
-                    showCheckmark: false,
-                    onSelected: (_) => onSelected(category.id),
-                  ),
-                ],
-              ],
+            for (final category in categories) ...[
+              const SizedBox(width: 10),
+              _CategoryFilterPill(
+                label: category.name,
+                selected: selectedCategoryId == category.id,
+                onTap: () => onSelected(category.id),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryFilterPill extends StatelessWidget {
+  const _CategoryFilterPill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: selected
+          ? AppColors.brandPrimary
+          : theme.colorScheme.surfaceContainer.withValues(alpha: .72),
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onTap,
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 17),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: selected
+                  ? AppColors.brandPrimary
+                  : theme.colorScheme.outlineVariant.withValues(alpha: .48),
+            ),
+          ),
+          child: Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: selected ? Colors.white : theme.colorScheme.onSurface,
+              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
             ),
           ),
         ),

@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/app/router/app_router.dart';
 import 'package:riksa_app/core/providers/locale_provider.dart';
+import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/auth/presentation/login_screen.dart';
 import 'package:riksa_app/features/auth/presentation/register_screen.dart';
+import 'package:riksa_app/features/auth/presentation/splash_animation_screen.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
@@ -23,6 +25,11 @@ class _TestLocaleNotifier extends LocaleNotifier {
     isReady: true,
     hasSelection: true,
   );
+}
+
+class _UnavailableAuthNotifier extends AuthNotifier {
+  @override
+  AuthState build() => const AuthUnavailable('Service unavailable');
 }
 
 Widget _testApp(Widget child) {
@@ -75,6 +82,34 @@ void main() {
 
     expect(find.byKey(const Key('google_auth_button')), findsOneWidget);
     expect(find.byKey(const Key('telegram_auth_button')), findsOneWidget);
+  });
+
+  testWidgets('splash offline actions have finite button constraints', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_UnavailableAuthNotifier.new),
+          localeProvider.overrideWith(_TestLocaleNotifier.new),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: const SplashAnimationScreen(),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 1500));
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(FilledButton), findsOneWidget);
   });
 
   testWidgets('registration moves from basics to password step', (
