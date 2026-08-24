@@ -18,10 +18,27 @@ class AppLocalizationsKm extends AppLocalizations {
   String get loginSubtitle => 'ចូលប្រើប្រាស់ដើម្បីបន្តការសិក្សារបស់អ្នក';
 
   @override
+  String get loginEyebrow => 'កន្លែងសិក្សារបស់អ្នក';
+
+  @override
   String get registerTitle => 'បង្កើត​គណនី';
 
   @override
   String get registerSubtitle => 'ចូលរួម Riksa និងចាប់ផ្ដើមសិក្សាថ្ងៃនេះ';
+
+  @override
+  String get registerEyebrow => 'ចាប់ផ្ដើមការសិក្សាបន្តបន្ទាប់';
+
+  @override
+  String get accountBasics => 'ព័ត៌មានគណនី';
+
+  @override
+  String get secureYourAccount => 'ការពារគណនីរបស់អ្នក';
+
+  @override
+  String stepOfTwo(int step) {
+    return 'ជំហានទី $step នៃ ២';
+  }
 
   @override
   String get username => 'ឈ្មោះ​អ្នក​ប្រើ';
@@ -34,6 +51,30 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get passwordHint => 'បញ្ចូលពាក្យសម្ងាត់';
+
+  @override
+  String get confirmPassword => 'បញ្ជាក់​ពាក្យ​សម្ងាត់';
+
+  @override
+  String get confirmPasswordHint => 'បញ្ចូលពាក្យសម្ងាត់ម្ដងទៀត';
+
+  @override
+  String get showPassword => 'បង្ហាញពាក្យសម្ងាត់';
+
+  @override
+  String get hidePassword => 'លាក់ពាក្យសម្ងាត់';
+
+  @override
+  String get passwordEightCharacters => '៨ តួអក្សរឡើងទៅ';
+
+  @override
+  String get passwordUppercase => 'អក្សរធំ';
+
+  @override
+  String get passwordLowercase => 'អក្សរតូច';
+
+  @override
+  String get passwordNumber => 'លេខ';
 
   @override
   String get email => 'អ៊ីមែល';
@@ -60,7 +101,28 @@ class AppLocalizationsKm extends AppLocalizations {
   String get register => 'ចុះ​ឈ្មោះ';
 
   @override
+  String get continueLabel => 'បន្ត';
+
+  @override
+  String get back => 'ត្រឡប់ក្រោយ';
+
+  @override
+  String get tryAgain => 'ព្យាយាមម្ដងទៀត';
+
+  @override
+  String get useAnotherAccount => 'ប្រើគណនីផ្សេង';
+
+  @override
+  String get readyToLearn => 'ត្រៀមរៀន';
+
+  @override
+  String get preparingYourSpace => 'កំពុងរៀបចំកន្លែងសិក្សា';
+
+  @override
   String get orContinueWith => 'ឬ​បន្ត​ជាមួយ';
+
+  @override
+  String get orLabel => 'ឬ';
 
   @override
   String get signInWithGoogle => 'បន្ត​ជាមួយ Google';
@@ -124,6 +186,23 @@ class AppLocalizationsKm extends AppLocalizations {
       'ពាក្យ​សម្ងាត់​ត្រូវ​មាន ៨ តួ​អក្សរ​ឡើង​ទៅ​មាន​អក្សរ​ធំ អក្សរ​តូច និង​លេខ';
 
   @override
+  String get passwordsDoNotMatch => 'ពាក្យសម្ងាត់មិនត្រូវគ្នា';
+
+  @override
+  String get displayNameTooLong => 'ឈ្មោះបង្ហាញត្រូវមានមិនលើសពី ១០០ តួអក្សរ';
+
+  @override
+  String get usernameTooLong => 'ឈ្មោះអ្នកប្រើត្រូវមានពី ៣ ដល់ ៥០ តួអក្សរ';
+
+  @override
+  String get signInSecureNote =>
+      'សម័យចូលប្រើរបស់អ្នកត្រូវបានការពារ និងបន្តដោយស្វ័យប្រវត្តិ។';
+
+  @override
+  String get registerEmailNote =>
+      'អ្នកអាចផ្ទៀងផ្ទាត់អ៊ីមែលពេលក្រោយក្នុងប្រវត្តិរូប។';
+
+  @override
   String get loginFailed => 'ការ​ចូល​បរាជ័យ។ ពិនិត្យ​ព័ត៌មាន​របស់​អ្នក។';
 
   @override
@@ -131,6 +210,14 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get googleFailed => 'ការ​ចូល​តាម Google បរាជ័យ';
+
+  @override
+  String get googleNotConfigured =>
+      'ការ​ចូល​តាម Google មិន​ទាន់​បាន​កំណត់​សម្រាប់​កំណែ​នេះ​ទេ។';
+
+  @override
+  String get googleUnsupported =>
+      'ប្រើ​ប៊ូតុង Google ដែល​កម្មវិធី​រុករក​ផ្តល់​ឱ្យ​ដើម្បី​បន្ត។';
 
   @override
   String get otpSendFailed => 'មិន​អាច​ផ្ញើ​កូដ OTP បាន';
@@ -142,17 +229,517 @@ class AppLocalizationsKm extends AppLocalizations {
   String get otpSendSuccess => 'កូដ​បាន​ផ្ញើ​ទៅ Telegram របស់​អ្នក';
 
   @override
+  String get telegramEyebrow => 'ចូលប្រើរហ័សដោយគ្មានពាក្យសម្ងាត់';
+
+  @override
+  String get telegramLoginTitle => 'ចូលជាមួយ Telegram';
+
+  @override
+  String get telegramLoginSubtitle =>
+      'បញ្ចូលលេខសម្គាល់ការជជែកពី Riksa bot ហើយយើងនឹងផ្ញើកូដប្រើតែម្តង។';
+
+  @override
+  String get telegramRegisterTitle => 'ចុះឈ្មោះជាមួយ Telegram';
+
+  @override
+  String get telegramRegisterSubtitle =>
+      'ជ្រើសរើសឈ្មោះ Riksa របស់អ្នក រួចផ្ទៀងផ្ទាត់គណនី Telegram ដោយកូដប្រើតែម្តង។';
+
+  @override
+  String get enterTelegramCode => 'បញ្ចូលកូដ Telegram របស់អ្នក';
+
+  @override
+  String get invalidTelegramChatId =>
+      'បញ្ចូលលេខសម្គាល់ការជជែក Telegram ជាលេខត្រឹមត្រូវ';
+
+  @override
+  String get invalidOtpCode => 'បញ្ចូលកូដ ៦ ខ្ទង់';
+
+  @override
   String get languageEn => 'English';
 
   @override
   String get languageKm => 'ខ្មែរ';
 
   @override
+  String get community => 'សហគមន៍';
+
+  @override
+  String get myFeed => 'មតិព័ត៌មានរបស់ខ្ញុំ';
+
+  @override
+  String streakDays(int count) {
+    return '$count ថ្ងៃ';
+  }
+
+  @override
+  String get streakTitle => 'ការសិក្សាបន្ត';
+
+  @override
+  String get streakSubtitle =>
+      'រៀនរាល់ថ្ងៃ ដើម្បីបន្តការសិក្សារបស់អ្នកឱ្យកាន់តែប្រសើរ។';
+
+  @override
+  String get bestStreak => 'ការសិក្សាបន្តល្អបំផុត';
+
+  @override
+  String get lastTracked => 'បានកត់ត្រាចុងក្រោយ';
+
+  @override
+  String get noTrackedDate => 'មិនទាន់មានសកម្មភាពសិក្សាដែលបានកត់ត្រាទេ។';
+
+  @override
+  String get activityCalendar => 'ប្រតិទិនសកម្មភាព';
+
+  @override
+  String get createCommunityContent => 'បង្កើតក្នុងសហគមន៍';
+
+  @override
+  String get createPost => 'បង្កើតការបង្ហោះ';
+
+  @override
+  String get createPostSubtitle => 'ចែករំលែកគំនិត មេរៀន ឬធនធានមានប្រយោជន៍។';
+
+  @override
+  String get askCommunity => 'សួរសហគមន៍';
+
+  @override
+  String get askCommunitySubtitle => 'សុំជំនួយពីអ្នកសិក្សាផ្សេងទៀត។';
+
+  @override
+  String get chooseCommunity => 'ជ្រើសរើសសហគមន៍';
+
+  @override
+  String get postTitleLabel => 'ចំណងជើងការបង្ហោះ';
+
+  @override
+  String get questionTitleLabel => 'តើអ្នកចង់សួរអ្វី?';
+
+  @override
+  String get detailsLabel => 'បន្ថែមព័ត៌មានលម្អិត';
+
+  @override
+  String get publish => 'បោះពុម្ពផ្សាយ';
+
+  @override
+  String get publishFailed =>
+      'យើងមិនអាចបោះពុម្ពផ្សាយបានទេ។ សូមពិនិត្យខ្លឹមសារ ហើយព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get noCommunities => 'មិនទាន់មានសហគមន៍ទេ។';
+
+  @override
+  String get blogEmptyMessage => 'អត្ថបទថ្មីៗពីសហគមន៍ RIKSA នឹងបង្ហាញនៅទីនេះ។';
+
+  @override
+  String get communityHeadline => 'រៀនជាមួយគ្នា។ ចែករំលែកអ្វីដែលអ្នកយល់។';
+
+  @override
+  String get communitySubtitle =>
+      'សួរសំណួរ ចែករំលែកគំនិតមានប្រយោជន៍ និងអបអរវឌ្ឍនភាពជាមួយអ្នកសិក្សា RIKSA។';
+
+  @override
+  String get forYou => 'សម្រាប់អ្នក';
+
+  @override
+  String get official => 'ផ្លូវការ';
+
+  @override
+  String get topLearnersThisWeek => 'អ្នកសិក្សាឆ្នើមប្រចាំសប្តាហ៍';
+
+  @override
+  String get viewAll => 'មើលទាំងអស់';
+
+  @override
+  String upvotesCount(int count) {
+    return 'ការគាំទ្រ $count';
+  }
+
+  @override
+  String get popularCommunities => 'សហគមន៍ពេញនិយម';
+
+  @override
+  String membersLabel(int count) {
+    return 'សមាជិក $count នាក់';
+  }
+
+  @override
+  String get join => 'ចូលរួម';
+
+  @override
+  String get joined => 'បានចូលរួម';
+
+  @override
+  String get feedEmptyTitle => 'មតិព័ត៌មានសហគមន៍របស់អ្នករួចរាល់';
+
+  @override
+  String get feedEmptyMessage =>
+      'ការបង្ហោះពីសហគមន៍នេះនឹងបង្ហាញនៅទីនេះ ពេលអ្នកសិក្សាចាប់ផ្ដើមចែករំលែក។';
+
+  @override
+  String get feedErrorTitle => 'យើងមិនអាចផ្ទុកសហគមន៍បានទេ';
+
+  @override
+  String get loadMore => 'ផ្ទុកបន្ថែម';
+
+  @override
+  String get copiedLink => 'បានចម្លងតំណការបង្ហោះ';
+
+  @override
+  String get actionFailed => 'សកម្មភាពនេះមិនបានសម្រេចទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get postDetail => 'ព័ត៌មានលម្អិតនៃការបង្ហោះ';
+
+  @override
+  String get discussion => 'ការពិភាក្សា';
+
+  @override
+  String get addComment => 'ចូលរួមក្នុងការពិភាក្សា';
+
+  @override
+  String get sendComment => 'ផ្ញើមតិយោបល់';
+
+  @override
+  String get commentFailed =>
+      'យើងមិនអាចបន្ថែមមតិយោបល់របស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get noComments => 'មិនទាន់មានមតិយោបល់ទេ។ ចាប់ផ្ដើមការសន្ទនា។';
+
+  @override
+  String get postUnavailable => 'មិនអាចមើលការបង្ហោះបាន';
+
+  @override
+  String get postUnavailableMessage =>
+      'ការបង្ហោះនេះអាចត្រូវបានលុប ឬលែងអាចមើលឃើញ។';
+
+  @override
+  String get profile => 'ប្រវត្តិរូប';
+
+  @override
+  String get blog => 'ប្លុក';
+
+  @override
+  String get setUpProfile => 'រៀបចំប្រវត្តិរូប';
+
+  @override
+  String get onboardingTitle => 'កសាងអនាគតដ៏ប្រសើរជាមួយសហគមន៍អ្នកសិក្សា';
+
+  @override
+  String get onboardingLearningBody =>
+      'ស្វែងយល់ពីការអប់រំប្រកបដោយគុណភាព បទពិសោធន៍សិក្សាទំនើប និងចំណេះដឹងដែលរីកចម្រើនជាមួយអ្នក។';
+
+  @override
+  String get onboardingAchievementBody =>
+      'បន្តការសិក្សាប្រចាំថ្ងៃ អបអរវឌ្ឍនភាព និងប្រែក្លាយជ័យជម្នះតូចៗទៅជាកម្លាំងចលករ។';
+
+  @override
+  String get onboardingCommunityBody =>
+      'រៀនជាមួយសហគមន៍ដែលគាំទ្រ ចែករំលែកគំនិត ឆ្លើយសំណួរ និងរីកចម្រើនជាមួយគ្នា។';
+
+  @override
+  String get selectProvinceTitle => 'ជ្រើសរើសខេត្តរបស់អ្នក';
+
+  @override
+  String get selectProvinceSubtitle =>
+      'ខេត្តរបស់អ្នកជួយកំណត់សហគមន៍ក្នុងតំបន់ និងចំណាត់ថ្នាក់តាមខេត្ត។ ព័ត៌មាននេះនឹងត្រូវរក្សាទុកដោយសុវត្ថិភាពក្នុងប្រវត្តិរូប បន្ទាប់ពីអ្នកចូលគណនី។';
+
+  @override
+  String get searchProvince => 'ស្វែងរកខេត្ត';
+
+  @override
+  String get noProvinceResults => 'រកមិនឃើញខេត្តដែលត្រូវនឹងការស្វែងរកទេ។';
+
+  @override
+  String get provinceLoadFailed => 'យើងមិនអាចផ្ទុកបញ្ជីខេត្តបានទេ។';
+
+  @override
+  String get provinceSaveFailed =>
+      'យើងមិនអាចរក្សាទុកខេត្តរបស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
   String get home => 'ទំព័រ​ដើម';
+
+  @override
+  String get learn => 'រៀន';
+
+  @override
+  String get leaderboard => 'តារាងចំណាត់ថ្នាក់';
 
   @override
   String get logout => 'ចេញ';
 
   @override
   String get loading => 'កំពុង​ផ្ទុក...';
+
+  @override
+  String get learningHeadline => 'ស្វែងរកមេរៀនបន្ទាប់របស់អ្នក';
+
+  @override
+  String get learningSubtitle =>
+      'ជ្រើសរើសថ្នាក់ មុខវិជ្ជា និងកម្រិត ដើម្បីរៀនតាមល្បឿនរបស់អ្នក។';
+
+  @override
+  String get gradeFilter => 'ថ្នាក់';
+
+  @override
+  String get subjectFilter => 'មុខវិជ្ជា';
+
+  @override
+  String get difficultyFilter => 'កម្រិត';
+
+  @override
+  String get allGrades => 'គ្រប់ថ្នាក់';
+
+  @override
+  String gradeNumber(int grade) {
+    return 'ថ្នាក់ទី $grade';
+  }
+
+  @override
+  String gradeDataPending(int grade) {
+    return 'បានជ្រើសរើសថ្នាក់ទី $grade។ រហូតដល់ API បន្ថែមស្លាកថ្នាក់ យើងនៅតែបង្ហាញមេរៀនដែលមិនទាន់កំណត់ថ្នាក់។';
+  }
+
+  @override
+  String get allSubjects => 'គ្រប់មុខវិជ្ជា';
+
+  @override
+  String get allLevels => 'គ្រប់កម្រិត';
+
+  @override
+  String get recommendedLessons => 'មេរៀនដែលណែនាំ';
+
+  @override
+  String get doneLabel => 'រួច';
+
+  @override
+  String get completedLabel => 'បានបញ្ចប់';
+
+  @override
+  String get generalSubject => 'ទូទៅ';
+
+  @override
+  String get difficultyEasy => 'ងាយ';
+
+  @override
+  String get difficultyMedium => 'មធ្យម';
+
+  @override
+  String get difficultyHard => 'ពិបាក';
+
+  @override
+  String get difficultyDifficult => 'កម្រិតខ្ពស់';
+
+  @override
+  String exerciseCount(int count) {
+    return 'លំហាត់ $count';
+  }
+
+  @override
+  String baseXpLabel(int xp) {
+    return '$xp XP មូលដ្ឋាន';
+  }
+
+  @override
+  String get lessonLoadFailed => 'យើងមិនអាចផ្ទុកមេរៀនបានទេ';
+
+  @override
+  String get noLessonsFound => 'រកមិនឃើញមេរៀន';
+
+  @override
+  String get noLessonsForFilters =>
+      'សាកល្បងជ្រើសរើសថ្នាក់ មុខវិជ្ជា ឬកម្រិតផ្សេង។';
+
+  @override
+  String get accountSettings => 'ការកំណត់គណនី';
+
+  @override
+  String get riksaLearner => 'អ្នកសិក្សា RIKSA';
+
+  @override
+  String memberSince(String date) {
+    return 'សមាជិកតាំងពី $date';
+  }
+
+  @override
+  String get verified => 'បានផ្ទៀងផ្ទាត់';
+
+  @override
+  String get notVerified => 'មិនទាន់ផ្ទៀងផ្ទាត់';
+
+  @override
+  String get accountRole => 'តួនាទីគណនី';
+
+  @override
+  String get totalXp => 'XP សរុប';
+
+  @override
+  String get currentStreak => 'ការសិក្សាបន្ត';
+
+  @override
+  String get achievements => 'សមិទ្ធផល';
+
+  @override
+  String get currentRank => 'ចំណាត់ថ្នាក់បច្ចុប្បន្ន';
+
+  @override
+  String get startingTier => 'កម្រិតចាប់ផ្តើម';
+
+  @override
+  String get highestRankReached => 'អ្នកបានឈានដល់ចំណាត់ថ្នាក់ខ្ពស់បំផុត។';
+
+  @override
+  String xpUntilNextRank(int xp, String tier) {
+    return 'ត្រូវការ $xp XP ទៀតដើម្បីឡើងទៅ $tier';
+  }
+
+  @override
+  String get earned => 'ទទួលបាន';
+
+  @override
+  String get recentActivity => 'សកម្មភាពថ្មីៗ';
+
+  @override
+  String get noAchievements => 'សមិទ្ធផល និងវឌ្ឍនភាពរបស់អ្នកនឹងបង្ហាញនៅទីនេះ។';
+
+  @override
+  String get noRecentActivity =>
+      'សកម្មភាព XP របស់អ្នកនឹងបង្ហាញនៅទីនេះពេលអ្នកសិក្សា។';
+
+  @override
+  String get profileLoadFailed => 'យើងមិនអាចផ្ទុកប្រវត្តិសិក្សារបស់អ្នកបានទេ។';
+
+  @override
+  String get lessonCompletionReward => 'បានបញ្ចប់មេរៀន';
+
+  @override
+  String get achievementReward => 'រង្វាន់សមិទ្ធផល';
+
+  @override
+  String get streakReward => 'រង្វាន់ការសិក្សាបន្ត';
+
+  @override
+  String get rankReward => 'រង្វាន់ចំណាត់ថ្នាក់';
+
+  @override
+  String get welcomeBonus => 'រង្វាន់ស្វាគមន៍';
+
+  @override
+  String get xpReward => 'រង្វាន់ XP';
+
+  @override
+  String get myPosts => 'ការបង្ហោះរបស់ខ្ញុំ';
+
+  @override
+  String get leaderboardRank => 'ចំណាត់ថ្នាក់តារាងពិន្ទុ';
+
+  @override
+  String get noPostsYet => 'ការបង្ហោះក្នុងសហគមន៍របស់អ្នកនឹងបង្ហាញនៅទីនេះ។';
+
+  @override
+  String get countryRank => 'ចំណាត់ថ្នាក់កម្ពុជា';
+
+  @override
+  String get provinceRank => 'ចំណាត់ថ្នាក់ខេត្ត';
+
+  @override
+  String get unranked => 'មិនទាន់មានចំណាត់ថ្នាក់';
+
+  @override
+  String get settings => 'ការកំណត់';
+
+  @override
+  String get editProfile => 'កែប្រែប្រវត្តិរូប';
+
+  @override
+  String get notificationPreferences => 'ការជូនដំណឹង';
+
+  @override
+  String get notificationPreferencesHint => 'រំលឹកអំពីការសិក្សា និងសហគមន៍';
+
+  @override
+  String get darkMode => 'មុខងារងងឹត';
+
+  @override
+  String get darkModeHint => 'ប្រើរូបរាងងងឹតរបស់ RIKSA';
+
+  @override
+  String get language => 'ភាសា';
+
+  @override
+  String get helpAndLegal => 'ជំនួយ និងច្បាប់';
+
+  @override
+  String get faq => 'សំណួរញឹកញាប់';
+
+  @override
+  String get termsOfService => 'លក្ខខណ្ឌប្រើប្រាស់';
+
+  @override
+  String get privacyPolicy => 'គោលការណ៍ឯកជនភាព';
+
+  @override
+  String get fullName => 'ឈ្មោះពេញ';
+
+  @override
+  String get bio => 'ប្រវត្តិខ្លី';
+
+  @override
+  String get gender => 'ភេទ';
+
+  @override
+  String get genderUnspecified => 'មិនចង់បញ្ជាក់';
+
+  @override
+  String get saveChanges => 'រក្សាទុកការផ្លាស់ប្តូរ';
+
+  @override
+  String get changesSaved => 'ប្រវត្តិរូបរបស់អ្នកត្រូវបានកែប្រែ។';
+
+  @override
+  String get profileSaveFailed =>
+      'យើងមិនអាចរក្សាទុកប្រវត្តិរូបបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get deleteAccount => 'លុបគណនី';
+
+  @override
+  String get deleteAccountTitle => 'លុបគណនី RIKSA របស់អ្នកមែនទេ?';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'វានឹងលុបប្រវត្តិសិក្សា XP សមិទ្ធផល និងការបង្ហោះរបស់អ្នកជាអចិន្ត្រៃយ៍។ បន្តទេ?';
+
+  @override
+  String get cancel => 'បោះបង់';
+
+  @override
+  String get deleteUnavailable =>
+      'API មិនទាន់គាំទ្រការលុបគណនីទេ។ សូមទាក់ទងក្រុមគាំទ្រ RIKSA។';
+
+  @override
+  String get accountIdentifiersReadOnly =>
+      'អ៊ីមែល លេខទូរស័ព្ទ និងឈ្មោះអ្នកប្រើ គឺជាព័ត៌មានសុវត្ថិភាពដែលមិនអាចកែប្រែនៅទីនេះបានទេ។';
+
+  @override
+  String get chooseAvatar => 'ជ្រើសរើសរូបតំណាង';
+
+  @override
+  String get humationAvatarSubtitle =>
+      'ជ្រើសរើសតួអង្គគូរដោយដៃសម្រាប់ប្រវត្តិរូប RIKSA របស់អ្នក។';
+
+  @override
+  String get notProvided => 'មិនបានផ្តល់';
+
+  @override
+  String get supportDocumentUnavailable =>
+      'ឯកសារនេះនឹងមាននៅទីនេះ បន្ទាប់ពីខ្លឹមសារជំនួយ RIKSA ត្រូវបានផ្សព្វផ្សាយ។';
+
+  @override
+  String get aiTutor => 'គ្រូ AI';
+
+  @override
+  String get aiTutorComingSoon => 'គ្រូ AI របស់ RIKSA នឹងមកដល់ឆាប់ៗនេះ។';
 }

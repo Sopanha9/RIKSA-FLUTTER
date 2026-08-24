@@ -22,22 +22,118 @@ class AuthResponse {
   final String role;
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) => AuthResponse(
-        userId: json['userId']?.toString() ?? '',
-        accessToken: json['accessToken'] as String? ?? '',
-        refreshToken: json['refreshToken'] as String? ?? '',
-        tokenType: json['tokenType'] as String? ?? 'Bearer',
-        username: json['username'] as String? ?? '',
-        role: json['role'] as String? ?? 'USER',
-      );
+    userId: json['userId']?.toString() ?? '',
+    accessToken: json['accessToken'] as String? ?? '',
+    refreshToken: json['refreshToken'] as String? ?? '',
+    tokenType: json['tokenType'] as String? ?? 'Bearer',
+    username: json['username'] as String? ?? '',
+    role: json['role'] as String? ?? 'USER',
+  );
 
   Map<String, dynamic> toJson() => {
-        'userId': userId,
-        'accessToken': accessToken,
-        'refreshToken': refreshToken,
-        'tokenType': tokenType,
-        'username': username,
-        'role': role,
-      };
+    'userId': userId,
+    'accessToken': accessToken,
+    'refreshToken': refreshToken,
+    'tokenType': tokenType,
+    'username': username,
+    'role': role,
+  };
+}
+
+/// The signed-in user's profile returned by `GET /auth/me`.
+class AuthUser {
+  const AuthUser({
+    required this.id,
+    required this.username,
+    required this.displayName,
+    required this.emailVerified,
+    required this.phoneVerified,
+    required this.role,
+    this.email,
+    this.avatarUrl,
+    this.bio,
+    this.gender,
+    this.phoneNumber,
+    this.countryId,
+    this.provinceId,
+    this.createdAt,
+  });
+
+  final String id;
+  final String username;
+  final String displayName;
+  final String? email;
+  final bool emailVerified;
+  final String? avatarUrl;
+  final String? bio;
+  final String? gender;
+  final String? phoneNumber;
+  final bool phoneVerified;
+  final String role;
+  final String? countryId;
+  final String? provinceId;
+  final DateTime? createdAt;
+
+  factory AuthUser.fromJson(Map<String, dynamic> json) {
+    return AuthUser(
+      id: json['id']?.toString() ?? '',
+      username: json['username'] as String? ?? '',
+      displayName: json['displayName'] as String? ?? '',
+      email: json['email'] as String?,
+      emailVerified: json['emailVerified'] as bool? ?? false,
+      avatarUrl: json['avatarUrl'] as String?,
+      bio: json['bio'] as String?,
+      gender: json['gender'] as String?,
+      phoneNumber: json['phoneNumber'] as String?,
+      phoneVerified: json['phoneVerified'] as bool? ?? false,
+      role: json['role'] as String? ?? 'USER',
+      countryId: json['countryId'] as String?,
+      provinceId: json['provinceId']?.toString(),
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+    );
+  }
+}
+
+class UpdateProfileRequest {
+  const UpdateProfileRequest({
+    this.displayName,
+    this.bio,
+    this.gender,
+    this.provinceId,
+    this.avatarUrl,
+  });
+
+  final String? displayName;
+  final String? bio;
+  final String? gender;
+  final String? provinceId;
+  final String? avatarUrl;
+
+  Map<String, dynamic> toJson() => {
+    if (displayName != null) 'displayName': displayName,
+    if (bio != null) 'bio': bio,
+    if (gender != null) 'gender': gender,
+    if (provinceId != null) 'provinceId': provinceId,
+    if (avatarUrl != null) 'avatarUrl': avatarUrl,
+  };
+}
+
+class ProvinceOption {
+  const ProvinceOption({
+    required this.id,
+    required this.nameKhmer,
+    required this.nameLatin,
+  });
+
+  final String id;
+  final String nameKhmer;
+  final String nameLatin;
+
+  factory ProvinceOption.fromJson(Map<String, dynamic> json) => ProvinceOption(
+    id: json['id']?.toString() ?? '',
+    nameKhmer: json['nameKhmer'] as String? ?? '',
+    nameLatin: json['nameLatin'] as String? ?? '',
+  );
 }
 
 class LoginRequest {
@@ -46,10 +142,7 @@ class LoginRequest {
   final String username;
   final String password;
 
-  Map<String, dynamic> toJson() => {
-        'username': username,
-        'password': password,
-      };
+  Map<String, dynamic> toJson() => {'username': username, 'password': password};
 }
 
 class RegisterRequest {
@@ -72,14 +165,14 @@ class RegisterRequest {
   final String? provinceId;
 
   Map<String, dynamic> toJson() => {
-        'username': username,
-        'displayName': displayName,
-        'email': email,
-        'password': password,
-        if (phoneNumber != null) 'phoneNumber': phoneNumber,
-        if (gender != null) 'gender': gender,
-        if (provinceId != null) 'provinceId': provinceId,
-      };
+    'username': username,
+    'displayName': displayName,
+    'email': email,
+    'password': password,
+    if (phoneNumber != null) 'phoneNumber': phoneNumber,
+    if (gender != null) 'gender': gender,
+    if (provinceId != null) 'provinceId': provinceId,
+  };
 }
 
 class GoogleAuthRequest {
@@ -96,41 +189,53 @@ class GoogleAuthRequest {
   final String? provinceId;
 
   Map<String, dynamic> toJson() => {
-        'idToken': idToken,
-        if (username != null) 'username': username,
-        if (displayName != null) 'displayName': displayName,
-        if (provinceId != null) 'provinceId': provinceId,
-      };
+    'idToken': idToken,
+    if (username != null) 'username': username,
+    if (displayName != null) 'displayName': displayName,
+    if (provinceId != null) 'provinceId': provinceId,
+  };
 }
 
-class OtpSendRequest {
-  OtpSendRequest({required this.identifier, this.channel = 'TELEGRAM'});
-
-  final String identifier;
-  final String channel;
-
-  Map<String, dynamic> toJson() => {
-        'identifier': identifier,
-        'channel': channel,
-      };
-}
-
-class OtpVerifyRequest {
-  OtpVerifyRequest({
+/// Exchanges a Telegram-delivered one-time code for a Riksa session.
+///
+/// Registration details are supplied only from the Telegram registration
+/// route. Returning users need only their Telegram chat ID and OTP.
+class TelegramAuthRequest {
+  TelegramAuthRequest({
     required this.identifier,
     required this.code,
-    this.channel = 'TELEGRAM',
+    this.username,
+    this.displayName,
   });
 
   final String identifier;
   final String code;
-  final String channel;
+  final String? username;
+  final String? displayName;
 
   Map<String, dynamic> toJson() => {
-        'identifier': identifier,
-        'channel': channel,
-        'code': code,
-      };
+    'identifier': identifier,
+    'code': code,
+    if (username != null) 'username': username,
+    if (displayName != null) 'displayName': displayName,
+  };
+}
+
+class OtpSendRequest {
+  OtpSendRequest({required this.identifier});
+
+  final String identifier;
+
+  Map<String, dynamic> toJson() => {'identifier': identifier};
+}
+
+class OtpVerifyRequest {
+  OtpVerifyRequest({required this.identifier, required this.code});
+
+  final String identifier;
+  final String code;
+
+  Map<String, dynamic> toJson() => {'identifier': identifier, 'code': code};
 }
 
 /// Result of an OTP send/verify call.
@@ -141,7 +246,10 @@ class OtpResult {
   final String? message;
   final String? channel;
 
-  factory OtpResult.fromJson(Map<String, dynamic> json, {bool? successOverride}) {
+  factory OtpResult.fromJson(
+    Map<String, dynamic> json, {
+    bool? successOverride,
+  }) {
     final verified = json['verified'] as bool?;
     return OtpResult(
       success: successOverride ?? verified ?? true,

@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RIKSA — Social Module Wireframe</title>
+<style>
+  :root {
+    --surface:    #F5F1EB;  /* card / surface */
+    --ink:        #2B2622;  /* text / dark */
+    --rose:       #B75C74;  /* gamification highlight */
+    --jade:       #5B7156;  /* success / positive */
+    --gold:       #C89B3C;  /* primary accent */
+    --terra:      #C1694F;  /* secondary accent */
+    --bg:         #E8DFD0;  /* app background (a shade deeper than surface) */
+    --line:       #D9CFBE;  /* hairline divider */
+    --muted:      #7A7066;  /* secondary text */
+    --soft:       #EDE6DA;  /* subtle fill */
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding: 48px 32px 96px;
+  }
+
+  /* ───────────── Page header ───────────── */
+  .page-head { max-width: 1280px; margin: 0 auto 40px; }
+  .page-head .crumb {
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--terra); font-weight: 600;
+  }
+  .page-head h1 {
+    font-size: 34px; font-weight: 800; letter-spacing: -0.5px;
+    margin-top: 8px;
+  }
+  .page-head p {
+    color: var(--muted); font-size: 15px; margin-top: 8px; max-width: 720px;
+  }
+  .palette {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;
+  }
+  .swatch {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--line);
+    padding: 8px 12px; border-radius: 10px; font-size: 12px;
+  }
+  .chip { width: 18px; height: 18px; border-radius: 5px; border: 1px solid rgba(0,0,0,0.08); }
+  .swatch b { font-weight: 600; }
+  .swatch span { color: var(--muted); font-family: ui-monospace, monospace; font-size: 11px; }
+
+  /* ───────────── Section / phone grid ───────────── */
+  section { max-width: 1280px; margin: 0 auto 64px; }
+  .sec-title {
+    display: flex; align-items: baseline; gap: 12px;
+    border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 24px;
+  }
+  .sec-title h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .sec-title .num {
+    font-family: ui-monospace, monospace; color: var(--terra);
+    font-size: 13px; font-weight: 700;
+  }
+  .sec-title .desc { color: var(--muted); font-size: 13px; margin-left: auto; }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 320px));
+    gap: 32px; justify-content: center;
+  }
+
+  /* ───────────── Phone frame ───────────── */
+  .phone {
+    width: 320px; background: var(--surface);
+    border-radius: 36px; border: 1px solid var(--line);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -22px rgba(43,38,34,0.35);
+    overflow: hidden; position: relative;
+  }
+  .phone .notch {
+    height: 26px; background: var(--ink); width: 120px;
+    margin: 10px auto 0; border-radius: 14px;
+  }
+  .phone .screen {
+    padding: 8px 14px 14px; min-height: 580px;
+    display: flex; flex-direction: column;
+  }
+  .phone-caption {
+    text-align: center; font-size: 12px; color: var(--muted);
+    margin-top: 12px; letter-spacing: 0.04em;
+  }
+  .phone-caption b { color: var(--ink); font-weight: 600; }
+
+  /* ───────────── Status bar ───────────── */
+  .statusbar {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; font-weight: 600; color: var(--ink);
+    padding: 6px 8px 10px;
+  }
+  .statusbar .right { display: flex; gap: 5px; opacity: 0.7; }
+  .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--ink); display: inline-block; }
+
+  /* ───────────── App top bar ───────────── */
+  .appbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 6px 12px; border-bottom: 1px solid var(--line);
+  }
+  .appbar .back { font-size: 18px; color: var(--ink); }
+  .appbar .title { font-size: 15px; font-weight: 700; flex: 1; }
+  .appbar .action {
+    font-size: 11px; color: var(--muted);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .brand .logo {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: linear-gradient(135deg, var(--gold), var(--terra));
+    color: #fff; font-weight: 800; font-size: 12px;
+    display: grid; place-items: center;
+  }
+  .brand b { font-size: 14px; letter-spacing: 0.05em; }
+
+  /* ───────────── Tabs / sort toggle ───────────── */
+  .tabs {
+    display: flex; gap: 6px; padding: 12px 6px 8px;
+  }
+  .tab {
+    flex: 1; text-align: center; padding: 7px 0;
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    border-radius: 999px; background: transparent;
+    border: 1px solid transparent;
+  }
+  .tab.active {
+    background: var(--ink); color: var(--surface);
+  }
+  .tab.gold.active { background: var(--gold); color: var(--ink); }
+
+  .seg {
+    display: inline-flex; background: var(--soft);
+    border-radius: 999px; padding: 3px; gap: 2px;
+    margin: 10px 6px 4px;
+  }
+  .seg button {
+    border: 0; background: transparent; padding: 5px 12px;
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    border-radius: 999px; cursor: pointer; font-family: inherit;
+  }
+  .seg button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+
+  /* ───────────── List rows ───────────── */
+  .list { padding: 4px 0; }
+  .row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 6px; border-bottom: 1px solid var(--line);
+  }
+  .row:last-child { border-bottom: 0; }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 12px;
+    background: var(--soft); color: var(--ink);
+    display: grid; place-items: center; font-weight: 700; font-size: 14px;
+    flex-shrink: 0; border: 1px solid var(--line);
+  }
+  .avatar.gold { background: linear-gradient(135deg, var(--gold), #E0B95C); color: var(--ink); border-color: transparent; }
+  .avatar.terra { background: linear-gradient(135deg, var(--terra), #D8826A); color: #fff; border-color: transparent; }
+  .avatar.jade  { background: linear-gradient(135deg, var(--jade), #7A9075); color: #fff; border-color: transparent; }
+  .avatar.rose  { background: linear-gradient(135deg, var(--rose), #D07E94); color: #fff; border-color: transparent; }
+  .row .meta { flex: 1; min-width: 0; }
+  .row .meta b { font-size: 13.5px; font-weight: 700; display: block; }
+  .row .meta span { font-size: 11.5px; color: var(--muted); display: block; margin-top: 2px; }
+  .row .meta .sub { color: var(--muted); }
+  .badge {
+    font-size: 10.5px; font-weight: 700; padding: 4px 10px;
+    border-radius: 999px; flex-shrink: 0;
+  }
+  .badge.joined { background: var(--soft); color: var(--muted); }
+  .badge.join   { background: var(--gold); color: var(--ink); }
+  .badge.count  { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+
+  /* ───────────── Post card ───────────── */
+  .post {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; padding: 12px; margin-bottom: 12px;
+  }
+  .post .p-head { display: flex; align-items: center; gap: 10px; }
+  .post .p-head .avatar { width: 30px; height: 30px; border-radius: 9px; font-size: 12px; }
+  .post .p-head .who b { font-size: 12.5px; font-weight: 700; display: block; }
+  .post .p-head .who span { font-size: 10.5px; color: var(--muted); }
+  .post .p-head .pin {
+    margin-left: auto; font-size: 10px; font-weight: 700;
+    color: var(--terra); background: rgba(193,105,79,0.12);
+    padding: 3px 8px; border-radius: 6px; letter-spacing: 0.04em;
+  }
+  .post h3 {
+    font-size: 14.5px; font-weight: 700; line-height: 1.35;
+    margin: 10px 0 6px;
+  }
+  .post p.body {
+    font-size: 12.5px; color: var(--ink); opacity: 0.85;
+    line-height: 1.55;
+  }
+  .post .media {
+    margin: 10px 0; height: 110px; border-radius: 10px;
+    background:
+      linear-gradient(135deg, rgba(200,155,60,0.25), rgba(193,105,79,0.25)),
+      repeating-linear-gradient(45deg, var(--soft) 0 8px, transparent 8px 16px);
+    border: 1px solid var(--line);
+    position: relative;
+  }
+  .post .media::after {
+    content: 'media'; position: absolute; inset: 0;
+    display: grid; place-items: center;
+    font-size: 11px; color: var(--muted); letter-spacing: 0.1em;
+  }
+  .post .p-foot {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line);
+  }
+  .react-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11.5px; font-weight: 600; color: var(--muted);
+    padding: 5px 9px; border-radius: 999px;
+    background: var(--soft);
+  }
+  .react-btn.active { background: var(--rose); color: #fff; }
+  .react-btn.jade.active { background: var(--jade); color: #fff; }
+  .react-btn .glyph { font-size: 13px; }
+  .react-btn.count { background: transparent; }
+
+  /* ───────────── Comment thread ───────────── */
+  .comment {
+    padding: 10px 0; border-bottom: 1px solid var(--line);
+  }
+  .comment .c-head { display: flex; align-items: center; gap: 8px; }
+  .comment .c-head .avatar { width: 26px; height: 26px; border-radius: 8px; font-size: 11px; }
+  .comment .c-head b { font-size: 12px; }
+  .comment .c-head span { font-size: 10.5px; color: var(--muted); margin-left: auto; }
+  .comment .c-body { font-size: 12.5px; margin: 6px 0 6px 34px; color: var(--ink); }
+  .comment .c-foot {
+    margin-left: 34px; display: flex; gap: 12px;
+    font-size: 11px; color: var(--muted); font-weight: 600;
+  }
+  .comment .c-foot a { color: var(--muted); text-decoration: none; }
+  .reply {
+    margin-left: 34px; padding-left: 12px;
+    border-left: 2px solid var(--line);
+  }
+
+  /* ───────────── Inputs ───────────── */
+  .field {
+    background: var(--soft); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;
+  }
+  .field .label {
+    font-size: 10.5px; font-weight: 700; color: var(--muted);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .field .value { font-size: 13px; color: var(--ink); margin-top: 4px; }
+  .field .value.placeholder { color: var(--muted); opacity: 0.7; }
+  .field textarea { width: 100%; border: 0; background: transparent; resize: none;
+    font-family: inherit; font-size: 13px; color: var(--ink); outline: none; }
+
+  .cta {
+    display: block; width: 100%; padding: 12px;
+    background: var(--gold); color: var(--ink);
+    border: 0; border-radius: 12px; font-weight: 700; font-size: 14px;
+    font-family: inherit; cursor: pointer;
+  }
+  .cta.terra { background: var(--terra); color: #fff; }
+  .cta.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+
+  /* ───────────── Reaction picker ───────────── */
+  .sheet {
+    position: absolute; left: 14px; right: 14px; bottom: 14px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 18px; padding: 14px;
+    box-shadow: 0 18px 40px -18px rgba(43,38,34,0.5);
+  }
+  .sheet .handle {
+    width: 36px; height: 4px; border-radius: 999px;
+    background: var(--line); margin: 0 auto 12px;
+  }
+  .sheet h4 { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+  .react-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  }
+  .react-grid .r {
+    text-align: center; padding: 10px 4px;
+    background: var(--soft); border-radius: 12px;
+    border: 1px solid transparent;
+  }
+  .react-grid .r.sel { border-color: var(--rose); background: rgba(183,92,116,0.12); }
+  .react-grid .r .g { font-size: 18px; display: block; }
+  .react-grid .r .n { font-size: 10px; color: var(--muted); margin-top: 4px; font-weight: 600; }
+
+  /* ───────────── Share sheet ───────────── */
+  .share-row {
+    display: flex; gap: 10px; padding: 10px 6px;
+    border-bottom: 1px solid var(--line); align-items: center;
+  }
+  .share-row:last-child { border-bottom: 0; }
+  .share-ic {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: grid; place-items: center; font-size: 16px; color: #fff; font-weight: 700;
+  }
+  .share-ic.tg { background: #29A6E0; }
+  .share-ic.fb { background: #1877F2; }
+  .share-ic.cp { background: var(--ink); }
+  .share-row b { font-size: 13px; font-weight: 600; display: block; }
+  .share-row span { font-size: 11px; color: var(--muted); }
+
+  /* ───────────── Profile ───────────── */
+  .profile-head {
+    text-align: center; padding: 18px 6px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .profile-head .avatar { width: 64px; height: 64px; border-radius: 20px; font-size: 22px; margin: 0 auto; }
+  .profile-head b { display: block; font-size: 16px; margin-top: 10px; }
+  .profile-head span { font-size: 12px; color: var(--muted); }
+  .stats {
+    display: flex; justify-content: space-around;
+    padding: 12px 0; border-bottom: 1px solid var(--line);
+  }
+  .stat b { display: block; font-size: 15px; font-weight: 800; }
+  .stat span { font-size: 10.5px; color: var(--muted); }
+
+  /* ───────────── STEM filter note ───────────── */
+  .stem {
+    background: rgba(91,113,86,0.12); border: 1px dashed var(--jade);
+    border-radius: 10px; padding: 8px 10px;
+    font-size: 11px; color: var(--jade); font-weight: 600;
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .stem .glyph {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--jade); color: #fff;
+    display: grid; place-items: center; font-size: 11px; font-weight: 800;
+  }
+
+  /* ───────────── XP / gamification ───────────── */
+  .xp-bar {
+    background: var(--soft); border-radius: 999px;
+    height: 8px; overflow: hidden; margin-top: 6px;
+  }
+  .xp-bar .fill {
+    height: 100%; width: 64%;
+    background: linear-gradient(90deg, var(--gold), var(--rose));
+  }
+
+  /* ───────────── Empty / hint ───────────── */
+  .hint {
+    font-size: 11px; color: var(--muted); text-align: center;
+    padding: 14px 8px;
+  }
+  .kbd {
+    font-family: ui-monospace, monospace; font-size: 11px;
+    background: var(--soft); padding: 1px 6px; border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+
+  /* ───────────── Flow diagram ───────────── */
+  .flow {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px; margin-top: 16px;
+  }
+  .flow .step {
+    background: var(--soft); border: 1px solid var(--line);
+    border-radius: 10px; padding: 8px 12px; font-size: 12px;
+  }
+  .flow .step b { display: block; font-size: 12.5px; }
+  .flow .step span { color: var(--muted); font-size: 11px; }
+  .flow .arr { color: var(--terra); font-weight: 700; }
+
+  /* footer */
+  footer {
+    max-width: 1280px; margin: 64px auto 0;
+    border-top: 1px solid var(--line); padding-top: 24px;
+    font-size: 12px; color: var(--muted);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <div class="crumb">RIKSA · Social Module</div>
+  <h1>Community Wireframe — Reddit-style, STEM-filtered</h1>
+  <p>
+    A preview of how the social layer works in RIKSA: dev-seeded communities (categories),
+    community-scoped feed with NEW / HOT sort, threaded comments, four reactions
+    (UPVOTE / DOWNVOTE / HAHA / LOVE), share, and a gamification overlay. Built from
+    <span class="kbd">docs/SOCIAL_MODULE_PLAN.md</span> in <span class="kbd">riksa-api</span>.
+  </p>
+
+  <div class="palette">
+    <div class="swatch"><span class="chip" style="background:#F5F1EB"></span><b>Surface</b><span>#F5F1EB</span></div>
+    <div class="swatch"><span class="chip" style="background:#2B2622"></span><b>Ink</b><span>#2B2622</span></div>
+    <div class="swatch"><span class="chip" style="background:#C89B3C"></span><b>Gold · primary</b><span>#C89B3C</span></div>
+    <div class="swatch"><span class="chip" style="background:#C1694F"></span><b>Terracotta</b><span>#C1694F</span></div>
+    <div class="swatch"><span class="chip" style="background:#B75C74"></span><b>Rose · game</b><span>#B75C74</span></div>
+    <div class="swatch"><span class="chip" style="background:#5B7156"></span><b>Jade · success</b><span>#5B7156</span></div>
+  </div>
+</div>
+
+<!-- ════════════════ Section 1 — Entry: Communities ════════════════ -->
+<section>
+  <div class="sec-title">
+    <span class="num">01</span><h2>Pick a community</h2>
+    <span class="desc">categories are dev-seeded · users join / leave only</span>
+  </div>
+
+  <div class="grid">
+
+    <!-- Phone 1: Community list -->
+    <div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="right"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+          </div>
+          <div class="appbar">
+            <div class="brand">
+              <div class="logo">R</div>
+              <b>RIKSA</b>
+            </div>
+            <span class="action">🔍</span>
+          </div>
+
+          <div style="padding: 8px 6px 4px;">
+            <b style="font-size:15px;">Communities</b>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">Pick one to open its feed</div>
+          </div>
+
+          <div class="seg">
+            <button class="on">All</button>
+            <button>Joined</button>
+          </div>
+
+          <div class="list">
+            <div class="row">
+              <div class="avatar gold">π</div>
+              <div class="meta"><b>Mathematics</b><span>គណិតវិទ្យា · 12.4k members</span></div>
+              <div class="badge joined">Joined</div>
+            </div>
+            <div class="row">
+              <div class="avatar terra">⚛</div>
+              <div class="meta"><b>Physics</b><span>រូបវិទ្យា · 8.1k members</span></div>
+              <div class="badge join">Join</div>
+            </div>
+            <div class="row">
+              <div class="avatar jade">🧪</div>
+              <div class="meta"><b>Chemistry</b><span>គីមីវិទ្យា · 5.6k members</span></div>
+              <div class="badge joined">Joined</div>
+            </div>
+            <div class="row">
+              <div class="avatar rose">🧬</div>
+              <div class="meta"><b>Biology</b><span>ជីវវិទ្យា · 4.2k members</span></div>
+              <div class="badge join">Join</div>
+            </div>
+            <div class="row">
+              <div class="avatar" style="background:linear-gradient(135deg,var(--ink),#4a403a);color:#fff;">&lt;/&gt;</div>
+              <div class="meta"><b>Programming</b><span>ការសរសេរកូដ · 21.8k members</span></div>
+              <div class="badge joined">Joined</div>
+            </div>
+            <div class="row">
+              <div class="avatar" style="background:var(--soft);color:var(--ink);">🔧</div>
+              <div class="meta"><b>Engineering</b><span>វិស្វកម្ម · 3.0k members</span></div>
+              <div class="badge join">Join</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption"><b>Communities screen</b> · <span class="kbd">categories</span> query</div>
+    </div>
+
+    <!-- Phone 2: XP / onboarding hint -->
+    <div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="right"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+          </div>
+          <div class="appbar"><span class="back">←</span><span class="title">Your level</span></div>
+
+          <div style="padding: 18px 6px; text-align: center;">
+            <div class="avatar gold" style="width:72px;height:72px;border-radius:24px;font-size:24px;margin:0 auto;">L7</div>
+            <b style="display:block;font-size:17px;margin-top:12px;">Sopanha</b>
+            <span style="font-size:12px;color:var(--muted);">Scholar · Level 7</span>
+
+            <div style="text-align:left;margin-top:18px;">
+              <div style="display:flex;justify-content:space-between;font-size:11.5px;">
+                <b>2,840 XP</b><span style="color:var(--muted);">→ 4,000 XP for L8</span>
+              </div>
+              <div class="xp-bar"><div class="fill"></div></div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--line);padding:12px 4px;">
+            <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">Earn XP from social</div>
+            <div class="row" style="border:0;padding:6px 0;">
+              <div class="avatar rose" style="width:28px;height:28px;border-radius:8px;font-size:11px;">+5</div>
+              <div class="meta"><b style="font-size:12.5px;">Post in a community</b><span>Per STEM post</span></div>
+            </div>
+            <div class="row" style="border:0;padding:6px 0;">
+              <div class="avatar rose" style="width:28px;height:28px;border-radius:8px;font-size:11px;">+2</div>
+              <div class="meta"><b style="font-size:12.5px;">Helpful comment</b><span>When someone upvotes you</span></div>
+            </div>
+            <div class="row" style="border:0;padding:6px 0;">
+              <div class="avatar rose" style="width:28px;height:28px;border-radius:8px;font-size:11px;">+10</div>
+              <div class="meta"><b style="font-size:12.5px;">Top post of the day</b><span>HOT sort · daily cap</span></div>
+            </div>
+          </div>
+
+          <div class="stem" style="margin-top:auto;">
+            <span class="glyph">!</span>
+            <span>Posts must be STEM-related or they are rejected.</span>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption"><b>Profile / XP</b> · gamification overlay (rose)</div>
+    </div>
+
+  </div>
+
+  <div class="flow">
+    <div class="step"><b>App open</b><span>Auth check (JWT)</span></div>
+    <span class="arr">→</span>
+    <div class="step"><b>categories</b><span>GraphQL query</span></div>
+    <span class="arr">→</span>
+    <div class="step"><b>User taps community</b><span>joinCategory (optional)</span></div>
+    <span class="arr">→</span>
+    <div class="step"><b>Feed screen</b><span>feed(categoryId, sort=NEW)</span></div>
+  </div>
+</section>
+
+<!-- ════════════════ Section 2 — Feed ════════════════ -->
+<section>
+  <div class="sec-title">
+    <span class="num">02</span><h2>Feed — community-scoped</h2>
+    <span class="desc">cursor pagination · NEW / HOT sort · pinned first</span>
+  </div>
+
+  <div class="grid">
+
+    <!-- Phone 3: Feed NEW -->
+    <div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="right"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+          </div>
+          <div class="appbar">
+            <span class="back">←</span>
+            <div class="brand" style="flex:1;">
+              <div class="avatar gold" style="width:24px;height:24px;border-radius:7px;font-size:11px;">π</div>
+              <b style="font-size:13.5px;">Mathematics</b>
+            </div>
+            <span class="action">⋮</span>
+          </div>
+
+          <div class="seg">
+            <button class="on">NEW</button>
+            <button>HOT</button>
+            <button style="margin-left:auto;">🔍</button>
+          </div>
+
+          <div style="padding: 6px 0;">
+
+            <div class="post">
+              <div class="p-head">
+                <div class="avatar gold" style="width:28px;height:28px;border-radius:8px;font-size:11px;">S</div>
+                <div class="who"><b>Sopanha</b><span>2h ago · Mathematics</span></div>
+                <div class="pin">PINNED</div>
+              </div>
+              <h3>Why is 0! = 1? A combinatorial proof.</h3>
+              <p class="body">There is exactly one way to arrange zero objects — the empty arrangement. So the count of permutations is 1…</p>
+              <div class="p-foot">
+                <span class="react-btn jade active"><span class="glyph">▲</span> 124</span>
+                <span class="react-btn"><span class="glyph">▼</span> 3</span>
+                <span class="react-btn"><span class="glyph">😂</span> 8</span>
+                <span class="react-btn"><span class="glyph">❤</span> 22</span>
+                <span class="react-btn count" style="margin-left:auto;">💬 18</span>
+                <span class="react-btn count">↗ 6</span>
+              </div>
+            </div>
+
+            <div class="post">
+              <div class="p-head">
+                <div class="avatar terra" style="width:28px;height:28px;border-radius:8px;font-size:11px;">D</div>
+                <div class="who"><b>Dara</b><span>5h ago</span></div>
+              </div>
+              <h3>Integral of 1/x — why ln|x|?</h3>
+              <div class="media"></div>
+              <div class="p-foot">
+                <span class="react-btn"><span class="glyph">▲</span> 41</span>
+                <span class="react-btn"><span class="glyph">▼</span> 0</span>
+                <span class="react-btn"><span class="glyph">😂</span> 1</span>
+                <span class="react-btn"><span class="glyph">❤</span> 7</span>
+                <span class="react-btn count" style="margin-left:auto;">💬 5</span>
+                <span class="react-btn count">↗ 2</span>
+              </div>
+            </div>
+
+            <div class="hint">Load more · cursor <span class="kbd">eyJjcmVhdGVkQXQiOi…</span></div>
+          </div>
+
+          <button class="cta" style="margin-top:auto;">＋ New post</button>
+        </div>
+      </div>
+      <div class="phone-caption"><b>Feed · NEW sort</b> · cursor on (createdAt, id)</div>
+    </div>
+
+    <!-- Phone 4: Feed HOT -->
+    <div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="right"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+          </div>
+          <div class="appbar">
+            <span class="back">←</span>
+            <div class="brand" style="flex:1;">
+              <div class="avatar gold" style="width:24px;height:24px;border-radius:8px;font-size:11px;">π</div>
+              <b style="font-size:13.5px;">Mathematics</b>
+            </div>
+            <span class="action">⋮</span>
+          </div>
+
+          <div class="seg">
+            <button>NEW</button>
+            <button class="on">HOT</button>
+            <button style="margin-left:auto;">🔍</button>
+          </div>
+
+          <div style="padding: 6px 0;">
+            <div style="font-size:11px;color:var(--muted);padding:6px 4px 10px;">
+              Top posts in the last <b style="color:var(--terra);">7 days</b> · ranked by reactions
+            </div>
+
+            <div class="post" style="border-left:3px solid var(--gold);">
+              <div class="p-head">
+                <div class="avatar rose" style="width:28px;height:28px;border-radius:8px;font-size:11px;">L</div>
+                <div class="who"><b>Lina</b><span>3d ago · 🔥 312 reactions</span></div>
+              </div>
+              <h3>The Monty Hall problem — explained with Khmer numerals</h3>
+              <p class="body">ប្រសិនបើអ្នកជ្រើសទ្វារណាមួយ ហើយអ្នកនាំសេះមួយចេញ តើអ្នកគួរប្ដូរទ្វារទេ? …</p>
+              <div class="p-foot">
+                <span class="react-btn jade active"><span class="glyph">▲</span> 198</span>
+                <span class="react-btn"><span class="glyph">▼</span> 12</span>
+                <span class="react-btn"><span class="glyph">😂</span> 30</span>
+                <span class="react-btn"><span class="glyph">❤</span> 72</span>
+                <span class="react-btn count" style="margin-left:auto;">💬 44</span>
+                <span class="react-btn count">↗ 21</span>
+              </div>
+            </div>
+
+            <div class="post">
+              <div class="p-head">
+                <div class="avatar jade" style="width:28px;height:28px;border-radius:8px;font-size:11px;">P</div>
+                <div class="who"><b>Pisey</b><span>1d ago · 🔥 187 reactions</span></div>
+              </div>
+              <h3>Visual proof: sum of first n odd numbers = n²</h3>
+              <div class="p-foot">
+                <span class="react-btn jade active"><span class="glyph">▲</span> 142</span>
+                <span class="react-btn"><span class="glyph">▼</span> 4</span>
+                <span class="react-btn"><span class="glyph">❤</span> 41</span>
+                <span class="react-btn count" style="margin-left:auto;">💬 19</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stem" style="margin-top:auto;">
+            <span class="glyph">!</span>
+            <span>HOT cursor: <span class="kbd">{"reactionCount":187,"id":…}</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption"><b>Feed · HOT sort</b> · cursor on (reactionCount, id)</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════════════════ Section 3 — Post detail + reactions ════════════════ -->
+<section>
+  <div class="sec-title">
+    <span class="num">03</span><h2>Post detail · comments · reactions</h2>
+    <span class="desc">threaded via parent_id · 4 reactions · optimistic UI</span>
+  </div>
+
+  <div class="grid">
+
+    <!-- Phone 5: Post detail with comments -->
+    <div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="right"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+          </div>
+          <div class="appbar">
+            <span class="back">←</span>
+            <span class="title">Post</span>
+            <span class="action">⋮</span>
+          </div>
+
+          <div style="padding: 6px 0;">
+            <div class="post" style="border:0;margin:0;border-bottom:1px solid var(--line);border-radius:0;">
+              <div class="p-head">
+                <div class="avatar gold" style="width:30px;height:30px;font-size:12px;">S</div>
+                <div class="who"><b>Sopanha</b><span>2h ago · Mathematics</span></div>
+              </div>
+              <h3>Why is 0! = 1? A combinatorial proof.</h3>
+              <p class="body">There is exactly one way to arrange zero objects — the empty arrangement. So the count of permutations is 1…</p>
+              <div class="p-foot">
+                <span class="react-btn jade active"><span class="glyph">▲</span> 124</span>
+                <span class="react-btn"><span class="glyph">▼</span> 3</span>
+                <span class="react-btn"><span class="glyph">😂</span> 8</span>
+                <span class="react-btn"><span class="glyph">❤</span> 22</span>
+                <span class="react-btn count" style="margin-left:auto;">↗ 6</span>
+              </div>
+            </div>
+
+            <div style="padding: 10px 4px 6px;">
+              <b style="font-size:12.5px;">Comments · 18</b>
+              <span style="float:right;font-size:11px;color:var(--muted);">Top first ▾</span>
+            </div>
+
+            <div class="comment">
+              <div class="c-head">
+                <div class="avatar terra" style="width:26px;height:26px;font-size:11px;">D</div>
+                <b>Dara</b><span>1h ago</span>
+              </div>
+              <div class="c-body">Nice — the empty product intuition also works: product of zero factors is 1.</div>
+              <div class="c-foot"><a>▲ 12</a><a>▼</a><a>Reply</a></div>
+
+              <div class="reply">
+                <div class="c-head">
+                  <div class="avatar gold" style="width:22px;height:22px;font-size:10px;">S</div>
+                  <b>Sopanha</b><span>45m</span>
+                </div>
+                <div class="c-body" style="margin-left:30px;">Yes! Empty product = multiplicative identity. Same idea.</div>
+                <div class="c-foot" style="margin-left:30px;"><a>▲ 4</a><a>Reply</a></div>
+              </div>
+            </div>
+
+            <div class="comment">
+              <div class="c-head">
+                <div class="avatar jade" style="width:26px;height:26px;font-size:11px;">P</div>
+                <b>Pisey</b><span>30m ago</span>
+              </div>
+              <div class="c-body">Does this generalize to gamma function? Γ(1) = 1 too.</div>
+              <div class="c-foot"><a>▲ 6</a><a>▼</a><a>Reply</a></div>
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:auto;display:flex;align-items:center;gap:8px;">
+            <div class="avatar" style="width:24px;height:24px;font-size:10px;">S</div>
+            <span class="value placeholder" style="flex:1;">Write a comment…</span>
+            <span style="color:var(--gold);font-weight:700;font-size:12px;">Post</span>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption"><b>Post detail</b> · comments + nested replies</div>
+    </div>
+
+    <!-- Phone 6: Reaction picker sheet -->
+    <div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="right"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+          </div>
+          <div class="appbar">
+            <span class="back">←</span>
+            <span class="title">Post</span>
+            <span class="action">⋮</span>
+          </div>
+
+          <div style="padding: 6px 0; opacity: 0.5;">
+            <div class="post" style="border:0;margin:0;">
+              <div class="p-head">
+                <div class="avatar gold" style="width:30px;height:30px;font-size:12px;">S</div>
+                <div class="who"><b>Sopanha</b><span>2h ago</span></div>
+              </div>
+              <h3>Why is 0! = 1?</h3>
+              <p class="body">There is exactly one way to arrange zero objects…</p>
+            </div>
+          </div>
+
+          <!-- reaction sheet -->
+          <div class="sheet">
+            <div class="handle"></div>
+            <h4>React</h4>
+            <div class="react-grid">
+              <div class="r sel"><span class="g">▲</span><span class="n">UPVOTE</span></div>
+              <div class="r"><span class="g">▼</span><span class="n">DOWNVOTE</span></div>
+              <div class="r"><span class="g">😂</span><span class="n">HAHA</span></div>
+              <div class="r"><span class="g">❤</span><span class="n">LOVE</span></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.5;">
+              One reaction per user per target · upsert via
+              <span class="kbd">UNIQUE(user_id, post_id, comment_id)</span>
+            </div>
+            <button class="cta ghost" style="margin-top:10px;">Remove my reaction</button>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption"><b>Reaction picker</b> · <span class="kbd">react</span> / <span class="kbd">removeReaction</span></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════════════════ Section 4 — Create + Share ════════════════ -->
+<section>
+  <div class="sec-title">
+    <span class="num">04</span><h2>Create post · share</h2>
+    <span class="desc">STEM content filter · Telegram / Facebook / Copy link</span>
+  </div>
+
+  <div class="grid">
+
+    <!-- Phone 7: Create post -->
+    <div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="right"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+          </div>
+          <div class="appbar">
+            <span class="back" style="color:var(--muted);">✕</span>
+            <span class="title">New post</span>
+            <span class="action" style="color:var(--gold);font-weight:700;">Post</span>
+          </div>
+
+          <div style="padding: 6px 0;">
+            <div class="field">
+              <div class="label">Community</div>
+              <div class="value" style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+                <div class="avatar gold" style="width:22px;height:22px;font-size:11px;border-radius:7px;">π</div>
+                Mathematics ▾
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="label">Title</div>
+              <div class="value placeholder" style="margin-top:4px;">A clear, specific question…</div>
+            </div>
+
+            <div class="field" style="min-height:120px;">
+              <div class="label">Content</div>
+              <textarea rows="4" placeholder="Explain your problem. Use STEM keywords (math, physics, code…)" style="margin-top:4px;"></textarea>
+            </div>
+
+            <div class="field">
+              <div class="label">Media URL · optional</div>
+              <div class="value placeholder" style="margin-top:4px;">https://…</div>
+            </div>
+
+            <div class="stem">
+              <span class="glyph">!</span>
+              <span>Content must include a STEM keyword or it will be rejected.</span>
+            </div>
+
+            <button class="cta">Publish post</button>
+            <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:8px;">
+              +5 XP on success
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption"><b>Create post</b> · <span class="kbd">createPost</span> + STEM filter</div>
+    </div>
+
+    <!-- Phone 8: Share sheet -->
+    <div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="right"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+          </div>
+          <div class="appbar">
+            <span class="back">←</span>
+            <span class="title">Post</span>
+            <span class="action">⋮</span>
+          </div>
+
+          <div style="padding: 6px 0; opacity:0.45;">
+            <div class="post" style="border:0;margin:0;">
+              <div class="p-head">
+                <div class="avatar gold" style="width:30px;height:30px;font-size:12px;">S</div>
+                <div class="who"><b>Sopanha</b><span>2h ago</span></div>
+              </div>
+              <h3>Why is 0! = 1?</h3>
+            </div>
+          </div>
+
+          <div class="sheet">
+            <div class="handle"></div>
+            <h4>Share to</h4>
+
+            <div class="share-row">
+              <div class="share-ic tg">✈</div>
+              <div class="meta"><b>Telegram</b><span>Open in Telegram app</span></div>
+              <span class="badge count">↗ 12</span>
+            </div>
+            <div class="share-row">
+              <div class="share-ic fb">f</div>
+              <div class="meta"><b>Facebook</b><span>Compose on Facebook</span></div>
+              <span class="badge count">↗ 5</span>
+            </div>
+            <div class="share-row">
+              <div class="share-ic cp">🔗</div>
+              <div class="meta"><b>Copy link</b><span>Works offline · no mutation</span></div>
+            </div>
+
+            <div style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.5;">
+              Each share fires <span class="kbd">sharePost</span> and increments
+              <span class="kbd">post.shareCount</span> (denormalized counter, @Transactional).
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption"><b>Share sheet</b> · <span class="kbd">SharePlatform</span> enum</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════════════════ Section 5 — Profile ════════════════ -->
+<section>
+  <div class="sec-title">
+    <span class="num">05</span><h2>Profile — user posts & comments</h2>
+    <span class="desc">userPosts + userComments · same cursor pattern</span>
+  </div>
+
+  <div class="grid">
+
+    <!-- Phone 9: Profile -->
+    <div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="right"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+          </div>
+          <div class="appbar">
+            <span class="back">←</span>
+            <span class="title">Profile</span>
+            <span class="action">⚙</span>
+          </div>
+
+          <div class="profile-head">
+            <div class="avatar gold">S</div>
+            <b>Sopanha</b>
+            <span>@sopanha · Scholar · Mathematics</span>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><b>24</b><span>Posts</span></div>
+            <div class="stat"><b>186</b><span>Comments</span></div>
+            <div class="stat"><b>2.8k</b><span>Reactions</span></div>
+            <div class="stat"><b>L7</b><span>Level</span></div>
+          </div>
+
+          <div class="seg">
+            <button class="on">Posts</button>
+            <button>Comments</button>
+            <button>Achievements</button>
+          </div>
+
+          <div style="padding: 6px 0;">
+            <div class="post" style="margin-bottom:10px;">
+              <div class="p-head">
+                <div class="avatar gold" style="width:26px;height:26px;font-size:11px;">π</div>
+                <div class="who"><b>Mathematics</b><span>2h ago · 124 ▲</span></div>
+              </div>
+              <h3 style="font-size:13.5px;">Why is 0! = 1? A combinatorial proof.</h3>
+            </div>
+
+            <div class="post" style="margin-bottom:10px;">
+              <div class="p-head">
+                <div class="avatar terra" style="width:26px;height:26px;font-size:11px;">⚛</div>
+                <div class="who"><b>Physics</b><span>3d ago · 87 ▲</span></div>
+              </div>
+              <h3 style="font-size:13.5px;">Kinematic equations — when to use which?</h3>
+            </div>
+
+            <div class="hint">Load more · <span class="kbd">userPosts(userId, cursor)</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption"><b>Profile</b> · <span class="kbd">userPosts</span> + <span class="kbd">userComments</span></div>
+    </div>
+
+    <!-- Phone 10: Achievements -->
+    <div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="right"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+          </div>
+          <div class="appbar">
+            <span class="back">←</span>
+            <span class="title">Achievements</span>
+          </div>
+
+          <div style="padding: 14px 4px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+              Earned by being active in STEM communities
+            </div>
+
+            <div class="row" style="border:0;background:var(--soft);border-radius:12px;margin-bottom:8px;padding:12px;">
+              <div class="avatar gold" style="width:36px;height:36px;border-radius:10px;">🏆</div>
+              <div class="meta"><b style="font-size:13px;">First Post</b><span>Publish your first STEM post</span></div>
+              <span class="badge joined">Earned</span>
+            </div>
+
+            <div class="row" style="border:0;background:var(--soft);border-radius:12px;margin-bottom:8px;padding:12px;">
+              <div class="avatar rose" style="width:36px;height:36px;border-radius:10px;">🔥</div>
+              <div class="meta"><b style="font-size:13px;">Hot Take</b><span>Reach top of HOT feed</span></div>
+              <span class="badge joined">Earned</span>
+            </div>
+
+            <div class="row" style="border:0;background:var(--soft);border-radius:12px;margin-bottom:8px;padding:12px;opacity:0.55;">
+              <div class="avatar" style="width:36px;height:36px;border-radius:10px;">💬</div>
+              <div class="meta"><b style="font-size:13px;">Helpful 100</b><span>Get 100 upvotes on comments</span></div>
+              <span class="badge count">72 / 100</span>
+            </div>
+
+            <div class="row" style="border:0;background:var(--soft);border-radius:12px;margin-bottom:8px;padding:12px;opacity:0.55;">
+              <div class="avatar" style="width:36px;height:36px;border-radius:10px;">🌟</div>
+              <div class="meta"><b style="font-size:13px;">Polyglot</b><span>Post in 3 different communities</span></div>
+              <span class="badge count">2 / 3</span>
+            </div>
+
+            <div class="stem" style="margin-top:14px;">
+              <span class="glyph">!</span>
+              <span>Gamification listens to <span class="kbd">PostCreatedEvent</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption"><b>Achievements</b> · gamification module</div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <span>RIKSA · Social Module Wireframe — built from SOCIAL_MODULE_PLAN.md</span>
+  <span>Single endpoint: <span class="kbd">POST /api/graphql</span> · same JWT as REST</span>
+</footer>
+
+</body>
+</html>

@@ -4,10 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/locale_provider.dart';
-import '../../../core/widgets/riksa_logo.dart';
+import '../../../core/theme/app_theme.dart';
 
-/// Language selection screen: two cards stacked vertically — English on top,
-/// Khmer below. User taps a card to select it, then taps "Select" to confirm.
+/// First-run language selection shown before the illustrated onboarding pages.
 class LanguageSelectScreen extends ConsumerStatefulWidget {
   const LanguageSelectScreen({super.key});
 
@@ -17,77 +16,107 @@ class LanguageSelectScreen extends ConsumerStatefulWidget {
 }
 
 class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
-  String? _selected; // 'en' or 'km', null = nothing selected yet
+  String _selected = 'km';
+  bool _submitting = false;
 
   Future<void> _confirmSelection() async {
-    if (_selected == null) return;
-    await ref.read(localeProvider.notifier).setLocale(Locale(_selected!));
-    if (mounted) {
-      context.go('/auth/login');
-    }
+    if (_submitting) return;
+    setState(() => _submitting = true);
+    await ref.read(localeProvider.notifier).setLocale(Locale(_selected));
+    if (mounted) context.go('/onboarding');
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F1EB),
+      backgroundColor: colors.surface,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Column(
-            children: [
-              // Top bar: logo
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [RiksaLogo(fontSize: 32)],
-              ),
-              const Spacer(flex: 1),
-
-              // Heading
-              Text(
-                'Choose your language',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1A1A1A),
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(height: constraints.maxHeight < 700 ? 54 : 96),
+                    Text(
+                      'Select your preferred\nlanguage',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        height: 1.05,
+                        letterSpacing: -.5,
+                      ),
                     ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'ជ្រើសរើសភាសារបស់អ្នក',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF8A8A8A),
-                      fontSize: 16,
+                    const SizedBox(height: 10),
+                    Text(
+                      'This helps us show content and features in your language.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                        height: 1.4,
+                      ),
                     ),
+                    const SizedBox(height: 24),
+                    _LanguageCard(
+                      flagAsset: 'assets/images/logos/Flag_of_Cambodia.svg',
+                      languageName: 'Khmer',
+                      languageNameNative: 'ភាសាខ្មែរ',
+                      isSelected: _selected == 'km',
+                      onTap: () => setState(() => _selected = 'km'),
+                    ),
+                    const SizedBox(height: 14),
+                    _LanguageCard(
+                      flagAsset:
+                          'assets/images/logos/Flag_of_the_United_Kingdom.svg.png',
+                      languageName: 'English',
+                      languageNameNative: 'English',
+                      isSelected: _selected == 'en',
+                      onTap: () => setState(() => _selected = 'en'),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'You can change the language later in your settings.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                    const Spacer(),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      height: 52,
+                      child: FilledButton(
+                        key: const Key('language_continue'),
+                        onPressed: _submitting ? null : _confirmSelection,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.lightTextPrimary,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: AppColors.lightTextPrimary,
+                          disabledForegroundColor: Colors.white70,
+                          shape: const StadiumBorder(),
+                        ),
+                        child: _submitting
+                            ? const SizedBox.square(
+                                dimension: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Continue',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                  ],
+                ),
               ),
-              const SizedBox(height: 48),
-
-              // Two cards stacked vertically
-              _LanguageCard(
-                flagAsset: 'assets/images/logos/Flag_of_the_United_Kingdom.svg.png',
-                languageName: 'English',
-                languageNameNative: 'English',
-                isSelected: _selected == 'en',
-                onTap: () => setState(() => _selected = 'en'),
-              ),
-              const SizedBox(height: 16),
-              _LanguageCard(
-                flagAsset: 'assets/images/logos/Flag_of_Cambodia.svg',
-                languageName: 'Khmer',
-                languageNameNative: 'ខ្មែរ',
-                isSelected: _selected == 'km',
-                onTap: () => setState(() => _selected = 'km'),
-              ),
-
-              const Spacer(flex: 2),
-
-              // Select button — disabled until a language is picked
-              ElevatedButton(
-                onPressed: _selected == null ? null : _confirmSelection,
-                child: const Text('Select'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -95,7 +124,7 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
   }
 }
 
-class _LanguageCard extends StatefulWidget {
+class _LanguageCard extends StatelessWidget {
   const _LanguageCard({
     required this.flagAsset,
     required this.languageName,
@@ -111,118 +140,82 @@ class _LanguageCard extends StatefulWidget {
   final VoidCallback onTap;
 
   @override
-  State<_LanguageCard> createState() => _LanguageCardState();
-}
-
-class _LanguageCardState extends State<_LanguageCard> {
-  bool _tapped = false;
-
-  @override
   Widget build(BuildContext context) {
-    final selected = widget.isSelected;
-    return GestureDetector(
-      onTap: widget.onTap,
-      onTapDown: (_) => setState(() => _tapped = true),
-      onTapUp: (_) => setState(() => _tapped = false),
-      onTapCancel: () => setState(() => _tapped = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        height: 100,
-        transform: _tapped
-            ? Matrix4.diagonal3Values(0.97, 0.97, 1.0)
-            : Matrix4.identity(),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: selected
-                ? const Color(0xFF1B4332)
-                : const Color(0xFFE0DCD3),
-            width: selected ? 2 : 1,
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: languageName,
+      child: InkWell(
+        borderRadius: AppRadii.mediumBorder,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          height: 76,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: isSelected ? colors.primaryContainer : colors.surface,
+            borderRadius: AppRadii.mediumBorder,
+            border: Border.all(
+              color: isSelected ? colors.primary : colors.outlineVariant,
+              width: isSelected ? 1.5 : 1,
+            ),
           ),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF1B4332).withValues(alpha: 0.12),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-        ),
-        child: Row(
-          children: [
-            // Flag image (SVG or PNG)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: SizedBox(
-                width: 48,
-                height: 36,
-                child: _buildFlagImage(),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: SizedBox(
+                  width: 42,
+                  height: 28,
+                  child: flagAsset.endsWith('.svg')
+                      ? SvgPicture.asset(flagAsset, fit: BoxFit.cover)
+                      : Image.asset(flagAsset, fit: BoxFit.cover),
+                ),
               ),
-            ),
-            const SizedBox(width: 20),
-            // Language names
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.languageName,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A1A),
-                  ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      languageName,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      languageNameNative,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.languageNameNative,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF8A8A8A),
-                  ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            // Selection indicator
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: selected
-                      ? const Color(0xFF1B4332)
-                      : const Color(0xFFE0DCD3),
-                  width: 2,
-                ),
-                color: selected ? const Color(0xFF1B4332) : Colors.transparent,
               ),
-              child: selected
-                  ? const Icon(Icons.check, color: Colors.white, size: 16)
-                  : null,
-            ),
-          ],
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: isSelected ? colors.primary : Colors.transparent,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected ? colors.primary : colors.outlineVariant,
+                    width: 1.5,
+                  ),
+                ),
+                child: isSelected
+                    ? const Icon(Icons.check, color: Colors.white, size: 14)
+                    : null,
+              ),
+            ],
+          ),
         ),
       ),
     );
-  }
-
-  Widget _buildFlagImage() {
-    final asset = widget.flagAsset;
-    if (asset.endsWith('.svg')) {
-      return SvgPicture.asset(asset, fit: BoxFit.cover);
-    }
-    return Image.asset(asset, fit: BoxFit.cover);
   }
 }

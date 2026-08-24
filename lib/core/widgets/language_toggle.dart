@@ -1,76 +1,139 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/locale_provider.dart';
+import '../theme/app_theme.dart';
 
-/// A language toggle pill that switches between English and Khmer.
-class LanguageToggle extends StatelessWidget {
+/// Compact animated language selector used on authentication screens.
+class LanguageToggle extends ConsumerWidget {
   const LanguageToggle({super.key});
 
+  static const _segmentWidth = 58.0;
+  static const _height = 34.0;
+
   @override
-  Widget build(BuildContext context) {
-    return Consumer(
-      builder: (context, ref, _) {
-        final locale = ref.watch(localeProvider);
-        return Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Theme.of(context).colorScheme.outline),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _Chip(
-                label: 'EN',
-                selected: locale.languageCode == 'en',
-                onTap: () =>
-                    ref.read(localeProvider.notifier).setLocale(const Locale('en')),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final languageCode = ref.watch(localeProvider).locale.languageCode;
+    final isEnglish = languageCode == 'en';
+    final theme = Theme.of(context);
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final duration = reduceMotion
+        ? Duration.zero
+        : const Duration(milliseconds: 220);
+
+    void select(String code) {
+      if (languageCode == code) return;
+      HapticFeedback.selectionClick();
+      ref.read(localeProvider.notifier).setLocale(Locale(code));
+    }
+
+    return Container(
+      // Include the 4 px padding on both sides and the 1 px outer border.
+      width: _segmentWidth * 2 + 10,
+      height: _height + 10,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: AppRadii.fullBorder,
+        border: Border.all(color: theme.colorScheme.outline),
+      ),
+      child: Stack(
+        children: [
+          AnimatedAlign(
+            key: const Key('language_toggle_highlight'),
+            alignment: isEnglish ? Alignment.centerLeft : Alignment.centerRight,
+            duration: duration,
+            curve: Curves.easeOutCubic,
+            child: Container(
+              width: _segmentWidth,
+              height: _height,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: AppRadii.fullBorder,
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withValues(alpha: .18),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
-              _Chip(
+            ),
+          ),
+          Row(
+            children: [
+              _LanguageSegment(
+                label: 'EN',
+                semanticLabel: 'English',
+                selected: isEnglish,
+                width: _segmentWidth,
+                duration: duration,
+                onTap: () => select('en'),
+              ),
+              _LanguageSegment(
                 label: 'ខ្មែរ',
-                selected: locale.languageCode == 'km',
-                onTap: () =>
-                    ref.read(localeProvider.notifier).setLocale(const Locale('km')),
+                semanticLabel: 'Khmer',
+                selected: !isEnglish,
+                width: _segmentWidth,
+                duration: duration,
+                onTap: () => select('km'),
               ),
             ],
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
 
-class _Chip extends StatelessWidget {
-  const _Chip({
+class _LanguageSegment extends StatelessWidget {
+  const _LanguageSegment({
     required this.label,
+    required this.semanticLabel,
     required this.selected,
+    required this.width,
+    required this.duration,
     required this.onTap,
   });
 
   final String label;
+  final String semanticLabel;
   final bool selected;
+  final double width;
+  final Duration duration;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected ? theme.colorScheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
-            fontSize: 13,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: semanticLabel,
+      child: SizedBox(
+        width: width,
+        height: double.infinity,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: AppRadii.fullBorder,
+            child: Center(
+              child: AnimatedDefaultTextStyle(
+                duration: duration,
+                curve: Curves.easeOutCubic,
+                style: TextStyle(
+                  color: selected
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurface,
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+                child: Text(label),
+              ),
+            ),
           ),
         ),
       ),

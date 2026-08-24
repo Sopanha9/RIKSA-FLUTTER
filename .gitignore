@@ -32,6 +32,7 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+/ios/Flutter/GoogleAuth.xcconfig
 
 # Symbolication related
 app.*.symbols
@@ -46,6 +47,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+**/node_modules/
 
 # Generated Dart files
 *.g.dart

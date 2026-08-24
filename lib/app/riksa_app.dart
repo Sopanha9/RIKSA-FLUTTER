@@ -6,6 +6,7 @@ import '../l10n/gen/app_localizations.dart';
 
 import 'router/app_router.dart';
 import '../core/providers/locale_provider.dart';
+import '../core/providers/theme_mode_provider.dart';
 import '../core/theme/app_theme.dart';
 
 class RiksaApp extends ConsumerWidget {
@@ -13,13 +14,16 @@ class RiksaApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locale = ref.watch(localeProvider);
+    final locale = ref.watch(localeProvider).locale;
+    final themeMode = ref.watch(themeModeProvider);
     final router = ref.watch(goRouterProvider);
 
     return MaterialApp.router(
       title: 'Riksa',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: themeMode,
       locale: locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -29,6 +33,73 @@ class RiksaApp extends ConsumerWidget {
       ],
       supportedLocales: const [Locale('en'), Locale('km')],
       routerConfig: router,
+      builder: (context, child) => _LocaleTransition(
+        locale: locale,
+        child: child ?? const SizedBox.shrink(),
+      ),
+    );
+  }
+}
+
+class _LocaleTransition extends StatefulWidget {
+  const _LocaleTransition({required this.locale, required this.child});
+
+  final Locale locale;
+  final Widget child;
+
+  @override
+  State<_LocaleTransition> createState() => _LocaleTransitionState();
+}
+
+class _LocaleTransitionState extends State<_LocaleTransition>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+  late final Animation<Offset> _position;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 210),
+      value: 1,
+    );
+    final curve = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+    _opacity = Tween<double>(begin: .78, end: 1).animate(curve);
+    _position = Tween<Offset>(
+      begin: const Offset(0, .008),
+      end: Offset.zero,
+    ).animate(curve);
+  }
+
+  @override
+  void didUpdateWidget(covariant _LocaleTransition oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.locale.languageCode == widget.locale.languageCode) return;
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (reduceMotion) {
+      _controller.value = 1;
+    } else {
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: SlideTransition(position: _position, child: widget.child),
     );
   }
 }

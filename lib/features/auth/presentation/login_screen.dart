@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/widgets/google_logo.dart';
-import '../../../core/widgets/language_toggle.dart';
-import '../../../core/widgets/riksa_logo.dart';
-import '../../../core/widgets/telegram_logo.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../l10n/gen/app_localizations.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/auth_scaffold.dart';
+import '../widgets/social_auth_section.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -17,218 +18,179 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _usernameCtrl.dispose();
-    _passwordCtrl.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _submit() async {
+    FocusManager.instance.primaryFocus?.unfocus();
     if (!_formKey.currentState!.validate()) return;
-    await ref.read(authProvider.notifier).login(
-          username: _usernameCtrl.text.trim(),
-          password: _passwordCtrl.text,
+    await ref
+        .read(authProvider.notifier)
+        .login(
+          username: _usernameController.text.trim(),
+          password: _passwordController.text,
         );
-  }
-
-  Future<void> _handleGoogleSignIn() async {
-    // Placeholder: in production, use google_sign_in package to get idToken,
-    // then send to backend. For now, show a snackbar with instructions.
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Google sign-in requires google_sign_in setup (OAuth client ID).')),
-    );
-  }
-
-  void _navigateToTelegramOtp() {
-    context.push('/auth/telegram-otp');
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
+    final strings = AppLocalizations.of(context)!;
+    final auth = ref.watch(authProvider);
+    final loading = auth is AuthLoading;
+    final error = auth is AuthError ? auth.message : null;
 
-    // Listen for auth state changes to navigate on success or show error
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next is Authenticated) {
+        TextInput.finishAutofillContext();
         context.go('/home');
-      } else if (next is AuthError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.message),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
       }
     });
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Top row: logo + language toggle
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const RiksaLogo(fontSize: 28),
-                  const LanguageToggle(),
-                ],
-              ),
-              const SizedBox(height: 48),
-
-              // Heading
-              Text(
-                'Welcome Back',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1A1A1A),
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Sign in to continue your learning journey',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF8A8A8A),
-                    ),
-              ),
-              const SizedBox(height: 36),
-
-              // Form
-              Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Username
-                    TextFormField(
-                      controller: _usernameCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Username',
-                        hintText: 'Enter your username',
-                        prefixIcon: Icon(Icons.person_outline, color: Color(0xFF8A8A8A)),
-                      ),
-                      textInputAction: TextInputAction.next,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'This field is required';
-                        if (v.trim().length < 3) return 'Username must be at least 3 characters';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Password
-                    TextFormField(
-                      controller: _passwordCtrl,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        hintText: 'Enter your password',
-                        prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF8A8A8A)),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                            color: const Color(0xFF8A8A8A),
-                          ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                        ),
-                      ),
-                      textInputAction: TextInputAction.done,
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'This field is required';
-                        return null;
-                      },
-                      onFieldSubmitted: (_) => _handleLogin(),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Forgot password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () => context.push('/auth/forgot-password'),
-                        child: const Text('Forgot password?'),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Login button
-                    ElevatedButton(
-                      onPressed: authState is AuthLoading ? null : _handleLogin,
-                      child: authState is AuthLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Log In'),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Divider
-              Row(
-                children: [
-                  const Expanded(child: Divider(color: Color(0xFFE0DCD3))),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'or continue with',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: const Color(0xFF8A8A8A),
-                          ),
-                    ),
-                  ),
-                  const Expanded(child: Divider(color: Color(0xFFE0DCD3))),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Google + Telegram buttons
-              OutlinedButton.icon(
-                onPressed: _handleGoogleSignIn,
-                icon: const GoogleLogo(size: 22),
-                label: const Text('Continue with Google'),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _navigateToTelegramOtp,
-                icon: const TelegramLogo(size: 22),
-                label: const Text('Continue with Telegram'),
-              ),
-              const SizedBox(height: 36),
-
-              // Sign up link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+    return AuthScaffold(
+      child: AutofillGroup(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AuthPanel(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    "Don't have an account?",
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF8A8A8A),
-                        ),
+                    strings.welcomeBack,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: AppTheme.onBackground,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -.4,
+                    ),
                   ),
-                  TextButton(
-                    onPressed: () => context.push('/auth/register'),
-                    child: const Text('Sign up'),
+                  const SizedBox(height: 22),
+                  const SocialAuthSection(
+                    isRegistration: false,
+                    showDivider: false,
+                  ),
+                  const SizedBox(height: 18),
+                  AuthDivider(label: strings.orLabel),
+                  const SizedBox(height: 18),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (error != null) ...[
+                          AuthErrorBanner(message: error),
+                          const SizedBox(height: 16),
+                        ],
+                        TextFormField(
+                          key: const Key('login_username'),
+                          controller: _usernameController,
+                          enabled: !loading,
+                          autofillHints: const [AutofillHints.username],
+                          textInputAction: TextInputAction.next,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          decoration: InputDecoration(
+                            labelText: strings.username,
+                            hintText: strings.usernameHint,
+                            prefixIcon: const Icon(
+                              Icons.alternate_email_rounded,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return strings.requiredField;
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        TextFormField(
+                          key: const Key('login_password'),
+                          controller: _passwordController,
+                          enabled: !loading,
+                          autofillHints: const [AutofillHints.password],
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _submit(),
+                          decoration: InputDecoration(
+                            labelText: strings.password,
+                            hintText: strings.passwordHint,
+                            prefixIcon: const Icon(Icons.lock_outline_rounded),
+                            suffixIcon: IconButton(
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                              ),
+                              tooltip: _obscurePassword
+                                  ? strings.showPassword
+                                  : strings.hidePassword,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return strings.requiredField;
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        FilledButton(
+                          key: const Key('login_submit'),
+                          onPressed: loading ? null : _submit,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 160),
+                            child: loading
+                                ? const SizedBox.square(
+                                    key: ValueKey('loading'),
+                                    dimension: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    strings.login,
+                                    key: const ValueKey('label'),
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Text(
+                    strings.noAccount,
+                    style: const TextStyle(color: AppTheme.muted),
+                  ),
+                ),
+                TextButton(
+                  onPressed: loading
+                      ? null
+                      : () => context.push('/auth/register'),
+                  child: Text(strings.signUpNow),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
