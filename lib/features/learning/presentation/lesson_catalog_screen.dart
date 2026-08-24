@@ -193,8 +193,14 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
     ];
   }
 
-  void _open(LessonSummary lesson) =>
-      context.push('/learn/${lesson.id}', extra: lesson);
+  void _open(LessonSummary lesson) {
+    final category = lesson.categoryName.toLowerCase();
+    if (category.contains('math')) {
+      context.push('/learn/mathematics', extra: lesson);
+      return;
+    }
+    context.push('/learn/${lesson.id}', extra: lesson);
+  }
 
   Future<void> _showFilters(LessonCatalogState state) =>
       showModalBottomSheet<void>(

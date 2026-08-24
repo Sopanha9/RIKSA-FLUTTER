@@ -16,6 +16,7 @@ import '../../features/blog/presentation/create_blog_post_screen.dart';
 import '../../features/blog/presentation/my_posts_screen.dart';
 import '../../features/learning/presentation/lesson_catalog_screen.dart';
 import '../../features/learning/presentation/lesson_experience_screen.dart';
+import '../../features/learning/presentation/mathematics_roadmap_screen.dart';
 import '../../features/learning/data/learning_models.dart';
 import '../../features/social/presentation/social_feed_screen.dart';
 import '../../features/social/presentation/compose_community_post_screen.dart';
@@ -140,6 +141,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 path: '/learn',
                 builder: (context, state) => const LessonCatalogScreen(),
                 routes: [
+                  GoRoute(
+                    path: 'mathematics',
+                    builder: (context, state) => MathematicsRoadmapScreen(
+                      currentLesson: state.extra is LessonSummary
+                          ? state.extra! as LessonSummary
+                          : null,
+                    ),
+                  ),
                   GoRoute(
                     path: ':id',
                     builder: (context, state) => LessonExperienceScreen(
