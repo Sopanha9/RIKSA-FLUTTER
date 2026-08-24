@@ -36,7 +36,6 @@ class RiksaBottomNavigationBar extends StatelessWidget {
         icon: Icons.account_circle_outlined,
       ),
     ];
-
     return SafeArea(
       top: false,
       minimum: const EdgeInsets.fromLTRB(18, 0, 18, 12),
@@ -76,7 +75,6 @@ class _NavigationSurface extends StatelessWidget {
     required this.onSelected,
     required this.onCollapsedTap,
   });
-
   final double expandedWidth;
   final List<_RiksaNavigationItem> items;
   final int currentIndex;
@@ -101,7 +99,6 @@ class _NavigationSurface extends StatelessWidget {
     final activeLeft = collapsed
         ? 5.0
         : _itemCenter(effectiveIndex) - (activeSize / 2);
-
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -188,9 +185,7 @@ class _NavigationSurface extends StatelessWidget {
                   child: InkResponse(
                     key: ValueKey('bottom-nav-item-$index'),
                     onTap: collapsed
-                        ? index == 0
-                              ? onCollapsedTap
-                              : null
+                        ? (index == 0 ? onCollapsedTap : null)
                         : () => onSelected(index),
                     radius: 27,
                     containedInkWell: true,
@@ -221,7 +216,6 @@ class _NavigationSurface extends StatelessWidget {
 
 class _RiksaNavigationItem {
   const _RiksaNavigationItem({required this.label, required this.icon});
-
   final String label;
   final IconData icon;
 }
