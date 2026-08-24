@@ -39,21 +39,34 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
     final provinceId = _selectedId;
     if (provinceId == null || _saving) return;
     setState(() => _saving = true);
-    final success = await ref
-        .read(authProvider.notifier)
-        .saveProvinceSelection(provinceId);
-    if (!mounted) return;
-    if (!success) {
+
+    try {
+      final success = await ref
+          .read(authProvider.notifier)
+          .saveProvinceSelection(provinceId);
+
+      if (!mounted) return;
+      if (!success) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.provinceSaveFailed),
+          ),
+        );
+        return;
+      }
+
+      final authenticated = ref.read(authProvider) is Authenticated;
+      context.go(authenticated ? '/home' : '/auth/login');
+    } catch (e) {
+      if (!mounted) return;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.provinceSaveFailed),
         ),
       );
-      return;
     }
-    final authenticated = ref.read(authProvider) is Authenticated;
-    context.go(authenticated ? '/home' : '/auth/login');
   }
 
   @override

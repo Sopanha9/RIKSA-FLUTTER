@@ -54,3 +54,58 @@ class ProfileCoverNotifier extends Notifier<String> {
 final profileCoverProvider = NotifierProvider<ProfileCoverNotifier, String>(
   ProfileCoverNotifier.new,
 );
+
+class ProfileAvatarNotifier extends Notifier<String?> {
+  String? _userId;
+  String? _avatarValue;
+  int _selectionVersion = 0;
+
+  @override
+  String? build() {
+    final auth = ref.watch(authProvider);
+    final userId = auth is Authenticated ? auth.user.id : null;
+    if (_userId != userId) {
+      _selectionVersion++;
+      _avatarValue = null;
+    }
+    _userId = userId;
+    unawaited(_restore(userId, _selectionVersion));
+    return _avatarValue;
+  }
+
+  Future<void> _restore(String? userId, int version) async {
+    if (userId == null || userId.isEmpty) return;
+    final preferences = await SharedPreferences.getInstance();
+    final saved = preferences.getString(_key(userId));
+    if (_userId == userId && _selectionVersion == version) {
+      _avatarValue = saved;
+      state = saved;
+    }
+  }
+
+  Future<void> selectLocalImage(String value) async {
+    final userId = _userId;
+    if (userId == null || userId.isEmpty) return;
+    _selectionVersion++;
+    _avatarValue = value;
+    state = value;
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(_key(userId), value);
+  }
+
+  Future<void> clear() async {
+    final userId = _userId;
+    if (userId == null || userId.isEmpty) return;
+    _selectionVersion++;
+    _avatarValue = null;
+    state = null;
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.remove(_key(userId));
+  }
+
+  String _key(String userId) => 'riksa_profile_avatar_$userId';
+}
+
+final profileAvatarProvider = NotifierProvider<ProfileAvatarNotifier, String?>(
+  ProfileAvatarNotifier.new,
+);

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_models.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../providers/profile_provider.dart';
+import '../data/profile_media_storage.dart';
 import '../providers/profile_cover_provider.dart';
+import '../providers/profile_provider.dart';
 import 'widgets/profile_cover.dart';
 import 'widgets/profile_ui.dart';
 
@@ -19,6 +21,8 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
+  static const _customImageChoice = '__custom_image__';
+
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _bioController;
@@ -54,6 +58,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final auth = ref.watch(authProvider);
     final user = auth is Authenticated ? auth.user : null;
     final coverId = ref.watch(profileCoverProvider);
+    final localAvatar = ref.watch(profileAvatarProvider);
 
     return Scaffold(
       backgroundColor: ProfilePalette.canvas(context),
@@ -108,7 +113,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       RiksaProfileAvatar(
                                         user: user,
                                         radius: 52,
-                                        avatarPath: _avatarPath,
+                                        avatarPath: localAvatar ?? _avatarPath,
                                       ),
                                       PositionedDirectional(
                                         end: -2,
@@ -356,7 +361,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     fontSize: 13,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('choose-custom-avatar'),
+                    onPressed: () =>
+                        Navigator.of(sheetContext).pop(_customImageChoice),
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: Text(l10n.chooseFromPhotos),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Expanded(
                   child: GridView.builder(
                     key: const ValueKey('humation-avatar-grid'),
@@ -437,7 +453,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         ),
       ),
     );
-    if (selected != null && mounted) setState(() => _avatarPath = selected);
+    if (selected == _customImageChoice) {
+      await _pickCustomAvatar();
+    } else if (selected != null && mounted) {
+      setState(() => _avatarPath = selected);
+      await ref.read(profileAvatarProvider.notifier).clear();
+    }
   }
 
   Future<void> _chooseCover(BuildContext context) async {
@@ -447,86 +468,156 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       context: context,
       backgroundColor: ProfilePalette.panel(context),
       showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 4, 18, 22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.chooseProfileCover,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
+      isScrollControlled: true,
+      builder: (sheetContext) => FractionallySizedBox(
+        heightFactor: .72,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 4, 18, 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.chooseProfileCover,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                l10n.profileCoverSubtitle,
-                style: TextStyle(
-                  color: ProfilePalette.muted(context),
-                  fontSize: 13,
+                const SizedBox(height: 5),
+                Text(
+                  l10n.profileCoverSubtitle,
+                  style: TextStyle(
+                    color: ProfilePalette.muted(context),
+                    fontSize: 13,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              GridView.builder(
-                key: const ValueKey('profile-cover-grid'),
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 2.1,
-                  mainAxisSpacing: 11,
-                  crossAxisSpacing: 11,
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('choose-custom-cover'),
+                    onPressed: () =>
+                        Navigator.of(sheetContext).pop(_customImageChoice),
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: Text(l10n.chooseFromPhotos),
+                  ),
                 ),
-                itemCount: profileCoverStyles.length,
-                itemBuilder: (context, index) {
-                  final cover = profileCoverStyles[index];
-                  final isSelected = cover.id == current;
-                  return Semantics(
-                    button: true,
-                    selected: isSelected,
-                    label: '${l10n.chooseProfileCover} ${index + 1}',
-                    child: InkWell(
-                      key: ValueKey('profile-cover-option-${cover.id}'),
-                      borderRadius: AppRadii.mediumBorder,
-                      onTap: () => Navigator.of(sheetContext).pop(cover.id),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          ProfileCover(coverId: cover.id, height: 100),
-                          if (isSelected)
-                            Align(
-                              alignment: AlignmentDirectional.topEnd,
-                              child: Padding(
-                                padding: const EdgeInsets.all(7),
-                                child: CircleAvatar(
-                                  radius: 10,
-                                  backgroundColor: Colors.white,
-                                  child: Icon(
-                                    Icons.check_rounded,
-                                    size: 15,
-                                    color: ProfilePalette.green(context),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: GridView.builder(
+                    key: const ValueKey('profile-cover-grid'),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 2.1,
+                          mainAxisSpacing: 11,
+                          crossAxisSpacing: 11,
+                        ),
+                    itemCount: profileCoverStyles.length,
+                    itemBuilder: (context, index) {
+                      final cover = profileCoverStyles[index];
+                      final isSelected = cover.id == current;
+                      return Semantics(
+                        button: true,
+                        selected: isSelected,
+                        label: '${l10n.chooseProfileCover} ${index + 1}',
+                        child: InkWell(
+                          key: ValueKey('profile-cover-option-${cover.id}'),
+                          borderRadius: AppRadii.mediumBorder,
+                          onTap: () => Navigator.of(sheetContext).pop(cover.id),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ProfileCover(coverId: cover.id, height: 100),
+                              if (isSelected)
+                                Align(
+                                  alignment: AlignmentDirectional.topEnd,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(7),
+                                    child: CircleAvatar(
+                                      radius: 10,
+                                      backgroundColor: Colors.white,
+                                      child: Icon(
+                                        Icons.check_rounded,
+                                        size: 15,
+                                        color: ProfilePalette.green(context),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
-    if (selected != null) {
+    if (selected == _customImageChoice) {
+      await _pickCustomCover();
+    } else if (selected != null) {
       await ref.read(profileCoverProvider.notifier).select(selected);
     }
+  }
+
+  Future<void> _pickCustomAvatar() async {
+    final user = _user;
+    if (user == null) return;
+    try {
+      final image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 900,
+        maxHeight: 900,
+        imageQuality: 88,
+        requestFullMetadata: false,
+      );
+      if (image == null) return;
+      final value = await persistProfileImage(
+        source: image,
+        userId: user.id,
+        kind: 'avatar',
+      );
+      await ref.read(profileAvatarProvider.notifier).selectLocalImage(value);
+    } catch (_) {
+      _showImageSelectionError();
+    }
+  }
+
+  Future<void> _pickCustomCover() async {
+    final user = _user;
+    if (user == null) return;
+    try {
+      final image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1800,
+        imageQuality: 88,
+        requestFullMetadata: false,
+      );
+      if (image == null) return;
+      final value = await persistProfileImage(
+        source: image,
+        userId: user.id,
+        kind: 'cover',
+      );
+      await ref.read(profileCoverProvider.notifier).select(value);
+    } catch (_) {
+      _showImageSelectionError();
+    }
+  }
+
+  void _showImageSelectionError() {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.imageSelectionFailed)));
   }
 
   Future<void> _confirmDelete(BuildContext context) async {

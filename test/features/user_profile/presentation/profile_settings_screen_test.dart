@@ -10,6 +10,7 @@ import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/userProfile/presentation/edit_profile_screen.dart';
 import 'package:riksa_app/features/userProfile/presentation/profile_settings_screen.dart';
 import 'package:riksa_app/features/userProfile/presentation/widgets/profile_cover.dart';
+import 'package:riksa_app/features/userProfile/presentation/widgets/profile_ui.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 class _AuthNotifier extends AuthNotifier {
@@ -128,6 +129,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('edit-cover')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('profile-cover-grid')), findsOneWidget);
+    expect(find.byKey(const ValueKey('choose-custom-cover')), findsOneWidget);
     await tester.tap(
       find.byKey(const ValueKey('profile-cover-option-sunrise')),
     );
@@ -144,13 +146,24 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('edit-avatar')));
     await tester.pumpAndSettle();
     expect(find.text('Humation'), findsOneWidget);
+    expect(find.byKey(const ValueKey('choose-custom-avatar')), findsOneWidget);
     expect(find.byKey(const ValueKey('humation-avatar-grid')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('humation-avatar-option-0')),
       findsOneWidget,
     );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('humation-avatar-option-0')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('humation-avatar-option-0')));
     await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<RiksaProfileAvatar>(find.byType(RiksaProfileAvatar))
+          .avatarPath,
+      '/avatars/avatar-1.png',
+    );
     expect(
       find.byKey(const ValueKey('humation-avatar-avatar-01.svg')),
       findsOneWidget,

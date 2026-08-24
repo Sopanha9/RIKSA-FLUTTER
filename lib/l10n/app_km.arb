@@ -259,6 +259,8 @@
   "editCover": "កែរូបគម្រប",
   "chooseProfileCover": "ជ្រើសរើសរូបគម្របប្រវត្តិរូប",
   "profileCoverSubtitle": "ជ្រើសរើសពណ៌ និងលំនាំដែលបង្ហាញពីអ្នក។",
+  "chooseFromPhotos": "ជ្រើសរើសពីរូបថត",
+  "imageSelectionFailed": "យើងមិនអាចប្រើរូបភាពនោះបានទេ។ សូមសាកល្បងរូបភាពផ្សេង។",
   "notProvided": "មិនបានផ្តល់",
   "supportDocumentUnavailable": "ឯកសារនេះនឹងមាននៅទីនេះ បន្ទាប់ពីខ្លឹមសារជំនួយ RIKSA ត្រូវបានផ្សព្វផ្សាយ។",
   "aiTutor": "គ្រូ AI",

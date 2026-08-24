@@ -830,6 +830,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pick a color and pattern that feels like you.';
 
   @override
+  String get chooseFromPhotos => 'Choose from photos';
+
+  @override
+  String get imageSelectionFailed =>
+      'We couldn’t use that image. Please try another one.';
+
+  @override
   String get notProvided => 'Not provided';
 
   @override

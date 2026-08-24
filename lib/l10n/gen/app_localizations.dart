@@ -1568,6 +1568,18 @@ abstract class AppLocalizations {
   /// **'Pick a color and pattern that feels like you.'**
   String get profileCoverSubtitle;
 
+  /// No description provided for @chooseFromPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from photos'**
+  String get chooseFromPhotos;
+
+  /// No description provided for @imageSelectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t use that image. Please try another one.'**
+  String get imageSelectionFailed;
+
   /// No description provided for @notProvided.
   ///
   /// In en, this message translates to:

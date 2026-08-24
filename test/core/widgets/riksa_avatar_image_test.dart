@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/core/widgets/riksa_avatar_image.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
+import 'package:riksa_app/features/userProfile/data/profile_media_storage.dart';
 
 void main() {
   test('maps stored Humation avatar values to bundled assets', () {
@@ -22,6 +23,13 @@ void main() {
     final request = UpdateProfileRequest(avatarUrl: humationAvatarValue(0));
 
     expect(request.toJson()['avatarUrl'], '/avatars/avatar-1.png');
+  });
+
+  test('round-trips local profile media paths', () {
+    const path = '/documents/riksa-profile-media/user/avatar.jpg';
+
+    expect(localProfileMediaPath(localProfileMediaValue(path)), path);
+    expect(localProfileMediaPath('/avatars/avatar-1.png'), isNull);
   });
 
   testWidgets('renders a bundled Humation avatar without a network image', (

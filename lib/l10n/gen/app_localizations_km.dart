@@ -802,6 +802,13 @@ class AppLocalizationsKm extends AppLocalizations {
   String get profileCoverSubtitle => 'ជ្រើសរើសពណ៌ និងលំនាំដែលបង្ហាញពីអ្នក។';
 
   @override
+  String get chooseFromPhotos => 'ជ្រើសរើសពីរូបថត';
+
+  @override
+  String get imageSelectionFailed =>
+      'យើងមិនអាចប្រើរូបភាពនោះបានទេ។ សូមសាកល្បងរូបភាពផ្សេង។';
+
+  @override
   String get notProvided => 'មិនបានផ្តល់';
 
   @override

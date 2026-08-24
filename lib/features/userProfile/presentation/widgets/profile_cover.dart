@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../data/profile_media_storage.dart';
 
 @immutable
 class ProfileCoverStyle {
@@ -67,8 +70,9 @@ class ProfileCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localPath = localProfileMediaPath(coverId);
     final style = profileCoverStyle(coverId);
-    return Container(
+    final fallback = Container(
       height: height,
       width: double.infinity,
       decoration: BoxDecoration(
@@ -88,6 +92,28 @@ class ProfileCover extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: CustomPaint(painter: _CoverPatternPainter(style.accent)),
+    );
+    if (localPath == null) return fallback;
+    return Container(
+      height: height,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: borderRadius,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: .14),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Image.file(
+        File(localPath),
+        key: const ValueKey('local-profile-cover'),
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => fallback,
+      ),
     );
   }
 }

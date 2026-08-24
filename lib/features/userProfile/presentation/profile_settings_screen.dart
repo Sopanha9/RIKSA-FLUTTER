@@ -6,6 +6,7 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_mode_provider.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../providers/profile_cover_provider.dart';
 import 'widgets/profile_ui.dart';
 
 class ProfileSettingsScreen extends ConsumerStatefulWidget {
@@ -26,6 +27,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     final user = auth is Authenticated ? auth.user : null;
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider).locale;
+    final localAvatar = ref.watch(profileAvatarProvider);
 
     return Scaffold(
       backgroundColor: ProfilePalette.canvas(context),
@@ -54,7 +56,11 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                         horizontal: 16,
                         vertical: 9,
                       ),
-                      leading: RiksaProfileAvatar(user: user, radius: 25),
+                      leading: RiksaProfileAvatar(
+                        user: user,
+                        radius: 25,
+                        avatarPath: localAvatar,
+                      ),
                       title: Text(
                         user.displayName,
                         style: const TextStyle(fontWeight: FontWeight.w900),

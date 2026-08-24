@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../features/userProfile/data/profile_media_storage.dart';
 import '../network/api_config.dart';
 
 const humationAvatarCount = 24;
@@ -59,6 +62,7 @@ class RiksaAvatarImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localPath = localProfileMediaPath(value);
     final assetPath = humationAvatarAssetPath(value);
     final networkUrl = resolvedAvatarUrl(value);
     final fallback = _AvatarFallback(
@@ -72,7 +76,17 @@ class RiksaAvatarImage extends StatelessWidget {
       child: ClipOval(
         child: ColoredBox(
           color: backgroundColor,
-          child: assetPath != null
+          child: localPath != null
+              ? Image.file(
+                  File(localPath),
+                  key: const ValueKey('local-profile-avatar'),
+                  width: size,
+                  height: size,
+                  fit: BoxFit.cover,
+                  excludeFromSemantics: true,
+                  errorBuilder: (_, _, _) => fallback,
+                )
+              : assetPath != null
               ? SvgPicture.asset(
                   assetPath,
                   key: ValueKey('humation-avatar-${assetPath.split('/').last}'),

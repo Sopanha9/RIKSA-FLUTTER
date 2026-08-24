@@ -136,6 +136,7 @@ class _ProfileHeader extends ConsumerWidget {
         : user.displayName.trim();
     final tier = readableProfileName(game?.currentTier ?? l10n.startingTier);
     final coverId = ref.watch(profileCoverProvider);
+    final localAvatar = ref.watch(profileAvatarProvider);
 
     return Column(
       children: [
@@ -150,7 +151,13 @@ class _ProfileHeader extends ConsumerWidget {
               start: 0,
               end: 0,
               bottom: -49,
-              child: Center(child: RiksaProfileAvatar(user: user, radius: 49)),
+              child: Center(
+                child: RiksaProfileAvatar(
+                  user: user,
+                  radius: 49,
+                  avatarPath: localAvatar,
+                ),
+              ),
             ),
           ],
         ),
