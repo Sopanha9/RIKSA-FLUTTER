@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_components.dart';
 import '../../auth/data/auth_api.dart';
 import '../data/blog_models.dart';
 import '../providers/blog_provider.dart';
@@ -38,7 +39,9 @@ class _CreateBlogPostScreenState extends ConsumerState<CreateBlogPostScreen> {
     setState(() => _submitting = true);
     try {
       final cover = _coverCtrl.text.trim();
-      await ref.read(blogApiProvider).createPost(
+      await ref
+          .read(blogApiProvider)
+          .createPost(
             CreateBlogPostRequest(
               title: _titleCtrl.text.trim(),
               content: _contentCtrl.text.trim(),
@@ -78,43 +81,14 @@ class _CreateBlogPostScreenState extends ConsumerState<CreateBlogPostScreen> {
   }
 
   Widget _buildPendingReview() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.hourglass_top_rounded,
-              size: 56,
-              color: AppTheme.primary,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Pending review',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.onBackground,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Your post was submitted and will appear in the feed once a '
-              'moderator approves it.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: AppTheme.muted),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => context.pop(true),
-              child: const Text('Back to Feed'),
-            ),
-          ],
-        ),
-      ),
+    return RiksaStateView(
+      title: 'Pending review',
+      body:
+          'Your story was submitted and will appear once a moderator '
+          'approves it.',
+      icon: Icons.hourglass_top_rounded,
+      actionLabel: 'Back to stories',
+      onAction: () => context.pop(true),
     );
   }
 
@@ -122,103 +96,131 @@ class _CreateBlogPostScreenState extends ConsumerState<CreateBlogPostScreen> {
     final categoriesAsync = ref.watch(blogCategoriesProvider);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextFormField(
-              controller: _titleCtrl,
-              maxLength: 200,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                hintText: 'Give your post a title',
-              ),
-              textInputAction: TextInputAction.next,
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Title is required';
-                if (v.trim().length > 200) return 'Max 200 characters';
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            categoriesAsync.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.symmetric(vertical: 14),
-                child: Center(
-                  child: SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: EdgeInsets.fromLTRB(
+        RiksaSpacing.md,
+        RiksaSpacing.sm,
+        RiksaSpacing.md,
+        RiksaSpacing.lg + MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: RiksaPastelCard(
+            padding: const EdgeInsets.all(RiksaSpacing.lg),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Share something useful',
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                ),
-              ),
-              error: (_, _) => Text(
-                'Could not load categories',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Theme.of(context).colorScheme.error),
-              ),
-              data: (categories) => DropdownButtonFormField<String>(
-                key: ValueKey(_categoryId),
-                initialValue: _categoryId,
-                decoration: const InputDecoration(labelText: 'Category'),
-                items: [
-                  for (final c in categories)
-                    DropdownMenuItem(value: c.id, child: Text(c.name)),
-                ],
-                onChanged: (v) => setState(() => _categoryId = v),
-                validator: (v) => v == null ? 'Category is required' : null,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _coverCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Cover image URL (optional)',
-                hintText: 'https://...',
-              ),
-              keyboardType: TextInputType.url,
-              textInputAction: TextInputAction.next,
-              validator: (v) {
-                if (v != null && v.trim().length > 2000) {
-                  return 'Max 2000 characters';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _contentCtrl,
-              minLines: 8,
-              maxLines: null,
-              decoration: const InputDecoration(
-                labelText: 'Content',
-                hintText: 'Write your article...',
-                alignLabelWithHint: true,
-              ),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Content is required';
-                return null;
-              },
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _submitting ? null : _submit,
-              child: _submitting
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+                  const SizedBox(height: RiksaSpacing.xs),
+                  Text(
+                    'Clear titles and focused stories help other learners.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: RiksaSpacing.lg),
+                  TextFormField(
+                    controller: _titleCtrl,
+                    maxLength: 200,
+                    decoration: const InputDecoration(
+                      labelText: 'Title',
+                      hintText: 'Give your post a title',
+                    ),
+                    textInputAction: TextInputAction.next,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'Title is required';
+                      }
+                      if (v.trim().length > 200) return 'Max 200 characters';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  categoriesAsync.when(
+                    loading: () => const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      child: Center(
+                        child: SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
                       ),
-                    )
-                  : const Text('Submit Post'),
+                    ),
+                    error: (_, _) => Text(
+                      'Could not load categories',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                    data: (categories) => DropdownButtonFormField<String>(
+                      key: ValueKey(_categoryId),
+                      initialValue: _categoryId,
+                      decoration: const InputDecoration(labelText: 'Category'),
+                      items: [
+                        for (final c in categories)
+                          DropdownMenuItem(value: c.id, child: Text(c.name)),
+                      ],
+                      onChanged: (v) => setState(() => _categoryId = v),
+                      validator: (v) =>
+                          v == null ? 'Category is required' : null,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _coverCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Cover image URL (optional)',
+                      hintText: 'https://...',
+                    ),
+                    keyboardType: TextInputType.url,
+                    textInputAction: TextInputAction.next,
+                    validator: (v) {
+                      if (v != null && v.trim().length > 2000) {
+                        return 'Max 2000 characters';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _contentCtrl,
+                    minLines: 8,
+                    maxLines: null,
+                    decoration: const InputDecoration(
+                      labelText: 'Content',
+                      hintText: 'Write your article...',
+                      alignLabelWithHint: true,
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'Content is required';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    onPressed: _submitting ? null : _submit,
+                    child: _submitting
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.warmCanvas,
+                            ),
+                          )
+                        : const Text('Submit Post'),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );

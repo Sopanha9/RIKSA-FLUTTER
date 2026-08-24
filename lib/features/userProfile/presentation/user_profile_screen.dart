@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_api.dart';
 import '../../auth/data/auth_models.dart';
@@ -46,7 +47,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     return Scaffold(
       backgroundColor: ProfilePalette.canvas(context),
       body: RefreshIndicator(
-        color: ProfilePalette.green,
+        color: ProfilePalette.green(context),
         onRefresh: () async {
           ref
             ..invalidate(profileDashboardProvider)
@@ -59,24 +60,17 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            SliverAppBar(
-              pinned: true,
-              backgroundColor: ProfilePalette.canvas(
-                context,
-              ).withValues(alpha: .96),
-              title: Text(
-                l10n.profile,
-                style: const TextStyle(fontWeight: FontWeight.w900),
-              ),
-              actions: [
-                IconButton(
+            SliverToBoxAdapter(
+              child: RiksaPageHeader(
+                title: l10n.profile,
+                subtitle: l10n.learningHeaderSubtitle,
+                trailing: IconButton.filledTonal(
                   key: const ValueKey('profile-settings'),
                   tooltip: l10n.settings,
                   onPressed: () => context.push('/profile/settings'),
                   icon: const Icon(Icons.settings_outlined),
                 ),
-                const SizedBox(width: 10),
-              ],
+              ),
             ),
             SliverToBoxAdapter(
               child: Center(
@@ -97,7 +91,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         ),
                         const SizedBox(height: 18),
                         AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 180),
+                          duration: RiksaMotion.resolve(
+                            context,
+                            RiksaMotion.standard,
+                          ),
                           child: user == null
                               ? const _ProfileLoading()
                               : switch (_tab) {
@@ -160,9 +157,9 @@ class _ProfileHeader extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.local_fire_department_rounded,
-                      color: ProfilePalette.streak,
+                      color: ProfilePalette.streak(context),
                       size: 17,
                     ),
                     const SizedBox(width: 3),
@@ -196,7 +193,7 @@ class _ProfileHeader extends StatelessWidget {
               user.emailVerified
                   ? Icons.verified_rounded
                   : Icons.workspace_premium_rounded,
-              color: ProfilePalette.green,
+              color: ProfilePalette.green(context),
               size: 20,
             ),
           ],
@@ -225,20 +222,20 @@ class _ProfileHeader extends StatelessWidget {
                 key: const ValueKey('profile-tier'),
                 value: tier,
                 label: l10n.currentRank,
-                color: ProfilePalette.green,
+                color: ProfilePalette.green(context),
               ),
               const _StatDivider(),
               _HeaderStat(
                 key: const ValueKey('profile-total-xp'),
                 value: NumberFormat.compact().format(game?.totalXp ?? 0),
                 label: l10n.totalXp,
-                color: ProfilePalette.xp,
+                color: ProfilePalette.xp(context),
               ),
               const _StatDivider(),
               _HeaderStat(
                 value: '${game?.currentStreak ?? 0}',
                 label: l10n.currentStreak,
-                color: ProfilePalette.streak,
+                color: ProfilePalette.streak(context),
               ),
             ],
           ),
@@ -350,21 +347,16 @@ class _TabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Expanded(
     child: InkWell(
-      borderRadius: AppRadii.fullBorder,
+      borderRadius: AppRadii.smallBorder,
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
+        duration: RiksaMotion.resolve(context, RiksaMotion.standard),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         decoration: BoxDecoration(
           color: selected
               ? ProfilePalette.greenSoft(context)
               : ProfilePalette.panel(context),
-          borderRadius: AppRadii.fullBorder,
-          border: Border.all(
-            color: selected
-                ? ProfilePalette.green
-                : ProfilePalette.border(context),
-          ),
+          borderRadius: AppRadii.smallBorder,
         ),
         child: Text(
           label,
@@ -373,7 +365,7 @@ class _TabButton extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: selected
-                ? ProfilePalette.green
+                ? ProfilePalette.green(context)
                 : ProfilePalette.muted(context),
             fontSize: 11,
             fontWeight: FontWeight.w800,
@@ -493,16 +485,16 @@ class _AchievementTile extends StatelessWidget {
                 color: AppColors.gamificationOrangeSoft,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.workspace_premium_rounded,
-                color: AppColors.gamificationOrange,
+                color: context.riksa.saffron,
               ),
             ),
             const Spacer(),
             Text(
               '+${achievement.xpReward} XP',
-              style: const TextStyle(
-                color: ProfilePalette.xp,
+              style: TextStyle(
+                color: ProfilePalette.xp(context),
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
               ),
@@ -597,7 +589,7 @@ class _RankCard extends StatelessWidget {
               color: ProfilePalette.greenSoft(context),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: ProfilePalette.green),
+            child: Icon(icon, color: ProfilePalette.green(context)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -627,16 +619,16 @@ class _RankCard extends StatelessWidget {
             children: [
               Text(
                 '$score XP',
-                style: const TextStyle(
-                  color: ProfilePalette.xp,
+                style: TextStyle(
+                  color: ProfilePalette.xp(context),
                   fontWeight: FontWeight.w900,
                 ),
               ),
               if (tier != null)
                 Text(
                   readableProfileName(tier!),
-                  style: const TextStyle(
-                    color: ProfilePalette.green,
+                  style: TextStyle(
+                    color: ProfilePalette.green(context),
                     fontSize: 12,
                   ),
                 ),
@@ -652,10 +644,10 @@ class _ProfileLoading extends StatelessWidget {
   const _ProfileLoading({super.key});
 
   @override
-  Widget build(BuildContext context) => const Padding(
-    padding: EdgeInsets.symmetric(vertical: 36),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 36),
     child: Center(
-      child: CircularProgressIndicator(color: ProfilePalette.green),
+      child: CircularProgressIndicator(color: ProfilePalette.green(context)),
     ),
   );
 }
@@ -672,7 +664,7 @@ class _EmptyPanel extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Column(
         children: [
-          Icon(icon, color: ProfilePalette.green, size: 34),
+          Icon(icon, color: ProfilePalette.green(context), size: 34),
           const SizedBox(height: 10),
           Text(
             message,

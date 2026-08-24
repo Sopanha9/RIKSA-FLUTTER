@@ -32,13 +32,24 @@ class _CatalogNotifier extends LessonCatalogNotifier {
   );
 
   @override
-  Future<void> selectGrade(int? grade) async {
-    state = state.copyWith(selectedGrade: grade, clearGrade: grade == null);
+  Future<void> applyFilters({
+    int? grade,
+    String? categoryId,
+    LessonDifficulty? difficulty,
+  }) async {
+    state = state.copyWith(
+      selectedGrade: grade,
+      clearGrade: grade == null,
+      selectedCategoryId: categoryId,
+      clearCategory: categoryId == null,
+      selectedDifficulty: difficulty,
+      clearDifficulty: difficulty == null,
+    );
   }
 }
 
 void main() {
-  testWidgets('grade pills update selection and explain ungraded data', (
+  testWidgets('lessons precede advanced filters and sheet applies grade', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(430, 932);
@@ -78,22 +89,26 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text("TODAY'S MISSION"), findsOneWidget);
+    expect(find.text('Recommended lessons'), findsOneWidget);
+    expect(find.text('Derivatives & Tangent Lines'), findsNWidgets(2));
+
+    await tester.tap(find.byKey(const ValueKey('lesson-filter-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('lesson-filter-sheet')), findsOneWidget);
     expect(find.text('Grade'), findsOneWidget);
-    expect(find.byKey(const Key('grade-filter-10')), findsOneWidget);
-
-    await tester.drag(
-      find.byKey(const Key('grade-filter-all')),
-      const Offset(-420, 0),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('grade-filter-10')));
+    await tester.tap(find.text('Grade 10'));
+    await tester.ensureVisible(find.byKey(const ValueKey('apply-filters')));
+    await tester.tap(find.byKey(const ValueKey('apply-filters')));
     await tester.pumpAndSettle();
 
+    expect(find.byKey(const ValueKey('active-grade-filter')), findsOneWidget);
     expect(
       find.textContaining('Until lessons receive grade tags'),
       findsOneWidget,
     );
-    expect(find.text('Derivatives & Tangent Lines'), findsOneWidget);
+    expect(find.text('Derivatives & Tangent Lines'), findsNWidgets(2));
 
     await tester.tap(find.byKey(const ValueKey('learning-streak-button')));
     await tester.pumpAndSettle();

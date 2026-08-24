@@ -47,6 +47,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get usernameHint => 'Enter your username';
 
   @override
+  String get emailOrUsername => 'Email or username';
+
+  @override
+  String get emailOrUsernameHint => 'Enter your email or username';
+
+  @override
   String get password => 'Password';
 
   @override
@@ -169,6 +175,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get passwordRecoveryUnavailable =>
+      'Password recovery is not available yet.';
 
   @override
   String get requiredField => 'This field is required';
@@ -501,6 +511,40 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose your grade, subject, and level to learn at your pace.';
 
   @override
+  String get learningHeaderSubtitle => 'A little progress, every day';
+
+  @override
+  String get dailyMissionEyebrow => 'Today\'s mission';
+
+  @override
+  String get dailyMissionBody => 'A focused lesson picked for your pace.';
+
+  @override
+  String get startDailyMission => 'Start lesson';
+
+  @override
+  String get filters => 'Filters';
+
+  @override
+  String get filterLessons => 'Filter lessons';
+
+  @override
+  String get applyFilters => 'Show lessons';
+
+  @override
+  String get resetFilters => 'Reset';
+
+  @override
+  String removeFilter(String filter) {
+    return 'Remove $filter filter';
+  }
+
+  @override
+  String minutesShort(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
   String get gradeFilter => 'Grade';
 
   @override
@@ -578,6 +622,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noLessonsForFilters =>
       'Try another grade, subject, or difficulty.';
+
+  @override
+  String get lessonPreviewHeading => 'Ready when you are';
+
+  @override
+  String get lessonPreviewBody =>
+      'Take it one step at a time. Your progress is saved along the way.';
+
+  @override
+  String get beginLesson => 'Begin lesson';
+
+  @override
+  String get lessonContentUnavailable =>
+      'Lesson activities will appear when the learning service provides the lesson detail.';
+
+  @override
+  String get backToLessons => 'Back to lessons';
 
   @override
   String get accountSettings => 'Account settings';

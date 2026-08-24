@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../data/auth_models.dart';
 import '../providers/auth_provider.dart';
@@ -64,7 +65,7 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
     final provinces = ref.watch(provinceOptionsProvider);
 
     return Scaffold(
-      backgroundColor: colors.surface,
+      backgroundColor: context.riksa.canvas,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 30, 20, 16),
@@ -76,8 +77,8 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
                 height: 48,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  borderRadius: AppRadii.mediumBorder,
+                  color: context.riksa.blushSoft,
+                  borderRadius: AppRadii.largeBorder,
                 ),
                 child: Icon(
                   Icons.location_on_rounded,
@@ -87,10 +88,7 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
               const SizedBox(height: 20),
               Text(
                 l10n.selectProvinceTitle,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -.4,
-                ),
+                style: theme.textTheme.headlineLarge,
               ),
               const SizedBox(height: 9),
               Text(
@@ -101,30 +99,32 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              TextField(
+              RiksaSearchField(
                 key: const Key('province_search'),
                 controller: _searchController,
+                hintText: l10n.searchProvince,
                 onChanged: (value) => setState(() => _query = value.trim()),
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: l10n.searchProvince,
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _query.isEmpty
-                      ? null
-                      : IconButton(
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _query = '');
-                          },
-                          icon: const Icon(Icons.close_rounded),
-                        ),
-                ),
+                trailing: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).deleteButtonTooltip,
+                        icon: const Icon(Icons.close_rounded),
+                      ),
               ),
               const SizedBox(height: 14),
               Expanded(
                 child: provinces.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => const RiksaStateView(
+                    title: 'Loading provinces',
+                    body: 'Preparing local learning options.',
+                    loading: true,
+                  ),
                   error: (error, stackTrace) => _ProvinceError(
                     message: l10n.provinceLoadFailed,
                     retryLabel: l10n.tryAgain,
@@ -138,7 +138,11 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
                           province.nameKhmer.contains(_query);
                     }).toList();
                     if (filtered.isEmpty) {
-                      return Center(child: Text(l10n.noProvinceResults));
+                      return RiksaStateView(
+                        title: l10n.noProvinceResults,
+                        body: l10n.searchProvince,
+                        icon: Icons.search_off_rounded,
+                      );
                     }
                     return ListView.separated(
                       key: const Key('province_list'),
@@ -166,18 +170,11 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
                 child: FilledButton(
                   key: const Key('province_continue'),
                   onPressed: _selectedId == null || _saving ? null : _continue,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.lightTextPrimary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: colors.surfaceContainerHighest,
-                    disabledForegroundColor: colors.onSurfaceVariant,
-                    shape: const StadiumBorder(),
-                  ),
                   child: _saving
-                      ? const SizedBox.square(
+                      ? SizedBox.square(
                           dimension: 20,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
+                            color: context.riksa.canvas,
                             strokeWidth: 2,
                           ),
                         )
@@ -223,17 +220,13 @@ class _ProvinceTile extends StatelessWidget {
       selected: selected,
       child: InkWell(
         onTap: onTap,
-        borderRadius: AppRadii.mediumBorder,
+        borderRadius: AppRadii.extraLargeBorder,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
           decoration: BoxDecoration(
-            color: selected ? colors.primaryContainer : colors.surface,
-            borderRadius: AppRadii.mediumBorder,
-            border: Border.all(
-              color: selected ? colors.primary : colors.outline,
-              width: selected ? 1.5 : 1,
-            ),
+            color: selected ? context.riksa.jadeSoft : context.riksa.surface,
+            borderRadius: AppRadii.extraLargeBorder,
           ),
           child: Row(
             children: [

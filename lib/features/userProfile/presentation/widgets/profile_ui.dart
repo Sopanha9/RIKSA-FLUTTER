@@ -7,9 +7,9 @@ import '../../../auth/data/auth_models.dart';
 class ProfilePalette {
   ProfilePalette._();
 
-  static const green = AppColors.brandPrimaryHover;
-  static const streak = AppColors.gamificationOrange;
-  static const xp = AppColors.gamificationGold;
+  static Color green(BuildContext context) => context.riksa.jade;
+  static Color streak(BuildContext context) => context.riksa.saffron;
+  static Color xp(BuildContext context) => context.riksa.saffron;
 
   static Color canvas(BuildContext context) =>
       Theme.of(context).scaffoldBackgroundColor;
@@ -63,13 +63,8 @@ class RiksaProfileAvatar extends StatelessWidget {
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: ProfilePalette.green, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: ProfilePalette.green.withValues(alpha: .18),
-            blurRadius: 22,
-          ),
-        ],
+        color: context.riksa.jadeSoft,
+        border: Border.all(color: context.riksa.jade, width: 2),
       ),
       child: RiksaAvatarImage(
         value: avatarPath ?? user.avatarUrl,
@@ -91,10 +86,8 @@ class ProfilePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: ProfilePalette.panel(context),
-    shape: RoundedRectangleBorder(
-      borderRadius: AppRadii.mediumBorder,
-      side: BorderSide(color: ProfilePalette.border(context)),
-    ),
+    shape: const RoundedRectangleBorder(borderRadius: AppRadii.mediumBorder),
+    elevation: 0,
     clipBehavior: Clip.antiAlias,
     child: Padding(padding: padding ?? const EdgeInsets.all(18), child: child),
   );

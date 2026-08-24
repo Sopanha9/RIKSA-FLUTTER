@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_api.dart';
 import '../../social/data/social_api.dart';
@@ -19,21 +21,25 @@ class LeaderboardScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: ProfilePalette.canvas(context),
       body: RefreshIndicator(
-        color: ProfilePalette.green,
+        color: ProfilePalette.green(context),
         onRefresh: () => ref.refresh(profileRankProvider.future),
         child: CustomScrollView(
           key: const PageStorageKey('leaderboard-scroll'),
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            SliverAppBar(
-              pinned: true,
-              title: Text(
-                l10n.leaderboard,
-                style: const TextStyle(fontWeight: FontWeight.w900),
+            SliverToBoxAdapter(
+              child: RiksaPageHeader(
+                title: l10n.leaderboard,
+                subtitle: l10n.learningHeaderSubtitle,
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              padding: const EdgeInsets.fromLTRB(
+                RiksaSpacing.md,
+                RiksaSpacing.sm,
+                RiksaSpacing.md,
+                RiksaSpacing.lg,
+              ),
               sliver: SliverToBoxAdapter(
                 child: rank.when(
                   loading: () => const Padding(
@@ -114,7 +120,7 @@ class _RankCard extends StatelessWidget {
               color: ProfilePalette.greenSoft(context),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: ProfilePalette.green),
+            child: Icon(icon, color: ProfilePalette.green(context)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -144,16 +150,16 @@ class _RankCard extends StatelessWidget {
             children: [
               Text(
                 '$score XP',
-                style: const TextStyle(
-                  color: ProfilePalette.xp,
+                style: TextStyle(
+                  color: ProfilePalette.xp(context),
                   fontWeight: FontWeight.w900,
                 ),
               ),
               if (tier != null)
                 Text(
                   readableProfileName(tier!),
-                  style: const TextStyle(
-                    color: ProfilePalette.green,
+                  style: TextStyle(
+                    color: ProfilePalette.green(context),
                     fontSize: 12,
                   ),
                 ),

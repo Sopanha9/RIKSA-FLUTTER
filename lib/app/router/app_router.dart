@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/ai/presentation/ai_tutor_screen.dart';
-import '../../features/auth/presentation/login_screen.dart';
-import '../../features/auth/presentation/register_screen.dart';
+import '../../features/auth/presentation/auth_switcher_screen.dart';
 import '../../features/auth/presentation/splash_animation_screen.dart';
 import '../../features/auth/presentation/language_select_screen.dart';
 import '../../features/auth/presentation/onboarding_splash_screen.dart';
@@ -16,6 +15,8 @@ import '../../features/blog/presentation/blog_feed_screen.dart';
 import '../../features/blog/presentation/create_blog_post_screen.dart';
 import '../../features/blog/presentation/my_posts_screen.dart';
 import '../../features/learning/presentation/lesson_catalog_screen.dart';
+import '../../features/learning/presentation/lesson_experience_screen.dart';
+import '../../features/learning/data/learning_models.dart';
 import '../../features/social/presentation/social_feed_screen.dart';
 import '../../features/social/presentation/compose_community_post_screen.dart';
 import '../../features/social/presentation/social_post_detail_screen.dart';
@@ -80,11 +81,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/auth/login',
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) => const AuthSwitcherScreen(),
       ),
       GoRoute(
         path: '/auth/register',
-        builder: (context, state) => const RegisterScreen(),
+        builder: (context, state) =>
+            const AuthSwitcherScreen(initialPage: PageState.register),
       ),
       GoRoute(
         path: '/auth/telegram',
@@ -137,6 +139,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/learn',
                 builder: (context, state) => const LessonCatalogScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) => LessonExperienceScreen(
+                      lessonId: state.pathParameters['id']!,
+                      lesson: state.extra is LessonSummary
+                          ? state.extra! as LessonSummary
+                          : null,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

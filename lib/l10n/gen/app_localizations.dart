@@ -170,6 +170,18 @@ abstract class AppLocalizations {
   /// **'Enter your username'**
   String get usernameHint;
 
+  /// No description provided for @emailOrUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Email or username'**
+  String get emailOrUsername;
+
+  /// No description provided for @emailOrUsernameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email or username'**
+  String get emailOrUsernameHint;
+
   /// No description provided for @password.
   ///
   /// In en, this message translates to:
@@ -415,6 +427,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Forgot password?'**
   String get forgotPassword;
+
+  /// No description provided for @passwordRecoveryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Password recovery is not available yet.'**
+  String get passwordRecoveryUnavailable;
 
   /// No description provided for @requiredField.
   ///
@@ -980,6 +998,66 @@ abstract class AppLocalizations {
   /// **'Choose your grade, subject, and level to learn at your pace.'**
   String get learningSubtitle;
 
+  /// No description provided for @learningHeaderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A little progress, every day'**
+  String get learningHeaderSubtitle;
+
+  /// No description provided for @dailyMissionEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s mission'**
+  String get dailyMissionEyebrow;
+
+  /// No description provided for @dailyMissionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A focused lesson picked for your pace.'**
+  String get dailyMissionBody;
+
+  /// No description provided for @startDailyMission.
+  ///
+  /// In en, this message translates to:
+  /// **'Start lesson'**
+  String get startDailyMission;
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @filterLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter lessons'**
+  String get filterLessons;
+
+  /// No description provided for @applyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Show lessons'**
+  String get applyFilters;
+
+  /// No description provided for @resetFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get resetFilters;
+
+  /// No description provided for @removeFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {filter} filter'**
+  String removeFilter(String filter);
+
+  /// No description provided for @minutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String minutesShort(int minutes);
+
   /// No description provided for @gradeFilter.
   ///
   /// In en, this message translates to:
@@ -1105,6 +1183,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try another grade, subject, or difficulty.'**
   String get noLessonsForFilters;
+
+  /// No description provided for @lessonPreviewHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready when you are'**
+  String get lessonPreviewHeading;
+
+  /// No description provided for @lessonPreviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Take it one step at a time. Your progress is saved along the way.'**
+  String get lessonPreviewBody;
+
+  /// No description provided for @beginLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Begin lesson'**
+  String get beginLesson;
+
+  /// No description provided for @lessonContentUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson activities will appear when the learning service provides the lesson detail.'**
+  String get lessonContentUnavailable;
+
+  /// No description provided for @backToLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to lessons'**
+  String get backToLessons;
 
   /// No description provided for @accountSettings.
   ///

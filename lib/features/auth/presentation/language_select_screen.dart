@@ -30,15 +30,19 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final palette = context.riksa;
 
     return Scaffold(
-      backgroundColor: colors.surface,
+      backgroundColor: palette.canvas,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) => SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.md),
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight,
+                maxWidth: 560,
+              ),
               child: IntrinsicHeight(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -46,11 +50,7 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
                     SizedBox(height: constraints.maxHeight < 700 ? 54 : 96),
                     Text(
                       'Select your preferred\nlanguage',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        height: 1.05,
-                        letterSpacing: -.5,
-                      ),
+                      style: theme.textTheme.headlineLarge,
                     ),
                     const SizedBox(height: 10),
                     Text(
@@ -91,18 +91,11 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
                       child: FilledButton(
                         key: const Key('language_continue'),
                         onPressed: _submitting ? null : _confirmSelection,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.lightTextPrimary,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: AppColors.lightTextPrimary,
-                          disabledForegroundColor: Colors.white70,
-                          shape: const StadiumBorder(),
-                        ),
                         child: _submitting
-                            ? const SizedBox.square(
+                            ? SizedBox.square(
                                 dimension: 20,
                                 child: CircularProgressIndicator(
-                                  color: Colors.white,
+                                  color: palette.canvas,
                                   strokeWidth: 2,
                                 ),
                               )
@@ -148,19 +141,15 @@ class _LanguageCard extends StatelessWidget {
       selected: isSelected,
       label: languageName,
       child: InkWell(
-        borderRadius: AppRadii.mediumBorder,
+        borderRadius: AppRadii.extraLargeBorder,
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           height: 76,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: isSelected ? colors.primaryContainer : colors.surface,
-            borderRadius: AppRadii.mediumBorder,
-            border: Border.all(
-              color: isSelected ? colors.primary : colors.outlineVariant,
-              width: isSelected ? 1.5 : 1,
-            ),
+            color: isSelected ? context.riksa.jadeSoft : context.riksa.surface,
+            borderRadius: AppRadii.extraLargeBorder,
           ),
           child: Row(
             children: [

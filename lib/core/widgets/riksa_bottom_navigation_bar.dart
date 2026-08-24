@@ -92,6 +92,10 @@ class _NavigationSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final barColor = isDark ? palette.surfaceRaised : palette.ink;
+    final barForeground = isDark ? palette.ink : palette.canvas;
     final effectiveIndex = collapsed ? 0 : currentIndex;
     const activeSize = 48.0;
     final activeLeft = collapsed
@@ -108,14 +112,14 @@ class _NavigationSurface extends StatelessWidget {
           height: 58,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: AppColors.neutralInk,
-              borderRadius: AppRadii.largeBorder,
-              border: Border.all(color: Colors.white.withValues(alpha: .07)),
+              color: barColor,
+              borderRadius: AppRadii.extraLargeBorder,
+              border: Border.all(color: palette.outline.withValues(alpha: .4)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: .24),
-                  blurRadius: 24,
-                  offset: const Offset(0, 10),
+                  color: Colors.black.withValues(alpha: isDark ? .2 : .12),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
@@ -132,17 +136,17 @@ class _NavigationSurface extends StatelessWidget {
           child: IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: AppColors.brandPrimaryHover,
+                color: palette.jade,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: .28),
+                  color: barForeground.withValues(alpha: .28),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.brandPrimaryPressed.withValues(alpha: .34),
-                    blurRadius: 18,
-                    offset: const Offset(0, 7),
+                    color: palette.jade.withValues(alpha: .24),
+                    blurRadius: 12,
+                    offset: const Offset(0, 5),
                   ),
                 ],
               ),
@@ -161,7 +165,7 @@ class _NavigationSurface extends StatelessWidget {
                   items[effectiveIndex].icon,
                   key: ValueKey(effectiveIndex),
                   size: collapsed ? 24 : 27,
-                  color: Colors.white,
+                  color: isDark ? AppColors.darkCanvas : Colors.white,
                 ),
               ),
             ),
@@ -201,7 +205,7 @@ class _NavigationSurface extends StatelessWidget {
                         child: Icon(
                           items[index].icon,
                           size: 24,
-                          color: Colors.white.withValues(alpha: .64),
+                          color: barForeground.withValues(alpha: .64),
                         ),
                       ),
                     ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_components.dart';
 import '../data/blog_models.dart';
 import '../providers/blog_provider.dart';
 
@@ -15,175 +16,164 @@ class BlogFeedScreen extends ConsumerStatefulWidget {
 }
 
 class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
-  final _scrollCtrl = ScrollController();
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _scrollCtrl.addListener(_onScroll);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _scrollCtrl.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   void _onScroll() {
-    if (_scrollCtrl.position.pixels >=
-        _scrollCtrl.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       ref.read(blogFeedProvider.notifier).loadMore();
     }
+  }
+
+  Future<void> _createPost() async {
+    final created = await context.push<bool>('/blog/create');
+    if (created == true) ref.read(blogFeedProvider.notifier).load();
   }
 
   @override
   Widget build(BuildContext context) {
     final feedState = ref.watch(blogFeedProvider);
-    final categoriesAsync = ref.watch(blogCategoriesProvider);
+    final categories = ref.watch(blogCategoriesProvider);
     final selectedCategoryId = feedState is BlogFeedLoaded
         ? feedState.categoryId
         : null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Blog'),
-        actions: [
-          IconButton(
-            onPressed: () => context.push('/blog/my-posts'),
-            icon: const Icon(Icons.article_outlined),
-            tooltip: 'My posts',
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final created = await context.push<bool>('/blog/create');
-          if (created == true) {
-            ref.read(blogFeedProvider.notifier).load();
-          }
-        },
-        backgroundColor: AppTheme.primary,
-        child: const Icon(Icons.edit_outlined, color: AppTheme.onPrimary),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _createPost,
+        icon: const Icon(Icons.edit_outlined),
+        label: const Text('Write'),
       ),
       body: Column(
         children: [
+          RiksaPageHeader(
+            title: 'Stories',
+            subtitle: 'Ideas and lessons from the Riksa community',
+            leading: RiksaRoundedIconButton(
+              icon: Icons.arrow_back_rounded,
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              onPressed: () => context.pop(),
+            ),
+            trailing: RiksaRoundedIconButton(
+              icon: Icons.article_outlined,
+              tooltip: 'My posts',
+              onPressed: () => context.push('/blog/my-posts'),
+            ),
+          ),
           _CategoryChips(
-            categoriesAsync: categoriesAsync,
+            categories: categories,
             selectedCategoryId: selectedCategoryId,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: RiksaSpacing.sm),
           Expanded(child: _buildBody(feedState)),
         ],
       ),
     );
   }
 
-  Widget _buildBody(BlogFeedState feedState) {
-    return switch (feedState) {
-      BlogFeedLoading() => const Center(child: CircularProgressIndicator()),
-      BlogFeedError(:final message) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppTheme.muted),
-              ),
-              const SizedBox(height: 16),
-              OutlinedButton(
-                onPressed: () => ref.read(blogFeedProvider.notifier).load(),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      ),
-      BlogFeedLoaded(:final posts, :final hasMore, :final isLoadingMore) =>
-        posts.isEmpty
-            ? Center(
-                child: Text(
-                  'No posts yet',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: AppTheme.muted),
+  Widget _buildBody(BlogFeedState state) => switch (state) {
+    BlogFeedLoading() => const RiksaStateView(
+      title: 'Finding fresh stories',
+      body: 'Gathering the latest posts for you.',
+      loading: true,
+    ),
+    BlogFeedError(:final message) => RiksaStateView(
+      title: 'Stories are taking a break',
+      body: message,
+      icon: Icons.cloud_off_outlined,
+      actionLabel: 'Try again',
+      onAction: () => ref.read(blogFeedProvider.notifier).load(),
+    ),
+    BlogFeedLoaded(:final posts, :final hasMore, :final isLoadingMore) =>
+      posts.isEmpty
+          ? RiksaStateView(
+              title: 'A blank first page',
+              body: 'Be the first learner to share something useful.',
+              icon: Icons.menu_book_outlined,
+              actionLabel: 'Write a story',
+              onAction: _createPost,
+            )
+          : RefreshIndicator(
+              onRefresh: () => ref.read(blogFeedProvider.notifier).load(),
+              child: ListView.builder(
+                key: const PageStorageKey('blog-feed-scroll'),
+                controller: _scrollController,
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(
+                  RiksaSpacing.md,
+                  0,
+                  RiksaSpacing.md,
+                  112,
                 ),
-              )
-            : ListView.builder(
-                controller: _scrollCtrl,
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 96),
                 itemCount: posts.length + (hasMore ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index == posts.length) {
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.all(RiksaSpacing.lg),
                       child: Center(
-                        child: SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: isLoadingMore
-                                ? AppTheme.primary
-                                : Colors.transparent,
-                          ),
-                        ),
+                        child: isLoadingMore
+                            ? const CircularProgressIndicator()
+                            : const SizedBox.shrink(),
                       ),
                     );
                   }
-                  return _PostCard(post: posts[index]);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: RiksaSpacing.md),
+                    child: _PostCard(post: posts[index], index: index),
+                  );
                 },
               ),
-    };
-  }
+            ),
+  };
 }
 
 class _CategoryChips extends ConsumerWidget {
   const _CategoryChips({
-    required this.categoriesAsync,
+    required this.categories,
     required this.selectedCategoryId,
   });
 
-  final AsyncValue<List<BlogCategory>> categoriesAsync;
+  final AsyncValue<List<BlogCategory>> categories;
   final String? selectedCategoryId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return SizedBox(
-      height: 44,
-      child: categoriesAsync.when(
-        loading: () => const Center(
-          child: SizedBox(
-            height: 20,
-            width: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
+      height: 48,
+      child: categories.when(
+        loading: () => const Padding(
+          padding: EdgeInsets.symmetric(horizontal: RiksaSpacing.md),
+          child: RiksaSkeleton(height: 44, radius: AppRadii.full),
         ),
         error: (_, _) => const SizedBox.shrink(),
-        data: (categories) => ListView.separated(
+        data: (items) => ListView.separated(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: categories.length + 1,
-          separatorBuilder: (_, _) => const SizedBox(width: 8),
+          padding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.md),
+          itemCount: items.length + 1,
+          separatorBuilder: (_, _) => const SizedBox(width: RiksaSpacing.xs),
           itemBuilder: (context, index) {
-            if (index == 0) {
-              return _Chip(
-                label: 'All',
-                selected: selectedCategoryId == null,
-                onTap: () => ref.read(blogFeedProvider.notifier).load(),
-              );
-            }
-            final category = categories[index - 1];
-            return _Chip(
-              label: category.name,
-              selected: selectedCategoryId == category.id,
-              onTap: () => ref
-                  .read(blogFeedProvider.notifier)
-                  .load(categoryId: category.id),
+            final isAll = index == 0;
+            final category = isAll ? null : items[index - 1];
+            final id = category?.id;
+            return RiksaChoicePill(
+              label: category?.name ?? 'All',
+              icon: isAll ? Icons.grid_view_rounded : Icons.bookmark_outline,
+              selected: selectedCategoryId == id,
+              onSelected: (_) =>
+                  ref.read(blogFeedProvider.notifier).load(categoryId: id),
             );
           },
         ),
@@ -192,152 +182,150 @@ class _CategoryChips extends ConsumerWidget {
   }
 }
 
-class _Chip extends StatelessWidget {
-  const _Chip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.primary : AppTheme.surface,
-          borderRadius: AppRadii.mediumBorder,
-          border: Border.all(
-            color: selected ? AppTheme.primary : AppTheme.outline,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: selected ? AppTheme.onPrimary : AppTheme.onBackground,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _PostCard extends ConsumerWidget {
-  const _PostCard({required this.post});
+  const _PostCard({required this.post, required this.index});
 
   final BlogPost post;
+  final int index;
+
+  RiksaPastelTone get _tone => switch (index % 3) {
+    0 => RiksaPastelTone.cream,
+    1 => RiksaPastelTone.jade,
+    _ => RiksaPastelTone.blush,
+  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return GestureDetector(
+    final palette = context.riksa;
+    return RiksaPastelCard(
+      tone: _tone,
+      padding: EdgeInsets.zero,
+      semanticLabel: post.title,
       onTap: () => context.push('/blog/${post.id}'),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: AppRadii.smallBorder,
-          border: Border.all(color: AppTheme.outline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (post.hasCover)
-              Image.network(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (post.hasCover)
+            AspectRatio(
+              aspectRatio: 2,
+              child: Image.network(
                 post.coverUrl!,
-                height: 160,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                errorBuilder: (_, _, _) => ColoredBox(
+                  color: palette.surfaceRaised,
+                  child: Icon(
+                    Icons.auto_stories_outlined,
+                    size: 52,
+                    color: palette.jadeStrong,
+                  ),
+                ),
               ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    post.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.onBackground,
+            ),
+          Padding(
+            padding: const EdgeInsets.all(RiksaSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    DecoratedBox(
+                      decoration: ShapeDecoration(
+                        color: palette.surface.withValues(alpha: .72),
+                        shape: const StadiumBorder(),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: RiksaSpacing.sm,
+                          vertical: RiksaSpacing.xxs,
+                        ),
+                        child: Text(
+                          DateFormat.yMMMd().format(post.createdAt),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    post.content,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: AppTheme.muted),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Text(
-                        DateFormat.yMMMd().format(post.createdAt),
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: AppTheme.muted),
+                    const Spacer(),
+                    Icon(
+                      Icons.visibility_outlined,
+                      size: 16,
+                      color: palette.inkMuted,
+                    ),
+                    const SizedBox(width: RiksaSpacing.xxs),
+                    Text(
+                      '${post.viewCount}',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: RiksaSpacing.sm),
+                Text(
+                  post.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: RiksaSpacing.xs),
+                Text(
+                  post.content,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: RiksaSpacing.sm),
+                Row(
+                  children: [
+                    Text(
+                      'Read story',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: palette.jadeStrong,
                       ),
-                      const SizedBox(width: 12),
-                      const Icon(
-                        Icons.visibility_outlined,
-                        size: 14,
-                        color: AppTheme.muted,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${post.viewCount}',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: AppTheme.muted),
-                      ),
-                      const Spacer(),
-                      GestureDetector(
+                    ),
+                    const SizedBox(width: RiksaSpacing.xxs),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 18,
+                      color: palette.jadeStrong,
+                    ),
+                    const Spacer(),
+                    Semantics(
+                      button: true,
+                      label: post.liked ? 'Unlike' : 'Like',
+                      child: InkResponse(
                         onTap: () => ref
                             .read(blogFeedProvider.notifier)
                             .toggleLike(post.id),
-                        child: Row(
-                          children: [
-                            Icon(
-                              post.liked
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              size: 16,
-                              color: post.liked
-                                  ? AppTheme.secondary
-                                  : AppTheme.muted,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${post.likeCount}',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: post.liked
-                                        ? AppTheme.secondary
-                                        : AppTheme.muted,
-                                  ),
-                            ),
-                          ],
+                        radius: 24,
+                        child: SizedBox.square(
+                          dimension: 48,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                post.liked
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                                size: 20,
+                                color: post.liked
+                                    ? Theme.of(context).colorScheme.error
+                                    : palette.inkMuted,
+                              ),
+                              const SizedBox(width: RiksaSpacing.xxs),
+                              Text(
+                                '${post.likeCount}',
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

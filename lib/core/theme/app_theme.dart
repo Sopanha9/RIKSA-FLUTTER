@@ -1,227 +1,462 @@
 import 'package:flutter/material.dart';
 
-/// RIKSA's semantic color system.
-///
-/// Feature code should normally consume [Theme.of] / [ColorScheme] rather than
-/// these constants directly. The named tokens remain available for accents
-/// that Material's scheme does not model, such as social reactions.
+/// Raw color values for Riksa's warm, Cambodian-inspired visual language.
+/// Feature code should prefer [RiksaPalette] so dark mode stays semantic.
 class AppColors {
   AppColors._();
 
-  // Brand green is for navigation, controls, links, and active states.
-  static const brandPrimary = Color(0xFF16A34A);
-  static const brandPrimaryHover = Color(0xFF22C55E);
-  static const brandPrimaryPressed = Color(0xFF166534);
-  static const brandAccent = Color(0xFF2E7D32);
-  static const brandSoft = Color(0xFFDCFCE7);
+  static const warmCanvas = Color(0xFFFFF8EC);
+  static const warmSurface = Color(0xFFFFFCF6);
+  static const warmSurfaceRaised = Color(0xFFFFF2D9);
+  static const ink = Color(0xFF29251C);
+  static const inkMuted = Color(0xFF70695E);
+  static const inkFaint = Color(0xFFA39A8C);
+  static const warmOutline = Color(0xFFE8DCC7);
 
-  // Orange is intentionally reserved for streaks, XP, and achievements.
-  static const gamificationOrange = Color(0xFFF97316);
-  static const gamificationOrangePressed = Color(0xFFC2410C);
-  static const gamificationOrangeSoft = Color(0xFFFFF1E8);
-  static const gamificationGold = Color(0xFFF59E0B);
-  static const gamificationGoldSoft = Color(0xFFFFF7D6);
+  static const brandJade = Color(0xFF237A5B);
+  static const brandJadeStrong = Color(0xFF15543E);
+  static const brandJadeSoft = Color(0xFFDDEFE5);
+  static const achievementSaffron = Color(0xFFE69A18);
+  static const achievementSaffronSoft = Color(0xFFFFE7B5);
+  static const supportingBlush = Color(0xFFF7DCE7);
+  static const supportingCream = Color(0xFFFFEDCF);
 
-  static const neutralInk = Color(0xFF1A1A1A);
-  static const lightCanvas = Color(0xFFFAFAFA);
-  static const lightSurface = Color(0xFFFFFFFF);
-  static const lightSubtle = Color(0xFFF3F4F6);
-  static const lightTextPrimary = neutralInk;
-  static const lightTextSecondary = Color(0xFF6B7280);
-  static const lightTextTertiary = Color(0xFF9CA3AF);
-  static const lightBorder = Color(0xFFE5E7EB);
-  static const lightBorderStrong = Color(0xFFD1D5DB);
+  static const subjectMath = Color(0xFF76528F);
+  static const subjectScience = Color(0xFF198A82);
+  static const subjectLanguage = Color(0xFFD2674A);
+  static const subjectTechnology = Color(0xFF3974A8);
+  static const subjectHumanities = Color(0xFFB87824);
+  static const subjectGeneral = Color(0xFF68715A);
 
-  static const darkCanvas = Color(0xFF111827);
-  static const darkSubtle = Color(0xFF1F2937);
-  static const darkElevated = Color(0xFF18212F);
-  static const darkTextPrimary = Color(0xFFF9FAFB);
-  static const darkTextSecondary = Color(0xFF9CA3AF);
-  static const darkBorder = Color(0xFF374151);
+  static const darkCanvas = Color(0xFF181713);
+  static const darkSurface = Color(0xFF211F1A);
+  static const darkSurfaceRaised = Color(0xFF2C2922);
+  static const darkInk = Color(0xFFF8F0E3);
+  static const darkInkMuted = Color(0xFFC7BDAE);
+  static const darkOutline = Color(0xFF494238);
+  static const error = Color(0xFFB93E3E);
 
-  static const success = brandPrimary;
-  static const warning = gamificationGold;
-  static const error = Color(0xFFDC2626);
-  static const info = brandAccent;
+  // Compatibility aliases while older screens migrate to semantic tokens.
+  static const brandPrimary = brandJade;
+  static const brandPrimaryHover = Color(0xFF2E8C69);
+  static const brandPrimaryPressed = brandJadeStrong;
+  static const brandAccent = brandJadeStrong;
+  static const brandSoft = brandJadeSoft;
+  static const gamificationOrange = achievementSaffron;
+  static const gamificationOrangePressed = Color(0xFFAE6905);
+  static const gamificationOrangeSoft = achievementSaffronSoft;
+  static const gamificationGold = achievementSaffron;
+  static const gamificationGoldSoft = achievementSaffronSoft;
+  static const neutralInk = ink;
+  static const lightCanvas = warmCanvas;
+  static const lightSurface = warmSurface;
+  static const lightSubtle = warmSurfaceRaised;
+  static const lightTextPrimary = ink;
+  static const lightTextSecondary = inkMuted;
+  static const lightTextTertiary = inkFaint;
+  static const lightBorder = warmOutline;
+  static const lightBorderStrong = Color(0xFFD5C4A8);
+  static const darkSubtle = darkSurfaceRaised;
+  static const darkElevated = darkSurfaceRaised;
+  static const darkTextPrimary = darkInk;
+  static const darkTextSecondary = darkInkMuted;
+  static const darkBorder = darkOutline;
+  static const success = brandJade;
+  static const warning = achievementSaffron;
+  static const info = subjectTechnology;
   static const socialRepost = success;
   static const socialLike = error;
 }
 
-/// Corner-radius scale used by component role rather than component size.
+@immutable
+class RiksaPalette extends ThemeExtension<RiksaPalette> {
+  const RiksaPalette({
+    required this.canvas,
+    required this.surface,
+    required this.surfaceRaised,
+    required this.ink,
+    required this.inkMuted,
+    required this.inkFaint,
+    required this.outline,
+    required this.jade,
+    required this.jadeStrong,
+    required this.jadeSoft,
+    required this.saffron,
+    required this.saffronSoft,
+    required this.blushSoft,
+    required this.creamSoft,
+    required this.math,
+    required this.science,
+    required this.language,
+    required this.technology,
+    required this.humanities,
+    required this.general,
+  });
+
+  final Color canvas;
+  final Color surface;
+  final Color surfaceRaised;
+  final Color ink;
+  final Color inkMuted;
+  final Color inkFaint;
+  final Color outline;
+  final Color jade;
+  final Color jadeStrong;
+  final Color jadeSoft;
+  final Color saffron;
+  final Color saffronSoft;
+  final Color blushSoft;
+  final Color creamSoft;
+  final Color math;
+  final Color science;
+  final Color language;
+  final Color technology;
+  final Color humanities;
+  final Color general;
+
+  static const light = RiksaPalette(
+    canvas: AppColors.warmCanvas,
+    surface: AppColors.warmSurface,
+    surfaceRaised: AppColors.warmSurfaceRaised,
+    ink: AppColors.ink,
+    inkMuted: AppColors.inkMuted,
+    inkFaint: AppColors.inkFaint,
+    outline: AppColors.warmOutline,
+    jade: AppColors.brandJade,
+    jadeStrong: AppColors.brandJadeStrong,
+    jadeSoft: AppColors.brandJadeSoft,
+    saffron: AppColors.achievementSaffron,
+    saffronSoft: AppColors.achievementSaffronSoft,
+    blushSoft: AppColors.supportingBlush,
+    creamSoft: AppColors.supportingCream,
+    math: AppColors.subjectMath,
+    science: AppColors.subjectScience,
+    language: AppColors.subjectLanguage,
+    technology: AppColors.subjectTechnology,
+    humanities: AppColors.subjectHumanities,
+    general: AppColors.subjectGeneral,
+  );
+
+  static const dark = RiksaPalette(
+    canvas: AppColors.darkCanvas,
+    surface: AppColors.darkSurface,
+    surfaceRaised: AppColors.darkSurfaceRaised,
+    ink: AppColors.darkInk,
+    inkMuted: AppColors.darkInkMuted,
+    inkFaint: Color(0xFF958C7E),
+    outline: AppColors.darkOutline,
+    jade: Color(0xFF69B893),
+    jadeStrong: Color(0xFF9AD4B7),
+    jadeSoft: Color(0xFF243F33),
+    saffron: Color(0xFFF4B84D),
+    saffronSoft: Color(0xFF49391D),
+    blushSoft: Color(0xFF442F38),
+    creamSoft: Color(0xFF443723),
+    math: Color(0xFFB49ACA),
+    science: Color(0xFF69C4BC),
+    language: Color(0xFFF09A82),
+    technology: Color(0xFF83B5DF),
+    humanities: Color(0xFFE5AE62),
+    general: Color(0xFFADB69C),
+  );
+
+  @override
+  RiksaPalette copyWith({
+    Color? canvas,
+    Color? surface,
+    Color? surfaceRaised,
+    Color? ink,
+    Color? inkMuted,
+    Color? inkFaint,
+    Color? outline,
+    Color? jade,
+    Color? jadeStrong,
+    Color? jadeSoft,
+    Color? saffron,
+    Color? saffronSoft,
+    Color? blushSoft,
+    Color? creamSoft,
+    Color? math,
+    Color? science,
+    Color? language,
+    Color? technology,
+    Color? humanities,
+    Color? general,
+  }) => RiksaPalette(
+    canvas: canvas ?? this.canvas,
+    surface: surface ?? this.surface,
+    surfaceRaised: surfaceRaised ?? this.surfaceRaised,
+    ink: ink ?? this.ink,
+    inkMuted: inkMuted ?? this.inkMuted,
+    inkFaint: inkFaint ?? this.inkFaint,
+    outline: outline ?? this.outline,
+    jade: jade ?? this.jade,
+    jadeStrong: jadeStrong ?? this.jadeStrong,
+    jadeSoft: jadeSoft ?? this.jadeSoft,
+    saffron: saffron ?? this.saffron,
+    saffronSoft: saffronSoft ?? this.saffronSoft,
+    blushSoft: blushSoft ?? this.blushSoft,
+    creamSoft: creamSoft ?? this.creamSoft,
+    math: math ?? this.math,
+    science: science ?? this.science,
+    language: language ?? this.language,
+    technology: technology ?? this.technology,
+    humanities: humanities ?? this.humanities,
+    general: general ?? this.general,
+  );
+
+  @override
+  RiksaPalette lerp(covariant RiksaPalette? other, double t) {
+    if (other == null) return this;
+    return RiksaPalette(
+      canvas: Color.lerp(canvas, other.canvas, t)!,
+      surface: Color.lerp(surface, other.surface, t)!,
+      surfaceRaised: Color.lerp(surfaceRaised, other.surfaceRaised, t)!,
+      ink: Color.lerp(ink, other.ink, t)!,
+      inkMuted: Color.lerp(inkMuted, other.inkMuted, t)!,
+      inkFaint: Color.lerp(inkFaint, other.inkFaint, t)!,
+      outline: Color.lerp(outline, other.outline, t)!,
+      jade: Color.lerp(jade, other.jade, t)!,
+      jadeStrong: Color.lerp(jadeStrong, other.jadeStrong, t)!,
+      jadeSoft: Color.lerp(jadeSoft, other.jadeSoft, t)!,
+      saffron: Color.lerp(saffron, other.saffron, t)!,
+      saffronSoft: Color.lerp(saffronSoft, other.saffronSoft, t)!,
+      blushSoft: Color.lerp(blushSoft, other.blushSoft, t)!,
+      creamSoft: Color.lerp(creamSoft, other.creamSoft, t)!,
+      math: Color.lerp(math, other.math, t)!,
+      science: Color.lerp(science, other.science, t)!,
+      language: Color.lerp(language, other.language, t)!,
+      technology: Color.lerp(technology, other.technology, t)!,
+      humanities: Color.lerp(humanities, other.humanities, t)!,
+      general: Color.lerp(general, other.general, t)!,
+    );
+  }
+}
+
+extension RiksaThemeContext on BuildContext {
+  RiksaPalette get riksa {
+    final theme = Theme.of(this);
+    return theme.extension<RiksaPalette>() ??
+        (theme.brightness == Brightness.dark
+            ? RiksaPalette.dark
+            : RiksaPalette.light);
+  }
+}
+
+class RiksaSpacing {
+  RiksaSpacing._();
+  static const double xxs = 4;
+  static const double xs = 8;
+  static const double sm = 12;
+  static const double md = 16;
+  static const double lg = 24;
+  static const double xl = 32;
+  static const double xxl = 48;
+}
+
 class AppRadii {
   AppRadii._();
-
   static const double small = 8;
   static const double medium = 14;
-  static const double large = 24;
+  static const double large = 20;
+  static const double extraLarge = 28;
   static const double full = 9999;
+  static const smallBorder = BorderRadius.all(Radius.circular(small));
+  static const mediumBorder = BorderRadius.all(Radius.circular(medium));
+  static const largeBorder = BorderRadius.all(Radius.circular(large));
+  static const extraLargeBorder = BorderRadius.all(Radius.circular(extraLarge));
+  static const fullBorder = BorderRadius.all(Radius.circular(full));
+}
 
-  static const BorderRadius smallBorder = BorderRadius.all(
-    Radius.circular(small),
+class RiksaElevation {
+  RiksaElevation._();
+  static List<BoxShadow> low(Brightness brightness) => [
+    BoxShadow(
+      color: Colors.black.withValues(
+        alpha: brightness == Brightness.dark ? .18 : .055,
+      ),
+      blurRadius: 10,
+      offset: const Offset(0, 3),
+    ),
+  ];
+}
+
+class RiksaMotion {
+  RiksaMotion._();
+  static const fast = Duration(milliseconds: 100);
+  static const standard = Duration(milliseconds: 200);
+  static const emphasis = Duration(milliseconds: 550);
+  static const emphasisLong = Duration(milliseconds: 650);
+  static const standardCurve = Curves.easeOutCubic;
+  static const emphasisCurve = Curves.easeOutBack;
+
+  static Duration resolve(BuildContext context, Duration duration) =>
+      MediaQuery.maybeOf(context)?.disableAnimations ?? false
+      ? Duration.zero
+      : duration;
+}
+
+class RiksaTypography {
+  RiksaTypography._();
+  static const latinFamily = 'Poppins';
+  static const khmerFamily = 'Noto Sans Khmer';
+  static const fallback = <String>[khmerFamily];
+
+  static TextTheme textTheme(Color ink, Color muted) => TextTheme(
+    displayLarge: _style(36, FontWeight.w800, ink, 1.12),
+    displayMedium: _style(32, FontWeight.w800, ink, 1.15),
+    displaySmall: _style(28, FontWeight.w700, ink, 1.18),
+    headlineLarge: _style(26, FontWeight.w700, ink, 1.22),
+    headlineMedium: _style(23, FontWeight.w700, ink, 1.25),
+    headlineSmall: _style(21, FontWeight.w700, ink, 1.27),
+    titleLarge: _style(19, FontWeight.w700, ink, 1.3),
+    titleMedium: _style(17, FontWeight.w600, ink, 1.35),
+    titleSmall: _style(15, FontWeight.w600, ink, 1.38),
+    bodyLarge: _style(16, FontWeight.w400, ink, 1.55),
+    bodyMedium: _style(14, FontWeight.w400, ink, 1.55),
+    bodySmall: _style(12, FontWeight.w400, muted, 1.5),
+    labelLarge: _style(14, FontWeight.w600, ink, 1.35),
+    labelMedium: _style(12, FontWeight.w600, ink, 1.35),
+    labelSmall: _style(11, FontWeight.w600, muted, 1.35),
   );
-  static const BorderRadius mediumBorder = BorderRadius.all(
-    Radius.circular(medium),
-  );
-  static const BorderRadius largeBorder = BorderRadius.all(
-    Radius.circular(large),
-  );
-  static const BorderRadius fullBorder = BorderRadius.all(
-    Radius.circular(full),
+
+  static TextStyle _style(
+    double size,
+    FontWeight weight,
+    Color color,
+    double height,
+  ) => TextStyle(
+    fontFamily: latinFamily,
+    fontFamilyFallback: fallback,
+    fontSize: size,
+    fontWeight: weight,
+    color: color,
+    height: height,
   );
 }
 
-/// RIKSA application themes built from the Figma light and dark variables.
 class AppTheme {
   AppTheme._();
-
-  // Backward-compatible aliases while older screens migrate to ColorScheme.
-  static const Color background = AppColors.lightCanvas;
-  static const Color surface = AppColors.lightSurface;
-  static const Color primary = AppColors.brandPrimary;
-  static const Color primaryContainer = AppColors.brandSoft;
+  static const Color background = AppColors.warmCanvas;
+  static const Color surface = AppColors.warmSurface;
+  static const Color primary = AppColors.brandJade;
+  static const Color primaryContainer = AppColors.brandJadeSoft;
   static const Color onPrimary = Colors.white;
-  static const Color secondary = AppColors.brandAccent;
-  static const Color onBackground = AppColors.lightTextPrimary;
-  static const Color onSurface = AppColors.lightTextPrimary;
-  static const Color muted = AppColors.lightTextSecondary;
-  static const Color outline = AppColors.lightBorder;
+  static const Color secondary = AppColors.brandJadeStrong;
+  static const Color onBackground = AppColors.ink;
+  static const Color onSurface = AppColors.ink;
+  static const Color muted = AppColors.inkMuted;
+  static const Color outline = AppColors.warmOutline;
   static const Color error = AppColors.error;
   static const Color onError = Colors.white;
 
-  static ThemeData get light => _theme(
-    brightness: Brightness.light,
-    canvas: AppColors.lightCanvas,
-    surface: AppColors.lightSurface,
-    surfaceContainer: AppColors.lightSubtle,
-    foreground: AppColors.lightTextPrimary,
-    mutedForeground: AppColors.lightTextSecondary,
-    border: AppColors.lightBorder,
-    borderStrong: AppColors.lightBorderStrong,
-  );
+  static ThemeData get light => _theme(Brightness.light, RiksaPalette.light);
+  static ThemeData get dark => _theme(Brightness.dark, RiksaPalette.dark);
 
-  static ThemeData get dark => _theme(
-    brightness: Brightness.dark,
-    canvas: AppColors.darkCanvas,
-    surface: AppColors.darkCanvas,
-    surfaceContainer: AppColors.darkElevated,
-    foreground: AppColors.darkTextPrimary,
-    mutedForeground: AppColors.darkTextSecondary,
-    border: AppColors.darkBorder,
-    borderStrong: AppColors.lightTextSecondary,
-  );
-
-  static ThemeData _theme({
-    required Brightness brightness,
-    required Color canvas,
-    required Color surface,
-    required Color surfaceContainer,
-    required Color foreground,
-    required Color mutedForeground,
-    required Color border,
-    required Color borderStrong,
-  }) {
+  static ThemeData _theme(Brightness brightness, RiksaPalette palette) {
     final isDark = brightness == Brightness.dark;
-    final colorScheme = ColorScheme(
+    final scheme = ColorScheme(
       brightness: brightness,
-      primary: AppColors.brandPrimary,
-      onPrimary: Colors.white,
-      primaryContainer: isDark ? const Color(0xFF14532D) : AppColors.brandSoft,
-      onPrimaryContainer: isDark
-          ? const Color(0xFFBBF7D0)
-          : const Color(0xFF14532D),
-      secondary: AppColors.brandAccent,
-      onSecondary: Colors.white,
-      secondaryContainer: isDark
-          ? const Color(0xFF163C23)
-          : const Color(0xFFE8F5E9),
-      onSecondaryContainer: isDark
-          ? AppColors.darkTextPrimary
-          : const Color(0xFF14532D),
-      tertiary: AppColors.gamificationOrange,
-      onTertiary: Colors.white,
+      primary: palette.jade,
+      onPrimary: isDark ? AppColors.darkCanvas : Colors.white,
+      primaryContainer: palette.jadeSoft,
+      onPrimaryContainer: isDark ? palette.ink : palette.jadeStrong,
+      secondary: palette.saffron,
+      onSecondary: AppColors.ink,
+      secondaryContainer: palette.saffronSoft,
+      onSecondaryContainer: palette.ink,
+      tertiary: palette.language,
+      onTertiary: isDark ? AppColors.darkCanvas : Colors.white,
       error: AppColors.error,
       onError: Colors.white,
-      surface: surface,
-      onSurface: foreground,
-      surfaceContainer: surfaceContainer,
-      surfaceContainerLow: isDark
-          ? AppColors.darkSubtle
-          : AppColors.lightSubtle,
-      surfaceContainerHighest: isDark
-          ? AppColors.darkBorder
-          : AppColors.lightBorder,
-      outline: border,
-      outlineVariant: borderStrong,
+      surface: palette.surface,
+      onSurface: palette.ink,
+      surfaceContainer: palette.surfaceRaised,
+      surfaceContainerLow: palette.surface,
+      surfaceContainerHighest: palette.outline,
+      onSurfaceVariant: palette.inkMuted,
+      outline: palette.outline,
+      outlineVariant: palette.outline,
       shadow: Colors.black,
-      scrim: isDark ? const Color(0x99111827) : const Color(0x66000000),
-      inverseSurface: isDark
-          ? AppColors.lightBorder
-          : AppColors.lightTextPrimary,
-      onInverseSurface: isDark ? AppColors.lightTextPrimary : Colors.white,
-      inversePrimary: AppColors.brandPrimaryHover,
+      scrim: Colors.black.withValues(alpha: isDark ? .72 : .45),
+      inverseSurface: palette.ink,
+      onInverseSurface: palette.canvas,
+      inversePrimary: isDark ? AppColors.brandJade : const Color(0xFF75C6A0),
     );
-
-    final shape = RoundedRectangleBorder(borderRadius: AppRadii.mediumBorder);
-    final inputShape = OutlineInputBorder(borderRadius: AppRadii.mediumBorder);
+    final textTheme = RiksaTypography.textTheme(palette.ink, palette.inkMuted);
+    const componentShape = RoundedRectangleBorder(
+      borderRadius: AppRadii.largeBorder,
+    );
+    const inputShape = OutlineInputBorder(borderRadius: AppRadii.mediumBorder);
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      colorScheme: colorScheme,
-      scaffoldBackgroundColor: canvas,
+      fontFamily: RiksaTypography.latinFamily,
+      fontFamilyFallback: RiksaTypography.fallback,
+      colorScheme: scheme,
+      extensions: [palette],
+      scaffoldBackgroundColor: palette.canvas,
+      canvasColor: palette.canvas,
       visualDensity: VisualDensity.standard,
-      splashFactory: InkSparkle.splashFactory,
-      dividerColor: border,
-      textTheme: ThemeData(
-        brightness: brightness,
-      ).textTheme.apply(bodyColor: foreground, displayColor: foreground),
-      textSelectionTheme: const TextSelectionThemeData(
-        cursorColor: AppColors.brandPrimary,
-        selectionColor: Color(0x5516A34A),
-        selectionHandleColor: AppColors.brandPrimary,
+      splashFactory: InkRipple.splashFactory,
+      dividerColor: palette.outline,
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: palette.jade,
+        selectionColor: palette.jade.withValues(alpha: .24),
+        selectionHandleColor: palette.jade,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: canvas,
-        foregroundColor: foreground,
+        backgroundColor: palette.canvas,
+        foregroundColor: palette.ink,
         elevation: 0,
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
+        titleTextStyle: textTheme.titleLarge,
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          minimumSize: const Size.square(48),
+          backgroundColor: palette.surfaceRaised,
+          foregroundColor: palette.ink,
+          shape: const CircleBorder(),
+        ),
       ),
       cardTheme: CardThemeData(
-        color: surface,
+        color: palette.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: shape.copyWith(side: BorderSide(color: border)),
+        shape: componentShape,
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: surfaceContainer,
-        selectedColor: AppColors.brandPrimary,
-        disabledColor: border,
-        side: BorderSide(color: borderStrong),
-        shape: const RoundedRectangleBorder(borderRadius: AppRadii.fullBorder),
-        labelStyle: TextStyle(color: foreground, fontWeight: FontWeight.w600),
-        secondaryLabelStyle: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
+        backgroundColor: palette.surfaceRaised,
+        selectedColor: palette.jadeSoft,
+        disabledColor: palette.outline,
+        side: BorderSide.none,
+        shape: const StadiumBorder(),
+        labelStyle: textTheme.labelMedium,
+        secondaryLabelStyle: textTheme.labelMedium?.copyWith(
+          color: palette.jadeStrong,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surface,
+        fillColor: palette.surface,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 17,
+          horizontal: RiksaSpacing.md,
+          vertical: RiksaSpacing.md,
         ),
-        border: inputShape.copyWith(borderSide: BorderSide(color: border)),
+        border: inputShape.copyWith(
+          borderSide: BorderSide(color: palette.outline),
+        ),
         enabledBorder: inputShape.copyWith(
-          borderSide: BorderSide(color: border),
+          borderSide: BorderSide(color: palette.outline),
         ),
         focusedBorder: inputShape.copyWith(
-          borderSide: const BorderSide(
-            color: AppColors.brandPrimary,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: palette.jade, width: 1.5),
         ),
         errorBorder: inputShape.copyWith(
           borderSide: const BorderSide(color: AppColors.error),
@@ -229,49 +464,66 @@ class AppTheme {
         focusedErrorBorder: inputShape.copyWith(
           borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
-        labelStyle: TextStyle(color: mutedForeground, fontSize: 14),
-        hintStyle: TextStyle(color: mutedForeground, fontSize: 14),
+        labelStyle: textTheme.bodyMedium?.copyWith(color: palette.inkMuted),
+        hintStyle: textTheme.bodyMedium?.copyWith(color: palette.inkMuted),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.brandPrimary,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: border,
-          disabledForegroundColor: mutedForeground,
-          minimumSize: const Size.fromHeight(52),
-          shape: shape,
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          backgroundColor: isDark ? palette.jade : palette.ink,
+          foregroundColor: isDark ? AppColors.darkCanvas : palette.canvas,
+          disabledBackgroundColor: palette.outline,
+          disabledForegroundColor: palette.inkMuted,
+          minimumSize: const Size(0, 50),
+          padding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.lg),
+          shape: const StadiumBorder(),
+          textStyle: textTheme.labelLarge,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.brandPrimary,
-          foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(52),
-          shape: shape,
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          backgroundColor: isDark ? palette.jade : palette.ink,
+          foregroundColor: isDark ? AppColors.darkCanvas : palette.canvas,
+          minimumSize: const Size(0, 50),
+          shape: const StadiumBorder(),
+          textStyle: textTheme.labelLarge,
           elevation: 0,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          backgroundColor: surface,
-          foregroundColor: foreground,
-          minimumSize: const Size.fromHeight(52),
-          side: BorderSide(color: borderStrong),
-          shape: shape,
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          backgroundColor: palette.surface,
+          foregroundColor: palette.ink,
+          minimumSize: const Size(0, 50),
+          side: BorderSide(color: palette.outline),
+          shape: const StadiumBorder(),
+          textStyle: textTheme.labelLarge,
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.brandPrimaryPressed,
+          foregroundColor: palette.jadeStrong,
+          textStyle: textTheme.labelLarge,
         ),
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AppColors.brandPrimary,
-        foregroundColor: Colors.white,
-        elevation: 3,
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: palette.surface,
+        modalBackgroundColor: palette.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadii.large),
+          ),
+        ),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: palette.jade,
+        linearTrackColor: palette.jadeSoft,
+        circularTrackColor: palette.jadeSoft,
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: palette.jade,
+        foregroundColor: isDark ? AppColors.darkCanvas : Colors.white,
+        elevation: 2,
       ),
     );
   }

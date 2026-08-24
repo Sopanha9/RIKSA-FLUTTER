@@ -82,6 +82,8 @@ class AuthUnavailable extends AuthState {
 }
 
 class AuthNotifier extends Notifier<AuthState> {
+  static const _minimumAuthenticationLoading = Duration(milliseconds: 1200);
+
   StreamSubscription<void>? _sessionExpiredSubscription;
   StreamSubscription<GoogleAuthEvent>? _googleAuthSubscription;
   Future<void>? _bootstrapOperation;
@@ -159,11 +161,12 @@ class AuthNotifier extends Notifier<AuthState> {
     required String password,
   }) async {
     state = const AuthLoading();
+    final minimumLoading = Future<void>.delayed(_minimumAuthenticationLoading);
     try {
       final response = await ref
           .read(authApiProvider)
           .login(LoginRequest(username: username, password: password));
-      await _completeAuthentication(response);
+      await _completeAuthentication(response, minimumLoading: minimumLoading);
     } catch (error) {
       await _handleAuthenticationFailure(error);
     }
@@ -171,9 +174,10 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> register(RegisterRequest request) async {
     state = const AuthLoading();
+    final minimumLoading = Future<void>.delayed(_minimumAuthenticationLoading);
     try {
       final response = await ref.read(authApiProvider).register(request);
-      await _completeAuthentication(response);
+      await _completeAuthentication(response, minimumLoading: minimumLoading);
     } catch (error) {
       await _handleAuthenticationFailure(error);
     }
@@ -201,12 +205,16 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> _completeAuthentication(AuthResponse response) async {
+  Future<void> _completeAuthentication(
+    AuthResponse response, {
+    Future<void>? minimumLoading,
+  }) async {
     final client = ref.read(dioClientProvider);
     try {
       await client.persistSession(response.toJson());
       final user = await _hydrateProfile();
       _requireProfile(user);
+      await minimumLoading;
       state = Authenticated(user);
     } on AuthFailure catch (failure) {
       if (failure.kind == AuthFailureKind.network ||

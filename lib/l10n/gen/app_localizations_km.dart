@@ -47,6 +47,12 @@ class AppLocalizationsKm extends AppLocalizations {
   String get usernameHint => 'បញ្ចូលឈ្មោះអ្នកប្រើ';
 
   @override
+  String get emailOrUsername => 'អ៊ីមែល ឬឈ្មោះអ្នកប្រើ';
+
+  @override
+  String get emailOrUsernameHint => 'បញ្ចូលអ៊ីមែល ឬឈ្មោះអ្នកប្រើរបស់អ្នក';
+
+  @override
   String get password => 'ពាក្យ​សម្ងាត់';
 
   @override
@@ -170,6 +176,10 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get forgotPassword => 'ភ្លេច​ពាក្យ​សម្ងាត់?';
+
+  @override
+  String get passwordRecoveryUnavailable =>
+      'មុខងារសង្គ្រោះពាក្យសម្ងាត់មិនទាន់មាននៅឡើយទេ។';
 
   @override
   String get requiredField => 'ចន្លោះ​នេះ​ត្រូវ​ការ';
@@ -481,6 +491,41 @@ class AppLocalizationsKm extends AppLocalizations {
       'ជ្រើសរើសថ្នាក់ មុខវិជ្ជា និងកម្រិត ដើម្បីរៀនតាមល្បឿនរបស់អ្នក។';
 
   @override
+  String get learningHeaderSubtitle => 'រៀនបន្តិចម្តងៗ រាល់ថ្ងៃ';
+
+  @override
+  String get dailyMissionEyebrow => 'បេសកកម្មថ្ងៃនេះ';
+
+  @override
+  String get dailyMissionBody =>
+      'មេរៀនខ្លីមួយ ដែលបានជ្រើសសម្រាប់ល្បឿនរបស់អ្នក។';
+
+  @override
+  String get startDailyMission => 'ចាប់ផ្តើមមេរៀន';
+
+  @override
+  String get filters => 'តម្រង';
+
+  @override
+  String get filterLessons => 'តម្រងមេរៀន';
+
+  @override
+  String get applyFilters => 'បង្ហាញមេរៀន';
+
+  @override
+  String get resetFilters => 'កំណត់ឡើងវិញ';
+
+  @override
+  String removeFilter(String filter) {
+    return 'ដកតម្រង $filter';
+  }
+
+  @override
+  String minutesShort(int minutes) {
+    return '$minutes នាទី';
+  }
+
+  @override
   String get gradeFilter => 'ថ្នាក់';
 
   @override
@@ -551,6 +596,23 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get noLessonsForFilters =>
       'សាកល្បងជ្រើសរើសថ្នាក់ មុខវិជ្ជា ឬកម្រិតផ្សេង។';
+
+  @override
+  String get lessonPreviewHeading => 'ត្រៀមខ្លួនហើយឬនៅ';
+
+  @override
+  String get lessonPreviewBody =>
+      'រៀនម្តងមួយជំហាន។ វឌ្ឍនភាពរបស់អ្នកនឹងត្រូវបានរក្សាទុក។';
+
+  @override
+  String get beginLesson => 'ចាប់ផ្តើមរៀន';
+
+  @override
+  String get lessonContentUnavailable =>
+      'សកម្មភាពមេរៀននឹងបង្ហាញ នៅពេលសេវាកម្មសិក្សាផ្តល់ព័ត៌មានលម្អិត។';
+
+  @override
+  String get backToLessons => 'ត្រឡប់ទៅមេរៀន';
 
   @override
   String get accountSettings => 'ការកំណត់គណនី';

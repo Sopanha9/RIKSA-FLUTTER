@@ -86,7 +86,9 @@ class BlogFeedNotifier extends Notifier<BlogFeedState> {
       isLoadingMore: true,
     );
     try {
-      final page = await ref.read(blogApiProvider).listPosts(
+      final page = await ref
+          .read(blogApiProvider)
+          .listPosts(
             categoryId: current.categoryId,
             page: current.page + 1,
             size: _pageSize,
@@ -132,5 +134,6 @@ class BlogFeedNotifier extends Notifier<BlogFeedState> {
   }
 }
 
-final blogFeedProvider =
-    NotifierProvider<BlogFeedNotifier, BlogFeedState>(BlogFeedNotifier.new);
+final blogFeedProvider = NotifierProvider<BlogFeedNotifier, BlogFeedState>(
+  BlogFeedNotifier.new,
+);

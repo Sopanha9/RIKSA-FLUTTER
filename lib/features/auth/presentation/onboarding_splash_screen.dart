@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 
 class OnboardingSplashScreen extends ConsumerStatefulWidget {
@@ -49,8 +50,8 @@ class _OnboardingSplashScreenState
         _pageController.jumpToPage(_currentPage + 1);
       } else {
         await _pageController.nextPage(
-          duration: const Duration(milliseconds: 320),
-          curve: Curves.easeOutCubic,
+          duration: RiksaMotion.emphasis,
+          curve: RiksaMotion.standardCurve,
         );
       }
       return;
@@ -78,88 +79,105 @@ class _OnboardingSplashScreenState
     ];
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: context.riksa.canvas,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: PageView.builder(
-                  key: const Key('onboarding_pages'),
-                  controller: _pageController,
-                  itemCount: _assets.length,
-                  onPageChanged: (index) =>
-                      setState(() => _currentPage = index),
-                  itemBuilder: (context, index) => Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 18, 12, 8),
-                    child: Image.asset(
-                      _assets[index],
-                      key: ValueKey(_assets[index]),
-                      fit: BoxFit.contain,
-                      semanticLabel: l10n.onboardingTitle,
-                    ),
-                  ),
-                ),
-              ),
-              _PageIndicator(count: _assets.length, currentPage: _currentPage),
-              const SizedBox(height: 22),
-              Text(
-                l10n.onboardingTitle,
-                textAlign: TextAlign.start,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -.35,
-                  height: 1.28,
-                ),
-              ),
-              const SizedBox(height: 10),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
-                child: Text(
-                  bodies[_currentPage],
-                  key: ValueKey(_currentPage),
-                  textAlign: TextAlign.start,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontFamily: 'Poppins',
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 34),
-              SizedBox(
-                height: 52,
-                child: FilledButton(
-                  key: const Key('onboarding_continue'),
-                  onPressed: _finishing ? null : _continue,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.lightTextPrimary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.lightTextPrimary,
-                    disabledForegroundColor: Colors.white70,
-                    shape: const StadiumBorder(),
-                  ),
-                  child: _finishing
-                      ? const SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(
-                          l10n.continueLabel,
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w600,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: context.riksa.surface,
+                        borderRadius: AppRadii.fullBorder,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: RiksaSpacing.sm,
+                          vertical: RiksaSpacing.xs,
+                        ),
+                        child: Text(
+                          'RIKSA',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: context.riksa.jadeStrong,
+                            letterSpacing: 1.4,
                           ),
                         ),
-                ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: RiksaSpacing.sm),
+                  Expanded(
+                    child: PageView.builder(
+                      key: const Key('onboarding_pages'),
+                      controller: _pageController,
+                      itemCount: _assets.length,
+                      onPageChanged: (index) =>
+                          setState(() => _currentPage = index),
+                      itemBuilder: (context, index) => Padding(
+                        padding: const EdgeInsets.only(bottom: RiksaSpacing.md),
+                        child: RiksaPastelCard(
+                          tone: switch (index) {
+                            0 => RiksaPastelTone.jade,
+                            1 => RiksaPastelTone.cream,
+                            _ => RiksaPastelTone.blush,
+                          },
+                          padding: const EdgeInsets.all(RiksaSpacing.md),
+                          child: Image.asset(
+                            _assets[index],
+                            key: ValueKey(_assets[index]),
+                            fit: BoxFit.contain,
+                            semanticLabel: l10n.onboardingTitle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  _PageIndicator(
+                    count: _assets.length,
+                    currentPage: _currentPage,
+                  ),
+                  const SizedBox(height: RiksaSpacing.lg),
+                  Text(
+                    l10n.onboardingTitle,
+                    textAlign: TextAlign.start,
+                    style: theme.textTheme.headlineLarge,
+                  ),
+                  const SizedBox(height: RiksaSpacing.xs),
+                  AnimatedSwitcher(
+                    duration: RiksaMotion.resolve(
+                      context,
+                      RiksaMotion.standard,
+                    ),
+                    child: Text(
+                      bodies[_currentPage],
+                      key: ValueKey(_currentPage),
+                      textAlign: TextAlign.start,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                  const SizedBox(height: RiksaSpacing.lg),
+                  SizedBox(
+                    height: 54,
+                    child: FilledButton(
+                      key: const Key('onboarding_continue'),
+                      onPressed: _finishing ? null : _continue,
+                      child: _finishing
+                          ? const SizedBox.square(
+                              dimension: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(l10n.continueLabel),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -183,7 +201,7 @@ class _PageIndicator extends StatelessWidget {
         children: List.generate(
           count,
           (index) => AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
+            duration: RiksaMotion.resolve(context, RiksaMotion.standard),
             width: index == currentPage ? 7 : 5,
             height: index == currentPage ? 7 : 5,
             margin: const EdgeInsets.symmetric(horizontal: 4),

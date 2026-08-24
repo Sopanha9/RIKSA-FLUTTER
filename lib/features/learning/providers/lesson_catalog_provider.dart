@@ -78,7 +78,9 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
 
   @override
   LessonCatalogState build() {
-    unawaited(load());
+    // Notifier state is not initialized until build returns. Defer the first
+    // load so load() can safely read and update state.
+    unawaited(Future<void>.microtask(load));
     return const LessonCatalogState(isLoading: true);
   }
 
@@ -132,6 +134,23 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
 
   Future<void> selectDifficulty(LessonDifficulty? difficulty) async {
     state = state.copyWith(
+      selectedDifficulty: difficulty,
+      clearDifficulty: difficulty == null,
+    );
+    await load();
+  }
+
+  /// Applies the bottom-sheet selection atomically, resulting in one reload.
+  Future<void> applyFilters({
+    int? grade,
+    String? categoryId,
+    LessonDifficulty? difficulty,
+  }) async {
+    state = state.copyWith(
+      selectedGrade: grade,
+      clearGrade: grade == null,
+      selectedCategoryId: categoryId,
+      clearCategory: categoryId == null,
       selectedDifficulty: difficulty,
       clearDifficulty: difficulty == null,
     );

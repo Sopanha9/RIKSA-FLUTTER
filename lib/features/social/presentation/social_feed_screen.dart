@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
+import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../blog/data/blog_models.dart';
@@ -323,63 +324,36 @@ class _CommunityAppBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-
-    return SliverAppBar(
-      pinned: true,
-      toolbarHeight: 72,
-      titleSpacing: 2,
-      leadingWidth: 64,
-      automaticallyImplyLeading: false,
-      backgroundColor: theme.colorScheme.surface,
-      surfaceTintColor: Colors.transparent,
-      leading: Builder(
-        builder: (context) => Padding(
-          padding: const EdgeInsetsDirectional.only(start: 14),
-          child: _GlassIconButton(
+    return SliverToBoxAdapter(
+      child: RiksaPageHeader(
+        title: 'RIKSA',
+        subtitle: l10n.community,
+        leading: Builder(
+          builder: (context) => _GlassIconButton(
             key: const ValueKey('community-drawer-button'),
             icon: Icons.menu_rounded,
             tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-      ),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'RIKSA',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.2,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _StreakPill(
+              key: const ValueKey('streak-pill'),
+              streak: ref.watch(communityStreakProvider),
             ),
-          ),
-          Text(
-            l10n.community,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
+            const SizedBox(width: RiksaSpacing.xs),
+            _GlassIconButton(
+              key: const ValueKey('create-community-button'),
+              icon: Icons.add_rounded,
+              tooltip: l10n.createCommunityContent,
+              isPrimary: true,
+              onPressed: onCreate,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-      actions: [
-        _StreakPill(
-          key: const ValueKey('streak-pill'),
-          streak: ref.watch(communityStreakProvider),
-        ),
-        const SizedBox(width: 8),
-        Padding(
-          padding: const EdgeInsetsDirectional.only(end: 14),
-          child: _GlassIconButton(
-            key: const ValueKey('create-community-button'),
-            icon: Icons.add_rounded,
-            tooltip: l10n.createCommunityContent,
-            isPrimary: true,
-            onPressed: onCreate,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -400,46 +374,11 @@ class _GlassIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Tooltip(
       message: tooltip,
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: theme.colorScheme.shadow.withValues(alpha: .12),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Material(
-          color: isPrimary
-              ? AppColors.brandPrimary
-              : theme.colorScheme.surface.withValues(alpha: .94),
-          shape: CircleBorder(
-            side: BorderSide(
-              color: isPrimary
-                  ? AppColors.brandPrimary
-                  : theme.colorScheme.outlineVariant.withValues(alpha: .52),
-            ),
-          ),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onPressed,
-            child: SizedBox(
-              width: 44,
-              height: 44,
-              child: Icon(
-                icon,
-                size: 23,
-                color: isPrimary ? Colors.white : theme.colorScheme.onSurface,
-              ),
-            ),
-          ),
-        ),
-      ),
+      child: isPrimary
+          ? IconButton.filled(onPressed: onPressed, icon: Icon(icon))
+          : IconButton.filledTonal(onPressed: onPressed, icon: Icon(icon)),
     );
   }
 }
@@ -488,7 +427,7 @@ class _FeedSectionTabsState extends State<_FeedSectionTabs> {
       setState(() => _visualSelected = section);
       widget.onSelected(section);
     }
-    Future<void>.delayed(const Duration(milliseconds: 70), () {
+    Future<void>.delayed(RiksaMotion.resolve(context, RiksaMotion.fast), () {
       if (mounted && _pressedSection == section) {
         setState(() => _pressedSection = null);
       }
@@ -546,7 +485,7 @@ class _PressScale extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedScale(
       scale: pressed ? .95 : 1,
-      duration: Duration(milliseconds: pressed ? 110 : 150),
+      duration: RiksaMotion.resolve(context, RiksaMotion.fast),
       curve: pressed ? Curves.easeOutCubic : Curves.easeOutBack,
       child: child,
     );
@@ -586,20 +525,20 @@ class _SectionTab extends StatelessWidget {
       child: _PressScale(
         pressed: pressed,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: RiksaMotion.resolve(context, RiksaMotion.standard),
           curve: Curves.easeOutCubic,
           height: 32,
           decoration: BoxDecoration(
             color: selected ? AppColors.brandPrimary : colors.surfaceContainer,
-            borderRadius: AppRadii.fullBorder,
+            borderRadius: AppRadii.smallBorder,
             border: Border.all(color: border),
           ),
           child: Material(
             color: Colors.transparent,
-            borderRadius: AppRadii.fullBorder,
+            borderRadius: AppRadii.smallBorder,
             clipBehavior: Clip.antiAlias,
             child: InkWell(
-              borderRadius: AppRadii.fullBorder,
+              borderRadius: AppRadii.smallBorder,
               onTapDown: (_) => onPressChanged(true),
               onTapCancel: () => onPressChanged(false),
               onTap: onTap,
@@ -607,7 +546,10 @@ class _SectionTab extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Center(
                   child: AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 150),
+                    duration: RiksaMotion.resolve(
+                      context,
+                      RiksaMotion.standard,
+                    ),
                     curve: Curves.easeOutCubic,
                     style: theme.textTheme.labelMedium!.copyWith(
                       color: foreground,
@@ -948,7 +890,7 @@ class _DrawerNavigationTile extends StatelessWidget {
               children: [
                 AnimatedContainer(
                   key: ValueKey('drawer-accent-$label'),
-                  duration: const Duration(milliseconds: 220),
+                  duration: RiksaMotion.resolve(context, RiksaMotion.standard),
                   curve: Curves.easeInOut,
                   width: 4,
                   height: selected ? 28 : 0,
@@ -973,7 +915,7 @@ class _DrawerNavigationTile extends StatelessWidget {
                 ),
                 AnimatedRotation(
                   turns: expanded ? .5 : 0,
-                  duration: const Duration(milliseconds: 230),
+                  duration: RiksaMotion.resolve(context, RiksaMotion.standard),
                   curve: Curves.easeInOut,
                   child: Icon(
                     Icons.expand_more_rounded,
@@ -1028,7 +970,7 @@ class _SingleDestinationAccordion extends StatelessWidget {
         ),
         ClipRect(
           child: AnimatedSize(
-            duration: const Duration(milliseconds: 230),
+            duration: RiksaMotion.resolve(context, RiksaMotion.standard),
             curve: Curves.easeInOut,
             alignment: Alignment.topCenter,
             child: expanded
@@ -1092,7 +1034,7 @@ class _CommunityAccordion extends StatelessWidget {
         ),
         ClipRect(
           child: AnimatedSize(
-            duration: const Duration(milliseconds: 230),
+            duration: RiksaMotion.resolve(context, RiksaMotion.standard),
             curve: Curves.easeInOut,
             alignment: Alignment.topCenter,
             child: expanded
@@ -1163,7 +1105,7 @@ class _DrawerCategoryItem extends StatelessWidget {
             child: Row(
               children: [
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
+                  duration: RiksaMotion.resolve(context, RiksaMotion.standard),
                   curve: Curves.easeInOut,
                   width: 3,
                   height: selected ? 24 : 0,

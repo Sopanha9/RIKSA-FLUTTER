@@ -108,7 +108,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                         ),
                         trailing: Switch.adaptive(
                           value: locale.languageCode == 'km',
-                          activeTrackColor: ProfilePalette.green,
+                          activeTrackColor: ProfilePalette.green(context),
                           onChanged: (_) =>
                               ref.read(localeProvider.notifier).toggle(),
                         ),
@@ -218,7 +218,7 @@ class _SettingsSwitchRow extends StatelessWidget {
     ),
     trailing: Switch.adaptive(
       value: value,
-      activeTrackColor: ProfilePalette.green,
+      activeTrackColor: ProfilePalette.green(context),
       onChanged: onChanged,
     ),
   );

@@ -9,9 +9,9 @@ enum BlogStatus {
   String get wire => name.toUpperCase();
 
   static BlogStatus fromWire(String? value) => BlogStatus.values.firstWhere(
-        (s) => s.wire == value,
-        orElse: () => BlogStatus.pending,
-      );
+    (s) => s.wire == value,
+    orElse: () => BlogStatus.pending,
+  );
 }
 
 class BlogPost {
@@ -48,22 +48,24 @@ class BlogPost {
   bool get hasCover => coverUrl != null && coverUrl!.isNotEmpty;
 
   factory BlogPost.fromJson(Map<String, dynamic> json) => BlogPost(
-        id: json['id']?.toString() ?? '',
-        authorId: json['authorId']?.toString() ?? '',
-        title: json['title'] as String? ?? '',
-        content: json['content'] as String? ?? '',
-        coverUrl: json['coverUrl'] as String?,
-        status: BlogStatus.fromWire(json['status'] as String?),
-        rejectionReason: json['rejectionReason'] as String?,
-        viewCount: (json['viewCount'] as num?)?.toInt() ?? 0,
-        likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
-        categoryId: json['categoryId']?.toString() ?? '',
-        liked: json['liked'] as bool? ?? false,
-        createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
-            DateTime.now(),
-        updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
-            DateTime.now(),
-      );
+    id: json['id']?.toString() ?? '',
+    authorId: json['authorId']?.toString() ?? '',
+    title: json['title'] as String? ?? '',
+    content: json['content'] as String? ?? '',
+    coverUrl: json['coverUrl'] as String?,
+    status: BlogStatus.fromWire(json['status'] as String?),
+    rejectionReason: json['rejectionReason'] as String?,
+    viewCount: (json['viewCount'] as num?)?.toInt() ?? 0,
+    likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
+    categoryId: json['categoryId']?.toString() ?? '',
+    liked: json['liked'] as bool? ?? false,
+    createdAt:
+        DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+        DateTime.now(),
+    updatedAt:
+        DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
+        DateTime.now(),
+  );
 }
 
 /// Paginated list wrapper (`BlogListResponse`). Pages are 0-based.
@@ -83,14 +85,14 @@ class BlogPage {
   final int totalPages;
 
   factory BlogPage.fromJson(Map<String, dynamic> json) => BlogPage(
-        content: ((json['content'] as List?) ?? [])
-            .map((e) => BlogPost.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        page: (json['page'] as num?)?.toInt() ?? 0,
-        size: (json['size'] as num?)?.toInt() ?? 0,
-        totalElements: (json['totalElements'] as num?)?.toInt() ?? 0,
-        totalPages: (json['totalPages'] as num?)?.toInt() ?? 0,
-      );
+    content: ((json['content'] as List?) ?? [])
+        .map((e) => BlogPost.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    page: (json['page'] as num?)?.toInt() ?? 0,
+    size: (json['size'] as num?)?.toInt() ?? 0,
+    totalElements: (json['totalElements'] as num?)?.toInt() ?? 0,
+    totalPages: (json['totalPages'] as num?)?.toInt() ?? 0,
+  );
 }
 
 class CreateBlogPostRequest {
@@ -107,11 +109,11 @@ class CreateBlogPostRequest {
   final String categoryId;
 
   Map<String, dynamic> toJson() => {
-        'title': title,
-        'content': content,
-        if (coverUrl != null) 'coverUrl': coverUrl,
-        'categoryId': categoryId,
-      };
+    'title': title,
+    'content': content,
+    if (coverUrl != null) 'coverUrl': coverUrl,
+    'categoryId': categoryId,
+  };
 }
 
 /// Category served over GraphQL (`POST /graphql`).
@@ -135,12 +137,12 @@ class BlogCategory {
   final bool joined;
 
   factory BlogCategory.fromJson(Map<String, dynamic> json) => BlogCategory(
-        id: json['id']?.toString() ?? '',
-        name: json['name'] as String? ?? '',
-        slug: json['slug'] as String? ?? '',
-        description: json['description'] as String?,
-        iconUrl: json['iconUrl'] as String?,
-        memberCount: (json['memberCount'] as num?)?.toInt() ?? 0,
-        joined: json['joined'] as bool? ?? false,
-      );
+    id: json['id']?.toString() ?? '',
+    name: json['name'] as String? ?? '',
+    slug: json['slug'] as String? ?? '',
+    description: json['description'] as String?,
+    iconUrl: json['iconUrl'] as String?,
+    memberCount: (json['memberCount'] as num?)?.toInt() ?? 0,
+    joined: json['joined'] as bool? ?? false,
+  );
 }

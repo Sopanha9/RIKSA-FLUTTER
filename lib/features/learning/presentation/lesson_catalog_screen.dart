@@ -1,7 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../social/presentation/widgets/streak_details_sheet.dart';
 import '../../social/providers/social_feed_provider.dart';
@@ -16,21 +20,48 @@ class LessonCatalogScreen extends ConsumerStatefulWidget {
       _LessonCatalogScreenState();
 }
 
-class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
+class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen>
+    with SingleTickerProviderStateMixin {
   late final ScrollController _scrollController;
+  late final AnimationController _entranceController;
+  var _entranceStarted = false;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_onScroll);
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: RiksaMotion.emphasisLong,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _entranceController.value = 1;
+    }
   }
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
-    final position = _scrollController.position;
-    if (position.extentAfter < 420) {
+    if (_scrollController.position.extentAfter < 420) {
       ref.read(lessonCatalogProvider.notifier).loadMore();
     }
+  }
+
+  void _startEntranceWhenReady(LessonCatalogState state) {
+    if (_entranceStarted || state.lessons.isEmpty) return;
+    _entranceStarted = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (MediaQuery.disableAnimationsOf(context)) {
+        _entranceController.value = 1;
+      } else {
+        _entranceController.forward();
+      }
+    });
   }
 
   @override
@@ -38,6 +69,7 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
+    _entranceController.dispose();
     super.dispose();
   }
 
@@ -47,122 +79,128 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
     final streakState = ref.watch(communityStreakProvider);
     final streak = streakState.value;
     final l10n = AppLocalizations.of(context)!;
+    _startEntranceWhenReady(state);
+
+    final mission =
+        state.lessons.where((lesson) => !lesson.completed).firstOrNull ??
+        state.lessons.firstOrNull;
 
     return Scaffold(
       body: RefreshIndicator(
-        color: AppColors.brandPrimary,
+        color: context.riksa.jade,
         onRefresh: ref.read(lessonCatalogProvider.notifier).load,
         child: CustomScrollView(
           key: const PageStorageKey('learning-catalog-scroll'),
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            SliverAppBar(
-              pinned: true,
-              title: Text(
-                l10n.learn,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              actions: [
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 16),
-                  child: Material(
-                    color: AppColors.gamificationOrangeSoft,
-                    borderRadius: AppRadii.fullBorder,
-                    child: InkWell(
-                      key: const ValueKey('learning-streak-button'),
+            SliverToBoxAdapter(
+              child: RiksaPageHeader(
+                title: l10n.learn,
+                subtitle: l10n.learningHeaderSubtitle,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _FilterButton(
+                      count: state.activeFilterCount,
+                      label: l10n.filters,
+                      onPressed: () => _showFilters(context, state),
+                    ),
+                    const SizedBox(width: RiksaSpacing.xs),
+                    _StreakTag(
+                      value: streak?.current,
+                      loading: streakState.isLoading,
                       onTap: streak == null
                           ? null
                           : () => showStreakDetailsSheet(context, streak),
-                      borderRadius: AppRadii.fullBorder,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 13,
-                          vertical: 8,
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.local_fire_department_rounded,
-                              size: 19,
-                              color: AppColors.gamificationOrange,
-                            ),
-                            const SizedBox(width: 5),
-                            if (streakState.isLoading)
-                              const SizedBox.square(
-                                dimension: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            else
-                              Text(
-                                '${streak?.current ?? 0}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
+              padding: const EdgeInsets.fromLTRB(
+                RiksaSpacing.md,
+                RiksaSpacing.sm,
+                RiksaSpacing.md,
+                0,
+              ),
               sliver: SliverList.list(
                 children: [
-                  _LearningOverview(state: state),
-                  const SizedBox(height: 25),
-                  _FilterLabel(
-                    icon: Icons.school_outlined,
-                    label: l10n.gradeFilter,
-                  ),
-                  const SizedBox(height: 10),
-                  _GradeFilter(state: state),
+                  if (mission != null)
+                    _CatalogReveal(
+                      animation: _entranceController,
+                      begin: 0,
+                      end: .55,
+                      child: DailyMissionCard(
+                        eyebrow: l10n.dailyMissionEyebrow,
+                        title: mission.title,
+                        body: l10n.dailyMissionBody,
+                        actionLabel: l10n.startDailyMission,
+                        subject: _subjectLabel(l10n, mission),
+                        onPressed: () => _openLesson(context, mission),
+                      ),
+                    )
+                  else if (state.isLoading)
+                    const _MissionSkeleton(),
+                  if (state.hasActiveFilters) ...[
+                    const SizedBox(height: RiksaSpacing.sm),
+                    _ActiveFilters(
+                      state: state,
+                      onRemoveGrade: () => _applyFilters(
+                        state,
+                        grade: null,
+                        categoryId: state.selectedCategoryId,
+                        difficulty: state.selectedDifficulty,
+                      ),
+                      onRemoveCategory: () => _applyFilters(
+                        state,
+                        grade: state.selectedGrade,
+                        categoryId: null,
+                        difficulty: state.selectedDifficulty,
+                      ),
+                      onRemoveDifficulty: () => _applyFilters(
+                        state,
+                        grade: state.selectedGrade,
+                        categoryId: state.selectedCategoryId,
+                        difficulty: null,
+                      ),
+                    ),
+                  ],
                   if (state.selectedGrade != null && !state.hasGradeData) ...[
-                    const SizedBox(height: 9),
+                    const SizedBox(height: RiksaSpacing.xs),
                     _GradeDataNotice(grade: state.selectedGrade!),
                   ],
-                  const SizedBox(height: 22),
-                  _FilterLabel(
-                    icon: Icons.grid_view_rounded,
-                    label: l10n.subjectFilter,
-                  ),
-                  const SizedBox(height: 10),
-                  _CategoryFilter(state: state),
-                  const SizedBox(height: 22),
-                  _FilterLabel(
-                    icon: Icons.tune_rounded,
-                    label: l10n.difficultyFilter,
-                  ),
-                  const SizedBox(height: 10),
-                  _DifficultyFilter(state: state),
-                  const SizedBox(height: 28),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          l10n.recommendedLessons,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w800),
+                  const SizedBox(height: RiksaSpacing.lg),
+                  _CatalogReveal(
+                    animation: _entranceController,
+                    begin: .1,
+                    end: .65,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.recommendedLessons,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
                         ),
-                      ),
-                      if (state.isLoading && state.lessons.isNotEmpty)
-                        const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                    ],
+                        if (state.isLoading && state.lessons.isNotEmpty)
+                          SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: context.riksa.jade,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: RiksaSpacing.sm),
                 ],
               ),
             ),
             ..._lessonSlivers(context, state),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            const SliverToBoxAdapter(child: SizedBox(height: RiksaSpacing.lg)),
           ],
         ),
       ),
@@ -173,9 +211,17 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
     final l10n = AppLocalizations.of(context)!;
     if (state.isLoading && state.lessons.isEmpty) {
       return const [
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Center(child: CircularProgressIndicator()),
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: RiksaSpacing.md),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate.fixed([
+              LessonCardSkeleton(),
+              SizedBox(height: RiksaSpacing.sm),
+              LessonCardSkeleton(),
+              SizedBox(height: RiksaSpacing.sm),
+              LessonCardSkeleton(),
+            ]),
+          ),
         ),
       ];
     }
@@ -183,8 +229,7 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
       return [
         SliverFillRemaining(
           hasScrollBody: false,
-          child: _CatalogMessage(
-            icon: Icons.cloud_off_rounded,
+          child: IllustratedEmptyState(
             title: l10n.lessonLoadFailed,
             body: state.errorMessage!,
             actionLabel: l10n.tryAgain,
@@ -197,184 +242,296 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
       return [
         SliverFillRemaining(
           hasScrollBody: false,
-          child: _CatalogMessage(
-            icon: Icons.menu_book_rounded,
+          child: IllustratedEmptyState(
             title: l10n.noLessonsFound,
             body: l10n.noLessonsForFilters,
+            actionLabel: state.hasActiveFilters ? l10n.resetFilters : null,
+            onAction: state.hasActiveFilters
+                ? () => _applyFilters(state)
+                : null,
           ),
         ),
       ];
     }
 
+    final transitionKey = Object.hash(
+      state.selectedGrade,
+      state.selectedCategoryId,
+      state.selectedDifficulty,
+    );
     return [
       SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: 18),
+        padding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.md),
         sliver: SliverList.separated(
           itemCount: state.lessons.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 14),
-          itemBuilder: (context, index) =>
-              _LessonCard(lesson: state.lessons[index], index: index),
+          separatorBuilder: (_, _) => const SizedBox(height: RiksaSpacing.sm),
+          itemBuilder: (context, index) {
+            final lesson = state.lessons[index];
+            final card = LessonCard(
+              heroTag: 'lesson-art-${lesson.id}',
+              subject: _subjectLabel(l10n, lesson),
+              title: lesson.title,
+              durationLabel: l10n.minutesShort(_durationFor(lesson)),
+              difficultyLabel: lesson.difficulty == null
+                  ? l10n.allLevels
+                  : _difficultyLabel(l10n, lesson.difficulty!),
+              exerciseLabel: l10n.exerciseCount(lesson.exerciseCount),
+              progress: lesson.completed ? 1 : lesson.progress ?? 0,
+              completedLabel: l10n.completedLabel,
+              onTap: () => _openLesson(context, lesson),
+            );
+            final revealed = index < 4
+                ? _CatalogReveal(
+                    animation: _entranceController,
+                    begin: .18 + (index * .08),
+                    end: math.min(.76 + (index * .06), 1),
+                    child: card,
+                  )
+                : card;
+            return AnimatedSwitcher(
+              duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+              switchInCurve: RiksaMotion.standardCurve,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(
+                  scale: Tween(begin: .985, end: 1.0).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: KeyedSubtree(
+                key: ValueKey('$transitionKey-${lesson.id}'),
+                child: revealed,
+              ),
+            );
+          },
         ),
       ),
       if (state.isLoadingMore)
         const SliverToBoxAdapter(
           child: Padding(
-            padding: EdgeInsets.all(24),
+            padding: EdgeInsets.all(RiksaSpacing.lg),
             child: Center(child: CircularProgressIndicator()),
           ),
         ),
     ];
   }
+
+  Future<void> _showFilters(BuildContext context, LessonCatalogState state) =>
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (sheetContext) {
+          final l10n = AppLocalizations.of(sheetContext)!;
+          return FilterBottomSheet(
+            key: const ValueKey('lesson-filter-sheet'),
+            title: l10n.filterLessons,
+            gradeTitle: l10n.gradeFilter,
+            subjectTitle: l10n.subjectFilter,
+            difficultyTitle: l10n.difficultyFilter,
+            applyLabel: l10n.applyFilters,
+            resetLabel: l10n.resetFilters,
+            grades: [
+              for (var grade = 7; grade <= 12; grade++)
+                RiksaFilterOption(id: '$grade', label: l10n.gradeNumber(grade)),
+            ],
+            subjects: [
+              for (final category in state.categories)
+                RiksaFilterOption(id: category.id, label: category.name),
+            ],
+            difficulties: [
+              for (final difficulty in LessonDifficulty.values)
+                RiksaFilterOption(
+                  id: difficulty.name,
+                  label: _difficultyLabel(l10n, difficulty),
+                ),
+            ],
+            selection: RiksaFilterSelection(
+              grade: state.selectedGrade?.toString(),
+              subject: state.selectedCategoryId,
+              difficulty: state.selectedDifficulty?.name,
+            ),
+            onApply: (selection) => _applyFilters(
+              state,
+              grade: int.tryParse(selection.grade ?? ''),
+              categoryId: selection.subject,
+              difficulty: LessonDifficulty.values
+                  .where((item) => item.name == selection.difficulty)
+                  .firstOrNull,
+            ),
+          );
+        },
+      );
+
+  Future<void> _applyFilters(
+    LessonCatalogState _, {
+    int? grade,
+    String? categoryId,
+    LessonDifficulty? difficulty,
+  }) => ref
+      .read(lessonCatalogProvider.notifier)
+      .applyFilters(
+        grade: grade,
+        categoryId: categoryId,
+        difficulty: difficulty,
+      );
+
+  void _openLesson(BuildContext context, LessonSummary lesson) {
+    context.push('/learn/${lesson.id}', extra: lesson);
+  }
 }
 
-class _LearningOverview extends StatelessWidget {
-  const _LearningOverview({required this.state});
+class _FilterButton extends StatelessWidget {
+  const _FilterButton({
+    required this.count,
+    required this.label,
+    required this.onPressed,
+  });
+  final int count;
+  final String label;
+  final VoidCallback onPressed;
 
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: label,
+    value: count == 0 ? null : '$count',
+    child: IconButton.filledTonal(
+      key: const ValueKey('lesson-filter-button'),
+      tooltip: label,
+      onPressed: onPressed,
+      icon: Badge(
+        isLabelVisible: count > 0,
+        label: Text('$count'),
+        child: const Icon(Icons.tune_rounded),
+      ),
+    ),
+  );
+}
+
+class _StreakTag extends StatelessWidget {
+  const _StreakTag({
+    required this.value,
+    required this.loading,
+    required this.onTap,
+  });
+  final int? value;
+  final bool loading;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: context.riksa.saffronSoft,
+    shape: const StadiumBorder(),
+    child: InkWell(
+      key: const ValueKey('learning-streak-button'),
+      onTap: onTap,
+      customBorder: const StadiumBorder(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.local_fire_department_rounded,
+              size: 18,
+              color: context.riksa.saffron,
+            ),
+            const SizedBox(width: 4),
+            if (loading)
+              const SizedBox.square(
+                dimension: 13,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Text(
+                '${value ?? 0}',
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _MissionSkeleton extends StatelessWidget {
+  const _MissionSkeleton();
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: context.riksa.surfaceRaised,
+      borderRadius: AppRadii.largeBorder,
+    ),
+    child: const Padding(
+      padding: EdgeInsets.all(RiksaSpacing.md),
+      child: SizedBox(
+        height: 176,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            RiksaSkeleton(width: 92, height: 10),
+            SizedBox(height: RiksaSpacing.sm),
+            RiksaSkeleton(width: 230, height: 22),
+            SizedBox(height: RiksaSpacing.xs),
+            RiksaSkeleton(width: 180, height: 13),
+            Spacer(),
+            RiksaSkeleton(width: 140, height: 48, radius: AppRadii.medium),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _ActiveFilters extends StatelessWidget {
+  const _ActiveFilters({
+    required this.state,
+    required this.onRemoveGrade,
+    required this.onRemoveCategory,
+    required this.onRemoveDifficulty,
+  });
   final LessonCatalogState state;
+  final VoidCallback onRemoveGrade;
+  final VoidCallback onRemoveCategory;
+  final VoidCallback onRemoveDifficulty;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final completed = state.lessons.where((lesson) => lesson.completed).length;
-    final total = state.lessons.length;
-    final progress = total == 0 ? 0.0 : completed / total;
-
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF0FDF4), AppColors.brandSoft],
-        ),
-        borderRadius: AppRadii.largeBorder,
-        border: Border.all(color: const Color(0xFFBBF7D0)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.brandPrimary.withValues(alpha: .10),
-            blurRadius: 26,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Row(
+    final category = state.categories
+        .where((item) => item.id == state.selectedCategoryId)
+        .firstOrNull;
+    return AnimatedSize(
+      duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+      curve: RiksaMotion.standardCurve,
+      child: Wrap(
+        spacing: RiksaSpacing.xs,
+        runSpacing: RiksaSpacing.xs,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.learningHeadline,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    height: 1.08,
-                    color: AppColors.neutralInk,
-                  ),
-                ),
-                const SizedBox(height: 9),
-                Text(
-                  l10n.learningSubtitle,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.45,
-                    color: AppColors.lightTextSecondary,
-                  ),
-                ),
-              ],
+          if (state.selectedGrade != null)
+            ActiveFilterChip(
+              key: const ValueKey('active-grade-filter'),
+              label: l10n.gradeNumber(state.selectedGrade!),
+              removeSemanticLabel: l10n.removeFilter(l10n.gradeFilter),
+              onRemoved: onRemoveGrade,
             ),
-          ),
-          const SizedBox(width: 16),
-          SizedBox.square(
-            dimension: 76,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CircularProgressIndicator(
-                  value: progress,
-                  strokeWidth: 8,
-                  strokeCap: StrokeCap.round,
-                  backgroundColor: Colors.white.withValues(alpha: .72),
-                  color: AppColors.brandPrimary,
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '$completed',
-                      style: const TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.neutralInk,
-                      ),
-                    ),
-                    Text(
-                      l10n.doneLabel,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.lightTextSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+          if (category != null)
+            ActiveFilterChip(
+              key: const ValueKey('active-subject-filter'),
+              label: category.name,
+              removeSemanticLabel: l10n.removeFilter(l10n.subjectFilter),
+              onRemoved: onRemoveCategory,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterLabel extends StatelessWidget {
-  const _FilterLabel({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Icon(icon, size: 19, color: AppColors.brandPrimaryPressed),
-      const SizedBox(width: 8),
-      Text(
-        label,
-        style: Theme.of(
-          context,
-        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-      ),
-    ],
-  );
-}
-
-class _GradeFilter extends ConsumerWidget {
-  const _GradeFilter({required this.state});
-
-  final LessonCatalogState state;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _FilterPill(
-            key: const Key('grade-filter-all'),
-            label: l10n.allGrades,
-            selected: state.selectedGrade == null,
-            onTap: () =>
-                ref.read(lessonCatalogProvider.notifier).selectGrade(null),
-          ),
-          for (var grade = 7; grade <= 12; grade++) ...[
-            const SizedBox(width: 9),
-            _FilterPill(
-              key: Key('grade-filter-$grade'),
-              label: l10n.gradeNumber(grade),
-              selected: state.selectedGrade == grade,
-              onTap: () =>
-                  ref.read(lessonCatalogProvider.notifier).selectGrade(grade),
+          if (state.selectedDifficulty != null)
+            ActiveFilterChip(
+              key: const ValueKey('active-difficulty-filter'),
+              label: _difficultyLabel(l10n, state.selectedDifficulty!),
+              removeSemanticLabel: l10n.removeFilter(l10n.difficultyFilter),
+              onRemoved: onRemoveDifficulty,
             ),
-          ],
         ],
       ),
     );
@@ -383,7 +540,6 @@ class _GradeFilter extends ConsumerWidget {
 
 class _GradeDataNotice extends StatelessWidget {
   const _GradeDataNotice({required this.grade});
-
   final int grade;
 
   @override
@@ -392,22 +548,16 @@ class _GradeDataNotice extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 2),
-          child: Icon(
-            Icons.info_outline_rounded,
-            size: 16,
-            color: AppColors.lightTextSecondary,
-          ),
+        Icon(
+          Icons.info_outline_rounded,
+          size: 16,
+          color: context.riksa.inkMuted,
         ),
-        const SizedBox(width: 7),
+        const SizedBox(width: RiksaSpacing.xs),
         Expanded(
           child: Text(
             l10n.gradeDataPending(grade),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              height: 1.35,
-            ),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ),
       ],
@@ -415,369 +565,45 @@ class _GradeDataNotice extends StatelessWidget {
   }
 }
 
-class _CategoryFilter extends ConsumerWidget {
-  const _CategoryFilter({required this.state});
-
-  final LessonCatalogState state;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _FilterPill(
-            label: l10n.allSubjects,
-            selected: state.selectedCategoryId == null,
-            onTap: () =>
-                ref.read(lessonCatalogProvider.notifier).selectCategory(null),
-          ),
-          for (final category in state.categories) ...[
-            const SizedBox(width: 9),
-            _FilterPill(
-              label: category.name,
-              selected: state.selectedCategoryId == category.id,
-              onTap: () => ref
-                  .read(lessonCatalogProvider.notifier)
-                  .selectCategory(category.id),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _DifficultyFilter extends ConsumerWidget {
-  const _DifficultyFilter({required this.state});
-
-  final LessonCatalogState state;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _FilterPill(
-            label: l10n.allLevels,
-            selected: state.selectedDifficulty == null,
-            onTap: () =>
-                ref.read(lessonCatalogProvider.notifier).selectDifficulty(null),
-          ),
-          for (final difficulty in LessonDifficulty.values) ...[
-            const SizedBox(width: 9),
-            _FilterPill(
-              label: _difficultyLabel(l10n, difficulty),
-              selected: state.selectedDifficulty == difficulty,
-              onTap: () => ref
-                  .read(lessonCatalogProvider.notifier)
-                  .selectDifficulty(difficulty),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterPill extends StatelessWidget {
-  const _FilterPill({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
+class _CatalogReveal extends StatelessWidget {
+  const _CatalogReveal({
+    required this.animation,
+    required this.begin,
+    required this.end,
+    required this.child,
   });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    selected: selected,
-    child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppRadii.fullBorder,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 190),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: selected
-                ? AppColors.brandPrimary
-                : Theme.of(context).colorScheme.surfaceContainer,
-            borderRadius: AppRadii.fullBorder,
-            border: Border.all(
-              color: selected
-                  ? AppColors.brandPrimary
-                  : Theme.of(context).colorScheme.outlineVariant,
-            ),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: AppColors.brandPrimary.withValues(alpha: .18),
-                      blurRadius: 12,
-                      offset: const Offset(0, 5),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected
-                  ? Colors.white
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-class _LessonCard extends StatelessWidget {
-  const _LessonCard({required this.lesson, required this.index});
-
-  final LessonSummary lesson;
-  final int index;
+  final Animation<double> animation;
+  final double begin;
+  final double end;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final palette = _cardPalettes[index % _cardPalettes.length];
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {},
-        borderRadius: AppRadii.mediumBorder,
-        child: Ink(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: palette.background,
-            borderRadius: AppRadii.mediumBorder,
-            border: Border.all(color: palette.border),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: palette.overlay,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      _categoryIcon(lesson.categoryName),
-                      color: palette.foreground,
-                      size: 21,
-                    ),
-                  ),
-                  const SizedBox(width: 11),
-                  Expanded(
-                    child: Text(
-                      lesson.categoryName.isEmpty
-                          ? l10n.generalSubject
-                          : lesson.categoryName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: palette.foreground.withValues(alpha: .82),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  if (lesson.completed)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.brandPrimary,
-                        borderRadius: AppRadii.smallBorder,
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.check_rounded,
-                            color: Colors.white,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            l10n.completedLabel,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else if (lesson.difficulty != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: palette.overlay,
-                        borderRadius: AppRadii.smallBorder,
-                      ),
-                      child: Text(
-                        _difficultyLabel(l10n, lesson.difficulty!),
-                        style: TextStyle(
-                          color: palette.foreground,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 17),
-              Text(
-                lesson.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  height: 1.2,
-                  fontWeight: FontWeight.w900,
-                  color: palette.foreground,
-                ),
-              ),
-              if (lesson.description.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  lesson.description,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.45,
-                    color: palette.foreground.withValues(alpha: .72),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 19),
-              Row(
-                children: [
-                  Icon(
-                    Icons.edit_note_rounded,
-                    size: 19,
-                    color: palette.foreground.withValues(alpha: .74),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    l10n.exerciseCount(lesson.exerciseCount),
-                    style: TextStyle(
-                      color: palette.foreground.withValues(alpha: .74),
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Icon(
-                    Icons.bolt_rounded,
-                    size: 18,
-                    color: palette.foreground.withValues(alpha: .74),
-                  ),
-                  const SizedBox(width: 3),
-                  Expanded(
-                    child: Text(
-                      l10n.baseXpLabel(lesson.baseXp),
-                      style: TextStyle(
-                        color: palette.foreground.withValues(alpha: .74),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 43,
-                    height: 43,
-                    decoration: BoxDecoration(
-                      color: palette.overlay,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: palette.foreground.withValues(alpha: .14),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.arrow_forward_rounded,
-                      color: palette.foreground,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    final curved = CurvedAnimation(
+      parent: animation,
+      curve: Interval(begin, end, curve: RiksaMotion.standardCurve),
+    );
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween(
+          begin: const Offset(0, .055),
+          end: Offset.zero,
+        ).animate(curved),
+        child: child,
       ),
     );
   }
 }
 
-class _CatalogMessage extends StatelessWidget {
-  const _CatalogMessage({
-    required this.icon,
-    required this.title,
-    required this.body,
-    this.actionLabel,
-    this.onAction,
-  });
+String _subjectLabel(AppLocalizations l10n, LessonSummary lesson) =>
+    lesson.categoryName.trim().isEmpty
+    ? l10n.generalSubject
+    : lesson.categoryName;
 
-  final IconData icon;
-  final String title;
-  final String body;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 44, color: AppColors.brandPrimary),
-          const SizedBox(height: 14),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            body,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          if (onAction != null && actionLabel != null) ...[
-            const SizedBox(height: 18),
-            FilledButton.tonal(onPressed: onAction, child: Text(actionLabel!)),
-          ],
-        ],
-      ),
-    ),
-  );
-}
+int _durationFor(LessonSummary lesson) =>
+    lesson.durationMinutes ?? math.max(5, lesson.exerciseCount * 4);
 
 String _difficultyLabel(AppLocalizations l10n, LessonDifficulty difficulty) =>
     switch (difficulty) {
@@ -787,53 +613,10 @@ String _difficultyLabel(AppLocalizations l10n, LessonDifficulty difficulty) =>
       LessonDifficulty.difficult => l10n.difficultyDifficult,
     };
 
-IconData _categoryIcon(String category) {
-  final value = category.toLowerCase();
-  if (value.contains('math')) return Icons.calculate_outlined;
-  if (value.contains('computer') || value.contains('tech')) {
-    return Icons.computer_rounded;
-  }
-  if (value.contains('chem')) return Icons.science_outlined;
-  if (value.contains('bio') || value.contains('health')) {
-    return Icons.eco_outlined;
-  }
-  if (value.contains('english') || value.contains('khmer')) {
-    return Icons.translate_rounded;
-  }
-  return Icons.menu_book_rounded;
-}
-
-const _cardPalettes = <_LessonCardPalette>[
-  _LessonCardPalette(
-    background: AppColors.lightSurface,
-    border: AppColors.lightBorder,
-    foreground: AppColors.neutralInk,
-    overlay: AppColors.lightSubtle,
-  ),
-  _LessonCardPalette(
-    background: Color(0xFFF0FDF4),
-    border: Color(0xFFBBF7D0),
-    foreground: Color(0xFF14532D),
-    overlay: AppColors.lightSurface,
-  ),
-  _LessonCardPalette(
-    background: AppColors.lightSubtle,
-    border: AppColors.lightBorder,
-    foreground: AppColors.neutralInk,
-    overlay: AppColors.lightSurface,
-  ),
-];
-
-class _LessonCardPalette {
-  const _LessonCardPalette({
-    required this.background,
-    required this.border,
-    required this.foreground,
-    required this.overlay,
-  });
-
-  final Color background;
-  final Color border;
-  final Color foreground;
-  final Color overlay;
+extension on LessonCatalogState {
+  bool get hasActiveFilters => activeFilterCount > 0;
+  int get activeFilterCount =>
+      (selectedGrade == null ? 0 : 1) +
+      (selectedCategoryId == null ? 0 : 1) +
+      (selectedDifficulty == null ? 0 : 1);
 }

@@ -43,6 +43,8 @@ class LessonSummary {
     required this.completed,
     required this.createdAt,
     this.grade,
+    this.durationMinutes,
+    this.progress,
   });
 
   final String id;
@@ -59,6 +61,13 @@ class LessonSummary {
   /// Nullable until the learning API adds grade metadata to lesson responses.
   final int? grade;
 
+  /// Optional metadata supplied by newer learning API responses.
+  /// UI code uses a conservative exercise-based estimate when duration is null.
+  final int? durationMinutes;
+
+  /// Normalized lesson progress from 0 to 1 when supplied by the API.
+  final double? progress;
+
   factory LessonSummary.fromJson(Map<String, dynamic> json) => LessonSummary(
     id: json['id']?.toString() ?? '',
     title: json['title'] as String? ?? '',
@@ -71,6 +80,10 @@ class LessonSummary {
     completed: json['completed'] as bool? ?? false,
     createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? ''),
     grade: _gradeFromJson(json['grade']),
+    durationMinutes:
+        (json['durationMinutes'] as num?)?.toInt() ??
+        (json['estimatedMinutes'] as num?)?.toInt(),
+    progress: _progressFromJson(json['progress']),
   );
 
   static int? _gradeFromJson(Object? value) {
@@ -79,6 +92,12 @@ class LessonSummary {
       return int.tryParse(value.replaceAll(RegExp(r'[^0-9]'), ''));
     }
     return null;
+  }
+
+  static double? _progressFromJson(Object? value) {
+    if (value is! num) return null;
+    final normalized = value > 1 ? value / 100 : value.toDouble();
+    return normalized.clamp(0, 1).toDouble();
   }
 }
 

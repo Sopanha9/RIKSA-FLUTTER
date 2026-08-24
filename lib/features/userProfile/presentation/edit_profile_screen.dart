@@ -89,7 +89,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 child: IconButton.filled(
                                   key: const ValueKey('edit-avatar'),
                                   style: IconButton.styleFrom(
-                                    backgroundColor: ProfilePalette.green,
+                                    backgroundColor: ProfilePalette.green(
+                                      context,
+                                    ),
                                     foregroundColor: Colors.black,
                                   ),
                                   onPressed: () => _chooseAvatar(context),
@@ -209,7 +211,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         FilledButton(
                           key: const ValueKey('save-profile'),
                           style: FilledButton.styleFrom(
-                            backgroundColor: ProfilePalette.green,
+                            backgroundColor: ProfilePalette.green(context),
                             foregroundColor: Colors.black,
                           ),
                           onPressed: _saving ? null : _save,
@@ -304,10 +306,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         color: ProfilePalette.greenSoft(context),
                         borderRadius: AppRadii.smallBorder,
                       ),
-                      child: const Text(
+                      child: Text(
                         'Humation',
                         style: TextStyle(
-                          color: ProfilePalette.green,
+                          color: ProfilePalette.green(context),
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
                         ),
@@ -350,7 +352,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             borderRadius: AppRadii.mediumBorder,
                             side: BorderSide(
                               color: selected
-                                  ? ProfilePalette.green
+                                  ? ProfilePalette.green(context)
                                   : ProfilePalette.border(context),
                               width: selected ? 2 : 1,
                             ),
@@ -375,12 +377,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   ),
                                 ),
                                 if (selected)
-                                  const PositionedDirectional(
+                                  PositionedDirectional(
                                     top: 5,
                                     end: 5,
                                     child: CircleAvatar(
                                       radius: 9,
-                                      backgroundColor: ProfilePalette.green,
+                                      backgroundColor: ProfilePalette.green(
+                                        context,
+                                      ),
                                       child: Icon(
                                         Icons.check_rounded,
                                         size: 13,
