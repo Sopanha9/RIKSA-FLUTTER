@@ -9,6 +9,7 @@ import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/userProfile/presentation/edit_profile_screen.dart';
 import 'package:riksa_app/features/userProfile/presentation/profile_settings_screen.dart';
+import 'package:riksa_app/features/userProfile/presentation/widgets/profile_cover.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 class _AuthNotifier extends AuthNotifier {
@@ -123,6 +124,22 @@ void main() {
     expect(find.text('@sophea'), findsOneWidget);
     expect(find.text('sophea@example.com'), findsOneWidget);
     expect(find.text('012345678'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('edit-cover')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('profile-cover-grid')), findsOneWidget);
+    await tester.tap(
+      find.byKey(const ValueKey('profile-cover-option-sunrise')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<ProfileCover>(
+            find.byKey(const ValueKey('edit-profile-cover')),
+          )
+          .coverId,
+      'sunrise',
+    );
 
     await tester.tap(find.byKey(const ValueKey('edit-avatar')));
     await tester.pumpAndSettle();

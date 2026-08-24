@@ -820,6 +820,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pick a hand-drawn character for your RIKSA profile.';
 
   @override
+  String get editCover => 'Edit cover';
+
+  @override
+  String get chooseProfileCover => 'Choose a profile cover';
+
+  @override
+  String get profileCoverSubtitle =>
+      'Pick a color and pattern that feels like you.';
+
+  @override
   String get notProvided => 'Not provided';
 
   @override

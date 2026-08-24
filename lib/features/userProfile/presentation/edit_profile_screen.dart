@@ -7,6 +7,8 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_models.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
+import '../providers/profile_cover_provider.dart';
+import 'widgets/profile_cover.dart';
 import 'widgets/profile_ui.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -51,6 +53,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final l10n = AppLocalizations.of(context)!;
     final auth = ref.watch(authProvider);
     final user = auth is Authenticated ? auth.user : null;
+    final coverId = ref.watch(profileCoverProvider);
 
     return Scaffold(
       backgroundColor: ProfilePalette.canvas(context),
@@ -74,37 +77,65 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
                       children: [
-                        Center(
+                        SizedBox(
+                          height: 205,
                           child: Stack(
                             clipBehavior: Clip.none,
                             children: [
-                              RiksaProfileAvatar(
-                                user: user,
-                                radius: 52,
-                                avatarPath: _avatarPath,
+                              ProfileCover(
+                                key: const ValueKey('edit-profile-cover'),
+                                coverId: coverId,
+                                height: 150,
                               ),
                               PositionedDirectional(
-                                end: -2,
-                                bottom: 1,
-                                child: IconButton.filled(
-                                  key: const ValueKey('edit-avatar'),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: ProfilePalette.green(
-                                      context,
-                                    ),
-                                    foregroundColor: Colors.black,
-                                  ),
-                                  onPressed: () => _chooseAvatar(context),
-                                  icon: const Icon(
-                                    Icons.camera_alt_rounded,
-                                    size: 19,
+                                top: 10,
+                                end: 10,
+                                child: FilledButton.tonalIcon(
+                                  key: const ValueKey('edit-cover'),
+                                  onPressed: () => _chooseCover(context),
+                                  icon: const Icon(Icons.palette_outlined),
+                                  label: Text(l10n.editCover),
+                                ),
+                              ),
+                              PositionedDirectional(
+                                start: 0,
+                                end: 0,
+                                bottom: 0,
+                                child: Center(
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      RiksaProfileAvatar(
+                                        user: user,
+                                        radius: 52,
+                                        avatarPath: _avatarPath,
+                                      ),
+                                      PositionedDirectional(
+                                        end: -2,
+                                        bottom: 1,
+                                        child: IconButton.filled(
+                                          key: const ValueKey('edit-avatar'),
+                                          style: IconButton.styleFrom(
+                                            backgroundColor:
+                                                ProfilePalette.green(context),
+                                            foregroundColor: Colors.black,
+                                          ),
+                                          onPressed: () =>
+                                              _chooseAvatar(context),
+                                          icon: const Icon(
+                                            Icons.camera_alt_rounded,
+                                            size: 19,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 18),
                         ProfilePanel(
                           child: Column(
                             children: [
@@ -407,6 +438,95 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       ),
     );
     if (selected != null && mounted) setState(() => _avatarPath = selected);
+  }
+
+  Future<void> _chooseCover(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final current = ref.read(profileCoverProvider);
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: ProfilePalette.panel(context),
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 4, 18, 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.chooseProfileCover,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                l10n.profileCoverSubtitle,
+                style: TextStyle(
+                  color: ProfilePalette.muted(context),
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 16),
+              GridView.builder(
+                key: const ValueKey('profile-cover-grid'),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 2.1,
+                  mainAxisSpacing: 11,
+                  crossAxisSpacing: 11,
+                ),
+                itemCount: profileCoverStyles.length,
+                itemBuilder: (context, index) {
+                  final cover = profileCoverStyles[index];
+                  final isSelected = cover.id == current;
+                  return Semantics(
+                    button: true,
+                    selected: isSelected,
+                    label: '${l10n.chooseProfileCover} ${index + 1}',
+                    child: InkWell(
+                      key: ValueKey('profile-cover-option-${cover.id}'),
+                      borderRadius: AppRadii.mediumBorder,
+                      onTap: () => Navigator.of(sheetContext).pop(cover.id),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          ProfileCover(coverId: cover.id, height: 100),
+                          if (isSelected)
+                            Align(
+                              alignment: AlignmentDirectional.topEnd,
+                              child: Padding(
+                                padding: const EdgeInsets.all(7),
+                                child: CircleAvatar(
+                                  radius: 10,
+                                  backgroundColor: Colors.white,
+                                  child: Icon(
+                                    Icons.check_rounded,
+                                    size: 15,
+                                    color: ProfilePalette.green(context),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (selected != null) {
+      await ref.read(profileCoverProvider.notifier).select(selected);
+    }
   }
 
   Future<void> _confirmDelete(BuildContext context) async {

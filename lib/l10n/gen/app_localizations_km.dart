@@ -793,6 +793,15 @@ class AppLocalizationsKm extends AppLocalizations {
       'ជ្រើសរើសតួអង្គគូរដោយដៃសម្រាប់ប្រវត្តិរូប RIKSA របស់អ្នក។';
 
   @override
+  String get editCover => 'កែរូបគម្រប';
+
+  @override
+  String get chooseProfileCover => 'ជ្រើសរើសរូបគម្របប្រវត្តិរូប';
+
+  @override
+  String get profileCoverSubtitle => 'ជ្រើសរើសពណ៌ និងលំនាំដែលបង្ហាញពីអ្នក។';
+
+  @override
   String get notProvided => 'មិនបានផ្តល់';
 
   @override

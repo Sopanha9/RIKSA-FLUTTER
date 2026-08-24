@@ -133,9 +133,14 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Sok Sophea'), findsNWidgets(2));
     expect(find.text('@sophea'), findsOneWidget);
+    expect(find.byKey(const ValueKey('profile-cover')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-total-xp')), findsOneWidget);
-    expect(find.byKey(const ValueKey('profile-streak')), findsOneWidget);
-    expect(find.text('Gold'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('profile-level-progress')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('profile-streak')), findsNothing);
+    expect(find.text('Gold'), findsNothing);
     expect(find.text('My Posts'), findsOneWidget);
     expect(
       find.text('A simple way to remember quadratic formulas'),

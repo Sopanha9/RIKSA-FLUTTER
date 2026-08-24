@@ -15,7 +15,9 @@ import '../../social/data/social_models.dart';
 import '../../social/presentation/widgets/social_post_card.dart';
 import '../../social/providers/social_feed_provider.dart';
 import '../data/profile_models.dart';
+import '../providers/profile_cover_provider.dart';
 import '../providers/profile_provider.dart';
+import 'widgets/profile_cover.dart';
 import 'widgets/profile_ui.dart';
 
 enum _ProfileTab { posts, achievements, rank }
@@ -119,61 +121,40 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   }
 }
 
-class _ProfileHeader extends StatelessWidget {
+class _ProfileHeader extends ConsumerWidget {
   const _ProfileHeader({required this.user, required this.dashboard});
 
   final AuthUser user;
   final AsyncValue<ProfileDashboardData> dashboard;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final game = dashboard.asData?.value.gamification;
     final name = user.displayName.trim().isEmpty
         ? user.username
         : user.displayName.trim();
     final tier = readableProfileName(game?.currentTier ?? l10n.startingTier);
+    final coverId = ref.watch(profileCoverProvider);
 
     return Column(
       children: [
         Stack(
           clipBehavior: Clip.none,
           children: [
-            RiksaProfileAvatar(user: user, radius: 49),
+            ProfileCover(
+              key: const ValueKey('profile-cover'),
+              coverId: coverId,
+            ),
             PositionedDirectional(
-              end: -25,
-              top: 3,
-              child: Container(
-                key: const ValueKey('profile-streak'),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: ProfilePalette.panelSoft(context),
-                  borderRadius: AppRadii.fullBorder,
-                  border: Border.all(color: ProfilePalette.border(context)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.local_fire_department_rounded,
-                      color: ProfilePalette.streak(context),
-                      size: 17,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      '${game?.currentStreak ?? 0}',
-                      style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
-                  ],
-                ),
-              ),
+              start: 0,
+              end: 0,
+              bottom: -49,
+              child: Center(child: RiksaProfileAvatar(user: user, radius: 49)),
             ),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 61),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -213,87 +194,59 @@ class _ProfileHeader extends StatelessWidget {
             style: const TextStyle(color: Color(0xFFC6CDC7), height: 1.45),
           ),
         ],
-        const SizedBox(height: 22),
-        ProfilePanel(
-          padding: const EdgeInsets.symmetric(vertical: 17, horizontal: 8),
-          child: Row(
-            children: [
-              _HeaderStat(
-                key: const ValueKey('profile-tier'),
-                value: tier,
-                label: l10n.currentRank,
-                color: ProfilePalette.green(context),
-              ),
-              const _StatDivider(),
-              _HeaderStat(
-                key: const ValueKey('profile-total-xp'),
-                value: NumberFormat.compact().format(game?.totalXp ?? 0),
-                label: l10n.totalXp,
-                color: ProfilePalette.xp(context),
-              ),
-              const _StatDivider(),
-              _HeaderStat(
-                value: '${game?.currentStreak ?? 0}',
-                label: l10n.currentStreak,
-                color: ProfilePalette.streak(context),
-              ),
-            ],
+        const SizedBox(height: 18),
+        Semantics(
+          label:
+              '$tier, ${NumberFormat.compact().format(game?.totalXp ?? 0)} ${l10n.totalXp}',
+          child: ProfilePanel(
+            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: ProfilePalette.greenSoft(context),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.workspace_premium_outlined,
+                    color: ProfilePalette.green(context),
+                    size: 19,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: AppRadii.fullBorder,
+                    child: LinearProgressIndicator(
+                      key: const ValueKey('profile-level-progress'),
+                      value: game?.nextTierProgress ?? 0,
+                      minHeight: 7,
+                      backgroundColor: ProfilePalette.greenSoft(context),
+                      valueColor: AlwaysStoppedAnimation(
+                        ProfilePalette.green(context),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  key: const ValueKey('profile-total-xp'),
+                  '${NumberFormat.compact().format(game?.totalXp ?? 0)} XP',
+                  style: TextStyle(
+                    color: ProfilePalette.text(context),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
-}
-
-class _HeaderStat extends StatelessWidget {
-  const _HeaderStat({
-    super.key,
-    required this.value,
-    required this.label,
-    required this.color,
-  });
-
-  final String value;
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => Expanded(
-    child: Column(
-      children: [
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: color,
-            fontSize: 17,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: ProfilePalette.muted(context),
-            fontSize: 10.5,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class _StatDivider extends StatelessWidget {
-  const _StatDivider();
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 34,
-    child: VerticalDivider(color: ProfilePalette.border(context), width: 1),
-  );
 }
 
 class _ProfileTabs extends StatelessWidget {

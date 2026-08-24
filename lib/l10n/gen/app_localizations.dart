@@ -1550,6 +1550,24 @@ abstract class AppLocalizations {
   /// **'Pick a hand-drawn character for your RIKSA profile.'**
   String get humationAvatarSubtitle;
 
+  /// No description provided for @editCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit cover'**
+  String get editCover;
+
+  /// No description provided for @chooseProfileCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a profile cover'**
+  String get chooseProfileCover;
+
+  /// No description provided for @profileCoverSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a color and pattern that feels like you.'**
+  String get profileCoverSubtitle;
+
   /// No description provided for @notProvided.
   ///
   /// In en, this message translates to:

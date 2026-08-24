@@ -10,22 +10,25 @@ String humationAvatarValue(int index) {
   if (index < 0 || index >= humationAvatarCount) {
     throw RangeError.range(index, 0, humationAvatarCount - 1, 'index');
   }
-  final number = (index + 1).toString().padLeft(2, '0');
-  return '/avatars/humation/avatar-$number.svg';
+  return '/avatars/avatar-${index + 1}.png';
 }
 
 String? humationAvatarAssetPath(String? value) {
   final path = value?.trim();
   if (path == null) return null;
-  final match = RegExp(
-    r'^/avatars/humation/avatar-(\d{2})\.svg$',
-  ).firstMatch(path);
+  // Persist the API's accepted catalog value while rendering the matching
+  // bundled Humation artwork. The SVG form remains readable for users who
+  // selected an avatar in an earlier app build.
+  final match =
+      RegExp(r'^/avatars/avatar-(\d{1,2})\.png$').firstMatch(path) ??
+      RegExp(r'^/avatars/humation/avatar-(\d{2})\.svg$').firstMatch(path);
   if (match == null) return null;
   final number = int.tryParse(match.group(1)!);
   if (number == null || number < 1 || number > humationAvatarCount) {
     return null;
   }
-  return '$_humationAssetDirectory/avatar-${match.group(1)}.svg';
+  final assetNumber = number.toString().padLeft(2, '0');
+  return '$_humationAssetDirectory/avatar-$assetNumber.svg';
 }
 
 String? resolvedAvatarUrl(String? value) {
