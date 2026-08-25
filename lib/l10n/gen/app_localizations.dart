@@ -884,6 +884,18 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get profile;
 
+  /// No description provided for @shareProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Share profile'**
+  String get shareProfile;
+
+  /// No description provided for @profileLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile link copied'**
+  String get profileLinkCopied;
+
   /// No description provided for @blog.
   ///
   /// In en, this message translates to:
@@ -938,6 +950,24 @@ abstract class AppLocalizations {
   /// **'Search provinces'**
   String get searchProvince;
 
+  /// No description provided for @searchCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get searchCommunity;
+
+  /// No description provided for @searchCommunityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different keyword.'**
+  String get searchCommunityHint;
+
+  /// No description provided for @noSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching results'**
+  String get noSearchResults;
+
   /// No description provided for @noProvinceResults.
   ///
   /// In en, this message translates to:
@@ -967,6 +997,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Learn'**
   String get learn;
+
+  /// No description provided for @learningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning'**
+  String get learningTitle;
+
+  /// No description provided for @continueLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue learning'**
+  String get continueLearning;
+
+  /// No description provided for @searchLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Search lessons'**
+  String get searchLessons;
 
   /// No description provided for @leaderboard.
   ///
@@ -1603,6 +1651,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'RIKSA AI Tutor is coming soon.'**
   String get aiTutorComingSoon;
+
+  /// No description provided for @publicProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Public profile'**
+  String get publicProfile;
+
+  /// No description provided for @posts.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts'**
+  String get posts;
+
+  /// No description provided for @publicProfileUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile unavailable'**
+  String get publicProfileUnavailable;
+
+  /// No description provided for @publicProfileUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This person may have deleted their account, been suspended, or limited access to their profile.'**
+  String get publicProfileUnavailableMessage;
+
+  /// No description provided for @publicProfileLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load this public profile. Please try again.'**
+  String get publicProfileLoadFailed;
+
+  /// No description provided for @publicPostsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load this person’s posts.'**
+  String get publicPostsLoadFailed;
+
+  /// No description provided for @noPublicPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'This person hasn’t shared any community posts yet.'**
+  String get noPublicPosts;
+
+  /// No description provided for @noPublicAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'No earned achievements are available yet.'**
+  String get noPublicAchievements;
+
+  /// No description provided for @noPublicRank.
+  ///
+  /// In en, this message translates to:
+  /// **'No public ranking is available yet.'**
+  String get noPublicRank;
 }
 
 class _AppLocalizationsDelegate

@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_api.dart';
 import '../../auth/data/auth_models.dart';
@@ -19,8 +19,7 @@ import '../providers/profile_cover_provider.dart';
 import '../providers/profile_provider.dart';
 import 'widgets/profile_cover.dart';
 import 'widgets/profile_ui.dart';
-
-enum _ProfileTab { posts, achievements, rank }
+import 'public_profile_navigation.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({super.key});
@@ -31,7 +30,7 @@ class UserProfileScreen extends ConsumerStatefulWidget {
 
 class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   final _scrollController = ScrollController();
-  _ProfileTab _tab = _ProfileTab.posts;
+  ProfileTab _tab = ProfileTab.posts;
 
   @override
   void dispose() {
@@ -63,14 +62,19 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
-              child: RiksaPageHeader(
-                title: l10n.profile,
-                subtitle: l10n.learningHeaderSubtitle,
-                trailing: IconButton.filledTonal(
-                  key: const ValueKey('profile-settings'),
-                  tooltip: l10n.settings,
-                  onPressed: () => context.push('/profile/settings'),
-                  icon: const Icon(Icons.settings_outlined),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 680),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
+                    child: _ProfileTopBar(
+                      title: l10n.profile,
+                      shareLabel: l10n.shareProfile,
+                      settingsLabel: l10n.settings,
+                      onShare: user == null ? null : () => _share(user),
+                      onSettings: () => context.push('/profile/settings'),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -79,7 +83,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 680),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 10, 18, 0),
+                    padding: const EdgeInsets.fromLTRB(18, 14, 18, 0),
                     child: Column(
                       children: [
                         if (user != null)
@@ -87,8 +91,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         else
                           const _ProfileLoading(),
                         const SizedBox(height: 22),
-                        _ProfileTabs(
+                        ProfileTabs(
                           selected: _tab,
+                          postsLabel: l10n.myPosts,
+                          achievementsLabel: l10n.achievements,
+                          rankLabel: l10n.currentRank,
                           onSelected: (tab) => setState(() => _tab = tab),
                         ),
                         const SizedBox(height: 18),
@@ -100,11 +107,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                           child: user == null
                               ? const _ProfileLoading()
                               : switch (_tab) {
-                                  _ProfileTab.posts => _PostsTab(user: user),
-                                  _ProfileTab.achievements => _AchievementsTab(
+                                  ProfileTab.posts => _PostsTab(user: user),
+                                  ProfileTab.achievements => _AchievementsTab(
                                     dashboard: dashboard,
                                   ),
-                                  _ProfileTab.rank => const _RankTab(),
+                                  ProfileTab.rank => const _RankTab(),
                                 },
                         ),
                       ],
@@ -113,12 +120,102 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            const SliverToBoxAdapter(child: SizedBox(height: 112)),
           ],
         ),
       ),
     );
   }
+
+  Future<void> _share(AuthUser user) async {
+    await Clipboard.setData(ClipboardData(text: '/profile/${user.id}'));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.profileLinkCopied),
+        ),
+      );
+  }
+}
+
+class _ProfileTopBar extends StatelessWidget {
+  const _ProfileTopBar({
+    required this.title,
+    required this.shareLabel,
+    required this.settingsLabel,
+    required this.onShare,
+    required this.onSettings,
+  });
+
+  final String title;
+  final String shareLabel;
+  final String settingsLabel;
+  final VoidCallback? onShare;
+  final VoidCallback onSettings;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(
+        child: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: ProfilePalette.text(context),
+            fontSize: 42,
+            height: 1,
+            letterSpacing: -1.5,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+      _ProfileHeaderAction(
+        key: const ValueKey('profile-share'),
+        tooltip: shareLabel,
+        icon: Icons.ios_share_rounded,
+        onPressed: onShare,
+      ),
+      const SizedBox(width: 10),
+      _ProfileHeaderAction(
+        key: const ValueKey('profile-settings'),
+        tooltip: settingsLabel,
+        icon: Icons.settings_outlined,
+        backgroundColor: ProfilePalette.pink(context),
+        onPressed: onSettings,
+      ),
+    ],
+  );
+}
+
+class _ProfileHeaderAction extends StatelessWidget {
+  const _ProfileHeaderAction({
+    super.key,
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+    this.backgroundColor,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final Color? backgroundColor;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: tooltip,
+    onPressed: onPressed,
+    style: IconButton.styleFrom(
+      minimumSize: const Size.square(52),
+      backgroundColor:
+          backgroundColor ?? ProfilePalette.editorialSurface(context),
+      foregroundColor: AppColors.editorialAubergine,
+    ),
+    icon: Icon(icon, size: 23),
+  );
 }
 
 class _ProfileHeader extends ConsumerWidget {
@@ -131,6 +228,8 @@ class _ProfileHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final game = dashboard.asData?.value.gamification;
+    final achievements = dashboard.asData?.value.achievements ?? const [];
+    final earnedAchievements = achievements.where((item) => item.earned).length;
     final name = user.displayName.trim().isEmpty
         ? user.username
         : user.displayName.trim();
@@ -140,200 +239,501 @@ class _ProfileHeader extends ConsumerWidget {
 
     return Column(
       children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            ProfileCover(
+        _ProfileHeroCard(
+          user: user,
+          displayName: name,
+          coverId: coverId,
+          avatarPath: localAvatar,
+          verifiedLabel: l10n.verified,
+          fallbackBio: l10n.learningHeaderSubtitle,
+        ),
+        const SizedBox(height: 14),
+        _ProfileStatsCard(
+          totalXp: game?.totalXp ?? 0,
+          currentStreak: game?.currentStreak ?? 0,
+          earnedAchievements: earnedAchievements,
+        ),
+        const SizedBox(height: 14),
+        _ProfileLearningCard(
+          tier: tier,
+          gamification: game,
+          totalXpLabel: l10n.totalXp,
+          currentStreakLabel: l10n.currentStreak,
+          highestRankLabel: l10n.highestRankReached,
+          xpUntilNextRank: l10n.xpUntilNextRank,
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileHeroCard extends StatelessWidget {
+  const _ProfileHeroCard({
+    required this.user,
+    required this.displayName,
+    required this.coverId,
+    required this.avatarPath,
+    required this.verifiedLabel,
+    required this.fallbackBio,
+  });
+
+  final AuthUser user;
+  final String displayName;
+  final String coverId;
+  final String? avatarPath;
+  final String verifiedLabel;
+  final String fallbackBio;
+
+  @override
+  Widget build(BuildContext context) {
+    const height = 318.0;
+    return SizedBox(
+      height: height,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ProfileCover(
               key: const ValueKey('profile-cover'),
               coverId: coverId,
+              height: height,
+              borderRadius: AppRadii.extraLargeBorder,
             ),
-            PositionedDirectional(
-              start: 0,
-              end: 0,
-              bottom: -49,
-              child: Center(
-                child: RiksaProfileAvatar(
-                  user: user,
-                  radius: 49,
-                  avatarPath: localAvatar,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 61),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Icon(
-              user.emailVerified
-                  ? Icons.verified_rounded
-                  : Icons.workspace_premium_rounded,
-              color: ProfilePalette.green(context),
-              size: 20,
-            ),
-          ],
-        ),
-        const SizedBox(height: 3),
-        Text(
-          '@${user.username}',
-          style: TextStyle(color: ProfilePalette.muted(context)),
-        ),
-        if (user.bio?.trim().isNotEmpty == true) ...[
-          const SizedBox(height: 10),
-          Text(
-            user.bio!.trim(),
-            textAlign: TextAlign.center,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Color(0xFFC6CDC7), height: 1.45),
           ),
-        ],
-        const SizedBox(height: 18),
-        Semantics(
-          label:
-              '$tier, ${NumberFormat.compact().format(game?.totalXp ?? 0)} ${l10n.totalXp}',
-          child: ProfilePanel(
-            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 14),
-            child: Row(
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: AppRadii.extraLargeBorder,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.editorialAubergine.withValues(alpha: .94),
+                    AppColors.editorialAubergineRaised.withValues(alpha: .8),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          PositionedDirectional(
+            start: -38,
+            bottom: -68,
+            child: _ProfileBlob(
+              width: 210,
+              height: 172,
+              color: ProfilePalette.pink(context).withValues(alpha: .92),
+            ),
+          ),
+          PositionedDirectional(
+            start: 102,
+            bottom: -84,
+            child: _ProfileBlob(
+              width: 145,
+              height: 168,
+              color: ProfilePalette.pink(context).withValues(alpha: .58),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
               children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: ProfilePalette.greenSoft(context),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.workspace_premium_outlined,
-                    color: ProfilePalette.green(context),
-                    size: 19,
-                  ),
+                RiksaProfileAvatar(
+                  key: const ValueKey('profile-hero-avatar'),
+                  user: user,
+                  radius: 52,
+                  avatarPath: avatarPath,
+                  borderColor: Colors.white,
+                  ringColor: ProfilePalette.pink(context),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(height: 12),
                 Expanded(
-                  child: ClipRRect(
-                    borderRadius: AppRadii.fullBorder,
-                    child: LinearProgressIndicator(
-                      key: const ValueKey('profile-level-progress'),
-                      value: game?.nextTierProgress ?? 0,
-                      minHeight: 7,
-                      backgroundColor: ProfilePalette.greenSoft(context),
-                      valueColor: AlwaysStoppedAnimation(
-                        ProfilePalette.green(context),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  key: const ValueKey('profile-total-xp'),
-                  '${NumberFormat.compact().format(game?.totalXp ?? 0)} XP',
-                  style: TextStyle(
-                    color: ProfilePalette.text(context),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
+                  child: _ProfileHeroIdentity(
+                    user: user,
+                    displayName: displayName,
+                    verifiedLabel: verifiedLabel,
+                    fallbackBio: fallbackBio,
                   ),
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileBlob extends StatelessWidget {
+  const _ProfileBlob({
+    required this.width,
+    required this.height,
+    required this.color,
+  });
+
+  final double width;
+  final double height;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Transform.rotate(
+    angle: -.24,
+    child: Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(80),
+      ),
+    ),
+  );
+}
+
+class _ProfileHeroIdentity extends StatelessWidget {
+  const _ProfileHeroIdentity({
+    required this.user,
+    required this.displayName,
+    required this.verifiedLabel,
+    required this.fallbackBio,
+  });
+
+  final AuthUser user;
+  final String displayName;
+  final String verifiedLabel;
+  final String fallbackBio;
+
+  @override
+  Widget build(BuildContext context) {
+    final bio = user.bio?.trim().isNotEmpty == true
+        ? user.bio!.trim()
+        : fallbackBio;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          displayName,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: ProfilePalette.onAubergine(context),
+            fontSize: 25,
+            height: 1.05,
+            letterSpacing: -.5,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          '@${user.username}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: ProfilePalette.onAubergine(context).withValues(alpha: .82),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (user.emailVerified) ...[
+          _ProfileVerificationBadge(label: verifiedLabel),
+          const SizedBox(height: 12),
+        ] else
+          const SizedBox(height: 10),
+        Text(
+          bio,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: ProfilePalette.onAubergine(context).withValues(alpha: .88),
+            fontSize: 13,
+            height: 1.35,
+          ),
         ),
       ],
     );
   }
 }
 
-class _ProfileTabs extends StatelessWidget {
-  const _ProfileTabs({required this.selected, required this.onSelected});
+class _ProfileVerificationBadge extends StatelessWidget {
+  const _ProfileVerificationBadge({required this.label});
 
-  final _ProfileTab selected;
-  final ValueChanged<_ProfileTab> onSelected;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    key: const ValueKey('profile-verification-badge'),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: const Color(0xFF159B6C),
+      borderRadius: AppRadii.fullBorder,
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.verified_rounded,
+          size: 15,
+          color: ProfilePalette.onAubergine(context),
+        ),
+        const SizedBox(width: 5),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: ProfilePalette.onAubergine(context),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _ProfileStatsCard extends StatelessWidget {
+  const _ProfileStatsCard({
+    required this.totalXp,
+    required this.currentStreak,
+    required this.earnedAchievements,
+  });
+
+  final int totalXp;
+  final int currentStreak;
+  final int earnedAchievements;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Row(
-      children: [
-        _TabButton(
-          key: const ValueKey('profile-posts-tab'),
-          label: l10n.myPosts,
-          selected: selected == _ProfileTab.posts,
-          onTap: () => onSelected(_ProfileTab.posts),
+    final locale = Localizations.localeOf(context).languageCode;
+    return Container(
+      key: const ValueKey('profile-stats'),
+      padding: const EdgeInsets.symmetric(vertical: 17, horizontal: 8),
+      decoration: BoxDecoration(
+        color: ProfilePalette.editorialSurface(context),
+        borderRadius: AppRadii.extraLargeBorder,
+        border: Border.all(
+          color: ProfilePalette.border(context).withValues(alpha: .45),
         ),
-        const SizedBox(width: 8),
-        _TabButton(
-          key: const ValueKey('profile-achievements-tab'),
-          label: l10n.achievements,
-          selected: selected == _ProfileTab.achievements,
-          onTap: () => onSelected(_ProfileTab.achievements),
-        ),
-        const SizedBox(width: 8),
-        _TabButton(
-          key: const ValueKey('profile-rank-tab'),
-          label: l10n.leaderboardRank,
-          selected: selected == _ProfileTab.rank,
-          onTap: () => onSelected(_ProfileTab.rank),
-        ),
-      ],
+      ),
+      child: Row(
+        children: [
+          _ProfileStat(
+            value: NumberFormat.compact(locale: locale).format(totalXp),
+            label: l10n.totalXp,
+          ),
+          const _ProfileStatDivider(),
+          _ProfileStat(
+            key: const ValueKey('profile-streak'),
+            value: NumberFormat.decimalPattern(locale).format(currentStreak),
+            label: l10n.currentStreak,
+          ),
+          const _ProfileStatDivider(),
+          _ProfileStat(
+            value: NumberFormat.decimalPattern(
+              locale,
+            ).format(earnedAchievements),
+            label: l10n.achievements,
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _TabButton extends StatelessWidget {
-  const _TabButton({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+class _ProfileStat extends StatelessWidget {
+  const _ProfileStat({super.key, required this.value, required this.label});
 
+  final String value;
   final String label;
-  final bool selected;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) => Expanded(
-    child: InkWell(
-      borderRadius: AppRadii.smallBorder,
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? ProfilePalette.greenSoft(context)
-              : ProfilePalette.panel(context),
-          borderRadius: AppRadii.smallBorder,
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
+    child: Column(
+      children: [
+        Text(
+          value,
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: selected
-                ? ProfilePalette.green(context)
-                : ProfilePalette.muted(context),
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
+            color: ProfilePalette.text(context),
+            fontSize: 23,
+            height: 1,
+            fontWeight: FontWeight.w900,
           ),
         ),
-      ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: ProfilePalette.muted(context),
+            fontSize: 11,
+            height: 1.15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     ),
   );
+}
+
+class _ProfileStatDivider extends StatelessWidget {
+  const _ProfileStatDivider();
+
+  @override
+  Widget build(BuildContext context) =>
+      Container(width: 1, height: 38, color: ProfilePalette.border(context));
+}
+
+class _ProfileLearningCard extends StatelessWidget {
+  const _ProfileLearningCard({
+    required this.tier,
+    required this.gamification,
+    required this.totalXpLabel,
+    required this.currentStreakLabel,
+    required this.highestRankLabel,
+    required this.xpUntilNextRank,
+  });
+
+  final String tier;
+  final GamificationProfile? gamification;
+  final String totalXpLabel;
+  final String currentStreakLabel;
+  final String highestRankLabel;
+  final String Function(int xp, String tier) xpUntilNextRank;
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context).languageCode;
+    final totalXp = gamification?.totalXp ?? 0;
+    final streak = gamification?.currentStreak ?? 0;
+    final nextTier = gamification?.nextTier;
+    final progress = gamification?.nextTierProgress ?? 0;
+    final progressLabel = nextTier == null
+        ? highestRankLabel
+        : xpUntilNextRank(
+            gamification?.xpToNext ?? 0,
+            readableProfileName(nextTier),
+          );
+    return Semantics(
+      label: '$tier, $totalXp $totalXpLabel, $streak $currentStreakLabel',
+      child: Container(
+        key: const ValueKey('profile-learning-card'),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: ProfilePalette.pinkSoft(context),
+          borderRadius: AppRadii.extraLargeBorder,
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: const BoxDecoration(
+                    color: AppColors.editorialAubergine,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: AppColors.editorialPink,
+                  ),
+                ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        tier,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: ProfilePalette.text(context),
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        key: const ValueKey('profile-total-xp'),
+                        '${NumberFormat.decimalPattern(locale).format(totalXp)} XP',
+                        style: const TextStyle(
+                          color: AppColors.editorialPink,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 11,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: ProfilePalette.editorialSurface(context),
+                    borderRadius: AppRadii.fullBorder,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        NumberFormat.decimalPattern(locale).format(streak),
+                        style: TextStyle(
+                          color: ProfilePalette.text(context),
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      const Icon(
+                        Icons.local_fire_department_rounded,
+                        color: AppColors.achievementSaffron,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 17),
+            ClipRRect(
+              borderRadius: AppRadii.fullBorder,
+              child: LinearProgressIndicator(
+                key: const ValueKey('profile-level-progress'),
+                value: progress,
+                minHeight: 10,
+                backgroundColor: AppColors.editorialAubergine.withValues(
+                  alpha: .14,
+                ),
+                valueColor: const AlwaysStoppedAnimation(
+                  AppColors.editorialPink,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                progressLabel,
+                style: TextStyle(
+                  color: ProfilePalette.muted(context),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _PostsTab extends ConsumerWidget {
@@ -365,6 +765,9 @@ class _PostsTab extends ConsumerWidget {
               SocialPostCard(
                 post: post,
                 onTap: () => context.push('/community/posts/${post.id}'),
+                onAuthorTap: publicProfilePath(post.author.id) == null
+                    ? null
+                    : () => context.push(publicProfilePath(post.author.id)!),
                 onReact: () async {
                   await ref
                       .read(socialApiProvider)
@@ -431,56 +834,10 @@ class _AchievementTile extends StatelessWidget {
   final ProfileAchievement achievement;
 
   @override
-  Widget build(BuildContext context) => ProfilePanel(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: AppColors.gamificationOrangeSoft,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.workspace_premium_rounded,
-                color: context.riksa.saffron,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              '+${achievement.xpReward} XP',
-              style: TextStyle(
-                color: ProfilePalette.xp(context),
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-        const Spacer(),
-        Text(
-          achievement.name,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w900, height: 1.2),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          achievement.description,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: ProfilePalette.muted(context),
-            fontSize: 11,
-            height: 1.3,
-          ),
-        ),
-      ],
-    ),
+  Widget build(BuildContext context) => ProfileAchievementTile(
+    name: achievement.name,
+    description: achievement.description,
+    trailingLabel: '+${achievement.xpReward} XP',
   );
 }
 
@@ -539,61 +896,29 @@ class _RankCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return ProfilePanel(
-      child: Row(
+    return ProfileRankCard(
+      icon: icon,
+      label: label,
+      rank: rank,
+      unrankedLabel: l10n.unranked,
+      trailing: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: ProfilePalette.greenSoft(context),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: ProfilePalette.green(context)),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: ProfilePalette.muted(context),
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  rank > 0 ? '#$rank' : l10n.unranked,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
+          Text(
+            '$score XP',
+            style: TextStyle(
+              color: ProfilePalette.xp(context),
+              fontWeight: FontWeight.w900,
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '$score XP',
-                style: TextStyle(
-                  color: ProfilePalette.xp(context),
-                  fontWeight: FontWeight.w900,
-                ),
+          if (tier != null)
+            Text(
+              readableProfileName(tier!),
+              style: TextStyle(
+                color: ProfilePalette.green(context),
+                fontSize: 12,
               ),
-              if (tier != null)
-                Text(
-                  readableProfileName(tier!),
-                  style: TextStyle(
-                    color: ProfilePalette.green(context),
-                    fontSize: 12,
-                  ),
-                ),
-            ],
-          ),
+            ),
         ],
       ),
     );
@@ -604,12 +929,7 @@ class _ProfileLoading extends StatelessWidget {
   const _ProfileLoading({super.key});
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 36),
-    child: Center(
-      child: CircularProgressIndicator(color: ProfilePalette.green(context)),
-    ),
-  );
+  Widget build(BuildContext context) => ProfileLoadingState(key: key);
 }
 
 class _EmptyPanel extends StatelessWidget {
@@ -619,22 +939,8 @@ class _EmptyPanel extends StatelessWidget {
   final String message;
 
   @override
-  Widget build(BuildContext context) => ProfilePanel(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Column(
-        children: [
-          Icon(icon, color: ProfilePalette.green(context), size: 34),
-          const SizedBox(height: 10),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: ProfilePalette.muted(context)),
-          ),
-        ],
-      ),
-    ),
-  );
+  Widget build(BuildContext context) =>
+      ProfileEmptyPanel(icon: icon, message: message);
 }
 
 class _ErrorPanel extends StatelessWidget {
@@ -644,21 +950,10 @@ class _ErrorPanel extends StatelessWidget {
   final VoidCallback onRetry;
 
   @override
-  Widget build(BuildContext context) => ProfilePanel(
-    child: Column(
-      children: [
-        Text(
-          message,
-          textAlign: TextAlign.center,
-          style: TextStyle(color: ProfilePalette.muted(context)),
-        ),
-        const SizedBox(height: 12),
-        FilledButton.tonal(
-          onPressed: onRetry,
-          child: Text(AppLocalizations.of(context)!.tryAgain),
-        ),
-      ],
-    ),
+  Widget build(BuildContext context) => ProfileErrorPanel(
+    message: message,
+    retryLabel: AppLocalizations.of(context)!.tryAgain,
+    onRetry: onRetry,
   );
 }
 

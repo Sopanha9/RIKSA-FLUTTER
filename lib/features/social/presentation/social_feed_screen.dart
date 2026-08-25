@@ -6,14 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/riksa_avatar_image.dart';
-import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../../auth/providers/auth_provider.dart';
 import '../../blog/data/blog_models.dart';
 import '../../blog/providers/blog_provider.dart';
+import '../../userProfile/presentation/public_profile_navigation.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
 import 'social_post_detail_screen.dart';
@@ -32,6 +29,7 @@ class SocialFeedScreen extends ConsumerStatefulWidget {
 class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
   late final ScrollController _scrollController;
   _SocialSection _section = _SocialSection.feed;
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -68,18 +66,7 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
     final selectedCategory = state is SocialFeedLoaded
         ? state.selectedCategoryId
         : null;
-    final categories = state is SocialFeedLoaded
-        ? state.categories
-        : const <SocialCategory>[];
-
     return Scaffold(
-      drawer: _CommunityDrawer(
-        categories: categories,
-        selectedSection: _section,
-        selectedCategoryId: selectedCategory,
-        onSectionSelected: _selectDrawerSection,
-        onCategorySelected: _selectDrawerCategory,
-      ),
       body: RefreshIndicator(
         color: AppColors.brandPrimary,
         onRefresh: () => _section == _SocialSection.feed
@@ -92,7 +79,11 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            _CommunityAppBar(onCreate: _showCreateMenu),
+            _CommunityAppBar(
+              onSearchChanged: (value) =>
+                  setState(() => _searchQuery = value.trim().toLowerCase()),
+              onCreate: _showCreateMenu,
+            ),
             SliverToBoxAdapter(
               child: _FeedSectionTabs(
                 selected: _section,
@@ -127,58 +118,71 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
         ),
       ],
       SocialFeedLoaded(:final categories, :final posts) => [
-        SliverToBoxAdapter(
-          child: _CategoryFilters(
-            categories: categories,
-            selectedCategoryId: state.selectedCategoryId,
-            onSelected: (id) =>
-                ref.read(socialFeedProvider.notifier).selectCategory(id),
-          ),
-        ),
-        if (posts.isNotEmpty)
-          SliverToBoxAdapter(
-            child: _TopLearnersSpotlight(
-              posts: posts,
-              onViewAll: () => _showTopLearners(posts),
+        ...() {
+          final filteredPosts = posts.where(_matchesPostSearch).toList();
+          return <Widget>[
+            SliverToBoxAdapter(
+              child: _CategoryFilters(
+                categories: categories,
+                selectedCategoryId: state.selectedCategoryId,
+                onSelected: (id) =>
+                    ref.read(socialFeedProvider.notifier).selectCategory(id),
+              ),
             ),
-          ),
-        if (posts.isEmpty)
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: _FeedMessage(
-              icon: Icons.forum_outlined,
-              title: l10n.feedEmptyTitle,
-              message: l10n.feedEmptyMessage,
-            ),
-          )
-        else
-          SliverList.builder(
-            itemCount: posts.length,
-            itemBuilder: (context, index) {
-              final post = posts[index];
-              return SocialPostCard(
-                post: post,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (context) =>
-                        SocialPostDetailScreen(postId: post.id),
-                    settings: RouteSettings(
-                      name: '/community/posts/${post.id}',
-                    ),
-                  ),
+            if (_searchQuery.isEmpty && posts.isNotEmpty)
+              SliverToBoxAdapter(
+                child: _TopLearnersSpotlight(
+                  posts: posts,
+                  onViewAll: () => _showTopLearners(posts),
+                  onLearnerTap: _openProfile,
                 ),
-                onReact: () => _react(post.id),
-                onShare: () => _share(post.id),
-              );
-            },
-          ),
-        if (state.isLoadingMore)
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          ),
+              ),
+            if (filteredPosts.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _FeedMessage(
+                  icon: Icons.forum_outlined,
+                  title: _searchQuery.isEmpty
+                      ? l10n.feedEmptyTitle
+                      : l10n.noSearchResults,
+                  message: _searchQuery.isEmpty
+                      ? l10n.feedEmptyMessage
+                      : l10n.searchCommunityHint,
+                ),
+              )
+            else
+              SliverList.builder(
+                itemCount: filteredPosts.length,
+                itemBuilder: (context, index) {
+                  final post = filteredPosts[index];
+                  return SocialPostCard(
+                    post: post,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (context) =>
+                            SocialPostDetailScreen(postId: post.id),
+                        settings: RouteSettings(
+                          name: '/community/posts/${post.id}',
+                        ),
+                      ),
+                    ),
+                    onAuthorTap: publicProfilePath(post.author.id) == null
+                        ? null
+                        : () => _openProfile(post.author.id),
+                    onReact: () => _react(post.id),
+                    onShare: () => _share(post.id),
+                  );
+                },
+              ),
+            if (state.isLoadingMore)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ),
+          ];
+        }(),
       ],
     };
   }
@@ -200,35 +204,42 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
         ),
       ],
       BlogFeedLoaded(:final posts, :final isLoadingMore) => [
-        if (posts.isEmpty)
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: _FeedMessage(
-              icon: Icons.menu_book_rounded,
-              title: l10n.blog,
-              message: l10n.blogEmptyMessage,
-            ),
-          )
-        else
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-            sliver: SliverList.builder(
-              itemCount: posts.length,
-              itemBuilder: (context, index) => _GlassBlogCard(
-                post: posts[index],
-                onLike: () => ref
-                    .read(blogFeedProvider.notifier)
-                    .toggleLike(posts[index].id),
+        ...() {
+          final filteredPosts = posts.where(_matchesBlogSearch).toList();
+          return <Widget>[
+            if (filteredPosts.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _FeedMessage(
+                  icon: Icons.menu_book_rounded,
+                  title: l10n.blog,
+                  message: _searchQuery.isEmpty
+                      ? l10n.blogEmptyMessage
+                      : l10n.noSearchResults,
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                sliver: SliverList.builder(
+                  itemCount: filteredPosts.length,
+                  itemBuilder: (context, index) => _GlassBlogCard(
+                    post: filteredPosts[index],
+                    onLike: () => ref
+                        .read(blogFeedProvider.notifier)
+                        .toggleLike(filteredPosts[index].id),
+                  ),
+                ),
               ),
-            ),
-          ),
-        if (isLoadingMore)
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          ),
+            if (isLoadingMore)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ),
+          ];
+        }(),
       ],
     };
   }
@@ -265,9 +276,19 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (context) =>
-          _TopLearnersSheet(learners: _SpotlightLearner.fromPosts(posts)),
+      builder: (sheetContext) => _TopLearnersSheet(
+        learners: _SpotlightLearner.fromPosts(posts),
+        onLearnerTap: (userId) {
+          Navigator.of(sheetContext).pop();
+          _openProfile(userId);
+        },
+      ),
     );
+  }
+
+  void _openProfile(String userId) {
+    final path = publicProfilePath(userId);
+    if (path != null) context.push(path);
   }
 
   void _showFailure() {
@@ -285,16 +306,21 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
     }
   }
 
-  void _selectDrawerSection(_SocialSection section) {
-    _selectSection(section);
-    if (section == _SocialSection.feed) {
-      ref.read(socialFeedProvider.notifier).selectCategory(null);
-    }
+  bool _matchesPostSearch(SocialPost post) {
+    if (_searchQuery.isEmpty) return true;
+    return [
+      post.title,
+      post.content,
+      post.author.displayName,
+      post.author.username,
+      post.category.name,
+    ].any((value) => value.toLowerCase().contains(_searchQuery));
   }
 
-  void _selectDrawerCategory(String categoryId) {
-    _selectSection(_SocialSection.feed);
-    ref.read(socialFeedProvider.notifier).selectCategory(categoryId);
+  bool _matchesBlogSearch(BlogPost post) {
+    if (_searchQuery.isEmpty) return true;
+    return post.title.toLowerCase().contains(_searchQuery) ||
+        post.content.toLowerCase().contains(_searchQuery);
   }
 
   Future<void> _showCreateMenu() async {
@@ -317,41 +343,69 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
 }
 
 class _CommunityAppBar extends ConsumerWidget {
-  const _CommunityAppBar({required this.onCreate});
+  const _CommunityAppBar({
+    required this.onSearchChanged,
+    required this.onCreate,
+  });
 
+  final ValueChanged<String> onSearchChanged;
   final VoidCallback onCreate;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     return SliverToBoxAdapter(
-      child: RiksaPageHeader(
-        title: 'RIKSA',
-        subtitle: l10n.community,
-        leading: Builder(
-          builder: (context) => _GlassIconButton(
-            key: const ValueKey('community-drawer-button'),
-            icon: Icons.menu_rounded,
-            tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-            onPressed: () => Scaffold.of(context).openDrawer(),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 4),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 76,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'RIKSA',
+                      style: Theme.of(context).textTheme.headlineLarge,
+                    ),
+                    Text(
+                      l10n.community,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  key: const ValueKey('community-search'),
+                  onChanged: onSearchChanged,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: l10n.searchCommunity,
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 11),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              _StreakPill(
+                key: const ValueKey('streak-pill'),
+                streak: ref.watch(communityStreakProvider),
+              ),
+              const SizedBox(width: RiksaSpacing.xs),
+              _GlassIconButton(
+                key: const ValueKey('create-community-button'),
+                icon: Icons.add_rounded,
+                tooltip: l10n.createCommunityContent,
+                isPrimary: true,
+                onPressed: onCreate,
+              ),
+            ],
           ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _StreakPill(
-              key: const ValueKey('streak-pill'),
-              streak: ref.watch(communityStreakProvider),
-            ),
-            const SizedBox(width: RiksaSpacing.xs),
-            _GlassIconButton(
-              key: const ValueKey('create-community-button'),
-              icon: Icons.add_rounded,
-              tooltip: l10n.createCommunityContent,
-              isPrimary: true,
-              onPressed: onCreate,
-            ),
-          ],
         ),
       ),
     );
@@ -638,533 +692,6 @@ class _StreakPill extends StatelessWidget {
   }
 }
 
-enum _DrawerAccordionSection { feed, blog, profile, community }
-
-class _CommunityDrawer extends ConsumerStatefulWidget {
-  const _CommunityDrawer({
-    required this.categories,
-    required this.selectedSection,
-    required this.selectedCategoryId,
-    required this.onSectionSelected,
-    required this.onCategorySelected,
-  });
-
-  final List<SocialCategory> categories;
-  final _SocialSection selectedSection;
-  final String? selectedCategoryId;
-  final ValueChanged<_SocialSection> onSectionSelected;
-  final ValueChanged<String> onCategorySelected;
-
-  @override
-  ConsumerState<_CommunityDrawer> createState() => _CommunityDrawerState();
-}
-
-class _CommunityDrawerState extends ConsumerState<_CommunityDrawer> {
-  _DrawerAccordionSection? _expandedSection;
-
-  void _toggleSection(_DrawerAccordionSection section) {
-    setState(() {
-      _expandedSection = _expandedSection == section ? null : section;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final auth = ref.watch(authProvider);
-    final user = auth is Authenticated ? auth.user : null;
-    final displayName = user?.displayName.trim().isNotEmpty == true
-        ? user!.displayName
-        : user?.username ?? 'RIKSA Learner';
-
-    return Drawer(
-      width: MediaQuery.sizeOf(context).width.clamp(180, 270).toDouble(),
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      child: ClipRRect(
-        borderRadius: const BorderRadiusDirectional.only(
-          topEnd: Radius.circular(AppRadii.large),
-          bottomEnd: Radius.circular(AppRadii.large),
-        ),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-          child: Material(
-            color: theme.colorScheme.surface.withValues(alpha: .92),
-            child: SafeArea(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
-                children: [
-                  Container(
-                    key: const ValueKey('drawer-profile-hero'),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFFE8F8F1), Color(0xFFEAF4FC)],
-                      ),
-                      borderRadius: AppRadii.largeBorder,
-                      border: Border.all(color: const Color(0xFFD7E7E0)),
-                    ),
-                    child: Row(
-                      children: [
-                        RiksaAvatarImage(
-                          value: user?.avatarUrl,
-                          label: displayName,
-                          size: 50,
-                          backgroundColor: AppColors.brandPrimary,
-                          foregroundColor: Colors.white,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                displayName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  color: AppColors.lightTextPrimary,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              Text(
-                                '@${user?.username ?? 'learner'}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: AppColors.lightTextSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _SingleDestinationAccordion(
-                    key: const ValueKey('drawer-feed-row'),
-                    icon: Icons.dynamic_feed_outlined,
-                    label: l10n.myFeed,
-                    destinationLabel: l10n.forYou,
-                    expanded: _expandedSection == _DrawerAccordionSection.feed,
-                    parentSelected:
-                        _expandedSection == null &&
-                        widget.selectedSection == _SocialSection.feed &&
-                        widget.selectedCategoryId == null,
-                    destinationSelected:
-                        widget.selectedSection == _SocialSection.feed &&
-                        widget.selectedCategoryId == null,
-                    onToggle: () =>
-                        _toggleSection(_DrawerAccordionSection.feed),
-                    onDestinationTap: () {
-                      Navigator.pop(context);
-                      widget.onSectionSelected(_SocialSection.feed);
-                    },
-                  ),
-                  const SizedBox(height: 4),
-                  _SingleDestinationAccordion(
-                    key: const ValueKey('drawer-blog-row'),
-                    icon: Icons.auto_stories_outlined,
-                    label: l10n.blog,
-                    destinationLabel: l10n.viewAll,
-                    expanded: _expandedSection == _DrawerAccordionSection.blog,
-                    parentSelected:
-                        _expandedSection == null &&
-                        widget.selectedSection == _SocialSection.blog,
-                    destinationSelected:
-                        widget.selectedSection == _SocialSection.blog,
-                    onToggle: () =>
-                        _toggleSection(_DrawerAccordionSection.blog),
-                    onDestinationTap: () {
-                      Navigator.pop(context);
-                      widget.onSectionSelected(_SocialSection.blog);
-                    },
-                  ),
-                  const SizedBox(height: 4),
-                  _SingleDestinationAccordion(
-                    key: const ValueKey('drawer-profile-row'),
-                    icon: Icons.person_outline_rounded,
-                    label: l10n.setUpProfile,
-                    destinationLabel: l10n.profile,
-                    expanded:
-                        _expandedSection == _DrawerAccordionSection.profile,
-                    parentSelected: false,
-                    destinationSelected: false,
-                    onToggle: () =>
-                        _toggleSection(_DrawerAccordionSection.profile),
-                    onDestinationTap: () {
-                      Navigator.pop(context);
-                      context.push('/profile/setup');
-                    },
-                  ),
-                  const SizedBox(height: 4),
-                  _CommunityAccordion(
-                    expanded:
-                        _expandedSection == _DrawerAccordionSection.community,
-                    parentSelected:
-                        _expandedSection == null &&
-                        widget.selectedCategoryId != null,
-                    categories: widget.categories.take(6).toList(),
-                    selectedCategoryId: widget.selectedCategoryId,
-                    onToggle: () =>
-                        _toggleSection(_DrawerAccordionSection.community),
-                    onCategorySelected: (categoryId) {
-                      Navigator.pop(context);
-                      widget.onCategorySelected(categoryId);
-                    },
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Divider(),
-                  ),
-                  _DrawerTile(
-                    icon: Icons.translate_rounded,
-                    label: ref.watch(localeProvider).locale.languageCode == 'en'
-                        ? l10n.languageKm
-                        : l10n.languageEn,
-                    onTap: () => ref.read(localeProvider.notifier).toggle(),
-                  ),
-                  _DrawerTile(
-                    icon: Icons.logout_rounded,
-                    label: l10n.logout,
-                    foregroundColor: theme.colorScheme.error,
-                    onTap: () {
-                      Navigator.pop(context);
-                      ref.read(authProvider.notifier).logout();
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DrawerNavigationTile extends StatelessWidget {
-  const _DrawerNavigationTile({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.selected = false,
-    this.expanded = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool selected;
-  final bool expanded;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final foreground = selected
-        ? AppColors.brandPrimaryPressed
-        : colors.onSurface;
-    return Semantics(
-      button: true,
-      expanded: expanded,
-      selected: selected,
-      child: Material(
-        key: ValueKey('drawer-nav-$label'),
-        color: selected
-            ? AppColors.brandPrimary.withValues(alpha: .12)
-            : Colors.transparent,
-        borderRadius: AppRadii.mediumBorder,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          borderRadius: AppRadii.mediumBorder,
-          onTap: onTap,
-          child: SizedBox(
-            height: 50,
-            child: Row(
-              children: [
-                AnimatedContainer(
-                  key: ValueKey('drawer-accent-$label'),
-                  duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-                  curve: Curves.easeInOut,
-                  width: 4,
-                  height: selected ? 28 : 0,
-                  decoration: BoxDecoration(
-                    color: AppColors.brandPrimaryPressed,
-                    borderRadius: AppRadii.smallBorder,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Icon(icon, size: 22, color: foreground),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: foreground,
-                      fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
-                    ),
-                  ),
-                ),
-                AnimatedRotation(
-                  turns: expanded ? .5 : 0,
-                  duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-                  curve: Curves.easeInOut,
-                  child: Icon(
-                    Icons.expand_more_rounded,
-                    size: 22,
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(width: 13),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SingleDestinationAccordion extends StatelessWidget {
-  const _SingleDestinationAccordion({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.destinationLabel,
-    required this.expanded,
-    required this.parentSelected,
-    required this.destinationSelected,
-    required this.onToggle,
-    required this.onDestinationTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final String destinationLabel;
-  final bool expanded;
-  final bool parentSelected;
-  final bool destinationSelected;
-  final VoidCallback onToggle;
-  final VoidCallback onDestinationTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _DrawerNavigationTile(
-          icon: icon,
-          label: label,
-          expanded: expanded,
-          selected: parentSelected,
-          onTap: onToggle,
-        ),
-        ClipRect(
-          child: AnimatedSize(
-            duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-            curve: Curves.easeInOut,
-            alignment: Alignment.topCenter,
-            child: expanded
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 5, bottom: 3),
-                    child: Container(
-                      margin: const EdgeInsetsDirectional.only(start: 27),
-                      decoration: BoxDecoration(
-                        border: BorderDirectional(
-                          start: BorderSide(
-                            color: colors.outlineVariant.withValues(alpha: .7),
-                          ),
-                        ),
-                      ),
-                      child: _DrawerCategoryItem(
-                        label: destinationLabel,
-                        selected: destinationSelected,
-                        onTap: onDestinationTap,
-                      ),
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CommunityAccordion extends StatelessWidget {
-  const _CommunityAccordion({
-    required this.expanded,
-    required this.parentSelected,
-    required this.categories,
-    required this.selectedCategoryId,
-    required this.onToggle,
-    required this.onCategorySelected,
-  });
-
-  final bool expanded;
-  final bool parentSelected;
-  final List<SocialCategory> categories;
-  final String? selectedCategoryId;
-  final VoidCallback onToggle;
-  final ValueChanged<String> onCategorySelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = Theme.of(context).colorScheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _DrawerNavigationTile(
-          key: const ValueKey('community-accordion'),
-          icon: Icons.groups_2_outlined,
-          label: l10n.community,
-          expanded: expanded,
-          selected: parentSelected,
-          onTap: onToggle,
-        ),
-        ClipRect(
-          child: AnimatedSize(
-            duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-            curve: Curves.easeInOut,
-            alignment: Alignment.topCenter,
-            child: expanded
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 5, bottom: 3),
-                    child: Container(
-                      margin: const EdgeInsetsDirectional.only(start: 27),
-                      decoration: BoxDecoration(
-                        border: BorderDirectional(
-                          start: BorderSide(
-                            color: colors.outlineVariant.withValues(alpha: .7),
-                          ),
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          for (final category in categories)
-                            _DrawerCategoryItem(
-                              key: ValueKey('drawer-category-${category.id}'),
-                              label: category.name,
-                              selected: selectedCategoryId == category.id,
-                              onTap: () => onCategorySelected(category.id),
-                            ),
-                        ],
-                      ),
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _DrawerCategoryItem extends StatelessWidget {
-  const _DrawerCategoryItem({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final foreground = selected
-        ? AppColors.brandPrimaryPressed
-        : colors.onSurfaceVariant;
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(start: 9, end: 2, bottom: 2),
-      child: Material(
-        color: selected
-            ? AppColors.brandPrimary.withValues(alpha: .12)
-            : Colors.transparent,
-        borderRadius: AppRadii.smallBorder,
-        child: InkWell(
-          borderRadius: AppRadii.smallBorder,
-          onTap: onTap,
-          child: SizedBox(
-            height: 42,
-            child: Row(
-              children: [
-                AnimatedContainer(
-                  duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-                  curve: Curves.easeInOut,
-                  width: 3,
-                  height: selected ? 24 : 0,
-                  decoration: BoxDecoration(
-                    color: AppColors.brandPrimaryPressed,
-                    borderRadius: AppRadii.smallBorder,
-                  ),
-                ),
-                const SizedBox(width: 13),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: foreground,
-                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DrawerTile extends StatelessWidget {
-  const _DrawerTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.foregroundColor,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final Color? foregroundColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = foregroundColor ?? theme.colorScheme.onSurface;
-    return ListTile(
-      shape: const RoundedRectangleBorder(borderRadius: AppRadii.mediumBorder),
-      leading: Icon(icon, color: color),
-      title: Text(
-        label,
-        style: TextStyle(color: color, fontWeight: FontWeight.w700),
-      ),
-      onTap: onTap,
-    );
-  }
-}
-
 enum _CreateAction { post, question }
 
 class _CreateMenuSheet extends StatelessWidget {
@@ -1421,13 +948,13 @@ class _SpotlightLearner {
     final byAuthor = <String, _SpotlightLearner>{};
     for (final post in posts) {
       final author = post.author;
-      final id = author.id.isEmpty ? author.username : author.id;
-      final current = byAuthor[id];
+      final identityKey = author.id.isEmpty ? author.username : author.id;
+      final current = byAuthor[identityKey];
       final displayName = author.displayName.trim().isEmpty
           ? author.username
           : author.displayName;
-      byAuthor[id] = _SpotlightLearner(
-        id: id,
+      byAuthor[identityKey] = _SpotlightLearner(
+        id: author.id.trim(),
         name: displayName,
         username: author.username,
         avatarUrl: author.avatarUrl,
@@ -1442,10 +969,15 @@ class _SpotlightLearner {
 }
 
 class _TopLearnersSpotlight extends StatelessWidget {
-  const _TopLearnersSpotlight({required this.posts, required this.onViewAll});
+  const _TopLearnersSpotlight({
+    required this.posts,
+    required this.onViewAll,
+    required this.onLearnerTap,
+  });
 
   final List<SocialPost> posts;
   final VoidCallback onViewAll;
+  final ValueChanged<String> onLearnerTap;
 
   @override
   Widget build(BuildContext context) {
@@ -1557,8 +1089,12 @@ class _TopLearnersSpotlight extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               itemCount: learners.length,
               separatorBuilder: (_, _) => const SizedBox(width: 10),
-              itemBuilder: (context, index) =>
-                  _SpotlightLearnerCard(learner: learners[index]),
+              itemBuilder: (context, index) => _SpotlightLearnerCard(
+                learner: learners[index],
+                onTap: learners[index].id.isEmpty
+                    ? null
+                    : () => onLearnerTap(learners[index].id),
+              ),
             ),
           ),
         ],
@@ -1568,101 +1104,111 @@ class _TopLearnersSpotlight extends StatelessWidget {
 }
 
 class _SpotlightLearnerCard extends StatelessWidget {
-  const _SpotlightLearnerCard({required this.learner});
+  const _SpotlightLearnerCard({required this.learner, this.onTap});
 
   final _SpotlightLearner learner;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    return Container(
-      width: 218,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.surface.withValues(alpha: .82),
+    return Material(
+      color: colors.surface.withValues(alpha: .82),
+      borderRadius: AppRadii.mediumBorder,
+      child: InkWell(
+        key: ValueKey('top-learner-${learner.id}'),
+        onTap: onTap,
         borderRadius: AppRadii.mediumBorder,
-        border: Border.all(color: colors.surface.withValues(alpha: .72)),
-      ),
-      child: Row(
-        children: [
-          SocialAuthorAvatar(
-            imageUrl: learner.avatarUrl,
-            label: learner.name,
-            seed: learner.username.isEmpty ? learner.id : learner.username,
-            size: 48,
+        child: Container(
+          width: 218,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: AppRadii.mediumBorder,
+            border: Border.all(color: colors.surface.withValues(alpha: .72)),
           ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  learner.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 122),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.brandPrimary.withValues(alpha: .1),
-                    borderRadius: AppRadii.smallBorder,
-                  ),
-                  child: Text(
-                    learner.subject,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: AppColors.brandPrimaryPressed,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 7),
-                Row(
+          child: Row(
+            children: [
+              SocialAuthorAvatar(
+                imageUrl: learner.avatarUrl,
+                label: learner.name,
+                seed: learner.username.isEmpty ? learner.id : learner.username,
+                size: 48,
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.thumb_up_alt_rounded,
-                      size: 14,
-                      color: AppColors.brandPrimaryPressed,
+                    Text(
+                      learner.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
-                    const SizedBox(width: 4),
-                    Expanded(
+                    const SizedBox(height: 5),
+                    Container(
+                      constraints: const BoxConstraints(maxWidth: 122),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.brandPrimary.withValues(alpha: .1),
+                        borderRadius: AppRadii.smallBorder,
+                      ),
                       child: Text(
-                        l10n.upvotesCount(learner.score),
+                        learner.subject,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                          fontWeight: FontWeight.w700,
+                          color: AppColors.brandPrimaryPressed,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
+                    const SizedBox(height: 7),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.thumb_up_alt_rounded,
+                          size: 14,
+                          color: AppColors.brandPrimaryPressed,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            l10n.upvotesCount(learner.score),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colors.onSurfaceVariant,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
 class _TopLearnersSheet extends StatelessWidget {
-  const _TopLearnersSheet({required this.learners});
+  const _TopLearnersSheet({required this.learners, required this.onLearnerTap});
 
   final List<_SpotlightLearner> learners;
+  final ValueChanged<String> onLearnerTap;
 
   @override
   Widget build(BuildContext context) {
@@ -1692,6 +1238,10 @@ class _TopLearnersSheet extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final learner = learners[index];
                   return ListTile(
+                    key: ValueKey('top-learner-row-${learner.id}'),
+                    onTap: learner.id.isEmpty
+                        ? null
+                        : () => onLearnerTap(learner.id),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: AppRadii.mediumBorder,

@@ -66,6 +66,7 @@ void main() {
   testWidgets('opens the post when the card body is tapped', (tester) async {
     await initializeDateFormatting('en');
     var opened = false;
+    var authorOpens = 0;
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
@@ -103,6 +104,7 @@ void main() {
                 updatedAt: DateTime.utc(2026, 8, 22),
               ),
               onTap: () => opened = true,
+              onAuthorTap: () => authorOpens++,
               onReact: () {},
               onShare: () {},
             ),
@@ -110,6 +112,14 @@ void main() {
         ),
       ),
     );
+
+    await tester.tap(find.byKey(const ValueKey('author-avatar-user-1')));
+    expect(authorOpens, 1);
+    expect(opened, isFalse);
+
+    await tester.tap(find.byKey(const ValueKey('author-name-user-1')));
+    expect(authorOpens, 2);
+    expect(opened, isFalse);
 
     await tester.tap(find.text('A useful study loop'));
 

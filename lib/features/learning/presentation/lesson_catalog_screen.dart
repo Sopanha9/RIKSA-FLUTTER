@@ -22,7 +22,6 @@ class LessonCatalogScreen extends ConsumerStatefulWidget {
 
 class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
   late final ScrollController _scrollController;
-  int _deckActiveIndex = 0;
 
   @override
   void initState() {
@@ -32,7 +31,7 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
 
   void _loadMore() {
     if (_scrollController.hasClients &&
-        _scrollController.position.extentAfter < 480) {
+        _scrollController.position.extentAfter < 520) {
       ref.read(lessonCatalogProvider.notifier).loadMore();
     }
   }
@@ -50,147 +49,169 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
     final state = ref.watch(lessonCatalogProvider);
     final streak = ref.watch(communityStreakProvider);
     final l10n = AppLocalizations.of(context)!;
-    final mission = _mission(state.lessons);
+    final lessons = _orderedLessons(state.lessons);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF9F6),
-      body: RefreshIndicator(
-        onRefresh: ref.read(lessonCatalogProvider.notifier).load,
-        child: CustomScrollView(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-              sliver: SliverToBoxAdapter(
-                child: _Header(
-                  streak: streak.value?.current,
-                  streakLoading: streak.isLoading,
-                  filterCount: state.filterCount,
-                  onFilter: () => _showFilters(state),
-                  onStreak: streak.value == null
-                      ? null
-                      : () => showStreakDetailsSheet(context, streak.value!),
+      backgroundColor: isDark
+          ? context.riksa.canvas
+          : AppColors.editorialCanvas,
+      body: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          color: AppColors.editorialPink,
+          onRefresh: ref.read(lessonCatalogProvider.notifier).load,
+          child: CustomScrollView(
+            key: const PageStorageKey('lesson-catalog-scroll'),
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(18, 22, 18, 0),
+                sliver: SliverToBoxAdapter(
+                  child: _CatalogHeader(
+                    title: l10n.learningTitle,
+                    searchLabel: l10n.searchLessons,
+                    filterLabel: l10n.filterLessons,
+                    filterCount: state.filterCount,
+                    onSearch: () => _showSearch(lessons),
+                    onFilter: () => _showFilters(state),
+                  ),
                 ),
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 30, 20, 0),
-              sliver: SliverToBoxAdapter(
-                child: mission == null
-                    ? const _MissionPlaceholder()
-                    : _MissionCard(
-                        lesson: mission,
-                        subject: _subject(l10n, mission),
-                        duration: l10n.minutesShort(_duration(mission)),
-                        difficulty: _difficulty(l10n, mission.difficulty),
-                        onTap: () => _open(mission),
-                      ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 34, 20, 12),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Recommended for you',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: context.riksa.ink,
-                                letterSpacing: -.2,
-                              ),
-                        ),
-                        const Spacer(),
-                        if (state.lessons.isNotEmpty)
-                          _DeckProgress(
-                            activeIndex: _deckActiveIndex,
-                            count: state.lessons.length,
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Swipe up to explore more lessons',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.riksa.inkMuted.withValues(alpha: .7),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+              SliverPadding(
+                padding: const EdgeInsets.only(top: 24),
+                sliver: SliverToBoxAdapter(
+                  child: _SubjectStrip(
+                    categories: state.categories,
+                    selectedCategoryId: state.selectedCategoryId,
+                    allLabel: l10n.forYou,
+                    streak: streak.value?.current,
+                    streakLoading: streak.isLoading,
+                    onSelected: (id) => ref
+                        .read(lessonCatalogProvider.notifier)
+                        .selectCategory(id),
+                    onStreak: streak.value == null
+                        ? null
+                        : () => showStreakDetailsSheet(context, streak.value!),
+                  ),
                 ),
               ),
-            ),
-            ..._lessons(state, l10n),
-            const SliverToBoxAdapter(child: _DeckSwipeHint()),
-          ],
+              if (state.isLoading && state.lessons.isNotEmpty)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(18, 12, 18, 0),
+                    child: LinearProgressIndicator(
+                      minHeight: 3,
+                      color: AppColors.editorialPink,
+                    ),
+                  ),
+                ),
+              ..._lessonSlivers(state: state, lessons: lessons, l10n: l10n),
+              const SliverToBoxAdapter(child: SizedBox(height: 112)),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  LessonSummary? _mission(List<LessonSummary> lessons) {
-    for (final lesson in lessons) {
-      if (lesson.title.toLowerCase().contains('chemical equilibrium')) {
-        return lesson;
-      }
-    }
-    return lessons.where((lesson) => !lesson.completed).firstOrNull ??
-        lessons.firstOrNull;
-  }
-
-  List<Widget> _lessons(LessonCatalogState state, AppLocalizations l10n) {
+  List<Widget> _lessonSlivers({
+    required LessonCatalogState state,
+    required List<LessonSummary> lessons,
+    required AppLocalizations l10n,
+  }) {
     if (state.isLoading && state.lessons.isEmpty) {
       return const [
         SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          sliver: SliverToBoxAdapter(child: _DeckPlaceholder()),
+          padding: EdgeInsets.fromLTRB(18, 18, 18, 0),
+          sliver: SliverToBoxAdapter(child: _LessonStackPlaceholder()),
         ),
       ];
     }
-    if (state.lessons.isEmpty) {
+
+    if (lessons.isEmpty) {
       return [
         SliverFillRemaining(
           hasScrollBody: false,
-          child: IllustratedEmptyState(
-            title: state.errorMessage == null
-                ? l10n.noLessonsFound
-                : l10n.lessonLoadFailed,
-            body: state.errorMessage ?? l10n.noLessonsForFilters,
-            actionLabel: l10n.tryAgain,
-            onAction: ref.read(lessonCatalogProvider.notifier).load,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 28, 18, 112),
+            child: IllustratedEmptyState(
+              title: state.errorMessage == null
+                  ? l10n.noLessonsFound
+                  : l10n.lessonLoadFailed,
+              body: state.errorMessage ?? l10n.noLessonsForFilters,
+              actionLabel: l10n.tryAgain,
+              onAction: ref.read(lessonCatalogProvider.notifier).load,
+            ),
           ),
         ),
       ];
     }
+
     return [
       SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        sliver: SliverToBoxAdapter(
-          child: _LessonDeck(
-            lessons: state.lessons,
-            subject: (lesson) => _subject(l10n, lesson),
-            duration: (lesson) => l10n.minutesShort(_duration(lesson)),
-            difficulty: (lesson) => _difficulty(l10n, lesson.difficulty),
-            exercises: (lesson) => l10n.exerciseCount(lesson.exerciseCount),
-            completed: l10n.completedLabel,
-            onOpen: _open,
-            onActiveIndexChanged: (idx) =>
-                setState(() => _deckActiveIndex = idx),
-          ),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+        sliver: SliverList.builder(
+          itemCount: lessons.length,
+          itemBuilder: (context, index) {
+            final lesson = lessons[index];
+            final progress = _lessonProgress(lesson);
+            final isFirst = index == 0;
+            final height = isFirst && progress != null ? 278.0 : 246.0;
+            return _LessonCardSlot(
+              height: height,
+              isLast: index == lessons.length - 1,
+              child: _EditorialLessonCard(
+                key: ValueKey('lesson-card-${lesson.id}'),
+                lesson: lesson,
+                index: index,
+                hasTopNotch: !isFirst,
+                eyebrow: isFirst && progress != null && progress < 1
+                    ? l10n.continueLearning
+                    : _subject(l10n, lesson),
+                subject: _subject(l10n, lesson),
+                duration: l10n.minutesShort(_duration(lesson)),
+                difficulty: _difficulty(l10n, lesson.difficulty),
+                exercises: l10n.exerciseCount(lesson.exerciseCount),
+                completedLabel: l10n.completedLabel,
+                progress: progress,
+                onTap: () => _open(lesson),
+              ),
+            );
+          },
         ),
       ),
       if (state.isLoadingMore)
         const SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.all(24),
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(
+              child: CircularProgressIndicator(color: AppColors.editorialPink),
+            ),
           ),
         ),
     ];
+  }
+
+  List<LessonSummary> _orderedLessons(List<LessonSummary> lessons) {
+    final indexed = lessons.indexed.toList();
+    indexed.sort((a, b) {
+      final aPriority = _lessonPriority(a.$2);
+      final bPriority = _lessonPriority(b.$2);
+      if (aPriority != bPriority) return aPriority.compareTo(bPriority);
+      return a.$1.compareTo(b.$1);
+    });
+    return [for (final item in indexed) item.$2];
+  }
+
+  int _lessonPriority(LessonSummary lesson) {
+    final progress = lesson.progress;
+    if (!lesson.completed && progress != null && progress > 0 && progress < 1) {
+      return 0;
+    }
+    if (!lesson.completed) return 1;
+    return 2;
   }
 
   void _open(LessonSummary lesson) {
@@ -202,6 +223,20 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
     context.push('/learn/${lesson.id}', extra: lesson);
   }
 
+  Future<void> _showSearch(List<LessonSummary> lessons) async {
+    final l10n = AppLocalizations.of(context)!;
+    final selected = await showSearch<LessonSummary?>(
+      context: context,
+      delegate: _LessonSearchDelegate(
+        lessons: lessons,
+        hint: l10n.searchLessons,
+        emptyLabel: l10n.noLessonsFound,
+        subject: (lesson) => _subject(l10n, lesson),
+      ),
+    );
+    if (selected != null && mounted) _open(selected);
+  }
+
   Future<void> _showFilters(LessonCatalogState state) =>
       showModalBottomSheet<void>(
         context: context,
@@ -210,6 +245,7 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
         builder: (sheetContext) {
           final l10n = AppLocalizations.of(sheetContext)!;
           return FilterBottomSheet(
+            key: const ValueKey('lesson-filter-sheet'),
             title: l10n.filterLessons,
             gradeTitle: l10n.gradeFilter,
             subjectTitle: l10n.subjectFilter,
@@ -250,983 +286,437 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
       );
 }
 
-class _Header extends StatelessWidget {
-  const _Header({
-    required this.streak,
-    required this.streakLoading,
+class _CatalogHeader extends StatelessWidget {
+  const _CatalogHeader({
+    required this.title,
+    required this.searchLabel,
+    required this.filterLabel,
     required this.filterCount,
+    required this.onSearch,
     required this.onFilter,
-    required this.onStreak,
   });
-  final int? streak;
-  final bool streakLoading;
+
+  final String title;
+  final String searchLabel;
+  final String filterLabel;
   final int filterCount;
+  final VoidCallback onSearch;
   final VoidCallback onFilter;
-  final VoidCallback? onStreak;
 
   @override
-  Widget build(BuildContext context) {
-    final palette = context.riksa;
-    return SizedBox(
-      height: 100,
-      child: Stack(
-        children: [
-          Text(
-            'Learn',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              fontSize: 50,
-              fontWeight: FontWeight.w900,
-              color: palette.ink,
-              letterSpacing: -1.3,
-            ),
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(
+        child: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.displaySmall?.copyWith(
+            color: context.riksa.ink,
+            fontSize: 48,
+            height: 1,
+            letterSpacing: -1.5,
+            fontWeight: FontWeight.w900,
           ),
-          Positioned(
-            top: 66,
-            left: 0,
-            child: Text(
-              'Grow a little every day',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: 19,
-                color: palette.inkMuted,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Row(
-              children: [
-                _HeaderButton(
-                  onTap: onFilter,
-                  child: const Icon(Icons.search_rounded, size: 26),
-                ),
-                const SizedBox(width: 10),
-                _HeaderButton(
-                  onTap: onFilter,
-                  child: Badge(
-                    isLabelVisible: filterCount > 0,
-                    label: Text('$filterCount'),
-                    child: const Icon(Icons.tune_rounded, size: 20),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Material(
-                  color: palette.saffronSoft,
-                  borderRadius: BorderRadius.circular(19),
-                  child: InkWell(
-                    onTap: onStreak,
-                    borderRadius: BorderRadius.circular(18),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 13,
-                        vertical: 10,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.local_fire_department_rounded,
-                                size: 25,
-                                color: palette.saffron,
-                              ),
-                              const SizedBox(width: 3),
-                              streakLoading
-                                  ? const SizedBox.square(
-                                      dimension: 15,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : Text(
-                                      '${streak ?? 0}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 20,
-                                      ),
-                                    ),
-                            ],
-                          ),
-                          const Text(
-                            'Day streak',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
-    );
-  }
+      _CatalogActionButton(
+        key: const ValueKey('lesson-search-button'),
+        tooltip: searchLabel,
+        icon: Icons.search_rounded,
+        onTap: onSearch,
+      ),
+      const SizedBox(width: 10),
+      _CatalogActionButton(
+        key: const ValueKey('lesson-filter-button'),
+        tooltip: filterLabel,
+        icon: Icons.tune_rounded,
+        badgeCount: filterCount,
+        onTap: onFilter,
+      ),
+    ],
+  );
 }
 
-class _HeaderButton extends StatelessWidget {
-  const _HeaderButton({required this.onTap, required this.child});
+class _CatalogActionButton extends StatelessWidget {
+  const _CatalogActionButton({
+    super.key,
+    required this.tooltip,
+    required this.icon,
+    required this.onTap,
+    this.badgeCount = 0,
+  });
+
+  final String tooltip;
+  final IconData icon;
   final VoidCallback onTap;
-  final Widget child;
+  final int badgeCount;
+
   @override
-  Widget build(BuildContext context) => Material(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(99),
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(99),
-      child: SizedBox(width: 66, height: 66, child: Center(child: child)),
+  Widget build(BuildContext context) => Tooltip(
+    message: tooltip,
+    child: Material(
+      color: Theme.of(context).brightness == Brightness.dark
+          ? context.riksa.surfaceRaised
+          : AppColors.editorialSurface,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox.square(
+          dimension: 52,
+          child: Center(
+            child: Badge(
+              key: badgeCount > 0
+                  ? const ValueKey('active-filter-count')
+                  : null,
+              isLabelVisible: badgeCount > 0,
+              label: Text('$badgeCount'),
+              backgroundColor: AppColors.editorialPink,
+              textColor: AppColors.editorialAubergine,
+              child: Icon(icon, color: context.riksa.ink, size: 23),
+            ),
+          ),
+        ),
+      ),
     ),
   );
 }
 
-class _DeckProgress extends StatelessWidget {
-  const _DeckProgress({required this.activeIndex, required this.count});
-  final int activeIndex;
-  final int count;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.end,
-    children: [
-      Text(
-        '${activeIndex + 1} of $count lessons',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: context.riksa.inkMuted,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      const SizedBox(height: 8),
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: List.generate(
-          count,
-          (index) => Container(
-            width: 22,
-            height: 5,
-            margin: EdgeInsets.only(left: index == 0 ? 0 : 4),
-            decoration: BoxDecoration(
-              color: index <= activeIndex
-                  ? context.riksa.jadeStrong
-                  : context.riksa.jadeSoft,
-              borderRadius: BorderRadius.circular(99),
-            ),
-          ),
-        ),
-      ),
-    ],
-  );
-}
-
-class _MissionCard extends StatelessWidget {
-  const _MissionCard({
-    required this.lesson,
-    required this.subject,
-    required this.duration,
-    required this.difficulty,
-    required this.onTap,
+class _SubjectStrip extends StatelessWidget {
+  const _SubjectStrip({
+    required this.categories,
+    required this.selectedCategoryId,
+    required this.allLabel,
+    required this.streak,
+    required this.streakLoading,
+    required this.onSelected,
+    required this.onStreak,
   });
-  final LessonSummary lesson;
-  final String subject;
-  final String duration;
-  final String difficulty;
-  final VoidCallback onTap;
+
+  final List<LearningCategory> categories;
+  final String? selectedCategoryId;
+  final String allLabel;
+  final int? streak;
+  final bool streakLoading;
+  final ValueChanged<String?> onSelected;
+  final VoidCallback? onStreak;
 
   @override
-  Widget build(BuildContext context) {
-    final palette = context.riksa;
-    return SizedBox(
-      height: 344,
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFE8F5E9).withValues(alpha: .88),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: palette.jade.withValues(alpha: .06),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
-            ),
-          ],
+  Widget build(BuildContext context) => SingleChildScrollView(
+    key: const ValueKey('lesson-subject-strip'),
+    scrollDirection: Axis.horizontal,
+    padding: const EdgeInsets.symmetric(horizontal: 18),
+    child: Row(
+      children: [
+        _SubjectChip(
+          key: const ValueKey('lesson-category-all'),
+          label: allLabel,
+          selected: selectedCategoryId == null,
+          onTap: () => onSelected(null),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Stack(
-            children: [
-              // Chemistry illustration on right background
-              Positioned(
-                right: -6,
-                bottom: 2,
-                width: 172,
-                height: 250,
-                child: CustomPaint(
-                  painter: _ChemistryPainter(color: palette.jadeStrong),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: palette.jade.withValues(alpha: .12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            "TODAY'S MISSION",
-                            style: TextStyle(
-                              color: palette.jadeStrong,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: palette.saffronSoft,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.bolt_rounded,
-                                size: 12,
-                                color: palette.saffron,
-                              ),
-                              const SizedBox(width: 2),
-                              Text(
-                                '+20 XP',
-                                style: TextStyle(
-                                  color: palette.ink,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      lesson.title,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: palette.ink,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 26,
-                        height: 1.12,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 14,
-                      runSpacing: 8,
-                      children: [
-                        _MiniMeta(Icons.category_outlined, subject),
-                        _MiniMeta(Icons.schedule_outlined, duration),
-                        _MiniMeta(Icons.bolt_rounded, difficulty),
-                      ],
-                    ),
-                    const Spacer(),
-                    SizedBox(
-                      height: 58,
-                      width: 284,
-                      child: FilledButton.icon(
-                        onPressed: onTap,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: palette.ink,
-                          foregroundColor: Colors.white,
-                          minimumSize: Size.zero,
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        icon: const Icon(Icons.arrow_forward_rounded, size: 24),
-                        label: const Text(
-                          'Start lesson',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MiniMeta extends StatelessWidget {
-  const _MiniMeta(this.icon, this.label);
-  final IconData icon;
-  final String label;
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Icon(icon, size: 14, color: context.riksa.inkMuted),
-      const SizedBox(width: 3),
-      Text(label, style: Theme.of(context).textTheme.labelSmall),
-    ],
-  );
-}
-
-/// A vertical swipe deck. The page scroll stays outside this controlled area.
-class _LessonDeck extends StatefulWidget {
-  const _LessonDeck({
-    required this.lessons,
-    required this.subject,
-    required this.duration,
-    required this.difficulty,
-    required this.exercises,
-    required this.completed,
-    required this.onOpen,
-    this.onActiveIndexChanged,
-  });
-  final List<LessonSummary> lessons;
-  final String Function(LessonSummary) subject;
-  final String Function(LessonSummary) duration;
-  final String Function(LessonSummary) difficulty;
-  final String Function(LessonSummary) exercises;
-  final String completed;
-  final ValueChanged<LessonSummary> onOpen;
-  final ValueChanged<int>? onActiveIndexChanged;
-  @override
-  State<_LessonDeck> createState() => _LessonDeckState();
-}
-
-class _LessonDeckState extends State<_LessonDeck> {
-  static const _layerHeight = 88.0;
-  static const _layerStride = 70.0;
-  static const _cardOverlap = 16.0;
-  static const _swipeThreshold = 112.0;
-  static const _maxVisibleLayers = 3;
-  int _activeIndex = 0;
-  int? _prevIndex;
-  double _dragOffset = 0;
-
-  int _wrap(int i) => i % widget.lessons.length;
-
-  void _endDrag(DragEndDetails details) {
-    final velocity = details.primaryVelocity ?? 0;
-    final moveForward = _dragOffset < -_swipeThreshold || velocity < -480;
-    final moveBack = _dragOffset > _swipeThreshold || velocity > 480;
-    setState(() {
-      if (moveForward) {
-        _prevIndex = _activeIndex;
-        _activeIndex = _wrap(_activeIndex + 1);
-        widget.onActiveIndexChanged?.call(_activeIndex);
-      } else if (moveBack) {
-        _prevIndex = _activeIndex;
-        _activeIndex = _wrap(_activeIndex - 1 + widget.lessons.length);
-        widget.onActiveIndexChanged?.call(_activeIndex);
-      }
-      _dragOffset = 0;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Leave enough room for two inviting previews without turning the card
-    // into a full-screen colour block on compact phones.
-    final cardHeight = (MediaQuery.sizeOf(context).height * .55)
-        .clamp(420.0, 500.0)
-        .toDouble();
-    final totalLessons = widget.lessons.length;
-    final visibleLayers = totalLessons > 1
-        ? math.min(_maxVisibleLayers, totalLessons - 1)
-        : 0;
-    // This is the exact bottom edge of the last absolutely-positioned preview
-    // (the first layer starts 2px beneath the active card). No hidden lesson
-    // is built in normal flow, so it cannot reserve vertical scroll extent.
-    final previewExtent = visibleLayers == 0
-        ? 0.0
-        : (_layerHeight - _cardOverlap) +
-              ((visibleLayers - 1) * _layerStride);
-    final deckHeight = cardHeight + previewExtent + 12;
-    return SizedBox(
-      height: deckHeight,
-      child: ClipRect(
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onVerticalDragUpdate: (details) => setState(
-            () => _dragOffset = (_dragOffset + details.delta.dy).clamp(
-              -100.0,
-              100.0,
-            ),
-          ),
-          onVerticalDragEnd: _endDrag,
-          onVerticalDragCancel: () => setState(() => _dragOffset = 0),
-          child: Stack(
-            clipBehavior: Clip.hardEdge,
-            children: [
-              // Compact lesson posters peeking from beneath the active card.
-              for (var layer = visibleLayers; layer >= 1; layer--)
-                _underLayer(_wrap(_activeIndex + layer), layer, cardHeight),
-              if (_dragOffset > 0 && totalLessons > 1)
-                _previousIncomingCard(cardHeight),
-              // Leaving card (previous active)
-              if (_prevIndex != null) _leavingCard(_prevIndex!, cardHeight),
-              // Active card
-              _activeCard(cardHeight),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _underLayer(int index, int layer, double cardHeight) {
-    final lesson = widget.lessons[index];
-    final horizontalInset = layer * 5.0;
-    final forwardProgress =
-        (-_dragOffset / _swipeThreshold).clamp(0.0, 1.0).toDouble();
-    final isIncoming = layer == 1 && forwardProgress > 0;
-    final collapsedTop = cardHeight - _cardOverlap +
-        ((layer - 1) * _layerStride);
-    return AnimatedPositioned(
-      key: ValueKey('layer-${lesson.id}'),
-      duration: RiksaMotion.resolve(
-        context,
-        isIncoming ? Duration.zero : RiksaMotion.emphasis,
-      ),
-      curve: Curves.easeOutBack,
-      // Keep the incoming card's header at the active card's lower edge while
-      // it grows. This exposes its artwork and title during the drag instead
-      // of waiting for the outgoing card to disappear.
-      top: isIncoming
-          ? collapsedTop - (forwardProgress * (_cardOverlap + 12))
-          : collapsedTop,
-      left: isIncoming ? horizontalInset * (1 - forwardProgress) : horizontalInset,
-      right: isIncoming ? horizontalInset * (1 - forwardProgress) : horizontalInset,
-      height: isIncoming
-          ? _layerHeight + ((cardHeight - _layerHeight) * forwardProgress)
-          : _layerHeight,
-      child: isIncoming
-          ? ClipRect(
-              child: OverflowBox(
-                minHeight: cardHeight,
-                maxHeight: cardHeight,
-                alignment: Alignment.topCenter,
-                child: SizedBox(
-                  height: cardHeight,
-                  child: _DeckCard(
-                    lesson: lesson,
-                    subject: widget.subject(lesson),
-                    duration: widget.duration(lesson),
-                    difficulty: widget.difficulty(lesson),
-                    exercises: widget.exercises(lesson),
-                    completed: widget.completed,
-                    index: index,
-                    active: true,
-                    totalLessons: widget.lessons.length,
-                    interactionProgress: forwardProgress,
-                    onTap: () => widget.onOpen(lesson),
-                  ),
-                ),
-              ),
-            )
-          : _DeckHeader(
-              lesson: lesson,
-              subject: widget.subject(lesson),
-              index: index,
-              totalLessons: widget.lessons.length,
-              onTap: () => widget.onOpen(lesson),
-            ),
-    );
-  }
-
-  Widget _previousIncomingCard(double cardHeight) {
-    final progress =
-        (_dragOffset / _swipeThreshold).clamp(0.0, 1.0).toDouble();
-    final index = _wrap(_activeIndex - 1 + widget.lessons.length);
-    final lesson = widget.lessons[index];
-    return Positioned(
-      key: ValueKey('previous-${lesson.id}'),
-      top: -cardHeight + (cardHeight * progress),
-      left: 0,
-      right: 0,
-      height: cardHeight,
-      child: Transform.scale(
-        scale: .97 + (.03 * progress),
-        alignment: Alignment.bottomCenter,
-        child: _DeckCard(
-          lesson: lesson,
-          subject: widget.subject(lesson),
-          duration: widget.duration(lesson),
-          difficulty: widget.difficulty(lesson),
-          exercises: widget.exercises(lesson),
-          completed: widget.completed,
-          index: index,
-          active: true,
-          totalLessons: widget.lessons.length,
-          interactionProgress: progress,
-          onTap: () => widget.onOpen(lesson),
-        ),
-      ),
-    );
-  }
-
-  Widget _leavingCard(int index, double cardHeight) {
-    final lesson = widget.lessons[index];
-    return AnimatedPositioned(
-      key: ValueKey('leaving-${lesson.id}'),
-      duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-      curve: Curves.easeInOutCubic,
-      top: -cardHeight - 32,
-      left: 0,
-      right: 0,
-      height: cardHeight,
-      child: IgnorePointer(
-        child: AnimatedOpacity(
-          duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-          opacity: 0.0,
-          child: Transform.scale(
-            scale: .94,
-            alignment: Alignment.topCenter,
-            child: _DeckCard(
-            lesson: lesson,
-            subject: widget.subject(lesson),
-            duration: widget.duration(lesson),
-            difficulty: widget.difficulty(lesson),
-            exercises: widget.exercises(lesson),
-            completed: widget.completed,
-            index: index,
-            active: false,
-            totalLessons: widget.lessons.length,
-              onTap: () {},
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _activeCard(double cardHeight) {
-    final lesson = widget.lessons[_activeIndex];
-    return AnimatedPositioned(
-      key: ValueKey('active-${lesson.id}'),
-      duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-      curve: Curves.easeOutBack,
-      top: _dragOffset,
-      left: 0,
-      right: 0,
-      height: cardHeight,
-      child: TweenAnimationBuilder<double>(
-        key: ValueKey('reveal-${lesson.id}'),
-        duration: RiksaMotion.resolve(context, RiksaMotion.emphasis),
-        curve: Curves.easeOutCubic,
-        tween: Tween(begin: .965, end: 1),
-        builder: (context, value, child) => Transform.rotate(
-          angle: _dragOffset * .00008,
-          alignment: Alignment.topCenter,
-          child: Transform.scale(
-            scale: value * (1 - (_dragOffset.abs() / 12000)),
-            alignment: Alignment.topCenter,
-            child: Opacity(opacity: .86 + (value * .14), child: child),
-          ),
-        ),
-        child: _DeckCard(
-          lesson: lesson,
-          subject: widget.subject(lesson),
-          duration: widget.duration(lesson),
-          difficulty: widget.difficulty(lesson),
-          exercises: widget.exercises(lesson),
-          completed: widget.completed,
-          index: _activeIndex,
-          active: true,
-          totalLessons: widget.lessons.length,
-          interactionProgress: (_dragOffset.abs() / _swipeThreshold)
-              .clamp(0.0, 1.0)
-              .toDouble(),
-          onTap: () => widget.onOpen(lesson),
-        ),
-      ),
-    );
-  }
-}
-
-class _DeckHeader extends StatelessWidget {
-  const _DeckHeader({
-    required this.lesson,
-    required this.subject,
-    required this.index,
-    required this.totalLessons,
-    required this.onTap,
-  });
-  final LessonSummary lesson;
-  final String subject;
-  final int index;
-  final int totalLessons;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) {
-    final tone = _tone(context, lesson, index);
-    return Container(
-      decoration: BoxDecoration(
-        color: tone.background,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: .06),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+        for (final category in categories) ...[
+          const SizedBox(width: 9),
+          _SubjectChip(
+            key: ValueKey('lesson-category-${category.id}'),
+            label: category.name,
+            selected: selectedCategoryId == category.id,
+            onTap: () => onSelected(category.id),
           ),
         ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -8,
-                top: -16,
-                width: 112,
-                height: 112,
-                child: IgnorePointer(
-                  child: _SubjectBackgroundArtwork(
-                    subject: subject,
-                    color: tone.accent,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(7),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .58),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(tone.icon, size: 18, color: tone.ink),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        subject.toUpperCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: tone.ink.withValues(alpha: .8),
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .6),
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      child: Text(
-                        '${index + 1} / $totalLessons',
-                        style: TextStyle(
-                          color: tone.ink.withValues(alpha: .72),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 9),
-                    Icon(
-                      lesson.completed
-                          ? Icons.bookmark_added_rounded
-                          : Icons.bookmark_border_rounded,
-                      size: 19,
-                      color: tone.ink.withValues(alpha: .62),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DeckSwipeHint extends StatelessWidget {
-  const _DeckSwipeHint();
-
-  @override
-  Widget build(BuildContext context) => const Padding(
-    padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.keyboard_arrow_up_rounded, size: 23),
-        SizedBox(height: 1),
-        Text(
-          'Swipe up or down to explore',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-        ),
+        const SizedBox(width: 9),
+        _StreakChip(streak: streak, loading: streakLoading, onTap: onStreak),
       ],
     ),
   );
 }
 
-class _DeckCard extends StatelessWidget {
-  const _DeckCard({
+class _SubjectChip extends StatelessWidget {
+  const _SubjectChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: selected
+        ? AppColors.editorialAubergine
+        : Theme.of(context).brightness == Brightness.dark
+        ? context.riksa.surfaceRaised
+        : AppColors.editorialSurface,
+    borderRadius: AppRadii.fullBorder,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: AppRadii.fullBorder,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+        child: Text(
+          label,
+          maxLines: 1,
+          style: TextStyle(
+            color: selected ? const Color(0xFFFFF8FC) : context.riksa.ink,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _StreakChip extends StatelessWidget {
+  const _StreakChip({
+    required this.streak,
+    required this.loading,
+    required this.onTap,
+  });
+
+  final int? streak;
+  final bool loading;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: context.riksa.saffronSoft,
+    borderRadius: AppRadii.fullBorder,
+    child: InkWell(
+      key: const ValueKey('learning-streak-button'),
+      onTap: onTap,
+      borderRadius: AppRadii.fullBorder,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
+        child: Row(
+          children: [
+            Icon(
+              Icons.local_fire_department_rounded,
+              color: context.riksa.saffron,
+              size: 22,
+            ),
+            const SizedBox(width: 4),
+            if (loading)
+              const SizedBox.square(
+                dimension: 15,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Text(
+                '${streak ?? 0}',
+                style: TextStyle(
+                  color: context.riksa.ink,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _LessonCardSlot extends StatelessWidget {
+  const _LessonCardSlot({
+    required this.height,
+    required this.isLast,
+    required this.child,
+  });
+
+  static const overlap = 16.0;
+
+  final double height;
+  final bool isLast;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: height - (isLast ? 0 : overlap),
+    child: OverflowBox(
+      alignment: Alignment.topCenter,
+      minHeight: height,
+      maxHeight: height,
+      child: SizedBox(height: height, child: child),
+    ),
+  );
+}
+
+class _EditorialLessonCard extends StatelessWidget {
+  const _EditorialLessonCard({
+    super.key,
     required this.lesson,
+    required this.index,
+    required this.hasTopNotch,
+    required this.eyebrow,
     required this.subject,
     required this.duration,
     required this.difficulty,
     required this.exercises,
-    required this.completed,
-    required this.index,
-    required this.active,
-    required this.totalLessons,
+    required this.completedLabel,
+    required this.progress,
     required this.onTap,
-    this.interactionProgress = 0,
   });
+
   final LessonSummary lesson;
+  final int index;
+  final bool hasTopNotch;
+  final String eyebrow;
   final String subject;
   final String duration;
   final String difficulty;
   final String exercises;
-  final String completed;
-  final int index;
-  final bool active;
-  final int totalLessons;
+  final String completedLabel;
+  final double? progress;
   final VoidCallback onTap;
-  final double interactionProgress;
+
   @override
   Widget build(BuildContext context) {
-    final tone = _tone(context, lesson, index);
-    return AnimatedContainer(
-      duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-      curve: Curves.easeOutCubic,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [tone.background, tone.background.withValues(alpha: .9)],
-        ),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white.withValues(alpha: .48)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(
-              alpha: active ? .10 + (interactionProgress * .04) : .06,
-            ),
-            blurRadius: active ? 24 + (interactionProgress * 5) : 10,
-            offset: Offset(0, active ? 10 + (interactionProgress * 3) : 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(30),
-            child: Stack(
-              children: [
-                // Subject-specific decorative artwork background (Requirement 4)
-                Positioned.fill(
-                  child: _SubjectBackgroundArtwork(
-                    subject: subject,
-                    color: tone.accent,
-                  ),
+    final tone = _LessonTone.forSubject(context, subject, index);
+    return PhysicalShape(
+      clipper: _LessonCardClipper(hasTopNotch: hasTopNotch),
+      color: tone.background,
+      shadowColor: Colors.black.withValues(alpha: .12),
+      elevation: 1,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: Stack(
+            children: [
+              PositionedDirectional(
+                end: 4,
+                top: 30,
+                width: 150,
+                height: 150,
+                child: CustomPaint(
+                  painter: _DashedRingsPainter(color: tone.accent),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 20, 20, 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Top Row: [icon] SUBJECT                      4 / 8
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(9),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: .62),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(tone.icon, color: tone.ink, size: 20),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              subject.toUpperCase(),
-                              style: TextStyle(
-                                color: tone.ink.withValues(alpha: .65),
-                                fontSize: 11,
-                                letterSpacing: 1.2,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                          if (active)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: .65),
-                                borderRadius: BorderRadius.circular(99),
-                              ),
-                              child: Text(
-                                '${index + 1} / $totalLessons',
-                                style: TextStyle(
-                                  color: tone.ink.withValues(alpha: .75),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                            )
-                          else if (lesson.completed)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: .5),
-                                borderRadius: BorderRadius.circular(99),
-                              ),
-                              child: Text(
-                                completed,
-                                style: TextStyle(
-                                  color: tone.ink.withValues(alpha: .6),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                        ],
+              ),
+              PositionedDirectional(
+                end: 28,
+                top: 62,
+                child: _SubjectArtwork(tone: tone),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(26, hasTopNotch ? 30 : 24, 22, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      eyebrow,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: tone.accentStrong,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
                       ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        height: 116,
-                        width: double.infinity,
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: SizedBox(
-                            width: 174,
-                            height: 116,
-                            child: _SubjectBackgroundArtwork(
-                              subject: subject,
-                              color: tone.accent,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      // Title
-                      Text(
+                    ),
+                    const SizedBox(height: 9),
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 112),
+                      child: Text(
                         lesson.title,
-                        maxLines: 2,
+                        maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
-                              color: tone.ink,
-                              fontWeight: FontWeight.w800,
-                              height: 1.1,
-                              letterSpacing: -.3,
+                              color: tone.foreground,
+                              fontSize: 25,
+                              height: 1.08,
+                              letterSpacing: -.45,
+                              fontWeight: FontWeight.w900,
                             ),
                       ),
-                      if (lesson.description.trim().isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          lesson.description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: tone.ink.withValues(alpha: .65),
-                                height: 1.4,
-                              ),
+                    ),
+                    const Spacer(),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 7,
+                      children: [
+                        _LessonMeta(
+                          icon: tone.icon,
+                          label: subject,
+                          tone: tone,
+                        ),
+                        _LessonMeta(
+                          icon: Icons.schedule_rounded,
+                          label: duration,
+                          tone: tone,
+                        ),
+                        _LessonMeta(
+                          icon: Icons.signal_cellular_alt_rounded,
+                          label: difficulty,
+                          tone: tone,
                         ),
                       ],
-                      const Spacer(),
-                      // Bottom Row: Meta chips + CTA Arrow
+                    ),
+                    if (progress != null) ...[
+                      const SizedBox(height: 13),
                       Row(
                         children: [
                           Expanded(
-                            child: Wrap(
-                              spacing: 6,
-                              runSpacing: 6,
-                              children: [
-                                _MetaChip(
-                                  Icons.schedule_rounded,
-                                  duration,
-                                  tone.ink,
+                            child: ClipRRect(
+                              borderRadius: AppRadii.fullBorder,
+                              child: LinearProgressIndicator(
+                                key: ValueKey('lesson-progress-${lesson.id}'),
+                                value: progress,
+                                minHeight: 7,
+                                color: tone.accentStrong,
+                                backgroundColor: tone.foreground.withValues(
+                                  alpha: .12,
                                 ),
-                                _MetaChip(
-                                  Icons.bolt_rounded,
-                                  difficulty,
-                                  tone.ink,
-                                ),
-                                _MetaChip(
-                                  Icons.edit_note_rounded,
-                                  exercises,
-                                  tone.ink,
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                           const SizedBox(width: 10),
-                          _DeckContinueButton(
-                            onTap: onTap,
-                            foreground: tone.ink,
-                            background: tone.background,
+                          Text(
+                            lesson.completed
+                                ? completedLabel
+                                : '${(progress! * 100).round()}%',
+                            style: TextStyle(
+                              color: tone.foreground,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
                         ],
                       ),
+                    ] else ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        '$exercises · ${lesson.baseXp} XP',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: tone.foreground.withValues(alpha: .7),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ],
+                  ],
+                ),
+              ),
+              PositionedDirectional(
+                end: 20,
+                bottom: 20,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: const BoxDecoration(
+                    color: AppColors.editorialAubergine,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Color(0xFFFFF8FC),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1234,185 +724,328 @@ class _DeckCard extends StatelessWidget {
   }
 }
 
-class _MetaChip extends StatelessWidget {
-  const _MetaChip(this.icon, this.label, this.color);
-  final IconData icon;
-  final String label;
-  final Color color;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-    decoration: BoxDecoration(
-      color: Colors.white.withValues(alpha: .45),
-      borderRadius: BorderRadius.circular(99),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: color.withValues(alpha: .6)),
-        const SizedBox(width: 3),
-        Text(
-          label,
-          style: TextStyle(
-            color: color.withValues(alpha: .7),
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class _DeckContinueButton extends StatefulWidget {
-  const _DeckContinueButton({
-    required this.onTap,
-    required this.foreground,
-    required this.background,
+class _LessonMeta extends StatelessWidget {
+  const _LessonMeta({
+    required this.icon,
+    required this.label,
+    required this.tone,
   });
 
-  final VoidCallback onTap;
-  final Color foreground;
-  final Color background;
-
-  @override
-  State<_DeckContinueButton> createState() => _DeckContinueButtonState();
-}
-
-class _DeckContinueButtonState extends State<_DeckContinueButton> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: widget.onTap,
-    onTapDown: (_) => setState(() => _pressed = true),
-    onTapCancel: () => setState(() => _pressed = false),
-    onTapUp: (_) => setState(() => _pressed = false),
-    child: AnimatedScale(
-      duration: RiksaMotion.resolve(context, RiksaMotion.fast),
-      scale: _pressed ? .92 : 1,
-      child: Container(
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(
-          color: widget.foreground,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: widget.foreground.withValues(alpha: .18),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Icon(
-          Icons.arrow_forward_rounded,
-          color: widget.background,
-          size: 23,
-        ),
-      ),
-    ),
-  );
-}
-
-class _Tone {
-  const _Tone(this.background, this.ink, this.icon, this.accent);
-  final Color background;
-  final Color ink;
   final IconData icon;
+  final String label;
+  final _LessonTone tone;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 15, color: tone.accentStrong),
+      const SizedBox(width: 4),
+      Text(
+        label,
+        style: TextStyle(
+          color: tone.foreground.withValues(alpha: .78),
+          fontSize: 11.5,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    ],
+  );
+}
+
+class _SubjectArtwork extends StatelessWidget {
+  const _SubjectArtwork({required this.tone});
+
+  final _LessonTone tone;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 82,
+    height: 82,
+    decoration: BoxDecoration(
+      color: tone.accent.withValues(alpha: .24),
+      shape: BoxShape.circle,
+      border: Border.all(color: tone.accent.withValues(alpha: .48), width: 2),
+    ),
+    child: Icon(tone.icon, color: tone.accentStrong, size: 38),
+  );
+}
+
+class _LessonTone {
+  const _LessonTone({
+    required this.background,
+    required this.foreground,
+    required this.accent,
+    required this.accentStrong,
+    required this.icon,
+  });
+
+  final Color background;
+  final Color foreground;
   final Color accent;
-}
+  final Color accentStrong;
+  final IconData icon;
 
-_Tone _tone(BuildContext context, LessonSummary lesson, int index) {
-  final p = context.riksa;
-  final subject = lesson.categoryName.toLowerCase();
-  Color accent = [
-    p.science,
-    p.language,
-    p.math,
-    p.saffron,
-    p.technology,
-    p.jade,
-  ][index % 6];
-  IconData icon = [
-    Icons.science_rounded,
-    Icons.menu_book_rounded,
-    Icons.auto_stories_rounded,
-    Icons.calculate_rounded,
-    Icons.lightbulb_rounded,
-    Icons.eco_rounded,
-  ][index % 6];
-  if (subject.contains('chem') || subject.contains('science')) {
-    accent = p.science;
-    icon = Icons.science_rounded;
-  }
-  if (subject.contains('english') || subject.contains('language')) {
-    accent = p.language;
-    icon = Icons.menu_book_rounded;
-  }
-  if (subject.contains('khmer') || subject.contains('literature')) {
-    accent = p.math;
-    icon = Icons.auto_stories_rounded;
-  }
-  if (subject.contains('phys')) {
-    accent = p.saffron;
-    icon = Icons.blur_on_rounded;
-  }
-  if (subject.contains('tech') ||
-      subject.contains('code') ||
-      subject.contains('computer')) {
-    accent = p.technology;
-    icon = Icons.terminal_rounded;
-  }
-  if (subject.contains('math')) {
-    accent = p.saffron;
-    icon = Icons.calculate_rounded;
-  }
-  if (subject.contains('biology')) {
-    accent = p.jade;
-    icon = Icons.eco_rounded;
-  }
-  if (subject.contains('general')) {
-    accent = p.technology;
-    icon = Icons.lightbulb_rounded;
-  }
-  return _Tone(Color.lerp(accent, Colors.white, .82)!, p.ink, icon, accent);
-}
-
-class _MissionPlaceholder extends StatelessWidget {
-  const _MissionPlaceholder();
-  @override
-  Widget build(BuildContext context) => const SizedBox(
-    height: 205,
-    child: DecoratedBox(
-      decoration: BoxDecoration(
-        color: Color(0xFFE5F1E8),
-        borderRadius: BorderRadius.all(Radius.circular(28)),
+  static _LessonTone forSubject(
+    BuildContext context,
+    String subject,
+    int index,
+  ) {
+    final value = subject.toLowerCase();
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final spec = switch (value) {
+      final s when s.contains('math') => const (
+        Color(0xFFF7C9E9),
+        Color(0xFFCF4C9C),
+        Icons.functions_rounded,
       ),
-    ),
+      final s when s.contains('bio') => const (
+        Color(0xFFFFFBF5),
+        Color(0xFF45A76B),
+        Icons.eco_rounded,
+      ),
+      final s when s.contains('phys') || s.contains('chem') => const (
+        Color(0xFFFFD467),
+        Color(0xFFD68C00),
+        Icons.science_rounded,
+      ),
+      final s
+          when s.contains('tech') ||
+              s.contains('computer') ||
+              s.contains('code') =>
+        const (Color(0xFFC9F1D7), Color(0xFF25885A), Icons.code_rounded),
+      final s when s.contains('language') || s.contains('khmer') => const (
+        Color(0xFFDCCEFF),
+        Color(0xFF7B58B3),
+        Icons.translate_rounded,
+      ),
+      _ => _fallbackTone(index),
+    };
+    final background = isDark
+        ? Color.alphaBlend(
+            spec.$1.withValues(alpha: .15),
+            palette.surfaceRaised,
+          )
+        : spec.$1;
+    return _LessonTone(
+      background: background,
+      foreground: palette.ink,
+      accent: spec.$2,
+      accentStrong: isDark ? Color.lerp(spec.$2, Colors.white, .25)! : spec.$2,
+      icon: spec.$3,
+    );
+  }
+
+  static (Color, Color, IconData) _fallbackTone(int index) {
+    const tones = [
+      (Color(0xFFF7C9E9), Color(0xFFCF4C9C), Icons.auto_awesome_rounded),
+      (Color(0xFFFFFBF5), Color(0xFF6A8F5A), Icons.menu_book_rounded),
+      (Color(0xFFFFD467), Color(0xFFD68C00), Icons.lightbulb_rounded),
+      (Color(0xFFC9F1D7), Color(0xFF25885A), Icons.school_rounded),
+      (Color(0xFFDCCEFF), Color(0xFF7B58B3), Icons.public_rounded),
+    ];
+    return tones[index % tones.length];
+  }
+}
+
+class _LessonCardClipper extends CustomClipper<Path> {
+  const _LessonCardClipper({required this.hasTopNotch});
+
+  final bool hasTopNotch;
+
+  @override
+  Path getClip(Size size) {
+    const radius = 28.0;
+    const notchHalfWidth = 30.0;
+    const notchDepth = 14.0;
+    final path = Path()..moveTo(radius, 0);
+    if (hasTopNotch) {
+      path
+        ..lineTo((size.width / 2) - notchHalfWidth, 0)
+        ..cubicTo(
+          (size.width / 2) - 18,
+          0,
+          (size.width / 2) - 17,
+          notchDepth,
+          size.width / 2,
+          notchDepth,
+        )
+        ..cubicTo(
+          (size.width / 2) + 17,
+          notchDepth,
+          (size.width / 2) + 18,
+          0,
+          (size.width / 2) + notchHalfWidth,
+          0,
+        );
+    }
+    path
+      ..lineTo(size.width - radius, 0)
+      ..quadraticBezierTo(size.width, 0, size.width, radius)
+      ..lineTo(size.width, size.height - radius)
+      ..quadraticBezierTo(
+        size.width,
+        size.height,
+        size.width - radius,
+        size.height,
+      )
+      ..lineTo(radius, size.height)
+      ..quadraticBezierTo(0, size.height, 0, size.height - radius)
+      ..lineTo(0, radius)
+      ..quadraticBezierTo(0, 0, radius, 0)
+      ..close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant _LessonCardClipper oldClipper) =>
+      oldClipper.hasTopNotch != hasTopNotch;
+}
+
+class _DashedRingsPainter extends CustomPainter {
+  const _DashedRingsPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final paint = Paint()
+      ..color = color.withValues(alpha: .28)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.7
+      ..strokeCap = StrokeCap.round;
+    for (final radius in [48.0, 67.0]) {
+      const segments = 18;
+      for (var index = 0; index < segments; index += 2) {
+        canvas.drawArc(
+          Rect.fromCircle(center: center, radius: radius),
+          (math.pi * 2 / segments) * index,
+          math.pi * 2 / segments * .72,
+          false,
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedRingsPainter oldDelegate) =>
+      oldDelegate.color != color;
+}
+
+class _LessonStackPlaceholder extends StatelessWidget {
+  const _LessonStackPlaceholder();
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      for (final color in const [
+        AppColors.editorialPinkSoft,
+        AppColors.editorialSurface,
+        Color(0xFFFFD467),
+      ])
+        Container(
+          height: 220,
+          margin: const EdgeInsets.only(bottom: 4),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? context.riksa.surfaceRaised
+                : color,
+            borderRadius: AppRadii.extraLargeBorder,
+          ),
+        ),
+    ],
   );
 }
 
-class _DeckPlaceholder extends StatelessWidget {
-  const _DeckPlaceholder();
+class _LessonSearchDelegate extends SearchDelegate<LessonSummary?> {
+  _LessonSearchDelegate({
+    required this.lessons,
+    required this.hint,
+    required this.emptyLabel,
+    required this.subject,
+  }) : super(searchFieldLabel: hint);
+
+  final List<LessonSummary> lessons;
+  final String hint;
+  final String emptyLabel;
+  final String Function(LessonSummary lesson) subject;
+
   @override
-  Widget build(BuildContext context) => const SizedBox(
-    height: 336,
-    child: DecoratedBox(
-      decoration: BoxDecoration(
-        color: Color(0xFFF0EDE7),
-        borderRadius: BorderRadius.all(Radius.circular(30)),
+  List<Widget>? buildActions(BuildContext context) => [
+    if (query.isNotEmpty)
+      IconButton(
+        onPressed: () => query = '',
+        icon: const Icon(Icons.close_rounded),
       ),
-    ),
+  ];
+
+  @override
+  Widget? buildLeading(BuildContext context) => IconButton(
+    onPressed: () => close(context, null),
+    icon: const Icon(Icons.arrow_back_rounded),
   );
+
+  @override
+  Widget buildResults(BuildContext context) => _results(context);
+
+  @override
+  Widget buildSuggestions(BuildContext context) => _results(context);
+
+  Widget _results(BuildContext context) {
+    final normalized = query.trim().toLowerCase();
+    final results = normalized.isEmpty
+        ? lessons
+        : lessons.where((lesson) {
+            return lesson.title.toLowerCase().contains(normalized) ||
+                lesson.description.toLowerCase().contains(normalized) ||
+                subject(lesson).toLowerCase().contains(normalized);
+          }).toList();
+    if (results.isEmpty) return Center(child: Text(emptyLabel));
+    return ListView.separated(
+      padding: const EdgeInsets.all(18),
+      itemCount: results.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final lesson = results[index];
+        return ListTile(
+          shape: RoundedRectangleBorder(borderRadius: AppRadii.mediumBorder),
+          tileColor: context.riksa.surface,
+          leading: const CircleAvatar(
+            backgroundColor: AppColors.editorialPinkSoft,
+            foregroundColor: AppColors.editorialAubergine,
+            child: Icon(Icons.menu_book_rounded),
+          ),
+          title: Text(
+            lesson.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          subtitle: Text(subject(lesson)),
+          trailing: const Icon(Icons.arrow_forward_rounded),
+          onTap: () => close(context, lesson),
+        );
+      },
+    );
+  }
+}
+
+double? _lessonProgress(LessonSummary lesson) {
+  if (lesson.completed) return 1;
+  return lesson.progress;
 }
 
 String _subject(AppLocalizations l10n, LessonSummary lesson) =>
     lesson.categoryName.trim().isEmpty
     ? l10n.generalSubject
     : lesson.categoryName;
+
 int _duration(LessonSummary lesson) =>
     lesson.durationMinutes ?? math.max(5, lesson.exerciseCount * 4);
+
 String _difficulty(AppLocalizations l10n, LessonDifficulty? value) =>
     switch (value) {
       LessonDifficulty.easy => l10n.difficultyEasy,
@@ -1427,363 +1060,4 @@ extension on LessonCatalogState {
       (selectedGrade == null ? 0 : 1) +
       (selectedCategoryId == null ? 0 : 1) +
       (selectedDifficulty == null ? 0 : 1);
-}
-
-class _SubjectBackgroundArtwork extends StatelessWidget {
-  const _SubjectBackgroundArtwork({required this.subject, required this.color});
-
-  final String subject;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = subject.toLowerCase();
-    if (s.contains('chem') || s.contains('science')) {
-      return CustomPaint(painter: _ChemistryPainter(color: color));
-    } else if (s.contains('phys')) {
-      return CustomPaint(painter: _PhysicsPainter(color: color));
-    } else if (s.contains('math')) {
-      return CustomPaint(painter: _MathPainter(color: color));
-    } else if (s.contains('tech') ||
-        s.contains('code') ||
-        s.contains('computer')) {
-      return CustomPaint(painter: _TechPainter(color: color));
-    } else if (s.contains('khmer') || s.contains('lit')) {
-      return CustomPaint(painter: _KhmerPainter(color: color));
-    } else if (s.contains('eng') || s.contains('lang')) {
-      return CustomPaint(painter: _LanguagePainter(color: color));
-    } else if (s.contains('bio')) {
-      return CustomPaint(painter: _BiologyPainter(color: color));
-    }
-    return CustomPaint(painter: _GeneralPainter(color: color));
-  }
-}
-
-class _ChemistryPainter extends CustomPainter {
-  _ChemistryPainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: .12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-
-    final fillPaint = Paint()
-      ..color = color.withValues(alpha: .06)
-      ..style = PaintingStyle.fill;
-
-    final cx = size.width * 0.78;
-    final cy = size.height * 0.52;
-
-    final path = Path()
-      ..moveTo(cx - 12, cy - 45)
-      ..lineTo(cx + 12, cy - 45)
-      ..moveTo(cx - 8, cy - 45)
-      ..lineTo(cx - 8, cy - 20)
-      ..lineTo(cx - 35, cy + 30)
-      ..cubicTo(cx - 40, cy + 40, cx - 30, cy + 48, cx - 20, cy + 48)
-      ..lineTo(cx + 20, cy + 48)
-      ..cubicTo(cx + 30, cy + 48, cx + 40, cy + 40, cx + 35, cy + 30)
-      ..lineTo(cx + 8, cy - 20)
-      ..lineTo(cx + 8, cy - 45);
-
-    canvas.drawPath(path, paint);
-
-    final liquidPath = Path()
-      ..moveTo(cx - 24, cy + 10)
-      ..quadraticBezierTo(cx, cy + 18, cx + 24, cy + 10)
-      ..lineTo(cx + 32, cy + 28)
-      ..cubicTo(cx + 38, cy + 38, cx + 28, cy + 46, cx + 18, cy + 46)
-      ..lineTo(cx - 18, cy + 46)
-      ..cubicTo(cx - 28, cy + 46, cx - 38, cy + 38, cx - 32, cy + 28)
-      ..close();
-    canvas.drawPath(liquidPath, fillPaint);
-
-    canvas.drawCircle(Offset(cx - 6, cy - 5), 4, paint);
-    canvas.drawCircle(Offset(cx + 8, cy - 12), 3, paint);
-    canvas.drawCircle(Offset(cx + 2, cy - 28), 2.5, paint);
-
-    final mx = size.width * 0.90;
-    final my = size.height * 0.25;
-    canvas.drawCircle(Offset(mx, my), 14, paint);
-    canvas.drawCircle(Offset(mx + 22, my + 10), 8, paint);
-    canvas.drawLine(Offset(mx + 12, my + 5), Offset(mx + 16, my + 7), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _ChemistryPainter oldDelegate) => false;
-}
-
-class _PhysicsPainter extends CustomPainter {
-  _PhysicsPainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: .12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-
-    final fillPaint = Paint()
-      ..color = color.withValues(alpha: .08)
-      ..style = PaintingStyle.fill;
-
-    final cx = size.width * 0.75;
-    final cy = size.height * 0.45;
-
-    canvas.save();
-    canvas.translate(cx, cy);
-    canvas.rotate(-0.3);
-    final rect = Rect.fromCenter(center: Offset.zero, width: 110, height: 50);
-    canvas.drawOval(rect, paint);
-    canvas.drawCircle(Offset.zero, 12, fillPaint);
-    canvas.drawCircle(Offset.zero, 12, paint);
-    canvas.drawCircle(const Offset(45, -10), 5, fillPaint);
-    canvas.restore();
-
-    final ax = size.width * 0.60;
-    final ay = size.height * 0.70;
-    canvas.drawLine(Offset(ax, ay), Offset(ax + 50, ay - 30), paint);
-    canvas.drawLine(Offset(ax + 50, ay - 30), Offset(ax + 38, ay - 28), paint);
-    canvas.drawLine(Offset(ax + 50, ay - 30), Offset(ax + 46, ay - 18), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _PhysicsPainter oldDelegate) => false;
-}
-
-class _MathPainter extends CustomPainter {
-  _MathPainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: .12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-
-    final cx = size.width * 0.70;
-    final cy = size.height * 0.50;
-
-    canvas.drawLine(Offset(cx - 40, cy), Offset(cx + 70, cy), paint);
-    canvas.drawLine(Offset(cx, cy + 40), Offset(cx, cy - 40), paint);
-
-    final path = Path()..moveTo(cx - 35, cy + 30);
-    for (double x = -35; x <= 65; x += 2) {
-      final y = -25 * math.sin(x * 0.08);
-      path.lineTo(cx + x, cy + y);
-    }
-    canvas.drawPath(path, paint);
-
-    final tx = size.width * 0.88;
-    final ty = size.height * 0.22;
-    final triPath = Path()
-      ..moveTo(tx, ty - 18)
-      ..lineTo(tx + 22, ty + 18)
-      ..lineTo(tx - 22, ty + 18)
-      ..close();
-    canvas.drawPath(triPath, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _MathPainter oldDelegate) => false;
-}
-
-class _TechPainter extends CustomPainter {
-  _TechPainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: .12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-
-    final fillPaint = Paint()
-      ..color = color.withValues(alpha: .05)
-      ..style = PaintingStyle.fill;
-
-    final cx = size.width * 0.76;
-    final cy = size.height * 0.48;
-
-    final rect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx, cy), width: 100, height: 70),
-      const Radius.circular(10),
-    );
-    canvas.drawRRect(rect, fillPaint);
-    canvas.drawRRect(rect, paint);
-
-    canvas.drawLine(Offset(cx - 50, cy - 18), Offset(cx + 50, cy - 18), paint);
-    canvas.drawCircle(Offset(cx - 38, cy - 26), 2.5, paint);
-    canvas.drawCircle(Offset(cx - 30, cy - 26), 2.5, paint);
-    canvas.drawCircle(Offset(cx - 22, cy - 26), 2.5, paint);
-
-    final bPath = Path()
-      ..moveTo(cx - 25, cy - 5)
-      ..lineTo(cx - 35, cy + 5)
-      ..lineTo(cx - 25, cy + 15)
-      ..moveTo(cx - 10, cy + 18)
-      ..lineTo(cx + 5, cy - 8)
-      ..moveTo(cx + 15, cy - 5)
-      ..lineTo(cx + 25, cy + 5)
-      ..lineTo(cx + 15, cy + 15);
-    canvas.drawPath(bPath, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _TechPainter oldDelegate) => false;
-}
-
-class _KhmerPainter extends CustomPainter {
-  _KhmerPainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: .12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-
-    final cx = size.width * 0.75;
-    final cy = size.height * 0.50;
-
-    final book = Path()
-      ..moveTo(cx, cy + 20)
-      ..quadraticBezierTo(cx - 25, cy + 10, cx - 50, cy + 18)
-      ..lineTo(cx - 50, cy - 22)
-      ..quadraticBezierTo(cx - 25, cy - 30, cx, cy - 20)
-      ..quadraticBezierTo(cx + 25, cy - 30, cx + 50, cy - 22)
-      ..lineTo(cx + 50, cy + 18)
-      ..quadraticBezierTo(cx + 25, cy + 10, cx, cy + 20)
-      ..moveTo(cx, cy - 20)
-      ..lineTo(cx, cy + 20);
-
-    canvas.drawPath(book, paint);
-
-    final swirl = Path()
-      ..moveTo(cx + 25, cy - 38)
-      ..cubicTo(cx + 45, cy - 50, cx + 55, cy - 25, cx + 35, cy - 20);
-    canvas.drawPath(swirl, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _KhmerPainter oldDelegate) => false;
-}
-
-class _LanguagePainter extends CustomPainter {
-  _LanguagePainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: .12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-
-    final fillPaint = Paint()
-      ..color = color.withValues(alpha: .05)
-      ..style = PaintingStyle.fill;
-
-    final cx = size.width * 0.72;
-    final cy = size.height * 0.42;
-
-    final bubble1 = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx - 15, cy - 10), width: 70, height: 50),
-      const Radius.circular(14),
-    );
-    canvas.drawRRect(bubble1, fillPaint);
-    canvas.drawRRect(bubble1, paint);
-
-    final bubble2 = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx + 20, cy + 15), width: 60, height: 42),
-      const Radius.circular(12),
-    );
-    canvas.drawRRect(bubble2, fillPaint);
-    canvas.drawRRect(bubble2, paint);
-
-    canvas.drawLine(Offset(cx - 35, cy - 16), Offset(cx - 5, cy - 16), paint);
-    canvas.drawLine(Offset(cx - 35, cy - 6), Offset(cx - 15, cy - 6), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _LanguagePainter oldDelegate) => false;
-}
-
-class _BiologyPainter extends CustomPainter {
-  _BiologyPainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: .12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-
-    final fillPaint = Paint()
-      ..color = color.withValues(alpha: .05)
-      ..style = PaintingStyle.fill;
-
-    final cx = size.width * 0.75;
-    final cy = size.height * 0.48;
-
-    final leaf = Path()
-      ..moveTo(cx - 40, cy + 30)
-      ..quadraticBezierTo(cx - 45, cy - 25, cx, cy - 40)
-      ..quadraticBezierTo(cx + 45, cy - 25, cx + 40, cy + 30)
-      ..quadraticBezierTo(cx, cy + 45, cx - 40, cy + 30);
-
-    canvas.drawPath(leaf, fillPaint);
-    canvas.drawPath(leaf, paint);
-
-    canvas.drawLine(Offset(cx, cy - 40), Offset(cx - 40, cy + 30), paint);
-    canvas.drawLine(Offset(cx - 10, cy - 20), Offset(cx + 10, cy - 15), paint);
-    canvas.drawLine(Offset(cx - 20, cy), Offset(cx + 5, cy + 5), paint);
-    canvas.drawLine(Offset(cx - 30, cy + 18), Offset(cx - 10, cy + 22), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _BiologyPainter oldDelegate) => false;
-}
-
-class _GeneralPainter extends CustomPainter {
-  _GeneralPainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: .10)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-
-    final cx = size.width * 0.78;
-    final cy = size.height * 0.45;
-
-    canvas.drawCircle(Offset(cx, cy), 28, paint);
-    for (int i = 0; i < 8; i++) {
-      final angle = i * (math.pi / 4);
-      final p1 = Offset(cx + 36 * math.cos(angle), cy + 36 * math.sin(angle));
-      final p2 = Offset(cx + 46 * math.cos(angle), cy + 46 * math.sin(angle));
-      canvas.drawLine(p1, p2, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _GeneralPainter oldDelegate) => false;
 }

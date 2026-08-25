@@ -21,6 +21,16 @@ class AppColors {
   static const supportingBlush = Color(0xFFF7DCE7);
   static const supportingCream = Color(0xFFFFEDCF);
 
+  // Editorial system colors introduced with the community/profile refresh.
+  // These are additive tokens so existing feature semantics can migrate
+  // without repurposing learning-success jade or achievement saffron.
+  static const editorialAubergine = Color(0xFF2A061D);
+  static const editorialAubergineRaised = Color(0xFF3A0A29);
+  static const editorialPink = Color(0xFFEE8FD0);
+  static const editorialPinkSoft = Color(0xFFF7D8EE);
+  static const editorialCanvas = Color(0xFFFAF9F7);
+  static const editorialSurface = Color(0xFFFFFBF7);
+
   static const subjectMath = Color(0xFF76528F);
   static const subjectScience = Color(0xFF198A82);
   static const subjectLanguage = Color(0xFFD2674A);

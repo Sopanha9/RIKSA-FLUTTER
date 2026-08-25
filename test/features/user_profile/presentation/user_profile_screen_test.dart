@@ -134,13 +134,23 @@ void main() {
     expect(find.text('Sok Sophea'), findsNWidgets(2));
     expect(find.text('@sophea'), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-cover')), findsOneWidget);
+    expect(find.byKey(const ValueKey('profile-hero-avatar')), findsOneWidget);
+    expect(
+      tester.getCenter(find.byKey(const ValueKey('profile-hero-avatar'))).dx,
+      tester.getCenter(find.byKey(const ValueKey('profile-cover'))).dx,
+    );
+    expect(find.byKey(const ValueKey('profile-share')), findsOneWidget);
+    expect(find.byKey(const ValueKey('profile-settings')), findsOneWidget);
+    expect(find.byKey(const ValueKey('profile-edit')), findsNothing);
+    expect(find.byKey(const ValueKey('profile-stats')), findsOneWidget);
+    expect(find.byKey(const ValueKey('profile-learning-card')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-total-xp')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('profile-level-progress')),
       findsOneWidget,
     );
-    expect(find.byKey(const ValueKey('profile-streak')), findsNothing);
-    expect(find.text('Gold'), findsNothing);
+    expect(find.byKey(const ValueKey('profile-streak')), findsOneWidget);
+    expect(find.text('Gold'), findsOneWidget);
     expect(find.text('My Posts'), findsOneWidget);
     expect(
       find.text('A simple way to remember quadratic formulas'),

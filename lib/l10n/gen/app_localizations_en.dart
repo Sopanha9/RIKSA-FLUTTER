@@ -447,6 +447,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile => 'Profile';
 
   @override
+  String get shareProfile => 'Share profile';
+
+  @override
+  String get profileLinkCopied => 'Profile link copied';
+
+  @override
   String get blog => 'Blog';
 
   @override
@@ -479,6 +485,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchProvince => 'Search provinces';
 
   @override
+  String get searchCommunity => 'Search';
+
+  @override
+  String get searchCommunityHint => 'Try a different keyword.';
+
+  @override
+  String get noSearchResults => 'No matching results';
+
+  @override
   String get noProvinceResults => 'No provinces match your search.';
 
   @override
@@ -493,6 +508,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get learn => 'Learn';
+
+  @override
+  String get learningTitle => 'Learning';
+
+  @override
+  String get continueLearning => 'Continue learning';
+
+  @override
+  String get searchLessons => 'Search lessons';
 
   @override
   String get leaderboard => 'Leaderboard';
@@ -848,4 +872,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiTutorComingSoon => 'RIKSA AI Tutor is coming soon.';
+
+  @override
+  String get publicProfile => 'Public profile';
+
+  @override
+  String get posts => 'Posts';
+
+  @override
+  String get publicProfileUnavailable => 'Profile unavailable';
+
+  @override
+  String get publicProfileUnavailableMessage =>
+      'This person may have deleted their account, been suspended, or limited access to their profile.';
+
+  @override
+  String get publicProfileLoadFailed =>
+      'We couldn’t load this public profile. Please try again.';
+
+  @override
+  String get publicPostsLoadFailed => 'We couldn’t load this person’s posts.';
+
+  @override
+  String get noPublicPosts =>
+      'This person hasn’t shared any community posts yet.';
+
+  @override
+  String get noPublicAchievements =>
+      'No earned achievements are available yet.';
+
+  @override
+  String get noPublicRank => 'No public ranking is available yet.';
 }

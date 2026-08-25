@@ -96,6 +96,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Sok Sophea'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('settings-edit-profile')),
+        findsOneWidget,
+      );
       expect(find.text('Notification preferences'), findsOneWidget);
       expect(find.text('Dark mode'), findsOneWidget);
       expect(find.text('Language'), findsOneWidget);

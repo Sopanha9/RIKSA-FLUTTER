@@ -92,8 +92,10 @@ class _NavigationSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.riksa;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final barColor = isDark ? palette.surfaceRaised : palette.ink;
-    final barForeground = isDark ? palette.ink : palette.canvas;
+    final barColor = isDark
+        ? AppColors.editorialAubergineRaised
+        : AppColors.editorialAubergine;
+    const barForeground = Color(0xFFFFF8FC);
     final effectiveIndex = collapsed ? 0 : currentIndex;
     const activeSize = 48.0;
     final activeLeft = collapsed
@@ -133,7 +135,7 @@ class _NavigationSurface extends StatelessWidget {
           child: IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: palette.jade,
+                color: AppColors.editorialPink,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: barForeground.withValues(alpha: .28),
@@ -141,7 +143,7 @@ class _NavigationSurface extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: palette.jade.withValues(alpha: .24),
+                    color: AppColors.editorialPink.withValues(alpha: .3),
                     blurRadius: 12,
                     offset: const Offset(0, 5),
                   ),
@@ -162,7 +164,7 @@ class _NavigationSurface extends StatelessWidget {
                   items[effectiveIndex].icon,
                   key: ValueKey(effectiveIndex),
                   size: collapsed ? 24 : 27,
-                  color: isDark ? AppColors.darkCanvas : Colors.white,
+                  color: AppColors.editorialAubergine,
                 ),
               ),
             ),

@@ -52,6 +52,12 @@ void main() {
       const ValueKey('persistent-bottom-navigation'),
     );
     expect(persistentNavigation, findsOneWidget);
+    expect(
+      tester
+          .widget<Scaffold>(find.byKey(const ValueKey('main-app-shell')))
+          .extendBody,
+      isTrue,
+    );
     final navigationElement = tester.element(persistentNavigation);
 
     await tester.tap(find.byKey(const ValueKey('increment-Home')));

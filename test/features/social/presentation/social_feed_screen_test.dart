@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:riksa_app/core/providers/locale_provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
-import 'package:riksa_app/features/auth/data/auth_models.dart';
-import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/blog/data/blog_models.dart';
 import 'package:riksa_app/features/blog/providers/blog_provider.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
@@ -76,33 +74,10 @@ class _FeedNotifier extends SocialFeedNotifier {
   }
 }
 
-class _AuthNotifier extends AuthNotifier {
-  @override
-  AuthState build() => const Authenticated(
-    AuthUser(
-      id: 'user-1',
-      username: 'sophea',
-      displayName: 'Sok Sophea',
-      emailVerified: true,
-      phoneVerified: false,
-      role: 'USER',
-    ),
-  );
-}
-
 class _BlogNotifier extends BlogFeedNotifier {
   @override
   BlogFeedState build() =>
       BlogFeedLoaded(posts: [_blogPost], page: 0, totalPages: 1);
-}
-
-class _LocaleNotifier extends LocaleNotifier {
-  @override
-  LocaleState build() => const LocaleState(
-    locale: Locale('en'),
-    isReady: true,
-    hasSelection: true,
-  );
 }
 
 void main() {
@@ -120,8 +95,6 @@ void main() {
           communityStreakProvider.overrideWith(
             (ref) async => const CommunityStreak(current: 7, highest: 12),
           ),
-          authProvider.overrideWith(_AuthNotifier.new),
-          localeProvider.overrideWith(_LocaleNotifier.new),
         ],
         child: MaterialApp(
           theme: AppTheme.light,
@@ -140,10 +113,9 @@ void main() {
 
     expect(find.text('RIKSA'), findsOneWidget);
     expect(find.byKey(const ValueKey('bottom-nav-morph')), findsNothing);
-    expect(
-      find.byKey(const ValueKey('community-drawer-button')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('community-drawer-button')), findsNothing);
+    expect(find.byType(Drawer), findsNothing);
+    expect(find.byKey(const ValueKey('community-search')), findsOneWidget);
     expect(find.byKey(const ValueKey('streak-pill')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('create-community-button')),
@@ -183,41 +155,24 @@ void main() {
     expect(find.text('The two-minute recall habit'), findsOneWidget);
     expect(find.byKey(const ValueKey('react-post-1')), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('community-drawer-button')));
-    await tester.pumpAndSettle();
-    expect(find.text('@sophea'), findsOneWidget);
-    expect(find.text('Set up profile'), findsOneWidget);
-    final profileHero = tester.widget<Container>(
-      find.byKey(const ValueKey('drawer-profile-hero')),
+    await tester.enterText(
+      find.byKey(const ValueKey('community-search')),
+      'missing topic',
     );
-    expect(
-      (profileHero.decoration! as BoxDecoration).borderRadius,
-      AppRadii.largeBorder,
-    );
-    final activeFeedRow = tester.widget<Material>(
-      find.byKey(const ValueKey('drawer-nav-My Feed')),
-    );
-    expect(activeFeedRow.borderRadius, AppRadii.mediumBorder);
-    expect(activeFeedRow.color, AppColors.brandPrimary.withValues(alpha: .12));
-    final activeAccent = tester.widget<AnimatedContainer>(
-      find.byKey(const ValueKey('drawer-accent-My Feed')),
-    );
-    expect(activeAccent.constraints?.maxWidth, 4);
-    expect(activeAccent.constraints?.maxHeight, 28);
-    expect(
-      find.byKey(const ValueKey('drawer-category-category-1')),
-      findsNothing,
-    );
-    await tester.tap(find.byKey(const ValueKey('community-accordion')));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 120));
-    expect(
-      find.byKey(const ValueKey('drawer-category-category-1')),
-      findsOneWidget,
+    expect(find.text('The two-minute recall habit'), findsNothing);
+    expect(find.text('No matching results'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('community-search')),
+      'recall',
     );
-    await tester.pumpAndSettle();
-    Navigator.of(tester.element(find.byType(Drawer))).pop();
-    await tester.pumpAndSettle();
+    await tester.pump();
+    expect(find.text('The two-minute recall habit'), findsOneWidget);
+    expect(find.byKey(const ValueKey('top-learners-spotlight')), findsNothing);
+
+    await tester.enterText(find.byKey(const ValueKey('community-search')), '');
+    await tester.pump();
 
     final sectionScroll = find.byKey(const ValueKey('feed-section-scroll'));
     expect(sectionScroll, findsOneWidget);
@@ -257,5 +212,69 @@ void main() {
     expect(find.text('Create in Community'), findsOneWidget);
     expect(find.text('Create a post'), findsOneWidget);
     expect(find.text('Ask the community'), findsOneWidget);
+  });
+
+  testWidgets('opens profiles from post and top-learner identities', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const SocialFeedScreen()),
+        GoRoute(
+          path: '/profile/:userId',
+          builder: (_, state) =>
+              Scaffold(body: Text('profile-${state.pathParameters['userId']}')),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          socialFeedProvider.overrideWith(_FeedNotifier.new),
+          blogFeedProvider.overrideWith(_BlogNotifier.new),
+          communityStreakProvider.overrideWith(
+            (ref) async => const CommunityStreak(current: 7, highest: 12),
+          ),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light,
+          routerConfig: router,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('author-avatar-user-2')));
+    await tester.pumpAndSettle();
+    expect(find.text('profile-user-2'), findsOneWidget);
+    expect(router.canPop(), isTrue);
+
+    router.go('/');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('top-learner-user-2')));
+    await tester.pumpAndSettle();
+    expect(find.text('profile-user-2'), findsOneWidget);
+
+    router.go('/');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('top-learners-view-all')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('top-learner-row-user-2')));
+    await tester.pumpAndSettle();
+    expect(find.text('profile-user-2'), findsOneWidget);
   });
 }

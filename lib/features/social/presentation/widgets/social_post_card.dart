@@ -13,12 +13,14 @@ class SocialPostCard extends StatelessWidget {
     required this.onTap,
     required this.onReact,
     required this.onShare,
+    this.onAuthorTap,
   });
 
   final SocialPost post;
   final VoidCallback onTap;
   final VoidCallback onReact;
   final VoidCallback onShare;
+  final VoidCallback? onAuthorTap;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +60,7 @@ class SocialPostCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _PostMetadata(post: post),
+                  _PostMetadata(post: post, onAuthorTap: onAuthorTap),
                   const SizedBox(height: 16),
                   Text(
                     post.title,
@@ -137,9 +139,10 @@ class SocialPostCard extends StatelessWidget {
 }
 
 class _PostMetadata extends StatelessWidget {
-  const _PostMetadata({required this.post});
+  const _PostMetadata({required this.post, this.onAuthorTap});
 
   final SocialPost post;
+  final VoidCallback? onAuthorTap;
 
   @override
   Widget build(BuildContext context) {
@@ -156,13 +159,17 @@ class _PostMetadata extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        SocialAuthorAvatar(
+        GestureDetector(
           key: ValueKey('author-avatar-${post.author.id}'),
-          imageUrl: post.author.avatarUrl,
-          label: authorName,
-          seed: post.author.username.isEmpty
-              ? post.author.id
-              : post.author.username,
+          behavior: HitTestBehavior.opaque,
+          onTap: onAuthorTap,
+          child: SocialAuthorAvatar(
+            imageUrl: post.author.avatarUrl,
+            label: authorName,
+            seed: post.author.username.isEmpty
+                ? post.author.id
+                : post.author.username,
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -172,13 +179,21 @@ class _PostMetadata extends StatelessWidget {
               Row(
                 children: [
                   Flexible(
-                    child: Text(
-                      authorName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: colors.onSurface,
-                        fontWeight: FontWeight.w800,
+                    child: GestureDetector(
+                      key: ValueKey('author-name-${post.author.id}'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: onAuthorTap,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Text(
+                          authorName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: colors.onSurface,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       ),
                     ),
                   ),

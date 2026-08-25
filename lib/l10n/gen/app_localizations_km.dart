@@ -428,6 +428,12 @@ class AppLocalizationsKm extends AppLocalizations {
   String get profile => 'ប្រវត្តិរូប';
 
   @override
+  String get shareProfile => 'ចែករំលែកប្រវត្តិរូប';
+
+  @override
+  String get profileLinkCopied => 'បានចម្លងតំណប្រវត្តិរូប';
+
+  @override
   String get blog => 'ប្លុក';
 
   @override
@@ -459,6 +465,15 @@ class AppLocalizationsKm extends AppLocalizations {
   String get searchProvince => 'ស្វែងរកខេត្ត';
 
   @override
+  String get searchCommunity => 'ស្វែងរក';
+
+  @override
+  String get searchCommunityHint => 'សាកល្បងពាក្យគន្លឹះផ្សេង។';
+
+  @override
+  String get noSearchResults => 'រកមិនឃើញលទ្ធផលដែលត្រូវគ្នា';
+
+  @override
   String get noProvinceResults => 'រកមិនឃើញខេត្តដែលត្រូវនឹងការស្វែងរកទេ។';
 
   @override
@@ -473,6 +488,15 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get learn => 'រៀន';
+
+  @override
+  String get learningTitle => 'ការសិក្សា';
+
+  @override
+  String get continueLearning => 'បន្តការសិក្សា';
+
+  @override
+  String get searchLessons => 'ស្វែងរកមេរៀន';
 
   @override
   String get leaderboard => 'តារាងចំណាត់ថ្នាក់';
@@ -820,4 +844,36 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get aiTutorComingSoon => 'គ្រូ AI របស់ RIKSA នឹងមកដល់ឆាប់ៗនេះ។';
+
+  @override
+  String get publicProfile => 'ប្រវត្តិរូបសាធារណៈ';
+
+  @override
+  String get posts => 'ការបង្ហោះ';
+
+  @override
+  String get publicProfileUnavailable => 'មិនអាចមើលប្រវត្តិរូបបាន';
+
+  @override
+  String get publicProfileUnavailableMessage =>
+      'អ្នកនេះប្រហែលជាបានលុបគណនី ត្រូវបានផ្អាក ឬបានកំណត់ការចូលមើលប្រវត្តិរូប។';
+
+  @override
+  String get publicProfileLoadFailed =>
+      'យើងមិនអាចផ្ទុកប្រវត្តិរូបសាធារណៈនេះបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get publicPostsLoadFailed =>
+      'យើងមិនអាចផ្ទុកការបង្ហោះរបស់អ្នកនេះបានទេ។';
+
+  @override
+  String get noPublicPosts =>
+      'អ្នកនេះមិនទាន់បានចែករំលែកការបង្ហោះក្នុងសហគមន៍ទេ។';
+
+  @override
+  String get noPublicAchievements =>
+      'មិនទាន់មានសមិទ្ធផលដែលទទួលបានសម្រាប់បង្ហាញទេ។';
+
+  @override
+  String get noPublicRank => 'មិនទាន់មានចំណាត់ថ្នាក់សាធារណៈសម្រាប់បង្ហាញទេ។';
 }

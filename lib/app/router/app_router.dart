@@ -25,6 +25,7 @@ import '../../features/userProfile/presentation/profile_setup_overview_screen.da
 import '../../features/userProfile/presentation/profile_settings_screen.dart';
 import '../../features/userProfile/presentation/edit_profile_screen.dart';
 import '../../features/userProfile/presentation/leaderboard_screen.dart';
+import '../../features/userProfile/presentation/public_profile_screen.dart';
 import '../../features/userProfile/presentation/user_profile_screen.dart';
 import 'app_shell.dart';
 
@@ -201,6 +202,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/profile/:userId',
+        redirect: (context, state) {
+          final authState = authRefresh.value;
+          final userId = state.pathParameters['userId'];
+          if (authState is Authenticated && userId == authState.userId) {
+            return '/profile';
+          }
+          return null;
+        },
+        builder: (context, state) =>
+            PublicProfileScreen(userId: state.pathParameters['userId']!),
       ),
     ],
   );

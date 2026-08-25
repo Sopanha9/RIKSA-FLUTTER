@@ -45,6 +45,7 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: const ValueKey('main-app-shell'),
+      extendBody: true,
       body: NotificationListener<ScrollNotification>(
         onNotification: _handleScrollNotification,
         child: widget.navigationShell,

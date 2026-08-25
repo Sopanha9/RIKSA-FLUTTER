@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../userProfile/presentation/public_profile_navigation.dart';
 import '../data/social_api.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
@@ -199,7 +201,12 @@ class _SocialPostDetailScreenState
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                 children: [
-                  _PostBody(post: _post!, onReact: _react, onShare: _share),
+                  _PostBody(
+                    post: _post!,
+                    onAuthorTap: _authorTap(_post!.author),
+                    onReact: _react,
+                    onShare: _share,
+                  ),
                   const SizedBox(height: 24),
                   Row(
                     children: [
@@ -218,7 +225,10 @@ class _SocialPostDetailScreenState
                     _EmptyComments(message: l10n.noComments)
                   else
                     for (final comment in _comments) ...[
-                      _CommentCard(comment: comment),
+                      _CommentCard(
+                        comment: comment,
+                        onAuthorTap: _authorTap(comment.author),
+                      ),
                       const SizedBox(height: 10),
                     ],
                   if (_hasMore)
@@ -251,16 +261,23 @@ class _SocialPostDetailScreenState
             ),
     );
   }
+
+  VoidCallback? _authorTap(SocialAuthor author) {
+    final path = publicProfilePath(author.id);
+    return path == null ? null : () => context.push(path);
+  }
 }
 
 class _PostBody extends StatelessWidget {
   const _PostBody({
     required this.post,
+    this.onAuthorTap,
     required this.onReact,
     required this.onShare,
   });
 
   final SocialPost post;
+  final VoidCallback? onAuthorTap;
   final VoidCallback onReact;
   final VoidCallback onShare;
 
@@ -285,7 +302,11 @@ class _PostBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _AuthorLine(author: post.author, createdAt: post.createdAt),
+          _AuthorLine(
+            author: post.author,
+            createdAt: post.createdAt,
+            onAuthorTap: onAuthorTap,
+          ),
           const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -373,10 +394,15 @@ class _PostBody extends StatelessWidget {
 }
 
 class _AuthorLine extends StatelessWidget {
-  const _AuthorLine({required this.author, required this.createdAt});
+  const _AuthorLine({
+    required this.author,
+    required this.createdAt,
+    this.onAuthorTap,
+  });
 
   final SocialAuthor author;
   final DateTime createdAt;
+  final VoidCallback? onAuthorTap;
 
   @override
   Widget build(BuildContext context) {
@@ -387,16 +413,21 @@ class _AuthorLine extends StatelessWidget {
         : author.displayName;
     return Row(
       children: [
-        _Avatar(author: author),
+        _Avatar(author: author, onTap: onAuthorTap),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                name,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
+              GestureDetector(
+                key: ValueKey('detail-author-name-${author.id}'),
+                behavior: HitTestBehavior.opaque,
+                onTap: onAuthorTap,
+                child: Text(
+                  name,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               const SizedBox(height: 2),
@@ -415,9 +446,10 @@ class _AuthorLine extends StatelessWidget {
 }
 
 class _CommentCard extends StatelessWidget {
-  const _CommentCard({required this.comment});
+  const _CommentCard({required this.comment, this.onAuthorTap});
 
   final SocialComment comment;
+  final VoidCallback? onAuthorTap;
 
   @override
   Widget build(BuildContext context) {
@@ -436,7 +468,7 @@ class _CommentCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Avatar(author: comment.author, radius: 18),
+          _Avatar(author: comment.author, radius: 18, onTap: onAuthorTap),
           const SizedBox(width: 11),
           Expanded(
             child: Column(
@@ -445,12 +477,19 @@ class _CommentCard extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
+                      child: GestureDetector(
+                        key: ValueKey(
+                          'comment-author-name-${comment.author.id}',
+                        ),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: onAuthorTap,
+                        child: Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                     ),
@@ -479,10 +518,11 @@ class _CommentCard extends StatelessWidget {
 }
 
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.author, this.radius = 22});
+  const _Avatar({required this.author, this.radius = 22, this.onTap});
 
   final SocialAuthor author;
   final double radius;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -490,12 +530,17 @@ class _Avatar extends StatelessWidget {
     final label = author.displayName.isEmpty
         ? author.username
         : author.displayName;
-    return RiksaAvatarImage(
-      value: author.avatarUrl,
-      label: label,
-      size: radius * 2,
-      backgroundColor: colors.primaryContainer,
-      foregroundColor: colors.onPrimaryContainer,
+    return GestureDetector(
+      key: ValueKey('detail-author-avatar-${author.id}'),
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: RiksaAvatarImage(
+        value: author.avatarUrl,
+        label: label,
+        size: radius * 2,
+        backgroundColor: colors.primaryContainer,
+        foregroundColor: colors.onPrimaryContainer,
+      ),
     );
   }
 }

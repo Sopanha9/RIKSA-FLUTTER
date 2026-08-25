@@ -21,12 +21,53 @@ const _lesson = LessonSummary(
   exerciseCount: 2,
   completed: false,
   createdAt: null,
+  durationMinutes: 12,
+  progress: .68,
+);
+
+const _biologyLesson = LessonSummary(
+  id: 'lesson-2',
+  title: 'Journey inside the cell',
+  description: 'Explore the structures that keep living cells working.',
+  difficulty: LessonDifficulty.easy,
+  baseXp: 25,
+  categoryId: 'biology',
+  categoryName: 'Biology',
+  exerciseCount: 4,
+  completed: false,
+  createdAt: null,
+);
+
+const _physicsLesson = LessonSummary(
+  id: 'lesson-3',
+  title: 'Motion, forces and everyday life',
+  description: 'Connect force and motion to familiar examples.',
+  difficulty: LessonDifficulty.medium,
+  baseXp: 30,
+  categoryId: 'physics',
+  categoryName: 'Physics',
+  exerciseCount: 5,
+  completed: false,
+  createdAt: null,
+);
+
+const _technologyLesson = LessonSummary(
+  id: 'lesson-4',
+  title: 'Think like a programmer',
+  description: 'Break a problem into clear, reusable steps.',
+  difficulty: LessonDifficulty.medium,
+  baseXp: 35,
+  categoryId: 'technology',
+  categoryName: 'Computer Science',
+  exerciseCount: 6,
+  completed: false,
+  createdAt: null,
 );
 
 class _CatalogNotifier extends LessonCatalogNotifier {
   @override
   LessonCatalogState build() => const LessonCatalogState(
-    lessons: [_lesson],
+    lessons: [_lesson, _biologyLesson, _physicsLesson, _technologyLesson],
     categories: [LearningCategory(id: 'math', name: 'Mathematics')],
     totalPages: 1,
   );
@@ -46,10 +87,68 @@ class _CatalogNotifier extends LessonCatalogNotifier {
       clearDifficulty: difficulty == null,
     );
   }
+
+  @override
+  Future<void> selectCategory(String? categoryId) async {
+    state = state.copyWith(
+      selectedCategoryId: categoryId,
+      clearCategory: categoryId == null,
+    );
+  }
 }
 
 void main() {
-  testWidgets('lessons precede advanced filters and sheet applies grade', (
+  testWidgets('keeps the Learning header below the device top inset', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          lessonCatalogProvider.overrideWith(_CatalogNotifier.new),
+          communityStreakProvider.overrideWith(
+            (ref) async => CommunityStreak(
+              current: 7,
+              highest: 12,
+              lastTrackedDate: DateTime(2026, 8, 22),
+              activityDates: const [],
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: Builder(
+            builder: (context) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(padding: const EdgeInsets.only(top: 59)),
+              child: const LessonCatalogScreen(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getTopLeft(find.text('Learning')).dy,
+      greaterThanOrEqualTo(59),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('renders the stacked library and keeps real filters working', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(430, 932);
@@ -89,9 +188,28 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text("TODAY'S MISSION"), findsOneWidget);
-    expect(find.text('Recommended lessons'), findsOneWidget);
-    expect(find.text('Derivatives & Tangent Lines'), findsNWidgets(2));
+    expect(tester.takeException(), isNull);
+    expect(find.text('Learning'), findsOneWidget);
+    expect(find.byKey(const ValueKey('lesson-subject-strip')), findsOneWidget);
+    expect(find.byKey(const ValueKey('lesson-card-lesson-1')), findsOneWidget);
+    expect(find.text('Continue learning'), findsOneWidget);
+    expect(find.text('Derivatives & Tangent Lines'), findsOneWidget);
+    expect(find.text('68%'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('lesson-progress-lesson-1')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('lesson-category-math')));
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(LessonCatalogScreen)),
+    );
+    expect(container.read(lessonCatalogProvider).selectedCategoryId, 'math');
+
+    await tester.tap(find.byKey(const ValueKey('lesson-category-all')));
+    await tester.pumpAndSettle();
+    expect(container.read(lessonCatalogProvider).selectedCategoryId, isNull);
 
     await tester.tap(find.byKey(const ValueKey('lesson-filter-button')));
     await tester.pumpAndSettle();
@@ -103,12 +221,15 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('apply-filters')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('active-grade-filter')), findsOneWidget);
+    expect(find.byKey(const ValueKey('active-filter-count')), findsOneWidget);
     expect(
-      find.textContaining('Until lessons receive grade tags'),
+      find.descendant(
+        of: find.byKey(const ValueKey('active-filter-count')),
+        matching: find.text('1'),
+      ),
       findsOneWidget,
     );
-    expect(find.text('Derivatives & Tangent Lines'), findsNWidgets(2));
+    expect(find.text('Derivatives & Tangent Lines'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('learning-streak-button')));
     await tester.pumpAndSettle();
@@ -118,5 +239,18 @@ void main() {
     expect(find.text('Best streak'), findsOneWidget);
     expect(find.text('Last tracked'), findsOneWidget);
     expect(find.text('Aug 22, 2026'), findsOneWidget);
+
+    Navigator.of(
+      tester.element(find.byKey(const ValueKey('streak-details-sheet'))),
+    ).pop();
+    await tester.pumpAndSettle();
+    await tester.fling(
+      find.byKey(const PageStorageKey('lesson-catalog-scroll')),
+      const Offset(0, -1200),
+      2200,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('lesson-card-lesson-4')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
