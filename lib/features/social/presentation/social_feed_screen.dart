@@ -9,10 +9,10 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../blog/data/blog_models.dart';
 import '../../blog/providers/blog_provider.dart';
 import '../../userProfile/presentation/public_profile_navigation.dart';
-import '../../userProfile/presentation/widgets/profile_ui.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
 import 'social_post_detail_screen.dart';
+import 'widgets/social_palette.dart';
 import 'widgets/social_post_card.dart';
 import 'widgets/streak_details_sheet.dart';
 
@@ -63,9 +63,9 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
         ? ref.watch(blogFeedProvider)
         : null;
     return Scaffold(
-      backgroundColor: ProfilePalette.canvas(context),
+      backgroundColor: SocialPalette.canvas(context),
       body: RefreshIndicator(
-        color: ProfilePalette.green(context),
+        color: SocialPalette.green(context),
         onRefresh: () => _section == _SocialSection.feed
             ? ref.read(socialFeedProvider.notifier).load()
             : ref.read(blogFeedProvider.notifier).load(),
@@ -77,13 +77,15 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
             _CommunityAppBar(
               onSearchChanged: (value) =>
                   setState(() => _searchQuery = value.trim().toLowerCase()),
-              onCreate: _showCreateMenu,
             ),
             SliverToBoxAdapter(
               child: _FeedSectionTabs(
                 selected: _section,
                 onSelected: _selectSection,
               ),
+            ),
+            SliverToBoxAdapter(
+              child: _CommunityComposerPrompt(onTap: _showCreateMenu),
             ),
             if (_section == _SocialSection.feed)
               ..._contentSlivers(state)
@@ -307,18 +309,13 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
 }
 
 class _CommunityAppBar extends ConsumerWidget {
-  const _CommunityAppBar({
-    required this.onSearchChanged,
-    required this.onCreate,
-  });
+  const _CommunityAppBar({required this.onSearchChanged});
 
   final ValueChanged<String> onSearchChanged;
-  final VoidCallback onCreate;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SliverToBoxAdapter(
       child: SafeArea(
@@ -334,14 +331,15 @@ class _CommunityAppBar extends ConsumerWidget {
                   Text(
                     'RIKSA',
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
+                      color: SocialPalette.aubergine(context),
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                   Text(
                     l10n.community,
                     style: TextStyle(
-                      color: ProfilePalette.muted(context),
+                      color: SocialPalette.muted(context),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -357,16 +355,16 @@ class _CommunityAppBar extends ConsumerWidget {
                   decoration: InputDecoration(
                     hintText: l10n.searchCommunity,
                     hintStyle: TextStyle(
-                      color: ProfilePalette.muted(context),
+                      color: SocialPalette.muted(context),
                       fontSize: 14,
                     ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
                       size: 20,
-                      color: ProfilePalette.muted(context),
+                      color: SocialPalette.muted(context),
                     ),
                     filled: true,
-                    fillColor: ProfilePalette.editorialSurface(context),
+                    fillColor: SocialPalette.editorialSurface(context),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
                       vertical: 10,
@@ -375,19 +373,23 @@ class _CommunityAppBar extends ConsumerWidget {
                     border: OutlineInputBorder(
                       borderRadius: AppRadii.fullBorder,
                       borderSide: BorderSide(
-                        color: ProfilePalette.border(context).withValues(alpha: .4),
+                        color: SocialPalette.border(
+                          context,
+                        ).withValues(alpha: .4),
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: AppRadii.fullBorder,
                       borderSide: BorderSide(
-                        color: ProfilePalette.border(context).withValues(alpha: .4),
+                        color: SocialPalette.border(
+                          context,
+                        ).withValues(alpha: .4),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: AppRadii.fullBorder,
                       borderSide: BorderSide(
-                        color: ProfilePalette.pink(context),
+                        color: SocialPalette.pink(context),
                         width: 1.5,
                       ),
                     ),
@@ -399,27 +401,87 @@ class _CommunityAppBar extends ConsumerWidget {
                 key: const ValueKey('streak-pill'),
                 streak: ref.watch(communityStreakProvider),
               ),
-              const SizedBox(width: RiksaSpacing.xs),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isDark ? context.riksa.surfaceRaised : AppColors.ink,
-                  shape: BoxShape.circle,
-                  boxShadow: RiksaElevation.low(Theme.of(context).brightness),
-                ),
-                child: IconButton(
-                  key: const ValueKey('create-community-button'),
-                  tooltip: l10n.createCommunityContent,
-                  onPressed: onCreate,
-                  icon: Icon(
-                    Icons.add_rounded,
-                    color: isDark ? context.riksa.ink : Colors.white,
-                    size: 20,
-                  ),
-                ),
-              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CommunityComposerPrompt extends StatelessWidget {
+  const _CommunityComposerPrompt({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+      child: Semantics(
+        button: true,
+        label: l10n.communityComposerPrompt,
+        child: Material(
+          color: SocialPalette.surface(context),
+          borderRadius: AppRadii.fullBorder,
+          child: InkWell(
+            key: const ValueKey('create-community-button'),
+            onTap: onTap,
+            borderRadius: AppRadii.fullBorder,
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 54),
+              padding: const EdgeInsets.fromLTRB(9, 7, 9, 7),
+              decoration: BoxDecoration(
+                borderRadius: AppRadii.fullBorder,
+                border: Border.all(color: SocialPalette.outline(context)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: SocialPalette.pinkSoft(
+                        context,
+                      ).withValues(alpha: .55),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.help_outline_rounded,
+                      size: 19,
+                      color: SocialPalette.pink(context).withValues(alpha: .7),
+                    ),
+                  ),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: Text(
+                      l10n.communityComposerPrompt,
+                      style: TextStyle(
+                        color: SocialPalette.muted(
+                          context,
+                        ).withValues(alpha: .72),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: SocialPalette.aubergine(context),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.add_rounded,
+                      size: 20,
+                      color: SocialPalette.onAubergine(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -441,7 +503,6 @@ class _FeedSectionTabsState extends State<_FeedSectionTabs> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    const capsuleBackground = Color(0xFF15101A);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -449,15 +510,9 @@ class _FeedSectionTabsState extends State<_FeedSectionTabs> {
         height: 48,
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: capsuleBackground,
+          color: SocialPalette.surface(context),
           borderRadius: AppRadii.fullBorder,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          border: Border.all(color: SocialPalette.outline(context)),
         ),
         child: Row(
           children: [
@@ -498,6 +553,7 @@ class _CapsuleTabItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Semantics(
       button: true,
       selected: selected,
@@ -505,17 +561,12 @@ class _CapsuleTabItem extends StatelessWidget {
         duration: RiksaMotion.resolve(context, RiksaMotion.standard),
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
-          color: selected ? Colors.white : Colors.transparent,
+          color: selected
+              ? (isDark
+                    ? AppColors.editorialPink
+                    : AppColors.editorialAubergine)
+              : Colors.transparent,
           borderRadius: AppRadii.fullBorder,
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.14),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
         ),
         child: Material(
           color: Colors.transparent,
@@ -524,28 +575,20 @@ class _CapsuleTabItem extends StatelessWidget {
           child: InkWell(
             borderRadius: AppRadii.fullBorder,
             onTap: onTap,
-            splashColor: selected
-                ? Colors.black.withValues(alpha: 0.06)
-                : Colors.white.withValues(alpha: 0.12),
-            highlightColor: selected
-                ? Colors.black.withValues(alpha: 0.04)
-                : Colors.white.withValues(alpha: 0.06),
+            splashColor: AppColors.editorialPink.withValues(alpha: .16),
+            highlightColor: AppColors.editorialPink.withValues(alpha: .1),
             child: Center(
-              child: AnimatedDefaultTextStyle(
-                duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-                curve: Curves.easeOutCubic,
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: selected
-                      ? const Color(0xFF140F19)
-                      : Colors.white.withValues(alpha: 0.9),
+                      ? (isDark ? AppColors.editorialAubergine : Colors.white)
+                      : SocialPalette.ink(context),
                   fontSize: 14,
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
                   letterSpacing: -0.1,
-                ),
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
@@ -577,7 +620,7 @@ class _StreakPill extends StatelessWidget {
         ],
       ),
       child: Material(
-        color: ProfilePalette.pinkSoft(context),
+        color: SocialPalette.pinkSoft(context),
         borderRadius: AppRadii.fullBorder,
         child: InkWell(
           borderRadius: AppRadii.fullBorder,
@@ -591,7 +634,7 @@ class _StreakPill extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: AppRadii.fullBorder,
               border: Border.all(
-                color: ProfilePalette.pink(context).withValues(alpha: .28),
+                color: SocialPalette.pink(context).withValues(alpha: .28),
               ),
             ),
             child: Row(
@@ -599,7 +642,7 @@ class _StreakPill extends StatelessWidget {
               children: [
                 Icon(
                   Icons.local_fire_department_rounded,
-                  color: ProfilePalette.pink(context),
+                  color: SocialPalette.pink(context),
                   size: 20,
                 ),
                 const SizedBox(width: 4),
@@ -613,7 +656,7 @@ class _StreakPill extends StatelessWidget {
                   Text(
                     '${value?.current ?? 0}',
                     style: theme.textTheme.labelLarge?.copyWith(
-                      color: ProfilePalette.aubergine(context),
+                      color: SocialPalette.aubergine(context),
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -647,7 +690,7 @@ class _CreateMenuSheet extends StatelessWidget {
           24 + MediaQuery.paddingOf(context).bottom,
         ),
         decoration: BoxDecoration(
-          color: ProfilePalette.panel(context),
+          color: SocialPalette.panel(context),
           borderRadius: const BorderRadius.vertical(
             top: Radius.circular(AppRadii.large),
           ),
@@ -661,7 +704,7 @@ class _CreateMenuSheet extends StatelessWidget {
                 width: 42,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: ProfilePalette.border(context),
+                  color: SocialPalette.border(context),
                   borderRadius: AppRadii.fullBorder,
                 ),
               ),
@@ -671,7 +714,7 @@ class _CreateMenuSheet extends StatelessWidget {
               l10n.createCommunityContent,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: ProfilePalette.text(context),
+                color: SocialPalette.text(context),
               ),
             ),
             const SizedBox(height: 14),
@@ -679,7 +722,7 @@ class _CreateMenuSheet extends StatelessWidget {
               icon: Icons.edit_note_rounded,
               title: l10n.createPost,
               subtitle: l10n.createPostSubtitle,
-              color: ProfilePalette.pink(context),
+              color: SocialPalette.pink(context),
               onTap: () => Navigator.pop(context, _CreateAction.post),
             ),
             const SizedBox(height: 10),
@@ -687,7 +730,7 @@ class _CreateMenuSheet extends StatelessWidget {
               icon: Icons.help_outline_rounded,
               title: l10n.askCommunity,
               subtitle: l10n.askCommunitySubtitle,
-              color: ProfilePalette.aubergine(context),
+              color: SocialPalette.aubergine(context),
               onTap: () => Navigator.pop(context, _CreateAction.question),
             ),
           ],
@@ -716,7 +759,7 @@ class _CreateOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Material(
-      color: ProfilePalette.editorialSurface(context),
+      color: SocialPalette.editorialSurface(context),
       borderRadius: AppRadii.mediumBorder,
       child: InkWell(
         borderRadius: AppRadii.mediumBorder,
@@ -743,14 +786,14 @@ class _CreateOption extends StatelessWidget {
                       title,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: ProfilePalette.text(context),
+                        color: SocialPalette.text(context),
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: ProfilePalette.muted(context),
+                        color: SocialPalette.muted(context),
                       ),
                     ),
                   ],
@@ -758,7 +801,7 @@ class _CreateOption extends StatelessWidget {
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: ProfilePalette.muted(context),
+                color: SocialPalette.muted(context),
               ),
             ],
           ),
@@ -777,11 +820,10 @@ class _GlassBlogCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Material(
-        color: isDark ? ProfilePalette.panel(context) : Colors.white,
+        color: SocialPalette.surface(context),
         borderRadius: AppRadii.largeBorder,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -789,7 +831,7 @@ class _GlassBlogCard extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               border: Border.all(
-                color: ProfilePalette.border(context).withValues(alpha: .35),
+                color: SocialPalette.border(context).withValues(alpha: .35),
               ),
               borderRadius: AppRadii.largeBorder,
             ),
@@ -816,7 +858,7 @@ class _GlassBlogCard extends StatelessWidget {
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                           fontSize: 18,
-                          color: ProfilePalette.text(context),
+                          color: SocialPalette.text(context),
                         ),
                       ),
                       const SizedBox(height: 7),
@@ -825,7 +867,7 @@ class _GlassBlogCard extends StatelessWidget {
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: ProfilePalette.muted(context),
+                          color: SocialPalette.muted(context),
                           height: 1.45,
                         ),
                       ),
@@ -835,14 +877,14 @@ class _GlassBlogCard extends StatelessWidget {
                           Text(
                             DateFormat.yMMMd().format(post.createdAt),
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: ProfilePalette.muted(context),
+                              color: SocialPalette.muted(context),
                             ),
                           ),
                           const Spacer(),
                           Material(
                             color: post.liked
-                                ? ProfilePalette.pinkSoft(context)
-                                : ProfilePalette.editorialSurface(context),
+                                ? SocialPalette.pinkSoft(context)
+                                : SocialPalette.editorialSurface(context),
                             borderRadius: AppRadii.fullBorder,
                             child: InkWell(
                               borderRadius: AppRadii.fullBorder,
@@ -861,16 +903,16 @@ class _GlassBlogCard extends StatelessWidget {
                                           : Icons.favorite_border_rounded,
                                       size: 16,
                                       color: post.liked
-                                          ? ProfilePalette.pink(context)
-                                          : ProfilePalette.muted(context),
+                                          ? SocialPalette.pink(context)
+                                          : SocialPalette.muted(context),
                                     ),
                                     const SizedBox(width: 5),
                                     Text(
                                       '${post.likeCount}',
                                       style: TextStyle(
                                         color: post.liked
-                                            ? ProfilePalette.aubergine(context)
-                                            : ProfilePalette.muted(context),
+                                            ? SocialPalette.aubergine(context)
+                                            : SocialPalette.muted(context),
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -922,14 +964,10 @@ class _FeedMessage extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: ProfilePalette.pinkSoft(context),
+                color: SocialPalette.pinkSoft(context),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                color: ProfilePalette.pink(context),
-                size: 29,
-              ),
+              child: Icon(icon, color: SocialPalette.pink(context), size: 29),
             ),
             const SizedBox(height: 16),
             Text(
@@ -937,7 +975,7 @@ class _FeedMessage extends StatelessWidget {
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: ProfilePalette.text(context),
+                color: SocialPalette.text(context),
               ),
             ),
             const SizedBox(height: 7),
@@ -945,7 +983,7 @@ class _FeedMessage extends StatelessWidget {
               message,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: ProfilePalette.muted(context),
+                color: SocialPalette.muted(context),
                 height: 1.45,
               ),
             ),
@@ -956,8 +994,8 @@ class _FeedMessage extends StatelessWidget {
                 child: FilledButton(
                   onPressed: onPressed,
                   style: FilledButton.styleFrom(
-                    backgroundColor: ProfilePalette.aubergine(context),
-                    foregroundColor: ProfilePalette.onAubergine(context),
+                    backgroundColor: SocialPalette.aubergine(context),
+                    foregroundColor: SocialPalette.onAubergine(context),
                     shape: const RoundedRectangleBorder(
                       borderRadius: AppRadii.fullBorder,
                     ),
@@ -978,7 +1016,7 @@ class _FeedSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.surfaceContainer;
+    final color = SocialPalette.surfaceRaised(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(

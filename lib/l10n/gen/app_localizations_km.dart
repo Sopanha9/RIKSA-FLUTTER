@@ -24,7 +24,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get registerTitle => 'បង្កើត​គណនី';
 
   @override
-  String get registerSubtitle => 'ចូលរួម Riksa និងចាប់ផ្ដើមសិក្សាថ្ងៃនេះ';
+  String get registerSubtitle => 'បង្កើតគណនីរបស់អ្នក និងចាប់ផ្ដើមសិក្សាថ្ងៃនេះ';
 
   @override
   String get registerEyebrow => 'ចាប់ផ្ដើមការសិក្សាបន្តបន្ទាប់';
@@ -321,6 +321,9 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get askCommunitySubtitle => 'សុំជំនួយពីអ្នកសិក្សាផ្សេងទៀត។';
+
+  @override
+  String get communityComposerPrompt => 'តើអ្នកមានចម្ងល់អ្វី?';
 
   @override
   String get chooseCommunity => 'ជ្រើសរើសសហគមន៍';

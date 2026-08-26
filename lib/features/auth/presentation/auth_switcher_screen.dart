@@ -211,7 +211,7 @@ class _AuthSwitcherScreenState extends ConsumerState<AuthSwitcherScreen> {
                       duration: _toggleDuration,
                       onSelected: _selectPage,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 28),
                     AnimatedSwitcher(
                       duration: _formDuration,
                       reverseDuration: _formDuration,
@@ -296,14 +296,18 @@ class _AuthLoadingOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
     final colors = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Semantics(
       liveRegion: true,
       label: strings.preparingYourSpace,
       child: Container(
         decoration: BoxDecoration(
-          color: colors.surface.withValues(alpha: .97),
+          color: (dark ? colors.surface : AppColors.editorialNeutralSurface)
+              .withValues(alpha: .97),
           borderRadius: AppRadii.largeBorder,
-          border: Border.all(color: colors.outline),
+          border: Border.all(
+            color: dark ? colors.outline : AppColors.editorialOutline,
+          ),
         ),
         child: Center(
           child: Padding(
@@ -315,7 +319,7 @@ class _AuthLoadingOverlay extends StatelessWidget {
                   dimension: 44,
                   child: CircularProgressIndicator(
                     strokeWidth: 3.5,
-                    color: colors.primary,
+                    color: AppColors.editorialPink,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -351,15 +355,20 @@ class _AuthSegmentedToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
 
     return Container(
       height: 52,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: colors.surfaceContainer,
+        color: dark
+            ? theme.colorScheme.surfaceContainerHighest
+            : AppColors.editorialPinkSoft,
         borderRadius: AppRadii.fullBorder,
-        border: Border.all(color: colors.outline),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: .65),
+        ),
       ),
       child: Stack(
         fit: StackFit.expand,
@@ -376,11 +385,13 @@ class _AuthSegmentedToggle extends StatelessWidget {
               heightFactor: 1,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: colors.primary,
+                  color: dark
+                      ? AppColors.editorialPink
+                      : AppColors.editorialAubergine,
                   borderRadius: AppRadii.fullBorder,
                   boxShadow: [
                     BoxShadow(
-                      color: colors.primary.withValues(alpha: .2),
+                      color: AppColors.editorialPink.withValues(alpha: .24),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -433,7 +444,8 @@ class _ToggleLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
     return Semantics(
       button: true,
       selected: selected,
@@ -444,9 +456,12 @@ class _ToggleLabel extends StatelessWidget {
           child: AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOutCubic,
-            style: TextStyle(
-              color: selected ? colors.onPrimary : colors.onSurfaceVariant,
-              fontSize: 14,
+            style: theme.textTheme.labelLarge!.copyWith(
+              color: selected
+                  ? (dark
+                        ? AppColors.editorialAubergine
+                        : const Color(0xFFFFF8FC))
+                  : theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w700,
             ),
             child: Text(label),
@@ -484,28 +499,15 @@ class _LoginForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
-    final textTheme = Theme.of(context).textTheme;
 
     return Form(
       key: formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            strings.welcomeBack,
-            textAlign: TextAlign.center,
-            style: textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: -.4,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            strings.loginSubtitle,
-            textAlign: TextAlign.center,
-            style: textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+          AuthHeader(
+            title: strings.welcomeBack,
+            subtitle: strings.loginSubtitle,
           ),
           const SizedBox(height: 22),
           if (error != null) ...[
@@ -580,6 +582,11 @@ class _LoginForm extends StatelessWidget {
             label: strings.login,
             onPressed: onSubmit,
           ),
+          const SizedBox(height: 14),
+          _AuthSupportNote(
+            icon: Icons.shield_outlined,
+            label: strings.signInSecureNote,
+          ),
         ],
       ),
     );
@@ -619,28 +626,15 @@ class _RegisterForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
-    final textTheme = Theme.of(context).textTheme;
 
     return Form(
       key: formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            strings.registerTitle,
-            textAlign: TextAlign.center,
-            style: textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: -.4,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            strings.registerSubtitle,
-            textAlign: TextAlign.center,
-            style: textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+          AuthHeader(
+            title: strings.registerTitle,
+            subtitle: strings.registerSubtitle,
           ),
           const SizedBox(height: 22),
           if (error != null) ...[
@@ -771,6 +765,11 @@ class _RegisterForm extends StatelessWidget {
             label: strings.register,
             onPressed: onSubmit,
           ),
+          const SizedBox(height: 14),
+          _AuthSupportNote(
+            icon: Icons.mark_email_read_outlined,
+            label: strings.registerEmailNote,
+          ),
         ],
       ),
     );
@@ -795,6 +794,15 @@ class _AuthSubmitButton extends StatelessWidget {
     return FilledButton(
       key: buttonKey,
       onPressed: loading ? null : onPressed,
+      style: FilledButton.styleFrom(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.editorialPink
+            : AppColors.editorialAubergine,
+        foregroundColor: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.editorialAubergine
+            : const Color(0xFFFFF8FC),
+        minimumSize: const Size.fromHeight(54),
+      ),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 160),
         child: loading
@@ -810,4 +818,30 @@ class _AuthSubmitButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AuthSupportNote extends StatelessWidget {
+  const _AuthSupportNote({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Icon(icon, size: 17, color: AppColors.editorialPink),
+      const SizedBox(width: 8),
+      Expanded(
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? context.riksa.inkMuted
+                : AppColors.editorialMuted,
+          ),
+        ),
+      ),
+    ],
+  );
 }

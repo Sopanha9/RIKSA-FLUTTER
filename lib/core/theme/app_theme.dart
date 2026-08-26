@@ -30,6 +30,12 @@ class AppColors {
   static const editorialPinkSoft = Color(0xFFF7D8EE);
   static const editorialCanvas = Color(0xFFFAF9F7);
   static const editorialSurface = Color(0xFFFFFBF7);
+  static const editorialNeutralCanvas = Color(0xFFF3F3F6);
+  static const editorialNeutralSurface = Color(0xFFFFFFFF);
+  static const editorialField = Color(0xFFF5F5F7);
+  static const editorialOutline = Color(0xFFE1E1E6);
+  static const editorialInk = Color(0xFF191619);
+  static const editorialMuted = Color(0xFF706C73);
 
   static const subjectMath = Color(0xFF76528F);
   static const subjectScience = Color(0xFF198A82);

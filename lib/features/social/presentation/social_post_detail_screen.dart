@@ -13,6 +13,7 @@ import '../../userProfile/presentation/public_profile_navigation.dart';
 import '../data/social_api.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
+import 'widgets/social_palette.dart';
 
 class SocialPostDetailScreen extends ConsumerStatefulWidget {
   const SocialPostDetailScreen({super.key, required this.postId});
@@ -184,18 +185,24 @@ class _SocialPostDetailScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: SocialPalette.canvas(context),
       appBar: AppBar(
+        backgroundColor: SocialPalette.canvas(context),
+        foregroundColor: SocialPalette.aubergine(context),
+        surfaceTintColor: Colors.transparent,
         title: Text(
           l10n.postDetail,
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.editorialPink),
+            )
           : _post == null
           ? _ErrorState(message: _error, onRetry: _load)
           : RefreshIndicator(
-              color: AppColors.brandPrimary,
+              color: AppColors.editorialPink,
               onRefresh: _load,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -213,6 +220,7 @@ class _SocialPostDetailScreenState
                       Text(
                         l10n.discussion,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: SocialPalette.aubergine(context),
                           fontWeight: FontWeight.w900,
                         ),
                       ),
@@ -235,6 +243,12 @@ class _SocialPostDetailScreenState
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: SocialPalette.aubergine(context),
+                          side: BorderSide(
+                            color: SocialPalette.outline(context),
+                          ),
+                        ),
                         onPressed: _loadingMore ? null : _loadMore,
                         child: _loadingMore
                             ? const SizedBox.square(
@@ -284,16 +298,16 @@ class _PostBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
     return Container(
+      key: const ValueKey('post-detail-body'),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: colors.surface,
+        color: SocialPalette.surface(context),
         borderRadius: AppRadii.mediumBorder,
-        border: Border.all(color: colors.outline),
+        border: Border.all(color: SocialPalette.outline(context)),
         boxShadow: [
           BoxShadow(
-            color: colors.shadow.withValues(alpha: .05),
+            color: Colors.black.withValues(alpha: .045),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -311,13 +325,13 @@ class _PostBody extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: colors.primaryContainer,
+              color: SocialPalette.pinkSoft(context),
               borderRadius: AppRadii.smallBorder,
             ),
             child: Text(
               post.category.name,
               style: theme.textTheme.labelMedium?.copyWith(
-                color: colors.onPrimaryContainer,
+                color: SocialPalette.aubergine(context),
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -326,6 +340,7 @@ class _PostBody extends StatelessWidget {
           Text(
             post.title,
             style: theme.textTheme.headlineSmall?.copyWith(
+              color: SocialPalette.ink(context),
               fontWeight: FontWeight.w900,
               height: 1.2,
             ),
@@ -335,7 +350,7 @@ class _PostBody extends StatelessWidget {
             Text(
               post.content,
               style: theme.textTheme.bodyLarge?.copyWith(
-                color: colors.onSurfaceVariant,
+                color: SocialPalette.muted(context),
                 height: 1.55,
               ),
             ),
@@ -350,11 +365,11 @@ class _PostBody extends StatelessWidget {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(
                   height: 180,
-                  color: colors.surfaceContainer,
+                  color: SocialPalette.surfaceRaised(context),
                   alignment: Alignment.center,
                   child: Icon(
                     Icons.image_not_supported_outlined,
-                    color: colors.onSurfaceVariant,
+                    color: SocialPalette.muted(context),
                     size: 34,
                   ),
                 ),
@@ -362,7 +377,7 @@ class _PostBody extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 18),
-          Divider(color: colors.outline),
+          Divider(color: SocialPalette.outline(context)),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -407,7 +422,6 @@ class _AuthorLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
     final name = author.displayName.isEmpty
         ? author.username
         : author.displayName;
@@ -426,6 +440,7 @@ class _AuthorLine extends StatelessWidget {
                 child: Text(
                   name,
                   style: theme.textTheme.titleSmall?.copyWith(
+                    color: SocialPalette.ink(context),
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -434,7 +449,7 @@ class _AuthorLine extends StatelessWidget {
               Text(
                 '@${author.username} · ${DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(createdAt.toLocal())}',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: colors.onSurfaceVariant,
+                  color: SocialPalette.muted(context),
                 ),
               ),
             ],
@@ -454,15 +469,15 @@ class _CommentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
     final name = comment.author.displayName.isEmpty
         ? comment.author.username
         : comment.author.displayName;
     return Container(
+      key: ValueKey('comment-card-${comment.id}'),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: colors.surfaceContainerLow,
-        border: Border.all(color: colors.outline),
+        color: SocialPalette.surface(context),
+        border: Border.all(color: SocialPalette.outline(context)),
         borderRadius: AppRadii.mediumBorder,
       ),
       child: Row(
@@ -488,6 +503,7 @@ class _CommentCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.labelLarge?.copyWith(
+                            color: SocialPalette.ink(context),
                             fontWeight: FontWeight.w800,
                           ),
                         ),
@@ -498,7 +514,7 @@ class _CommentCard extends StatelessWidget {
                         Localizations.localeOf(context).languageCode,
                       ).format(comment.createdAt.toLocal()),
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
+                        color: SocialPalette.muted(context),
                       ),
                     ),
                   ],
@@ -506,7 +522,10 @@ class _CommentCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   comment.content,
-                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: SocialPalette.ink(context),
+                    height: 1.45,
+                  ),
                 ),
               ],
             ),
@@ -526,7 +545,6 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     final label = author.displayName.isEmpty
         ? author.username
         : author.displayName;
@@ -538,8 +556,8 @@ class _Avatar extends StatelessWidget {
         value: author.avatarUrl,
         label: label,
         size: radius * 2,
-        backgroundColor: colors.primaryContainer,
-        foregroundColor: colors.onPrimaryContainer,
+        backgroundColor: SocialPalette.pinkSoft(context),
+        foregroundColor: SocialPalette.aubergine(context),
       ),
     );
   }
@@ -560,8 +578,9 @@ class _DetailAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final color = selected ? AppColors.brandPrimary : colors.onSurfaceVariant;
+    final color = selected
+        ? SocialPalette.pink(context)
+        : SocialPalette.muted(context);
     return InkWell(
       borderRadius: AppRadii.fullBorder,
       onTap: onTap,
@@ -569,8 +588,8 @@ class _DetailAction extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: selected
-              ? color.withValues(alpha: .12)
-              : colors.surfaceContainerLow,
+              ? SocialPalette.pinkSoft(context)
+              : SocialPalette.surfaceRaised(context),
           borderRadius: AppRadii.fullBorder,
         ),
         child: Row(
@@ -600,10 +619,16 @@ class _CountBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
     decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.primaryContainer,
+      color: SocialPalette.pinkSoft(context),
       borderRadius: AppRadii.smallBorder,
     ),
-    child: Text('$count', style: const TextStyle(fontWeight: FontWeight.w800)),
+    child: Text(
+      '$count',
+      style: TextStyle(
+        color: SocialPalette.aubergine(context),
+        fontWeight: FontWeight.w800,
+      ),
+    ),
   );
 }
 
@@ -616,17 +641,22 @@ class _EmptyComments extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      color: SocialPalette.surface(context),
       borderRadius: AppRadii.mediumBorder,
+      border: Border.all(color: SocialPalette.outline(context)),
     ),
     child: Column(
       children: [
         Icon(
           Icons.chat_bubble_outline_rounded,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          color: SocialPalette.pink(context),
         ),
         const SizedBox(height: 8),
-        Text(message, textAlign: TextAlign.center),
+        Text(
+          message,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: SocialPalette.muted(context)),
+        ),
       ],
     ),
   );
@@ -647,24 +677,34 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.article_outlined, size: 44),
+            const Icon(
+              Icons.article_outlined,
+              size: 44,
+              color: AppColors.editorialPink,
+            ),
             const SizedBox(height: 14),
             Text(
               l10n.postUnavailable,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: SocialPalette.aubergine(context),
+                fontWeight: FontWeight.w900,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               message ?? l10n.postUnavailableMessage,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+              style: TextStyle(color: SocialPalette.muted(context)),
             ),
             const SizedBox(height: 20),
-            FilledButton(onPressed: onRetry, child: Text(l10n.tryAgain)),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: SocialPalette.aubergine(context),
+                foregroundColor: SocialPalette.onAubergine(context),
+              ),
+              onPressed: onRetry,
+              child: Text(l10n.tryAgain),
+            ),
           ],
         ),
       ),
@@ -691,11 +731,9 @@ class _CommentComposer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return Material(
-      color: colors.surface,
-      elevation: 10,
-      shadowColor: colors.shadow.withValues(alpha: .12),
+      color: SocialPalette.surface(context),
+      elevation: 0,
       child: SafeArea(
         top: false,
         child: Padding(
@@ -714,10 +752,32 @@ class _CommentComposer extends StatelessWidget {
                   textCapitalization: TextCapitalization.sentences,
                   decoration: InputDecoration(
                     hintText: hint,
+                    hintStyle: TextStyle(color: SocialPalette.muted(context)),
                     counterText: '',
+                    filled: true,
+                    fillColor: SocialPalette.surfaceRaised(context),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: AppRadii.fullBorder,
+                      borderSide: BorderSide(
+                        color: SocialPalette.outline(context),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: AppRadii.fullBorder,
+                      borderSide: BorderSide(
+                        color: SocialPalette.outline(context),
+                      ),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderRadius: AppRadii.fullBorder,
+                      borderSide: BorderSide(
+                        color: AppColors.editorialPink,
+                        width: 1.5,
+                      ),
                     ),
                   ),
                   onSubmitted: (_) => onSend(),
@@ -727,8 +787,14 @@ class _CommentComposer extends StatelessWidget {
               Semantics(
                 button: true,
                 label: sendLabel,
-                child: IconButton.filled(
+                child: IconButton(
                   onPressed: submitting ? null : onSend,
+                  style: IconButton.styleFrom(
+                    backgroundColor: SocialPalette.aubergine(context),
+                    foregroundColor: SocialPalette.onAubergine(context),
+                    disabledBackgroundColor: SocialPalette.outline(context),
+                    shape: const CircleBorder(),
+                  ),
                   icon: submitting
                       ? const SizedBox.square(
                           dimension: 18,

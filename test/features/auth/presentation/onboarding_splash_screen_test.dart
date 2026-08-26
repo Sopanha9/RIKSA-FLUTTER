@@ -135,7 +135,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.byKey(const ValueKey('assets/images/splashScreen/image.png')),
+        find.byKey(const ValueKey('assets/images/onboarding/learning.svg')),
         findsOneWidget,
       );
       expect(
@@ -146,7 +146,7 @@ void main() {
       await tester.tap(find.byKey(const Key('onboarding_continue')));
       await tester.pumpAndSettle();
       expect(
-        find.byKey(const ValueKey('assets/images/splashScreen/image copy.png')),
+        find.byKey(const ValueKey('assets/images/onboarding/achievement.svg')),
         findsOneWidget,
       );
       expect(
@@ -157,9 +157,7 @@ void main() {
       await tester.tap(find.byKey(const Key('onboarding_continue')));
       await tester.pumpAndSettle();
       expect(
-        find.byKey(
-          const ValueKey('assets/images/splashScreen/image copy 2.png'),
-        ),
+        find.byKey(const ValueKey('assets/images/onboarding/community.svg')),
         findsOneWidget,
       );
       expect(

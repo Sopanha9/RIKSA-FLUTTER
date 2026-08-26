@@ -81,7 +81,9 @@ class _BlogNotifier extends BlogFeedNotifier {
 }
 
 void main() {
-  testWidgets('renders the glass social shell at phone width', (tester) async {
+  testWidgets('renders the editorial social shell at phone width', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -111,16 +113,28 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(
+      tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
+      AppColors.editorialNeutralCanvas,
+    );
     expect(find.text('RIKSA'), findsOneWidget);
     expect(find.byKey(const ValueKey('bottom-nav-morph')), findsNothing);
     expect(find.byKey(const ValueKey('community-drawer-button')), findsNothing);
     expect(find.byType(Drawer), findsNothing);
     expect(find.byKey(const ValueKey('community-search')), findsOneWidget);
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const ValueKey('community-search')))
+          .decoration
+          ?.fillColor,
+      AppColors.editorialNeutralSurface,
+    );
     expect(find.byKey(const ValueKey('streak-pill')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('create-community-button')),
       findsOneWidget,
     );
+    expect(find.text('What are your doubts?'), findsOneWidget);
     expect(find.text('7'), findsOneWidget);
     expect(find.byKey(const ValueKey('my-feed-tab')), findsOneWidget);
     expect(find.text('Blog'), findsOneWidget);
@@ -155,23 +169,17 @@ void main() {
     final feedTab = find.byKey(const ValueKey('my-feed-tab'));
     final blogTab = find.byKey(const ValueKey('blog-tab'));
     expect(
-      tabDecoration(feedTab).color,
-      Colors.white,
+      tester
+          .getTopLeft(find.byKey(const ValueKey('create-community-button')))
+          .dy,
+      greaterThan(tester.getBottomLeft(feedTab).dy),
     );
-    expect(
-      tabDecoration(blogTab).color,
-      Colors.transparent,
-    );
+    expect(tabDecoration(feedTab).color, AppColors.editorialAubergine);
+    expect(tabDecoration(blogTab).color, Colors.transparent);
     await tester.tap(find.byKey(const ValueKey('blog-tab')));
     await tester.pumpAndSettle();
-    expect(
-      tabDecoration(blogTab).color,
-      Colors.white,
-    );
-    expect(
-      tabDecoration(feedTab).color,
-      Colors.transparent,
-    );
+    expect(tabDecoration(blogTab).color, AppColors.editorialAubergine);
+    expect(tabDecoration(feedTab).color, Colors.transparent);
     expect(find.text('How curiosity improves learning'), findsOneWidget);
     expect(find.text('The two-minute recall habit'), findsNothing);
 
@@ -182,9 +190,7 @@ void main() {
     expect(find.text('Ask the community'), findsOneWidget);
   });
 
-  testWidgets('opens profiles from post author identity', (
-    tester,
-  ) async {
+  testWidgets('opens profiles from post author identity', (tester) async {
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);

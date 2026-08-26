@@ -24,7 +24,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerTitle => 'Create Account';
 
   @override
-  String get registerSubtitle => 'Join Riksa and start learning today';
+  String get registerSubtitle => 'Create your account and start learning today';
 
   @override
   String get registerEyebrow => 'Start your streak';
@@ -326,6 +326,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get askCommunitySubtitle =>
       'Get help from learners who have been there.';
+
+  @override
+  String get communityComposerPrompt => 'What are your doubts?';
 
   @override
   String get chooseCommunity => 'Choose a community';

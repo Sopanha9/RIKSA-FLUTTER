@@ -14,7 +14,7 @@ Widget _app({required Widget child, bool disableAnimations = false}) =>
     );
 
 void main() {
-  testWidgets('falls back to the matching PNG when Rive is not bundled', (
+  testWidgets('falls back to the matching SVG when Rive is not bundled', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -29,12 +29,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.byKey(const ValueKey('assets/images/splashScreen/image copy.png')),
+      find.byKey(const ValueKey('assets/images/onboarding/achievement.svg')),
       findsOneWidget,
     );
   });
 
-  testWidgets('uses the deterministic PNG path when motion is disabled', (
+  testWidgets('uses the deterministic SVG path when motion is disabled', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -49,7 +49,7 @@ void main() {
     );
 
     expect(
-      find.byKey(const ValueKey('assets/images/splashScreen/image copy 2.png')),
+      find.byKey(const ValueKey('assets/images/onboarding/community.svg')),
       findsOneWidget,
     );
   });

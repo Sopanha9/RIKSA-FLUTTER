@@ -14,27 +14,39 @@ class LeaderboardHeader extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
-              ),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+              color: isDark ? context.riksa.ink : AppColors.editorialAubergine,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.8,
+            ),
+          ),
         ),
+        const SizedBox(width: RiksaSpacing.sm),
         Container(
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: isDark ? context.riksa.surfaceRaised : AppColors.ink,
+            color: isDark
+                ? context.riksa.surfaceRaised
+                : AppColors.editorialPinkSoft,
             shape: BoxShape.circle,
-            boxShadow: RiksaElevation.low(Theme.of(context).brightness),
+            border: Border.all(
+              color: AppColors.editorialPink.withValues(alpha: .5),
+            ),
           ),
           child: IconButton(
             onPressed: () {},
             tooltip: 'Notifications',
             icon: Icon(
               Icons.notifications_none_rounded,
-              color: isDark ? context.riksa.ink : Colors.white,
+              color: isDark
+                  ? AppColors.editorialPink
+                  : AppColors.editorialAubergine,
               size: 20,
             ),
           ),

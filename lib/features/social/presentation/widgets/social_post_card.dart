@@ -4,8 +4,8 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../l10n/gen/app_localizations.dart';
-import '../../../userProfile/presentation/widgets/profile_ui.dart';
 import '../../data/social_models.dart';
+import 'social_palette.dart';
 
 class SocialPostCard extends StatelessWidget {
   const SocialPostCard({
@@ -40,16 +40,16 @@ class SocialPostCard extends StatelessWidget {
           key: ValueKey('post-${post.id}'),
           color: isOfficial
               ? (isDark
-                  ? ProfilePalette.editorialSurface(context)
-                  : ProfilePalette.pinkSoft(context).withValues(alpha: .28))
-              : (isDark ? ProfilePalette.panel(context) : Colors.white),
+                    ? SocialPalette.editorialSurface(context)
+                    : SocialPalette.pinkSoft(context).withValues(alpha: .28))
+              : SocialPalette.surface(context),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: AppRadii.largeBorder,
             side: BorderSide(
               color: isOfficial
-                  ? ProfilePalette.pink(context).withValues(alpha: .4)
-                  : ProfilePalette.border(context).withValues(alpha: .35),
+                  ? SocialPalette.pink(context).withValues(alpha: .4)
+                  : SocialPalette.border(context).withValues(alpha: .35),
             ),
           ),
           clipBehavior: Clip.antiAlias,
@@ -69,7 +69,7 @@ class SocialPostCard extends StatelessWidget {
                       fontWeight: FontWeight.w900,
                       height: 1.2,
                       letterSpacing: -.35,
-                      color: ProfilePalette.text(context),
+                      color: SocialPalette.text(context),
                     ),
                   ),
                   if (post.content.trim().isNotEmpty) ...[
@@ -79,7 +79,7 @@ class SocialPostCard extends StatelessWidget {
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: ProfilePalette.muted(context),
+                        color: SocialPalette.muted(context),
                         height: 1.55,
                       ),
                     ),
@@ -98,7 +98,7 @@ class SocialPostCard extends StatelessWidget {
                                 color: colors.surfaceContainer,
                                 child: Icon(
                                   Icons.image_not_supported_outlined,
-                                  color: ProfilePalette.muted(context),
+                                  color: SocialPalette.muted(context),
                                   size: 32,
                                 ),
                               ),
@@ -190,7 +190,7 @@ class _PostMetadata extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.labelLarge?.copyWith(
-                            color: ProfilePalette.text(context),
+                            color: SocialPalette.text(context),
                             fontWeight: FontWeight.w800,
                           ),
                         ),
@@ -210,7 +210,7 @@ class _PostMetadata extends StatelessWidget {
                     TextSpan(
                       text: categoryPrefix(post.category),
                       style: TextStyle(
-                        color: ProfilePalette.pink(context),
+                        color: SocialPalette.pink(context),
                         fontWeight: FontWeight.w900,
                         letterSpacing: -.2,
                       ),
@@ -218,7 +218,7 @@ class _PostMetadata extends StatelessWidget {
                     TextSpan(
                       text: ' ${post.category.name} · $date',
                       style: TextStyle(
-                        color: ProfilePalette.muted(context),
+                        color: SocialPalette.muted(context),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -246,7 +246,7 @@ class _OfficialBadge extends StatelessWidget {
       key: const ValueKey('official-account-badge'),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: ProfilePalette.pinkSoft(context),
+        color: SocialPalette.pinkSoft(context),
         borderRadius: AppRadii.fullBorder,
       ),
       child: Row(
@@ -255,13 +255,13 @@ class _OfficialBadge extends StatelessWidget {
           Icon(
             Icons.verified_rounded,
             size: 12,
-            color: ProfilePalette.pink(context),
+            color: SocialPalette.pink(context),
           ),
           const SizedBox(width: 4),
           Text(
             AppLocalizations.of(context)!.official,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: ProfilePalette.aubergine(context),
+              color: SocialPalette.aubergine(context),
               fontSize: 10,
               fontWeight: FontWeight.w900,
               height: 1,
@@ -414,7 +414,7 @@ class _PrimaryReactionButton extends StatelessWidget {
       selected: isSelected,
       child: Material(
         color: isSelected
-            ? ProfilePalette.pinkSoft(context)
+            ? SocialPalette.pinkSoft(context)
             : Colors.transparent,
         borderRadius: AppRadii.fullBorder,
         child: InkWell(
@@ -426,21 +426,19 @@ class _PrimaryReactionButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  isSelected
-                      ? Icons.thumb_up_rounded
-                      : Icons.thumb_up_outlined,
+                  isSelected ? Icons.thumb_up_rounded : Icons.thumb_up_outlined,
                   size: 17,
                   color: isSelected
-                      ? ProfilePalette.pink(context)
-                      : ProfilePalette.muted(context),
+                      ? SocialPalette.pink(context)
+                      : SocialPalette.muted(context),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   _compactCount(count),
                   style: TextStyle(
                     color: isSelected
-                        ? ProfilePalette.aubergine(context)
-                        : ProfilePalette.muted(context),
+                        ? SocialPalette.aubergine(context)
+                        : SocialPalette.muted(context),
                     fontSize: 13,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   ),
@@ -468,7 +466,7 @@ class _LightAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mutedColor = ProfilePalette.muted(context);
+    final mutedColor = SocialPalette.muted(context);
     final content = Material(
       color: Colors.transparent,
       borderRadius: AppRadii.fullBorder,
@@ -496,10 +494,7 @@ class _LightAction extends StatelessWidget {
       ),
     );
     if (onPressed == null) return content;
-    return Semantics(
-      button: true,
-      child: content,
-    );
+    return Semantics(button: true, child: content);
   }
 }
 

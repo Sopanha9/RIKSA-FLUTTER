@@ -131,7 +131,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Join Riksa and start learning today'**
+  /// **'Create your account and start learning today'**
   String get registerSubtitle;
 
   /// No description provided for @registerEyebrow.
@@ -691,6 +691,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Get help from learners who have been there.'**
   String get askCommunitySubtitle;
+
+  /// No description provided for @communityComposerPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'What are your doubts?'**
+  String get communityComposerPrompt;
 
   /// No description provided for @chooseCommunity.
   ///

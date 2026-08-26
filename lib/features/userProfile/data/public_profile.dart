@@ -37,7 +37,9 @@ class PublicProfile {
       displayName.trim().isEmpty ? username.trim() : displayName.trim();
 
   factory PublicProfile.fromJson(Map<String, dynamic> json) {
-    final user = _stringMap(json['user']);
+    // The production endpoint returns identity fields at the top level. Keep
+    // accepting the originally documented nested shape during rollout.
+    final user = _stringMapOrNull(json['user']) ?? json;
     final gamification = _stringMap(json['gamification']);
     final achievementValues = json['achievements'];
     final achievements = achievementValues is List
@@ -56,7 +58,7 @@ class PublicProfile {
     final tier = _nonBlankString(gamification['currentTier']);
 
     return PublicProfile(
-      id: user['id']?.toString() ?? '',
+      id: (user['id'] ?? user['userId'])?.toString() ?? '',
       username: _string(user['username']),
       displayName: _string(user['displayName']),
       avatarUrl: _nonBlankString(user['avatarUrl']),

@@ -2,41 +2,48 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../userProfile/data/profile_models.dart';
-import '../../../userProfile/presentation/widgets/profile_ui.dart';
 
 class LeaderboardScopeTabs extends StatelessWidget {
   const LeaderboardScopeTabs({
     super.key,
     required this.selected,
-    required this.provinceLabel,
     required this.onChanged,
   });
 
   final LeaderboardScope selected;
-  final String? provinceLabel;
   final ValueChanged<LeaderboardScope> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final label = (provinceLabel != null && provinceLabel!.trim().isNotEmpty)
-        ? readableProfileName(provinceLabel!)
-        : 'Province';
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      clipBehavior: Clip.none,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      key: const ValueKey('leaderboard-scope-control'),
+      height: 52,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isDark
+            ? context.riksa.surface
+            : AppColors.editorialNeutralSurface,
+        borderRadius: AppRadii.fullBorder,
+        border: Border.all(
+          color: isDark ? context.riksa.outline : AppColors.editorialOutline,
+        ),
+      ),
       child: Row(
         children: [
-          LeaderboardPillTab(
-            label: 'National',
-            selected: selected == LeaderboardScope.country,
-            onTap: () => onChanged(LeaderboardScope.country),
+          Expanded(
+            child: LeaderboardPillTab(
+              label: 'National',
+              selected: selected == LeaderboardScope.country,
+              onTap: () => onChanged(LeaderboardScope.country),
+            ),
           ),
-          const SizedBox(width: RiksaSpacing.xs),
-          LeaderboardPillTab(
-            label: label,
-            selected: selected == LeaderboardScope.province,
-            onTap: () => onChanged(LeaderboardScope.province),
+          Expanded(
+            child: LeaderboardPillTab(
+              label: 'Province',
+              selected: selected == LeaderboardScope.province,
+              onTap: () => onChanged(LeaderboardScope.province),
+            ),
           ),
         ],
       ),
@@ -68,26 +75,23 @@ class LeaderboardPillTab extends StatelessWidget {
         borderRadius: AppRadii.fullBorder,
         child: AnimatedContainer(
           duration: RiksaMotion.standard,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: selected
-                ? (isDark ? palette.jade : AppColors.ink)
-                : palette.surface,
+                ? (isDark
+                      ? AppColors.editorialPink
+                      : AppColors.editorialAubergine)
+                : Colors.transparent,
             borderRadius: AppRadii.fullBorder,
-            border: Border.all(
-              color: selected
-                  ? Colors.transparent
-                  : palette.outline.withValues(alpha: 0.6),
-            ),
           ),
           child: Text(
             label,
             style: TextStyle(
               color: selected
-                  ? (isDark ? AppColors.darkCanvas : Colors.white)
-                  : palette.inkMuted,
+                  ? (isDark ? AppColors.editorialAubergine : Colors.white)
+                  : palette.ink,
               fontSize: 13,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ),

@@ -87,6 +87,7 @@ flutter:
     - assets/images/profile/
     - assets/images/avatars/humation/
     - assets/images/splashScreen/
+    - assets/images/onboarding/
     - assets/rive/
 
   fonts:

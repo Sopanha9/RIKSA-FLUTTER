@@ -11,7 +11,7 @@
 
   "registerTitle": "Create Account",
   "@registerTitle": {},
-  "registerSubtitle": "Join Riksa and start learning today",
+  "registerSubtitle": "Create your account and start learning today",
   "@registerSubtitle": {},
   "registerEyebrow": "Start your streak",
   "@registerEyebrow": {},
@@ -207,6 +207,8 @@
   "@askCommunity": {},
   "askCommunitySubtitle": "Get help from learners who have been there.",
   "@askCommunitySubtitle": {},
+  "communityComposerPrompt": "What are your doubts?",
+  "@communityComposerPrompt": {},
   "chooseCommunity": "Choose a community",
   "@chooseCommunity": {},
   "postTitleLabel": "Post title",

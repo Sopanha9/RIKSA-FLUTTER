@@ -9,22 +9,28 @@ class RiksaLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+    final primary =
+        color ?? (dark ? theme.colorScheme.primary : const Color(0xFF1B4332));
+    final accent =
+        color ?? (dark ? theme.colorScheme.secondary : const Color(0xFFB5828C));
     return RichText(
       text: TextSpan(
         style: Theme.of(context).textTheme.displayLarge?.copyWith(
           fontSize: fontSize,
           fontWeight: FontWeight.w800,
           letterSpacing: -0.5,
-          color: color ?? const Color(0xFF1B4332),
+          color: primary,
         ),
-        children: const [
+        children: [
           TextSpan(
             text: 'Rik',
-            style: TextStyle(color: Color(0xFF1B4332)),
+            style: TextStyle(color: primary),
           ),
           TextSpan(
             text: 'sa',
-            style: TextStyle(color: Color(0xFFB5828C)),
+            style: TextStyle(color: accent),
           ),
         ],
       ),

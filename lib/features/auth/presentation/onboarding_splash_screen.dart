@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import 'widgets/onboarding_art.dart';
 
@@ -80,7 +79,9 @@ class _OnboardingSplashScreenState
     ];
 
     return Scaffold(
-      backgroundColor: context.riksa.canvas,
+      backgroundColor: theme.brightness == Brightness.dark
+          ? context.riksa.canvas
+          : AppColors.editorialNeutralCanvas,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -90,29 +91,6 @@ class _OnboardingSplashScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: context.riksa.surface,
-                        borderRadius: AppRadii.fullBorder,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: RiksaSpacing.sm,
-                          vertical: RiksaSpacing.xs,
-                        ),
-                        child: Text(
-                          'RIKSA',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: context.riksa.jadeStrong,
-                            letterSpacing: 1.4,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: RiksaSpacing.sm),
                   Expanded(
                     child: PageView.builder(
                       key: const Key('onboarding_pages'),
@@ -122,13 +100,19 @@ class _OnboardingSplashScreenState
                           setState(() => _currentPage = index),
                       itemBuilder: (context, index) => Padding(
                         padding: const EdgeInsets.only(bottom: RiksaSpacing.md),
-                        child: RiksaPastelCard(
-                          tone: switch (index) {
-                            0 => RiksaPastelTone.jade,
-                            1 => RiksaPastelTone.cream,
-                            _ => RiksaPastelTone.blush,
-                          },
-                          padding: const EdgeInsets.all(RiksaSpacing.md),
+                        child: Container(
+                          padding: const EdgeInsets.all(RiksaSpacing.lg),
+                          decoration: BoxDecoration(
+                            color: theme.brightness == Brightness.dark
+                                ? context.riksa.surface
+                                : AppColors.editorialNeutralSurface,
+                            borderRadius: AppRadii.extraLargeBorder,
+                            border: Border.all(
+                              color: theme.brightness == Brightness.dark
+                                  ? context.riksa.outline
+                                  : AppColors.editorialOutline,
+                            ),
+                          ),
                           child: OnboardingArt(
                             scene: _scenes[index],
                             active: index == _currentPage,
@@ -167,6 +151,14 @@ class _OnboardingSplashScreenState
                     child: FilledButton(
                       key: const Key('onboarding_continue'),
                       onPressed: _finishing ? null : _continue,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: theme.brightness == Brightness.dark
+                            ? AppColors.editorialPink
+                            : AppColors.editorialAubergine,
+                        foregroundColor: theme.brightness == Brightness.dark
+                            ? AppColors.editorialAubergine
+                            : Colors.white,
+                      ),
                       child: _finishing
                           ? const SizedBox.square(
                               dimension: 20,
@@ -193,7 +185,7 @@ class _PageIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     return Semantics(
       label: 'Page ${currentPage + 1} of $count',
       child: Row(
@@ -207,8 +199,10 @@ class _PageIndicator extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 4),
             decoration: BoxDecoration(
               color: index == currentPage
-                  ? colors.onSurface
-                  : colors.outlineVariant,
+                  ? AppColors.editorialPink
+                  : theme.brightness == Brightness.dark
+                  ? context.riksa.outline
+                  : AppColors.editorialOutline,
               shape: BoxShape.circle,
             ),
           ),

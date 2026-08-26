@@ -103,6 +103,38 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(
+      tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
+      AppColors.editorialNeutralCanvas,
+    );
+    expect(
+      (tester
+                  .widget<Container>(
+                    find.byKey(const ValueKey('post-detail-body')),
+                  )
+                  .decoration
+              as BoxDecoration)
+          .color,
+      AppColors.editorialNeutralSurface,
+    );
+    expect(
+      (tester
+                  .widget<Container>(
+                    find.byKey(const ValueKey('comment-card-comment-1')),
+                  )
+                  .decoration
+              as BoxDecoration)
+          .color,
+      AppColors.editorialNeutralSurface,
+    );
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const ValueKey('comment-composer')))
+          .decoration
+          ?.fillColor,
+      AppColors.editorialField,
+    );
+
     await tester.tap(find.byKey(const ValueKey('detail-author-avatar-user-2')));
     await tester.pumpAndSettle();
     expect(find.text('profile-user-2'), findsOneWidget);

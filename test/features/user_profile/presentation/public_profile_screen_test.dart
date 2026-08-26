@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,7 +42,7 @@ const _profile = PublicProfile(
   id: 'user-2',
   username: 'dara',
   displayName: 'Dara',
-  avatarUrl: null,
+  avatarUrl: '/avatars/avatar-17.png',
   bio: 'Learning in public.',
   isVerified: true,
   totalXp: 2400,
@@ -58,6 +60,8 @@ const _profile = PublicProfile(
 );
 
 void main() {
+  setUpAll(_loadFonts);
+
   testWidgets('renders populated public-safe profile tabs', (tester) async {
     await _pump(
       tester,
@@ -81,8 +85,41 @@ void main() {
     );
     expect(find.text('2.4K XP'), findsOneWidget);
     expect(find.text('How I study algebra'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('humation-avatar-avatar-17.svg')),
+      findsOneWidget,
+    );
     expect(find.textContaining('private@example.test'), findsNothing);
     expect(find.textContaining('+855'), findsNothing);
+
+    final scaffold = tester.widget<Scaffold>(
+      find.byKey(const ValueKey('public-profile-scaffold')),
+    );
+    expect(scaffold.backgroundColor, AppColors.editorialNeutralCanvas);
+    final cover = tester.widget<Container>(
+      find.byKey(const ValueKey('public-profile-default-cover')),
+    );
+    expect(cover.color, AppColors.editorialPinkSoft);
+    final avatarRing = tester.widget<Container>(
+      find.byKey(const ValueKey('public-profile-avatar-ring')),
+    );
+    final avatarDecoration = avatarRing.decoration! as BoxDecoration;
+    expect(avatarDecoration.color, AppColors.editorialPinkSoft);
+    expect(avatarDecoration.border!.top.color, AppColors.editorialPink);
+    final verification = tester.widget<Icon>(
+      find.byKey(const ValueKey('public-verification-badge')),
+    );
+    expect(verification.color, AppColors.editorialPink);
+    final selectedTab = tester.widget<AnimatedContainer>(
+      find.descendant(
+        of: find.byKey(const ValueKey('profile-posts-tab')),
+        matching: find.byType(AnimatedContainer),
+      ),
+    );
+    expect(
+      (selectedTab.decoration! as BoxDecoration).color,
+      AppColors.editorialAubergine,
+    );
 
     await tester.tap(find.byKey(const ValueKey('profile-achievements-tab')));
     await tester.pump();
@@ -110,6 +147,83 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('public-profile-posts-empty')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('never renders a blank public identity', (tester) async {
+    const blankIdentity = PublicProfile(
+      id: 'user-2',
+      username: '',
+      displayName: '',
+      avatarUrl: null,
+      bio: null,
+      isVerified: false,
+      totalXp: 3250,
+      currentTier: 'DIAMOND',
+      achievements: [],
+      rank: null,
+    );
+
+    await _pump(
+      tester,
+      profiles: _Profiles(result: Future.value(blankIdentity)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('@'), findsNothing);
+    expect(find.text('RIKSA Learner'), findsOneWidget);
+    expect(find.text('R'), findsOneWidget);
+  });
+
+  testWidgets('uses the matching post author when profile identity is blank', (
+    tester,
+  ) async {
+    const blankIdentity = PublicProfile(
+      id: 'user-2',
+      username: '',
+      displayName: '',
+      avatarUrl: null,
+      bio: null,
+      isVerified: false,
+      totalXp: 3250,
+      currentTier: 'DIAMOND',
+      achievements: [],
+      rank: null,
+    );
+    final postWithAuthorAvatar = SocialPost(
+      id: _post.id,
+      title: _post.title,
+      content: _post.content,
+      reactionCount: _post.reactionCount,
+      commentCount: _post.commentCount,
+      shareCount: _post.shareCount,
+      author: const SocialAuthor(
+        id: 'user-2',
+        username: 'dara',
+        displayName: 'Dara Seng',
+        avatarUrl: '/avatars/avatar-12.png',
+      ),
+      category: _post.category,
+      createdAt: _post.createdAt,
+      updatedAt: _post.updatedAt,
+    );
+
+    await _pump(
+      tester,
+      profiles: _Profiles(result: Future.value(blankIdentity)),
+      social: _Social(page: _page([postWithAuthorAvatar])),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('RIKSA Learner'), findsNothing);
+    expect(find.text('Dara Seng'), findsWidgets);
+    expect(find.text('@dara'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('public-profile-avatar-ring')),
+        matching: find.byKey(const ValueKey('humation-avatar-avatar-12.svg')),
+      ),
       findsOneWidget,
     );
   });
@@ -152,6 +266,51 @@ void main() {
     expect(find.text('សមិទ្ធផល'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('matches the editorial public profile visual', (tester) async {
+    await _pump(
+      tester,
+      profiles: _Profiles(result: Future.value(_profile)),
+      social: _Social(page: _page([_post])),
+    );
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(PublicProfileScreen),
+      matchesGoldenFile(
+        '../../../visuals/goldens/public_profile_editorial_en_light.png',
+      ),
+    );
+  });
+}
+
+Future<void> _loadFonts() async {
+  final poppins = FontLoader(RiksaTypography.latinFamily);
+  for (final name in [
+    'Light',
+    'Regular',
+    'Medium',
+    'SemiBold',
+    'Bold',
+    'ExtraBold',
+    'Black',
+  ]) {
+    poppins.addFont(rootBundle.load('assets/fonts/Poppins-$name.ttf'));
+  }
+  final khmer = FontLoader(RiksaTypography.khmerFamily)
+    ..addFont(rootBundle.load('assets/fonts/NotoSansKhmer-Variable.ttf'));
+  final configuredRoot = Platform.environment['FLUTTER_ROOT'];
+  final flutterRoot =
+      configuredRoot ??
+      File(Platform.resolvedExecutable).parent.parent.parent.parent.parent.path;
+  final materialIcons = FontLoader('MaterialIcons')
+    ..addFont(
+      File(
+        '$flutterRoot/bin/cache/artifacts/material_fonts/'
+        'MaterialIcons-Regular.otf',
+      ).readAsBytes().then(ByteData.sublistView),
+    );
+  await Future.wait([poppins.load(), khmer.load(), materialIcons.load()]);
 }
 
 SocialFeedPage _page(List<SocialPost> posts) =>
@@ -178,6 +337,7 @@ Future<void> _pump(
         ),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         theme: theme ?? AppTheme.light,
         locale: locale,
         localizationsDelegates: const [

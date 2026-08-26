@@ -7,7 +7,7 @@
   "loginEyebrow": "កន្លែងសិក្សារបស់អ្នក",
 
   "registerTitle": "បង្កើត​គណនី",
-  "registerSubtitle": "ចូលរួម Riksa និងចាប់ផ្ដើមសិក្សាថ្ងៃនេះ",
+  "registerSubtitle": "បង្កើតគណនីរបស់អ្នក និងចាប់ផ្ដើមសិក្សាថ្ងៃនេះ",
   "registerEyebrow": "ចាប់ផ្ដើមការសិក្សាបន្តបន្ទាប់",
   "accountBasics": "ព័ត៌មានគណនី",
   "secureYourAccount": "ការពារគណនីរបស់អ្នក",
@@ -109,6 +109,7 @@
   "createPostSubtitle": "ចែករំលែកគំនិត មេរៀន ឬធនធានមានប្រយោជន៍។",
   "askCommunity": "សួរសហគមន៍",
   "askCommunitySubtitle": "សុំជំនួយពីអ្នកសិក្សាផ្សេងទៀត។",
+  "communityComposerPrompt": "តើអ្នកមានចម្ងល់អ្វី?",
   "chooseCommunity": "ជ្រើសរើសសហគមន៍",
   "postTitleLabel": "ចំណងជើងការបង្ហោះ",
   "questionTitleLabel": "តើអ្នកចង់សួរអ្វី?",

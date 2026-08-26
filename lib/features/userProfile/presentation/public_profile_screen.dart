@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../social/data/social_models.dart';
 import '../../social/presentation/widgets/social_post_card.dart';
 import '../data/public_profile.dart';
 import '../providers/public_profile_provider.dart';
@@ -31,47 +32,68 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     final state = ref.watch(publicProfileProvider(widget.userId));
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: ProfilePalette.canvas(context),
-      appBar: AppBar(
-        leading: BackButton(
-          key: const ValueKey('public-profile-back'),
-          onPressed: () {
-            if (Navigator.of(context).canPop()) Navigator.of(context).pop();
-          },
-        ),
-        title: Text(
-          l10n.publicProfile,
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-      ),
-      body: switch (state.status) {
-        PublicProfileStatus.loading => const ProfileLoadingState(
-          key: ValueKey('public-profile-loading'),
-        ),
-        PublicProfileStatus.unavailable => _UnavailableProfile(
-          onRetry: () =>
-              ref.read(publicProfileProvider(widget.userId).notifier).refresh(),
-        ),
-        PublicProfileStatus.failure => Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: ProfileErrorPanel(
-                key: const ValueKey('public-profile-error'),
-                retryButtonKey: const ValueKey('public-profile-retry'),
-                message: l10n.publicProfileLoadFailed,
-                retryLabel: l10n.tryAgain,
-                onRetry: () => ref
-                    .read(publicProfileProvider(widget.userId).notifier)
-                    .refresh(),
+    return ProfilePaletteScope.editorial(
+      context: context,
+      child: Builder(
+        builder: (context) => Scaffold(
+          key: const ValueKey('public-profile-scaffold'),
+          backgroundColor: ProfilePalette.canvas(context),
+          appBar: AppBar(
+            backgroundColor: ProfilePalette.canvas(context),
+            foregroundColor: ProfilePalette.text(context),
+            leading: IconButton(
+              key: const ValueKey('public-profile-back'),
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              style: IconButton.styleFrom(
+                backgroundColor: ProfilePalette.panel(context),
+                foregroundColor: ProfilePalette.aubergine(context),
+                side: BorderSide(color: ProfilePalette.border(context)),
+              ),
+              icon: const Icon(Icons.arrow_back_rounded),
+              onPressed: () {
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+            title: Text(
+              l10n.publicProfile,
+              style: TextStyle(
+                color: ProfilePalette.aubergine(context),
+                fontWeight: FontWeight.w900,
               ),
             ),
           ),
+          body: switch (state.status) {
+            PublicProfileStatus.loading => const ProfileLoadingState(
+              key: ValueKey('public-profile-loading'),
+            ),
+            PublicProfileStatus.unavailable => _UnavailableProfile(
+              onRetry: () => ref
+                  .read(publicProfileProvider(widget.userId).notifier)
+                  .refresh(),
+            ),
+            PublicProfileStatus.failure => Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: ProfileErrorPanel(
+                    key: const ValueKey('public-profile-error'),
+                    retryButtonKey: const ValueKey('public-profile-retry'),
+                    message: l10n.publicProfileLoadFailed,
+                    retryLabel: l10n.tryAgain,
+                    onRetry: () => ref
+                        .read(publicProfileProvider(widget.userId).notifier)
+                        .refresh(),
+                  ),
+                ),
+              ),
+            ),
+            PublicProfileStatus.ready => _buildReady(context, state),
+          },
         ),
-        PublicProfileStatus.ready => _buildReady(context, state),
-      },
+      ),
     );
   }
 
@@ -79,6 +101,27 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     final profile = state.profile!;
     final l10n = AppLocalizations.of(context)!;
     final controller = ref.read(publicProfileProvider(widget.userId).notifier);
+    SocialAuthor? postAuthor;
+    for (final post in state.posts) {
+      if (post.author.id == widget.userId || post.author.id == profile.id) {
+        postAuthor = post.author;
+        break;
+      }
+    }
+    final postAuthorName = postAuthor?.displayName.trim().isNotEmpty == true
+        ? postAuthor!.displayName.trim()
+        : postAuthor?.username.trim() ?? '';
+    final displayName = profile.preferredName.isNotEmpty
+        ? profile.preferredName
+        : postAuthorName.isNotEmpty
+        ? postAuthorName
+        : l10n.riksaLearner;
+    final username = profile.username.trim().isNotEmpty
+        ? profile.username.trim()
+        : postAuthor?.username.trim() ?? '';
+    final avatarUrl = profile.avatarUrl?.trim().isNotEmpty == true
+        ? profile.avatarUrl
+        : postAuthor?.avatarUrl;
 
     return RefreshIndicator(
       color: ProfilePalette.green(context),
@@ -104,9 +147,12 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                       children: [
                         ProfileIdentityHeader(
                           cover: _PublicCover(url: profile.coverUrl),
-                          avatar: _PublicAvatar(profile: profile),
-                          displayName: profile.preferredName,
-                          username: profile.username,
+                          avatar: _PublicAvatar(
+                            value: avatarUrl,
+                            label: displayName,
+                          ),
+                          displayName: displayName,
+                          username: username,
                           bio: profile.bio,
                           isVerified: profile.isVerified,
                           tier: profile.currentTier,
@@ -178,27 +224,7 @@ class _PublicCover extends StatelessWidget {
   Widget build(BuildContext context) {
     final fallback = Container(
       key: const ValueKey('public-profile-default-cover'),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            ProfilePalette.greenSoft(context),
-            Theme.of(context).colorScheme.surfaceContainerHighest,
-          ],
-        ),
-      ),
-      child: Align(
-        alignment: AlignmentDirectional.bottomEnd,
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Icon(
-            Icons.auto_awesome_rounded,
-            color: ProfilePalette.green(context).withValues(alpha: .55),
-            size: 34,
-          ),
-        ),
-      ),
+      color: ProfilePalette.greenSoft(context),
     );
     return ClipRRect(
       borderRadius: AppRadii.largeBorder,
@@ -218,12 +244,14 @@ class _PublicCover extends StatelessWidget {
 }
 
 class _PublicAvatar extends StatelessWidget {
-  const _PublicAvatar({required this.profile});
+  const _PublicAvatar({required this.value, required this.label});
 
-  final PublicProfile profile;
+  final String? value;
+  final String label;
 
   @override
   Widget build(BuildContext context) => Container(
+    key: const ValueKey('public-profile-avatar-ring'),
     width: 98,
     height: 98,
     padding: const EdgeInsets.all(3),
@@ -233,8 +261,8 @@ class _PublicAvatar extends StatelessWidget {
       border: Border.all(color: ProfilePalette.green(context), width: 2),
     ),
     child: RiksaAvatarImage(
-      value: profile.avatarUrl,
-      label: profile.preferredName,
+      value: value,
+      label: label,
       size: 92,
       backgroundColor: ProfilePalette.panelSoft(context),
       foregroundColor: ProfilePalette.text(context),

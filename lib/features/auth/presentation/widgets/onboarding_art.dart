@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:rive/rive.dart' as rive;
 
 enum OnboardingScene { learning, achievement, community }
@@ -49,18 +50,18 @@ class _OnboardingArtState extends State<OnboardingArt> {
       label: widget.semanticLabel,
       child: ExcludeSemantics(
         child: reduceMotion
-            ? _PngOnboardingArt(scene: widget.scene)
+            ? _StaticOnboardingArt(scene: widget.scene)
             : FutureBuilder<bool>(
                 future: _riveAssetAvailable,
                 builder: (context, snapshot) {
                   if (snapshot.data != true) {
-                    return _PngOnboardingArt(scene: widget.scene);
+                    return _StaticOnboardingArt(scene: widget.scene);
                   }
                   return _RiveOnboardingArt(
                     asset: _riveAsset,
                     artboard: widget.scene.artboardName,
                     active: widget.active,
-                    fallback: _PngOnboardingArt(scene: widget.scene),
+                    fallback: _StaticOnboardingArt(scene: widget.scene),
                   );
                 },
               ),
@@ -125,13 +126,13 @@ class _RiveOnboardingArtState extends State<_RiveOnboardingArt> {
   );
 }
 
-class _PngOnboardingArt extends StatelessWidget {
-  const _PngOnboardingArt({required this.scene});
+class _StaticOnboardingArt extends StatelessWidget {
+  const _StaticOnboardingArt({required this.scene});
 
   final OnboardingScene scene;
 
   @override
-  Widget build(BuildContext context) => Image.asset(
+  Widget build(BuildContext context) => SvgPicture.asset(
     scene.fallbackAsset,
     key: ValueKey(scene.fallbackAsset),
     fit: BoxFit.contain,
@@ -146,8 +147,8 @@ extension on OnboardingScene {
   };
 
   String get fallbackAsset => switch (this) {
-    OnboardingScene.learning => 'assets/images/splashScreen/image.png',
-    OnboardingScene.achievement => 'assets/images/splashScreen/image copy.png',
-    OnboardingScene.community => 'assets/images/splashScreen/image copy 2.png',
+    OnboardingScene.learning => 'assets/images/onboarding/learning.svg',
+    OnboardingScene.achievement => 'assets/images/onboarding/achievement.svg',
+    OnboardingScene.community => 'assets/images/onboarding/community.svg',
   };
 }

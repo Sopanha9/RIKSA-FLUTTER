@@ -7,49 +7,161 @@ import '../../../auth/data/auth_models.dart';
 class ProfilePalette {
   ProfilePalette._();
 
-  static Color green(BuildContext context) => context.riksa.jade;
-  static Color streak(BuildContext context) => context.riksa.saffron;
-  static Color xp(BuildContext context) => context.riksa.saffron;
+  static ProfilePaletteScope? _scope(BuildContext context) =>
+      ProfilePaletteScope.maybeOf(context);
+
+  static Color green(BuildContext context) =>
+      _scope(context)?.accent ?? context.riksa.jade;
+  static Color streak(BuildContext context) =>
+      _scope(context)?.achievement ?? context.riksa.saffron;
+  static Color xp(BuildContext context) =>
+      _scope(context)?.achievement ?? context.riksa.saffron;
 
   static Color canvas(BuildContext context) =>
-      Theme.of(context).scaffoldBackgroundColor;
+      _scope(context)?.canvas ?? Theme.of(context).scaffoldBackgroundColor;
 
   static Color panel(BuildContext context) =>
+      _scope(context)?.panel ??
       Theme.of(context).colorScheme.surfaceContainerLow;
 
   static Color panelSoft(BuildContext context) =>
+      _scope(context)?.panelSoft ??
       Theme.of(context).colorScheme.surfaceContainer;
 
   static Color border(BuildContext context) =>
-      Theme.of(context).colorScheme.outline;
+      _scope(context)?.border ?? Theme.of(context).colorScheme.outline;
 
   static Color text(BuildContext context) =>
-      Theme.of(context).colorScheme.onSurface;
+      _scope(context)?.text ?? Theme.of(context).colorScheme.onSurface;
 
   static Color muted(BuildContext context) =>
-      Theme.of(context).colorScheme.onSurfaceVariant;
+      _scope(context)?.muted ?? Theme.of(context).colorScheme.onSurfaceVariant;
 
   static Color greenSoft(BuildContext context) =>
+      _scope(context)?.accentSoft ??
       Theme.of(context).colorScheme.primaryContainer;
 
-  static Color aubergine(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-      ? AppColors.editorialAubergineRaised
-      : AppColors.editorialAubergine;
+  static Color achievementSoft(BuildContext context) =>
+      _scope(context)?.achievementSoft ?? AppColors.gamificationOrangeSoft;
 
-  static Color pink(BuildContext context) => AppColors.editorialPink;
+  static Color aubergine(BuildContext context) =>
+      _scope(context)?.aubergine ??
+      (Theme.of(context).brightness == Brightness.dark
+          ? AppColors.editorialAubergineRaised
+          : AppColors.editorialAubergine);
+
+  static Color pink(BuildContext context) =>
+      _scope(context)?.pink ?? AppColors.editorialPink;
 
   static Color pinkSoft(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF4A253D)
-      : AppColors.editorialPinkSoft;
+      _scope(context)?.pinkSoft ??
+      (Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF4A253D)
+          : AppColors.editorialPinkSoft);
 
   static Color editorialSurface(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-      ? Theme.of(context).colorScheme.surfaceContainer
-      : AppColors.editorialSurface;
+      _scope(context)?.editorialSurface ??
+      (Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).colorScheme.surfaceContainer
+          : AppColors.editorialSurface);
 
-  static Color onAubergine(BuildContext context) => const Color(0xFFFFF8FC);
+  static Color onAubergine(BuildContext context) =>
+      _scope(context)?.onAubergine ?? const Color(0xFFFFF8FC);
+}
+
+/// Lets an individual profile route opt into a coherent color system without
+/// changing the palette used by the rest of the account experience.
+class ProfilePaletteScope extends InheritedWidget {
+  const ProfilePaletteScope({
+    super.key,
+    required this.canvas,
+    required this.panel,
+    required this.panelSoft,
+    required this.border,
+    required this.text,
+    required this.muted,
+    required this.accent,
+    required this.accentSoft,
+    required this.achievement,
+    required this.achievementSoft,
+    required this.aubergine,
+    required this.pink,
+    required this.pinkSoft,
+    required this.editorialSurface,
+    required this.onAubergine,
+    required super.child,
+  });
+
+  factory ProfilePaletteScope.editorial({
+    required BuildContext context,
+    required Widget child,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.riksa;
+    return ProfilePaletteScope(
+      canvas: isDark ? palette.canvas : AppColors.editorialNeutralCanvas,
+      panel: isDark ? palette.surface : AppColors.editorialNeutralSurface,
+      panelSoft: isDark ? palette.surfaceRaised : AppColors.editorialField,
+      border: isDark ? palette.outline : AppColors.editorialOutline,
+      text: isDark ? palette.ink : AppColors.editorialInk,
+      muted: isDark ? palette.inkMuted : AppColors.editorialMuted,
+      accent: AppColors.editorialPink,
+      accentSoft: isDark
+          ? const Color(0xFF4A253D)
+          : AppColors.editorialPinkSoft,
+      achievement: AppColors.editorialPink,
+      achievementSoft: isDark
+          ? const Color(0xFF4A253D)
+          : AppColors.editorialPinkSoft,
+      aubergine: isDark
+          ? AppColors.editorialAubergineRaised
+          : AppColors.editorialAubergine,
+      pink: AppColors.editorialPink,
+      pinkSoft: isDark ? const Color(0xFF4A253D) : AppColors.editorialPinkSoft,
+      editorialSurface: isDark
+          ? palette.surface
+          : AppColors.editorialNeutralSurface,
+      onAubergine: const Color(0xFFFFF8FC),
+      child: child,
+    );
+  }
+
+  final Color canvas;
+  final Color panel;
+  final Color panelSoft;
+  final Color border;
+  final Color text;
+  final Color muted;
+  final Color accent;
+  final Color accentSoft;
+  final Color achievement;
+  final Color achievementSoft;
+  final Color aubergine;
+  final Color pink;
+  final Color pinkSoft;
+  final Color editorialSurface;
+  final Color onAubergine;
+
+  static ProfilePaletteScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ProfilePaletteScope>();
+
+  @override
+  bool updateShouldNotify(ProfilePaletteScope oldWidget) =>
+      canvas != oldWidget.canvas ||
+      panel != oldWidget.panel ||
+      panelSoft != oldWidget.panelSoft ||
+      border != oldWidget.border ||
+      text != oldWidget.text ||
+      muted != oldWidget.muted ||
+      accent != oldWidget.accent ||
+      accentSoft != oldWidget.accentSoft ||
+      achievement != oldWidget.achievement ||
+      achievementSoft != oldWidget.achievementSoft ||
+      aubergine != oldWidget.aubergine ||
+      pink != oldWidget.pink ||
+      pinkSoft != oldWidget.pinkSoft ||
+      editorialSurface != oldWidget.editorialSurface ||
+      onAubergine != oldWidget.onAubergine;
 }
 
 String readableProfileName(String value) => value
@@ -109,7 +221,12 @@ class ProfilePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: ProfilePalette.panel(context),
-    shape: const RoundedRectangleBorder(borderRadius: AppRadii.mediumBorder),
+    shape: RoundedRectangleBorder(
+      borderRadius: AppRadii.mediumBorder,
+      side: ProfilePaletteScope.maybeOf(context) == null
+          ? BorderSide.none
+          : BorderSide(color: ProfilePalette.border(context)),
+    ),
     elevation: 0,
     clipBehavior: Clip.antiAlias,
     child: Padding(padding: padding ?? const EdgeInsets.all(18), child: child),
@@ -184,11 +301,13 @@ class ProfileIdentityHeader extends StatelessWidget {
             ],
           ],
         ),
-        const SizedBox(height: 3),
-        Text(
-          '@$username',
-          style: TextStyle(color: ProfilePalette.muted(context)),
-        ),
+        if (username.trim().isNotEmpty) ...[
+          const SizedBox(height: 3),
+          Text(
+            '@${username.trim()}',
+            style: TextStyle(color: ProfilePalette.muted(context)),
+          ),
+        ],
         if (bio?.trim().isNotEmpty == true) ...[
           const SizedBox(height: 10),
           Text(
@@ -372,8 +491,8 @@ class ProfileAchievementTile extends StatelessWidget {
               width: 42,
               height: 42,
               clipBehavior: Clip.antiAlias,
-              decoration: const BoxDecoration(
-                color: AppColors.gamificationOrangeSoft,
+              decoration: BoxDecoration(
+                color: ProfilePalette.achievementSoft(context),
                 shape: BoxShape.circle,
               ),
               child: iconUrl?.trim().isNotEmpty == true
@@ -382,12 +501,12 @@ class ProfileAchievementTile extends StatelessWidget {
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => Icon(
                         Icons.workspace_premium_rounded,
-                        color: context.riksa.saffron,
+                        color: ProfilePalette.xp(context),
                       ),
                     )
                   : Icon(
                       Icons.workspace_premium_rounded,
-                      color: context.riksa.saffron,
+                      color: ProfilePalette.xp(context),
                     ),
             ),
             const Spacer(),

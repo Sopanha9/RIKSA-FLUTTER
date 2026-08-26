@@ -27,67 +27,59 @@ class RankingListRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? context.riksa.ink : AppColors.editorialInk;
+    final muted = isDark ? context.riksa.inkMuted : AppColors.editorialMuted;
+
     return Material(
-      color: isCurrentUser ? const Color(0xFFFFF9FC) : Colors.white,
-      borderRadius: AppRadii.largeBorder,
+      color: isCurrentUser
+          ? AppColors.editorialPinkSoft.withValues(alpha: isDark ? .12 : .32)
+          : Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: AppRadii.largeBorder,
         child: Container(
+          constraints: const BoxConstraints(minHeight: 70),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: AppRadii.largeBorder,
-            border: Border.all(
-              color: isCurrentUser ? AppColors.editorialPink : Colors.transparent,
-              width: 1.5,
-            ),
-          ),
           child: Row(
             children: [
-              // Left-aligned fixed width rank column
               SizedBox(
-                width: 34,
+                width: 42,
                 child: Text(
                   '#$rank',
                   style: TextStyle(
-                    fontSize: 14,
+                    color: isCurrentUser ? AppColors.editorialPink : ink,
+                    fontSize: 15,
                     fontWeight: FontWeight.w900,
-                    color: isCurrentUser
-                        ? AppColors.editorialPink
-                        : const Color(0xFF70695E),
                   ),
                 ),
               ),
-
-              // Avatar
               Container(
-                width: 38,
-                height: 38,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: isCurrentUser
                         ? AppColors.editorialPink
-                        : AppColors.brandJade,
-                    width: 2,
+                        : AppColors.editorialOutline,
+                    width: 1.5,
                   ),
                 ),
                 child: RiksaAvatarImage(
                   value: avatarUrl,
                   label: avatarLabel,
-                  size: 34,
-                  backgroundColor: const Color(0xFFF2EFE9),
-                  foregroundColor: const Color(0xFF121212),
+                  size: 37,
+                  backgroundColor: isDark
+                      ? context.riksa.surfaceRaised
+                      : AppColors.editorialField,
+                  foregroundColor: ink,
                 ),
               ),
-
-              const SizedBox(width: 10),
-
-              // User Info
+              const SizedBox(width: 11),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
@@ -96,44 +88,34 @@ class RankingListRow extends StatelessWidget {
                             name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color(0xFF121212),
+                            style: TextStyle(
+                              color: ink,
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
                         if (isCurrentUser) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.ink,
-                              borderRadius: AppRadii.smallBorder,
-                            ),
-                            child: const Text(
-                              'YOU',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.4,
-                              ),
+                          const SizedBox(width: 5),
+                          const Text(
+                            'YOU',
+                            style: TextStyle(
+                              color: AppColors.editorialPink,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: .4,
                             ),
                           ),
                         ],
                       ],
                     ),
-                    const SizedBox(height: 1),
+                    const SizedBox(height: 2),
                     Text(
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF70695E),
+                      style: TextStyle(
+                        color: muted,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -141,42 +123,23 @@ class RankingListRow extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(width: 8),
-
-              // XP pill: pink for current user, black for default
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: isCurrentUser ? AppColors.editorialPink : AppColors.ink,
+                  color: AppColors.editorialPinkSoft,
                   borderRadius: AppRadii.fullBorder,
                 ),
                 child: Text(
                   '$xp XP',
-                  style: TextStyle(
-                    color: isCurrentUser ? AppColors.ink : Colors.white,
+                  style: const TextStyle(
+                    color: AppColors.editorialAubergine,
                     fontSize: 11,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w900,
                   ),
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              // Action arrow button
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: isCurrentUser
-                      ? AppColors.ink
-                      : AppColors.editorialPinkSoft,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.play_arrow_rounded,
-                  color: isCurrentUser ? Colors.white : AppColors.ink,
-                  size: 16,
                 ),
               ),
             ],

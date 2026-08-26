@@ -2,6 +2,31 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/features/userProfile/data/public_profile.dart';
 
 void main() {
+  test('parses the flat public profile returned by the live API', () {
+    final profile = PublicProfile.fromJson({
+      'userId': '7dc10ef5-c7aa-4b5f-99b3-7799ed8b1ead',
+      'username': 'sophea',
+      'displayName': 'Sok Sophea',
+      'avatarUrl': '/avatars/avatar-17.png',
+      'bio': 'Learning STEM & Tech',
+      'role': 'USER',
+      'gamification': {
+        'totalXp': 3250,
+        'currentTier': 'DIAMOND',
+        'currentTierIcon': '/tiers/diamond.png',
+      },
+    });
+
+    expect(profile.id, '7dc10ef5-c7aa-4b5f-99b3-7799ed8b1ead');
+    expect(profile.username, 'sophea');
+    expect(profile.displayName, 'Sok Sophea');
+    expect(profile.avatarUrl, '/avatars/avatar-17.png');
+    expect(profile.bio, 'Learning STEM & Tech');
+    expect(profile.totalXp, 3250);
+    expect(profile.currentTier, 'DIAMOND');
+    expect(profile.toJson().toString(), isNot(contains('role')));
+  });
+
   test('parses the public profile contract without private account fields', () {
     final profile = PublicProfile.fromJson({
       'user': {
