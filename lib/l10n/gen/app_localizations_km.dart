@@ -305,6 +305,12 @@ class AppLocalizationsKm extends AppLocalizations {
   String get createCommunityContent => 'បង្កើតក្នុងសហគមន៍';
 
   @override
+  String get startConversation => 'ចាប់ផ្តើមការសន្ទនា';
+
+  @override
+  String get startConversationHint => 'ចែករំលែកអ្វីមួយជាមួយ RIKSA...';
+
+  @override
   String get createPost => 'បង្កើតការបង្ហោះ';
 
   @override

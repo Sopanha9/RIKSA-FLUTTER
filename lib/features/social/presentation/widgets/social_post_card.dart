@@ -3,11 +3,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
-import '../../../../l10n/gen/app_localizations.dart';
-import '../../../userProfile/presentation/widgets/profile_ui.dart';
 import '../../data/social_models.dart';
 
-class SocialPostCard extends StatelessWidget {
+class SocialPostCard extends StatefulWidget {
   const SocialPostCard({
     super.key,
     required this.post,
@@ -24,320 +22,290 @@ class SocialPostCard extends StatelessWidget {
   final VoidCallback? onAuthorTap;
 
   @override
+  State<SocialPostCard> createState() => _SocialPostCardState();
+}
+
+class _SocialPostCardState extends State<SocialPostCard> {
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-    final isReacted = post.myReaction != null;
-    final isOfficial = isOfficialRiksaAuthor(post.author);
+    final post = widget.post;
+    final date = DateFormat.MMMd(
+      Localizations.localeOf(context).languageCode,
+    ).format(post.createdAt.toLocal());
 
-    return Semantics(
-      container: true,
-      label: '${post.author.displayName}: ${post.title}',
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
-        child: Material(
-          key: ValueKey('post-${post.id}'),
-          color: isOfficial
-              ? (isDark
-                  ? ProfilePalette.editorialSurface(context)
-                  : ProfilePalette.pinkSoft(context).withValues(alpha: .28))
-              : (isDark ? ProfilePalette.panel(context) : Colors.white),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadii.largeBorder,
-            side: BorderSide(
-              color: isOfficial
-                  ? ProfilePalette.pink(context).withValues(alpha: .4)
-                  : ProfilePalette.border(context).withValues(alpha: .35),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+      child: InkWell(
+        onTap: widget.onTap,
+        borderRadius: AppRadii.mediumBorder,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _PostHeader(
+              post: post,
+              date: date,
+              onAuthorTap: widget.onAuthorTap,
             ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _PostMetadata(post: post, onAuthorTap: onAuthorTap),
-                  const SizedBox(height: 16),
-                  Text(
-                    post.title,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w900,
-                      height: 1.2,
-                      letterSpacing: -.35,
-                      color: ProfilePalette.text(context),
-                    ),
-                  ),
-                  if (post.content.trim().isNotEmpty) ...[
-                    const SizedBox(height: 9),
-                    Text(
-                      post.content,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: ProfilePalette.muted(context),
-                        height: 1.55,
-                      ),
-                    ),
-                  ],
-                  if (post.hasMedia) ...[
-                    const SizedBox(height: 16),
-                    ClipRRect(
-                      borderRadius: AppRadii.mediumBorder,
-                      child: AspectRatio(
-                        aspectRatio: 16 / 9,
-                        child: Image.network(
-                          post.mediaUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              ColoredBox(
-                                color: colors.surfaceContainer,
-                                child: Icon(
-                                  Icons.image_not_supported_outlined,
-                                  color: ProfilePalette.muted(context),
-                                  size: 32,
-                                ),
-                              ),
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 17),
-                  Row(
-                    children: [
-                      _PrimaryReactionButton(
-                        key: ValueKey('react-${post.id}'),
-                        count: post.reactionCount,
-                        selected: isReacted,
-                        onPressed: onReact,
-                      ),
-                      const SizedBox(width: 10),
-                      _LightAction(
-                        icon: Icons.mode_comment_outlined,
-                        count: post.commentCount,
-                      ),
-                      const Spacer(),
-                      _LightAction(
-                        key: ValueKey('share-${post.id}'),
-                        icon: Icons.ios_share_rounded,
-                        count: post.shareCount,
-                        onPressed: onShare,
-                      ),
-                    ],
-                  ),
-                ],
+            const SizedBox(height: 15),
+            if (post.title.trim().isNotEmpty)
+              Text(
+                post.title,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -.35,
+                  height: 1.28,
+                ),
               ),
+            if (post.content.trim().isNotEmpty) ...[
+              const SizedBox(height: 7),
+              Text(
+                post.content,
+                maxLines: _expanded ? null : 4,
+                overflow: _expanded ? null : TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  height: 1.58,
+                ),
+              ),
+              if (post.content.length > 180 && !_expanded)
+                TextButton(
+                  onPressed: () => setState(() => _expanded = true),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF625284),
+                    minimumSize: Size.zero,
+                    padding: const EdgeInsets.only(top: 4),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('Read more'),
+                ),
+            ],
+            if (post.hasMedia) ...[
+              const SizedBox(height: 15),
+              ClipRRect(
+                borderRadius: const BorderRadius.all(Radius.circular(18)),
+                child: _PostMedia(post: post),
+              ),
+            ],
+            const SizedBox(height: 8),
+            _PostActions(
+              post: post,
+              onReact: widget.onReact,
+              onComment: widget.onTap,
+              onShare: widget.onShare,
             ),
-          ),
+            const Padding(
+              padding: EdgeInsets.only(top: 14),
+              child: Divider(height: 1, color: Color(0xFFE8E7E2)),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _PostMetadata extends StatelessWidget {
-  const _PostMetadata({required this.post, this.onAuthorTap});
+class _PostHeader extends StatelessWidget {
+  const _PostHeader({required this.post, required this.date, this.onAuthorTap});
 
   final SocialPost post;
+  final String date;
   final VoidCallback? onAuthorTap;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final date = DateFormat.MMMd(
-      Localizations.localeOf(context).languageCode,
-    ).format(post.createdAt.toLocal());
-    final authorName = post.author.displayName.trim().isEmpty
+    final colors = Theme.of(context).colorScheme;
+    final name = post.author.displayName.trim().isEmpty
         ? post.author.username
         : post.author.displayName;
-    final isOfficial = isOfficialRiksaAuthor(post.author);
-
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         GestureDetector(
           key: ValueKey('author-avatar-${post.author.id}'),
-          behavior: HitTestBehavior.opaque,
           onTap: onAuthorTap,
           child: SocialAuthorAvatar(
             imageUrl: post.author.avatarUrl,
-            label: authorName,
+            label: name,
             seed: post.author.username.isEmpty
                 ? post.author.id
                 : post.author.username,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 9),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Flexible(
-                    child: GestureDetector(
-                      key: ValueKey('author-name-${post.author.id}'),
-                      behavior: HitTestBehavior.opaque,
-                      onTap: onAuthorTap,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Text(
-                          authorName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: ProfilePalette.text(context),
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ),
+              GestureDetector(
+                key: ValueKey('author-name-${post.author.id}'),
+                onTap: onAuthorTap,
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colors.onSurface,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
                   ),
-                  if (isOfficial) ...[
-                    const SizedBox(width: 7),
-                    const _OfficialBadge(),
-                  ],
-                ],
-              ),
-              const SizedBox(height: 3),
-              Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: categoryPrefix(post.category),
-                      style: TextStyle(
-                        color: ProfilePalette.pink(context),
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -.2,
-                      ),
-                    ),
-                    TextSpan(
-                      text: ' ${post.category.name} · $date',
-                      style: TextStyle(
-                        color: ProfilePalette.muted(context),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
                 ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${post.category.name} · $date',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(height: 1.2),
+                style: TextStyle(
+                  color: colors.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
+        ),
+        IconButton(
+          onPressed: () {},
+          icon: Icon(Icons.more_horiz_rounded, color: colors.onSurfaceVariant),
+          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+          padding: EdgeInsets.zero,
         ),
       ],
     );
   }
 }
 
-class _OfficialBadge extends StatelessWidget {
-  const _OfficialBadge();
+class _PostMedia extends StatelessWidget {
+  const _PostMedia({required this.post});
+
+  final SocialPost post;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      key: const ValueKey('official-account-badge'),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: ProfilePalette.pinkSoft(context),
-        borderRadius: AppRadii.fullBorder,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.verified_rounded,
-            size: 12,
-            color: ProfilePalette.pink(context),
+    final colors = Theme.of(context).colorScheme;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 272),
+      child: Image.network(
+        post.mediaUrl!,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        alignment: Alignment.center,
+        errorBuilder: (_, _, _) => Container(
+          height: 190,
+          color: colors.surfaceContainerLow,
+          alignment: Alignment.center,
+          child: Icon(
+            Icons.image_not_supported_outlined,
+            color: colors.onSurfaceVariant,
           ),
-          const SizedBox(width: 4),
-          Text(
-            AppLocalizations.of(context)!.official,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: ProfilePalette.aubergine(context),
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              height: 1,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-/// Compact community label used in the dense post metadata line.
-String categoryPrefix(SocialCategory category) {
-  final normalizedName = _normalizeCategory(category.name);
-  final normalizedSlug = _normalizeCategory(category.slug);
-  final key = normalizedSlug.isNotEmpty ? normalizedSlug : normalizedName;
-  const prefixes = <String, String>{
-    'mathematics': 'math',
-    'math': 'math',
-    'biology': 'bio',
-    'bio': 'bio',
-    'chemistry': 'chem',
-    'chem': 'chem',
-    'computer science': 'cs',
-    'computerscience': 'cs',
-    'cs': 'cs',
-    'physics': 'phys',
-    'environmental science': 'env',
-    'environmentalscience': 'env',
-    'earth science': 'earth',
-    'earthscience': 'earth',
-    'study skills': 'study',
-    'studyskills': 'study',
-    'english': 'eng',
-    'khmer': 'kh',
-    'history': 'hist',
-    'geography': 'geo',
-    'economics': 'econ',
-    'technology': 'tech',
-    'engineering': 'engr',
-    'astronomy': 'astro',
-    'general': 'general',
-  };
+class _PostActions extends StatelessWidget {
+  const _PostActions({
+    required this.post,
+    required this.onReact,
+    required this.onComment,
+    required this.onShare,
+  });
 
-  final known = prefixes[key] ?? prefixes[normalizedName];
-  if (known != null) return '$known/';
+  final SocialPost post;
+  final VoidCallback onReact;
+  final VoidCallback onComment;
+  final VoidCallback onShare;
 
-  final words = category.name
-      .toLowerCase()
-      .split(RegExp(r'[^a-z0-9]+'))
-      .where((word) => word.isNotEmpty)
-      .toList();
-  if (words.length > 1) {
-    final initials = words.map((word) => word[0]).join();
-    return '${initials.substring(0, initials.length.clamp(1, 6))}/';
+  @override
+  Widget build(BuildContext context) {
+    final reacted = post.myReaction != null;
+    return Row(
+      children: [
+        _PostAction(
+          key: ValueKey('react-${post.id}'),
+          icon: reacted
+              ? Icons.favorite_rounded
+              : Icons.favorite_border_rounded,
+          label: '${post.reactionCount}',
+          selected: reacted,
+          onTap: onReact,
+        ),
+        const SizedBox(width: 18),
+        _PostAction(
+          icon: Icons.mode_comment_outlined,
+          label: '${post.commentCount}',
+          onTap: onComment,
+        ),
+        const SizedBox(width: 18),
+        _PostAction(
+          icon: Icons.auto_awesome_outlined,
+          label: '${post.reactionCount} learned',
+          onTap: onReact,
+        ),
+        const Spacer(),
+        _PostAction(
+          key: ValueKey('share-${post.id}'),
+          icon: Icons.ios_share_outlined,
+          onTap: onShare,
+        ),
+      ],
+    );
   }
-  final fallback = key.replaceAll(' ', '');
-  return '${fallback.isEmpty ? 'topic' : fallback.substring(0, fallback.length.clamp(1, 8))}/';
 }
 
-String _normalizeCategory(String value) => value
-    .toLowerCase()
-    .replaceAll(RegExp(r'[-_]+'), ' ')
-    .replaceAll(RegExp(r'\s+'), ' ')
-    .trim();
+class _PostAction extends StatelessWidget {
+  const _PostAction({
+    super.key,
+    required this.icon,
+    required this.onTap,
+    this.label,
+    this.selected = false,
+  });
 
-bool isOfficialRiksaAuthor(SocialAuthor author) {
-  final username = author.username.toLowerCase().replaceAll(
-    RegExp(r'[^a-z]'),
-    '',
-  );
-  final displayName = author.displayName.toLowerCase().trim();
-  return username == 'riksa' ||
-      username == 'riksaadmin' ||
-      username == 'adminriksa' ||
-      displayName == 'riksa admin';
+  final IconData icon;
+  final String? label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final color = selected ? const Color(0xFF625284) : colors.onSurfaceVariant;
+    return Semantics(
+      button: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadii.smallBorder,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 19, color: color),
+              if (label != null) ...[
+                const SizedBox(width: 5),
+                Text(
+                  label!,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class SocialAuthorAvatar extends StatelessWidget {
@@ -346,7 +314,7 @@ class SocialAuthorAvatar extends StatelessWidget {
     required this.imageUrl,
     required this.label,
     required this.seed,
-    this.size = 44,
+    this.size = 40,
   });
 
   final String imageUrl;
@@ -363,7 +331,7 @@ class SocialAuthorAvatar extends StatelessWidget {
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: palette.foreground.withValues(alpha: .2)),
+        border: Border.all(color: palette.background, width: 2),
       ),
       child: RiksaAvatarImage(
         value: imageUrl,
@@ -392,119 +360,4 @@ class SocialAuthorAvatar extends StatelessWidget {
     hash = ((hash ^ unit) * 0x01000193) & 0x7FFFFFFF;
   }
   return palettes[hash % palettes.length];
-}
-
-class _PrimaryReactionButton extends StatelessWidget {
-  const _PrimaryReactionButton({
-    super.key,
-    required this.count,
-    required this.selected,
-    required this.onPressed,
-  });
-
-  final int count;
-  final bool selected;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final isSelected = selected;
-    return Semantics(
-      button: true,
-      selected: isSelected,
-      child: Material(
-        color: isSelected
-            ? ProfilePalette.pinkSoft(context)
-            : Colors.transparent,
-        borderRadius: AppRadii.fullBorder,
-        child: InkWell(
-          borderRadius: AppRadii.fullBorder,
-          onTap: onPressed,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isSelected
-                      ? Icons.thumb_up_rounded
-                      : Icons.thumb_up_outlined,
-                  size: 17,
-                  color: isSelected
-                      ? ProfilePalette.pink(context)
-                      : ProfilePalette.muted(context),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  _compactCount(count),
-                  style: TextStyle(
-                    color: isSelected
-                        ? ProfilePalette.aubergine(context)
-                        : ProfilePalette.muted(context),
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LightAction extends StatelessWidget {
-  const _LightAction({
-    super.key,
-    required this.icon,
-    required this.count,
-    this.onPressed,
-  });
-
-  final IconData icon;
-  final int count;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final mutedColor = ProfilePalette.muted(context);
-    final content = Material(
-      color: Colors.transparent,
-      borderRadius: AppRadii.fullBorder,
-      child: InkWell(
-        borderRadius: AppRadii.fullBorder,
-        onTap: onPressed,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 17, color: mutedColor),
-              const SizedBox(width: 6),
-              Text(
-                _compactCount(count),
-                style: TextStyle(
-                  color: mutedColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (onPressed == null) return content;
-    return Semantics(
-      button: true,
-      child: content,
-    );
-  }
-}
-
-String _compactCount(int count) {
-  if (count < 1000) return '$count';
-  final compact = count / 1000;
-  return '${compact.toStringAsFixed(compact >= 10 ? 0 : 1)}K';
 }

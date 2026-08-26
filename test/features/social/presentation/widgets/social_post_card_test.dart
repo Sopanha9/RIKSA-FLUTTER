@@ -13,56 +13,6 @@ void main() {
     expect(socialAvatarPalette('bopha'), isNot(socialAvatarPalette('sokha')));
   });
 
-  test('recognizes the reserved RIKSA admin account', () {
-    expect(
-      isOfficialRiksaAuthor(
-        const SocialAuthor(
-          id: 'admin-1',
-          username: 'riksa.admin',
-          displayName: 'Riksa Admin',
-          avatarUrl: '',
-        ),
-      ),
-      isTrue,
-    );
-    expect(
-      isOfficialRiksaAuthor(
-        const SocialAuthor(
-          id: 'user-1',
-          username: 'riksa.student',
-          displayName: 'Riksa Student',
-          avatarUrl: '',
-        ),
-      ),
-      isFalse,
-    );
-  });
-
-  test('maps core RIKSA categories to compact metadata prefixes', () {
-    const cases = <String, String>{
-      'Mathematics': 'math/',
-      'Biology': 'bio/',
-      'Chemistry': 'chem/',
-      'Computer Science': 'cs/',
-      'Study Skills': 'study/',
-    };
-
-    for (final entry in cases.entries) {
-      expect(
-        categoryPrefix(
-          SocialCategory(
-            id: entry.key,
-            name: entry.key,
-            slug: entry.key.toLowerCase().replaceAll(' ', '-'),
-            memberCount: 0,
-            joined: false,
-          ),
-        ),
-        entry.value,
-      );
-    }
-  });
-
   testWidgets('opens the post when the card body is tapped', (tester) async {
     await initializeDateFormatting('en');
     var opened = false;
@@ -124,23 +74,17 @@ void main() {
     await tester.tap(find.text('A useful study loop'));
 
     expect(opened, isTrue);
-    expect(
-      find.byKey(const ValueKey('official-account-badge')),
-      findsOneWidget,
+    expect(find.byKey(const ValueKey('react-post-1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('share-post-1')), findsOneWidget);
+    expect(find.byType(ClipRRect), findsOneWidget);
+    final outerCard = tester.widget<Material>(
+      find
+          .descendant(
+            of: find.byType(SocialPostCard),
+            matching: find.byType(Material),
+          )
+          .first,
     );
-    expect(find.text('Official'), findsOneWidget);
-
-    final reaction = find.byKey(const ValueKey('react-post-1'));
-    final reactionMaterials = tester.widgetList<Material>(
-      find.descendant(of: reaction, matching: find.byType(Material)),
-    );
-    expect(reactionMaterials, isNotEmpty);
-    expect(
-      reactionMaterials.every(
-        (material) => material.color == Colors.transparent,
-      ),
-      isTrue,
-      reason: 'The like action should not render a filled pill background.',
-    );
+    expect(outerCard.borderRadius, AppRadii.extraLargeBorder);
   });
 }

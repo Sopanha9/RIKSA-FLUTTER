@@ -309,6 +309,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createCommunityContent => 'Create in Community';
 
   @override
+  String get startConversation => 'Start a conversation';
+
+  @override
+  String get startConversationHint => 'Share something with RIKSA...';
+
+  @override
   String get createPost => 'Create a post';
 
   @override

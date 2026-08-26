@@ -103,6 +103,8 @@
   "noTrackedDate": "មិនទាន់មានសកម្មភាពសិក្សាដែលបានកត់ត្រាទេ។",
   "activityCalendar": "ប្រតិទិនសកម្មភាព",
   "createCommunityContent": "បង្កើតក្នុងសហគមន៍",
+  "startConversation": "ចាប់ផ្តើមការសន្ទនា",
+  "startConversationHint": "ចែករំលែកអ្វីមួយជាមួយ RIKSA...",
   "createPost": "បង្កើតការបង្ហោះ",
   "createPostSubtitle": "ចែករំលែកគំនិត មេរៀន ឬធនធានមានប្រយោជន៍។",
   "askCommunity": "សួរសហគមន៍",

@@ -38,16 +38,16 @@ class RiksaBottomNavigationBar extends StatelessWidget {
     ];
     return SafeArea(
       top: false,
-      minimum: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+      minimum: const EdgeInsets.fromLTRB(20, 0, 20, 10),
       child: SizedBox(
-        height: 74,
+        height: 66,
         child: LayoutBuilder(
           builder: (context, constraints) => Align(
             alignment: Alignment.bottomLeft,
             child: AnimatedContainer(
               key: const ValueKey('bottom-nav-morph'),
               width: collapsed ? 58 : constraints.maxWidth,
-              height: 74,
+              height: 66,
               duration: const Duration(milliseconds: 230),
               curve: Curves.easeInOutCubic,
               child: _NavigationSurface(
@@ -90,14 +90,11 @@ class _NavigationSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.riksa;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final barColor = isDark
-        ? AppColors.editorialAubergineRaised
-        : AppColors.editorialAubergine;
-    const barForeground = Color(0xFFFFF8FC);
+    final barColor = isDark ? const Color(0xFF161716) : const Color(0xFF20211F);
+    const barForeground = Color(0xFFF3F3EF);
     final effectiveIndex = collapsed ? 0 : currentIndex;
-    const activeSize = 48.0;
+    const activeSize = 44.0;
     final activeLeft = collapsed
         ? 5.0
         : _itemCenter(effectiveIndex) - (activeSize / 2);
@@ -108,17 +105,16 @@ class _NavigationSurface extends StatelessWidget {
           left: 0,
           right: 0,
           bottom: 0,
-          height: 58,
+          height: 52,
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: barColor,
               borderRadius: AppRadii.extraLargeBorder,
-              border: Border.all(color: palette.outline.withValues(alpha: .4)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? .2 : .12),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
+                  color: Colors.black.withValues(alpha: isDark ? .24 : .16),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
@@ -128,26 +124,17 @@ class _NavigationSurface extends StatelessWidget {
           key: const ValueKey('bottom-nav-active-circle'),
           duration: const Duration(milliseconds: 240),
           curve: Curves.easeOutBack,
-          top: 21,
+          top: 18,
           left: activeLeft,
           width: activeSize,
           height: activeSize,
           child: IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: AppColors.editorialPink,
+                color: effectiveIndex == 2
+                    ? const Color(0xFFE9E4FA)
+                    : const Color(0xFFFAFAF7),
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: barForeground.withValues(alpha: .28),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.editorialPink.withValues(alpha: .3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
               ),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 150),
@@ -164,7 +151,7 @@ class _NavigationSurface extends StatelessWidget {
                   items[effectiveIndex].icon,
                   key: ValueKey(effectiveIndex),
                   size: collapsed ? 24 : 27,
-                  color: AppColors.editorialAubergine,
+                  color: const Color(0xFF20211F),
                 ),
               ),
             ),
@@ -175,7 +162,7 @@ class _NavigationSurface extends StatelessWidget {
             left: _itemCenter(index) - 26,
             bottom: 0,
             width: 52,
-            height: 58,
+            height: 52,
             child: IgnorePointer(
               ignoring: collapsed && index != 0,
               child: Semantics(
@@ -202,7 +189,7 @@ class _NavigationSurface extends StatelessWidget {
                         child: Icon(
                           items[index].icon,
                           size: 24,
-                          color: barForeground.withValues(alpha: .64),
+                          color: barForeground.withValues(alpha: .58),
                         ),
                       ),
                     ),

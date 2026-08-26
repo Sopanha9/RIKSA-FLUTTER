@@ -656,6 +656,18 @@ abstract class AppLocalizations {
   /// **'Create in Community'**
   String get createCommunityContent;
 
+  /// No description provided for @startConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a conversation'**
+  String get startConversation;
+
+  /// No description provided for @startConversationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Share something with RIKSA...'**
+  String get startConversationHint;
+
   /// No description provided for @createPost.
   ///
   /// In en, this message translates to:
