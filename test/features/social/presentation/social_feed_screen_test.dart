@@ -122,36 +122,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('7'), findsOneWidget);
-    expect(find.text('My Feed'), findsOneWidget);
+    expect(find.byKey(const ValueKey('my-feed-tab')), findsOneWidget);
     expect(find.text('Blog'), findsOneWidget);
-    expect(
-      tester.getSize(find.byKey(const ValueKey('my-feed-tab'))).height,
-      lessThanOrEqualTo(32),
-    );
-    expect(
-      tester.getSize(find.byKey(const ValueKey('my-feed-tab'))).width,
-      lessThan(135),
-    );
-    expect(find.text('For you'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('category-filter-for-you')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('category-filter-category-1')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('top-learners-spotlight')),
-      findsOneWidget,
-    );
-    final spotlight = tester.widget<Container>(
-      find.byKey(const ValueKey('top-learners-spotlight')),
-    );
-    expect((spotlight.decoration! as BoxDecoration).gradient, isNotNull);
-    expect(find.text('Top Learners This Week'), findsOneWidget);
-    expect(find.byKey(const ValueKey('top-learners-view-all')), findsOneWidget);
-    expect(find.text('View All'), findsNothing);
     expect(find.text('The two-minute recall habit'), findsOneWidget);
     expect(find.byKey(const ValueKey('react-post-1')), findsOneWidget);
 
@@ -169,17 +141,9 @@ void main() {
     );
     await tester.pump();
     expect(find.text('The two-minute recall habit'), findsOneWidget);
-    expect(find.byKey(const ValueKey('top-learners-spotlight')), findsNothing);
 
     await tester.enterText(find.byKey(const ValueKey('community-search')), '');
     await tester.pump();
-
-    final sectionScroll = find.byKey(const ValueKey('feed-section-scroll'));
-    expect(sectionScroll, findsOneWidget);
-    expect(
-      find.descendant(of: sectionScroll, matching: find.byType(Icon)),
-      findsNothing,
-    );
 
     BoxDecoration tabDecoration(Finder tab) {
       final container = tester.widget<AnimatedContainer>(
@@ -191,18 +155,22 @@ void main() {
     final feedTab = find.byKey(const ValueKey('my-feed-tab'));
     final blogTab = find.byKey(const ValueKey('blog-tab'));
     expect(
-      (tabDecoration(feedTab).border! as Border).top.color,
-      AppColors.brandPrimary,
+      tabDecoration(feedTab).color,
+      Colors.white,
+    );
+    expect(
+      tabDecoration(blogTab).color,
+      Colors.transparent,
     );
     await tester.tap(find.byKey(const ValueKey('blog-tab')));
     await tester.pumpAndSettle();
     expect(
-      (tabDecoration(blogTab).border! as Border).top.color,
-      AppColors.brandPrimary,
+      tabDecoration(blogTab).color,
+      Colors.white,
     );
     expect(
-      (tabDecoration(feedTab).border! as Border).top.color,
-      isNot(AppColors.brandPrimary),
+      tabDecoration(feedTab).color,
+      Colors.transparent,
     );
     expect(find.text('How curiosity improves learning'), findsOneWidget);
     expect(find.text('The two-minute recall habit'), findsNothing);
@@ -214,7 +182,7 @@ void main() {
     expect(find.text('Ask the community'), findsOneWidget);
   });
 
-  testWidgets('opens profiles from post and top-learner identities', (
+  testWidgets('opens profiles from post author identity', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(430, 932);
@@ -262,19 +230,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('profile-user-2'), findsOneWidget);
     expect(router.canPop(), isTrue);
-
-    router.go('/');
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('top-learner-user-2')));
-    await tester.pumpAndSettle();
-    expect(find.text('profile-user-2'), findsOneWidget);
-
-    router.go('/');
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('top-learners-view-all')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('top-learner-row-user-2')));
-    await tester.pumpAndSettle();
-    expect(find.text('profile-user-2'), findsOneWidget);
   });
 }

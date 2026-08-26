@@ -61,18 +61,21 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 680),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
-                    child: _ProfileTopBar(
-                      title: l10n.profile,
-                      shareLabel: l10n.shareProfile,
-                      settingsLabel: l10n.settings,
-                      onShare: user == null ? null : () => _share(user),
-                      onSettings: () => context.push('/profile/settings'),
+            SliverSafeArea(
+              bottom: false,
+              sliver: SliverToBoxAdapter(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 680),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
+                      child: _ProfileTopBar(
+                        title: l10n.profile,
+                        shareLabel: l10n.shareProfile,
+                        settingsLabel: l10n.settings,
+                        onShare: user == null ? null : () => _share(user),
+                        onSettings: () => context.push('/profile/settings'),
+                      ),
                     ),
                   ),
                 ),
@@ -157,6 +160,7 @@ class _ProfileTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.center,
     children: [
       Expanded(
         child: Text(
@@ -165,9 +169,8 @@ class _ProfileTopBar extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: ProfilePalette.text(context),
-            fontSize: 42,
-            height: 1,
-            letterSpacing: -1.5,
+            fontSize: 32,
+            letterSpacing: -0.5,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -209,12 +212,12 @@ class _ProfileHeaderAction extends StatelessWidget {
     tooltip: tooltip,
     onPressed: onPressed,
     style: IconButton.styleFrom(
-      minimumSize: const Size.square(52),
+      minimumSize: const Size.square(46),
       backgroundColor:
           backgroundColor ?? ProfilePalette.editorialSurface(context),
       foregroundColor: AppColors.editorialAubergine,
     ),
-    icon: Icon(icon, size: 23),
+    icon: Icon(icon, size: 20),
   );
 }
 

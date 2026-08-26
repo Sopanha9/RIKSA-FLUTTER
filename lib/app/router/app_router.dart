@@ -24,7 +24,7 @@ import '../../features/social/presentation/social_post_detail_screen.dart';
 import '../../features/userProfile/presentation/profile_setup_overview_screen.dart';
 import '../../features/userProfile/presentation/profile_settings_screen.dart';
 import '../../features/userProfile/presentation/edit_profile_screen.dart';
-import '../../features/userProfile/presentation/leaderboard_screen.dart';
+import '../../features/leaderBoard/presentation/leaderboard_screen.dart';
 import '../../features/userProfile/presentation/public_profile_screen.dart';
 import '../../features/userProfile/presentation/user_profile_screen.dart';
 import 'app_shell.dart';

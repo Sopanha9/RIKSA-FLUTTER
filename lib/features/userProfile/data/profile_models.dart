@@ -173,3 +173,48 @@ class LeaderboardRank {
         provinceTier: json['provinceTier'] as String?,
       );
 }
+
+/// Board scope, mirroring the backend `ScopeType` enum (`COUNTRY`, `PROVINCE`).
+enum LeaderboardScope { country, province }
+
+extension LeaderboardScopeApi on LeaderboardScope {
+  /// Scope value accepted by `GET /leaderboard?scope=`.
+  String get apiName => switch (this) {
+    LeaderboardScope.country => 'COUNTRY',
+    LeaderboardScope.province => 'PROVINCE',
+  };
+}
+
+/// One ranked entry from `GET /leaderboard`.
+class LeaderboardRow {
+  const LeaderboardRow({
+    required this.rank,
+    required this.userId,
+    required this.score,
+    this.rankingTier,
+    this.displayName,
+    this.avatarUrl,
+    this.snapshotDate,
+  });
+
+  final int rank;
+  final String userId;
+  final int score;
+  final String? rankingTier;
+  final String? displayName;
+  final String? avatarUrl;
+  final DateTime? snapshotDate;
+
+  String get fallbackName =>
+      (displayName ?? '').trim().isEmpty ? 'Learner' : displayName!.trim();
+
+  factory LeaderboardRow.fromJson(Map<String, dynamic> json) => LeaderboardRow(
+    rank: (json['rank'] as num?)?.toInt() ?? 0,
+    userId: json['userId']?.toString() ?? '',
+    score: (json['score'] as num?)?.toInt() ?? 0,
+    rankingTier: json['rankingTier'] as String?,
+    displayName: json['displayName'] as String?,
+    avatarUrl: json['avatarUrl'] as String?,
+    snapshotDate: DateTime.tryParse(json['snapshotDate']?.toString() ?? ''),
+  );
+}

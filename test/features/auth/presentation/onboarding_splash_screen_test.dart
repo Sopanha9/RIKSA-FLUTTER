@@ -36,6 +36,10 @@ Widget _app(Widget child, {Locale locale = const Locale('en')}) {
     child: MaterialApp(
       theme: AppTheme.light,
       locale: locale,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: true),
+        child: child!,
+      ),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -134,11 +138,19 @@ void main() {
         find.byKey(const ValueKey('assets/images/splashScreen/image.png')),
         findsOneWidget,
       );
+      expect(
+        find.byKey(const ValueKey('onboarding-art-learning')),
+        findsOneWidget,
+      );
 
       await tester.tap(find.byKey(const Key('onboarding_continue')));
       await tester.pumpAndSettle();
       expect(
         find.byKey(const ValueKey('assets/images/splashScreen/image copy.png')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('onboarding-art-achievement')),
         findsOneWidget,
       );
 
@@ -148,6 +160,10 @@ void main() {
         find.byKey(
           const ValueKey('assets/images/splashScreen/image copy 2.png'),
         ),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('onboarding-art-community')),
         findsOneWidget,
       );
 

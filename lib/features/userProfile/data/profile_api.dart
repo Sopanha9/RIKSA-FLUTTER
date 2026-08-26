@@ -46,4 +46,26 @@ class ProfileApi {
       (response.data as Map).cast<String, dynamic>(),
     );
   }
+
+  /// Fetches the full ranked board for a scope.
+  ///
+  /// Mirrors `GET /leaderboard?scope=&scopeId=&date=`. Rows arrive ordered by
+  /// rank and carry `displayName`/`avatarUrl` for direct rendering.
+  Future<List<LeaderboardRow>> leaderboard({
+    required LeaderboardScope scope,
+    required String scopeId,
+  }) async {
+    final response = await _client.dio.get(
+      '/leaderboard',
+      queryParameters: {'scope': scope.apiName, 'scopeId': scopeId},
+    );
+    final values = response.data as List? ?? const [];
+    return values
+        .map(
+          (item) => LeaderboardRow.fromJson(
+            (item as Map).cast<String, dynamic>(),
+          ),
+        )
+        .toList();
+  }
 }

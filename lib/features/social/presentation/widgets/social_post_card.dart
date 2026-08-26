@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../userProfile/presentation/widgets/profile_ui.dart';
 import '../../data/social_models.dart';
 
 class SocialPostCard extends StatelessWidget {
@@ -26,6 +27,7 @@ class SocialPostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final isReacted = post.myReaction != null;
     final isOfficial = isOfficialRiksaAuthor(post.author);
 
@@ -37,19 +39,17 @@ class SocialPostCard extends StatelessWidget {
         child: Material(
           key: ValueKey('post-${post.id}'),
           color: isOfficial
-              ? Color.alphaBlend(
-                  AppColors.brandPrimary.withValues(alpha: .045),
-                  colors.surface,
-                )
-              : colors.surface,
-          elevation: isOfficial ? 2 : 1,
-          shadowColor: colors.shadow.withValues(alpha: .11),
+              ? (isDark
+                  ? ProfilePalette.editorialSurface(context)
+                  : ProfilePalette.pinkSoft(context).withValues(alpha: .28))
+              : (isDark ? ProfilePalette.panel(context) : Colors.white),
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: AppRadii.mediumBorder,
+            borderRadius: AppRadii.largeBorder,
             side: BorderSide(
               color: isOfficial
-                  ? AppColors.brandPrimary.withValues(alpha: .24)
-                  : colors.outlineVariant.withValues(alpha: .48),
+                  ? ProfilePalette.pink(context).withValues(alpha: .4)
+                  : ProfilePalette.border(context).withValues(alpha: .35),
             ),
           ),
           clipBehavior: Clip.antiAlias,
@@ -69,6 +69,7 @@ class SocialPostCard extends StatelessWidget {
                       fontWeight: FontWeight.w900,
                       height: 1.2,
                       letterSpacing: -.35,
+                      color: ProfilePalette.text(context),
                     ),
                   ),
                   if (post.content.trim().isNotEmpty) ...[
@@ -78,7 +79,7 @@ class SocialPostCard extends StatelessWidget {
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colors.onSurfaceVariant,
+                        color: ProfilePalette.muted(context),
                         height: 1.55,
                       ),
                     ),
@@ -97,7 +98,7 @@ class SocialPostCard extends StatelessWidget {
                                 color: colors.surfaceContainer,
                                 child: Icon(
                                   Icons.image_not_supported_outlined,
-                                  color: colors.onSurfaceVariant,
+                                  color: ProfilePalette.muted(context),
                                   size: 32,
                                 ),
                               ),
@@ -114,7 +115,7 @@ class SocialPostCard extends StatelessWidget {
                         selected: isReacted,
                         onPressed: onReact,
                       ),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 10),
                       _LightAction(
                         icon: Icons.mode_comment_outlined,
                         count: post.commentCount,
@@ -147,7 +148,6 @@ class _PostMetadata extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
     final date = DateFormat.MMMd(
       Localizations.localeOf(context).languageCode,
     ).format(post.createdAt.toLocal());
@@ -190,7 +190,7 @@ class _PostMetadata extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.labelLarge?.copyWith(
-                            color: colors.onSurface,
+                            color: ProfilePalette.text(context),
                             fontWeight: FontWeight.w800,
                           ),
                         ),
@@ -209,8 +209,8 @@ class _PostMetadata extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: categoryPrefix(post.category),
-                      style: const TextStyle(
-                        color: AppColors.brandPrimaryPressed,
+                      style: TextStyle(
+                        color: ProfilePalette.pink(context),
                         fontWeight: FontWeight.w900,
                         letterSpacing: -.2,
                       ),
@@ -218,7 +218,7 @@ class _PostMetadata extends StatelessWidget {
                     TextSpan(
                       text: ' ${post.category.name} · $date',
                       style: TextStyle(
-                        color: colors.onSurfaceVariant,
+                        color: ProfilePalette.muted(context),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -244,27 +244,24 @@ class _OfficialBadge extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       key: const ValueKey('official-account-badge'),
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.brandPrimary.withValues(alpha: .11),
-        borderRadius: AppRadii.smallBorder,
-        border: Border.all(
-          color: AppColors.brandPrimary.withValues(alpha: .18),
-        ),
+        color: ProfilePalette.pinkSoft(context),
+        borderRadius: AppRadii.fullBorder,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.verified_rounded,
             size: 12,
-            color: AppColors.brandPrimaryPressed,
+            color: ProfilePalette.pink(context),
           ),
-          const SizedBox(width: 3),
+          const SizedBox(width: 4),
           Text(
             AppLocalizations.of(context)!.official,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: AppColors.brandPrimaryPressed,
+              color: ProfilePalette.aubergine(context),
               fontSize: 10,
               fontWeight: FontWeight.w900,
               height: 1,
@@ -411,36 +408,41 @@ class _PrimaryReactionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final foreground = selected
-        ? AppColors.brandPrimaryHover
-        : colors.onSurfaceVariant;
+    final isSelected = selected;
     return Semantics(
       button: true,
-      selected: selected,
+      selected: isSelected,
       child: Material(
-        color: Colors.transparent,
-        borderRadius: AppRadii.mediumBorder,
+        color: isSelected
+            ? ProfilePalette.pinkSoft(context)
+            : Colors.transparent,
+        borderRadius: AppRadii.fullBorder,
         child: InkWell(
-          borderRadius: AppRadii.mediumBorder,
+          borderRadius: AppRadii.fullBorder,
           onTap: onPressed,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  selected ? Icons.thumb_up_rounded : Icons.thumb_up_outlined,
-                  size: 19,
-                  color: foreground,
+                  isSelected
+                      ? Icons.thumb_up_rounded
+                      : Icons.thumb_up_outlined,
+                  size: 17,
+                  color: isSelected
+                      ? ProfilePalette.pink(context)
+                      : ProfilePalette.muted(context),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   _compactCount(count),
                   style: TextStyle(
-                    color: foreground,
+                    color: isSelected
+                        ? ProfilePalette.aubergine(context)
+                        : ProfilePalette.muted(context),
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   ),
                 ),
               ],
@@ -466,33 +468,37 @@ class _LightAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final content = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 19, color: colors.onSurfaceVariant),
-          const SizedBox(width: 6),
-          Text(
-            _compactCount(count),
-            style: TextStyle(
-              color: colors.onSurfaceVariant,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
+    final mutedColor = ProfilePalette.muted(context);
+    final content = Material(
+      color: Colors.transparent,
+      borderRadius: AppRadii.fullBorder,
+      child: InkWell(
+        borderRadius: AppRadii.fullBorder,
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 17, color: mutedColor),
+              const SizedBox(width: 6),
+              Text(
+                _compactCount(count),
+                style: TextStyle(
+                  color: mutedColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
     if (onPressed == null) return content;
     return Semantics(
       button: true,
-      child: InkWell(
-        borderRadius: AppRadii.mediumBorder,
-        onTap: onPressed,
-        child: content,
-      ),
+      child: content,
     );
   }
 }

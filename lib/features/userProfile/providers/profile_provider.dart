@@ -30,3 +30,26 @@ final profileRankProvider = FutureProvider<LeaderboardRank>((ref) {
   final provinceId = auth is Authenticated ? auth.user.provinceId : null;
   return ref.watch(profileApiProvider).leaderboardRank(provinceId: provinceId);
 });
+
+/// Ranked board rows for a scope, sourced from `GET /leaderboard`.
+///
+/// The country board is scoped to `CAMBODIA`; the province board uses the
+/// signed-in user's `provinceId`. Returns an empty list when the province
+/// board is requested but the user has no province set.
+final leaderboardProvider =
+    FutureProvider.family<List<LeaderboardRow>, LeaderboardScope>((ref, scope) {
+      final auth = ref.watch(authProvider);
+      final provinceId = auth is Authenticated ? auth.user.provinceId : null;
+
+      final String scopeId;
+      if (scope == LeaderboardScope.province) {
+        if (provinceId == null || provinceId.isEmpty) return const [];
+        scopeId = provinceId;
+      } else {
+        scopeId = 'CAMBODIA';
+      }
+
+      return ref
+          .watch(profileApiProvider)
+          .leaderboard(scope: scope, scopeId: scopeId);
+    });

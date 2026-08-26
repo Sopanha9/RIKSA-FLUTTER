@@ -6,6 +6,7 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import 'widgets/onboarding_art.dart';
 
 class OnboardingSplashScreen extends ConsumerStatefulWidget {
   const OnboardingSplashScreen({super.key, this.onComplete});
@@ -24,10 +25,10 @@ class _OnboardingSplashScreenState
   int _currentPage = 0;
   bool _finishing = false;
 
-  static const _assets = [
-    'assets/images/splashScreen/image.png',
-    'assets/images/splashScreen/image copy.png',
-    'assets/images/splashScreen/image copy 2.png',
+  static const _scenes = [
+    OnboardingScene.learning,
+    OnboardingScene.achievement,
+    OnboardingScene.community,
   ];
 
   @override
@@ -44,7 +45,7 @@ class _OnboardingSplashScreenState
 
   Future<void> _continue() async {
     if (_finishing) return;
-    if (_currentPage < _assets.length - 1) {
+    if (_currentPage < _scenes.length - 1) {
       final reduceMotion = MediaQuery.of(context).disableAnimations;
       if (reduceMotion) {
         _pageController.jumpToPage(_currentPage + 1);
@@ -116,7 +117,7 @@ class _OnboardingSplashScreenState
                     child: PageView.builder(
                       key: const Key('onboarding_pages'),
                       controller: _pageController,
-                      itemCount: _assets.length,
+                      itemCount: _scenes.length,
                       onPageChanged: (index) =>
                           setState(() => _currentPage = index),
                       itemBuilder: (context, index) => Padding(
@@ -128,10 +129,9 @@ class _OnboardingSplashScreenState
                             _ => RiksaPastelTone.blush,
                           },
                           padding: const EdgeInsets.all(RiksaSpacing.md),
-                          child: Image.asset(
-                            _assets[index],
-                            key: ValueKey(_assets[index]),
-                            fit: BoxFit.contain,
+                          child: OnboardingArt(
+                            scene: _scenes[index],
+                            active: index == _currentPage,
                             semanticLabel: l10n.onboardingTitle,
                           ),
                         ),
@@ -139,7 +139,7 @@ class _OnboardingSplashScreenState
                     ),
                   ),
                   _PageIndicator(
-                    count: _assets.length,
+                    count: _scenes.length,
                     currentPage: _currentPage,
                   ),
                   const SizedBox(height: RiksaSpacing.lg),
