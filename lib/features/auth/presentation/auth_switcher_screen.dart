@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -295,39 +296,54 @@ class _AuthLoadingOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
-    final colors = Theme.of(context).colorScheme;
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final palette = context.riksa;
+    final dark = theme.brightness == Brightness.dark;
+    final surface = dark
+        ? theme.colorScheme.surfaceContainer
+        : AppColors.editorialNeutralSurface;
     return Semantics(
       liveRegion: true,
       label: strings.preparingYourSpace,
       child: Container(
         decoration: BoxDecoration(
-          color: (dark ? colors.surface : AppColors.editorialNeutralSurface)
-              .withValues(alpha: .97),
+          color: surface.withValues(alpha: .78),
           borderRadius: AppRadii.largeBorder,
-          border: Border.all(
-            color: dark ? colors.outline : AppColors.editorialOutline,
-          ),
         ),
         child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: AppRadii.fullBorder,
+              border: Border.all(
+                color: dark ? palette.outline : AppColors.editorialOutline,
+              ),
+              boxShadow: RiksaElevation.low(theme.brightness),
+            ),
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox.square(
-                  dimension: 44,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3.5,
-                    color: AppColors.editorialPink,
+                  key: const Key('auth_loading_animation'),
+                  dimension: 46,
+                  child: LoadingAnimationWidget.twistingDots(
+                    leftDotColor: AppColors.editorialPink,
+                    rightDotColor: dark
+                        ? palette.ink
+                        : AppColors.editorialAubergine,
+                    size: 46,
                   ),
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  strings.preparingYourSpace,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                const SizedBox(width: 16),
+                Flexible(
+                  child: Text(
+                    strings.preparingYourSpace,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: dark ? palette.ink : AppColors.editorialInk,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -805,16 +821,7 @@ class _AuthSubmitButton extends StatelessWidget {
       ),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 160),
-        child: loading
-            ? const SizedBox.square(
-                key: ValueKey('loading'),
-                dimension: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.2,
-                  color: Colors.white,
-                ),
-              )
-            : Text(label, key: const ValueKey('label')),
+        child: Text(label, key: const ValueKey('label')),
       ),
     );
   }

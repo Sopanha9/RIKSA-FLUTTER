@@ -45,86 +45,91 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     final dashboard = ref.watch(profileDashboardProvider);
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: ProfilePalette.canvas(context),
-      body: RefreshIndicator(
-        color: ProfilePalette.green(context),
-        onRefresh: () async {
-          ref
-            ..invalidate(profileDashboardProvider)
-            ..invalidate(profileRankProvider);
-          if (user != null) ref.invalidate(userPostsProvider(user.id));
-          await ref.read(profileDashboardProvider.future);
-        },
-        child: CustomScrollView(
-          key: const PageStorageKey('user-profile-scroll'),
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverSafeArea(
-              bottom: false,
-              sliver: SliverToBoxAdapter(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 680),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
-                      child: _ProfileTopBar(
-                        title: l10n.profile,
-                        shareLabel: l10n.shareProfile,
-                        settingsLabel: l10n.settings,
-                        onShare: user == null ? null : () => _share(user),
-                        onSettings: () => context.push('/profile/settings'),
+    return ProfilePaletteScope.editorial(
+      context: context,
+      child: Builder(
+        builder: (context) => Scaffold(
+          key: const ValueKey('personal-profile-scaffold'),
+          backgroundColor: ProfilePalette.canvas(context),
+          body: RefreshIndicator(
+            color: ProfilePalette.green(context),
+            onRefresh: () async {
+              ref
+                ..invalidate(profileDashboardProvider)
+                ..invalidate(profileRankProvider);
+              if (user != null) ref.invalidate(userPostsProvider(user.id));
+              await ref.read(profileDashboardProvider.future);
+            },
+            child: CustomScrollView(
+              key: const PageStorageKey('user-profile-scroll'),
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverSafeArea(
+                  bottom: false,
+                  sliver: SliverToBoxAdapter(
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 680),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
+                          child: _ProfileTopBar(
+                            title: l10n.profile,
+                            shareLabel: l10n.shareProfile,
+                            settingsLabel: l10n.settings,
+                            onShare: user == null ? null : () => _share(user),
+                            onSettings: () => context.push('/profile/settings'),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 680),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 14, 18, 0),
-                    child: Column(
-                      children: [
-                        if (user != null)
-                          _ProfileHeader(user: user, dashboard: dashboard)
-                        else
-                          const _ProfileLoading(),
-                        const SizedBox(height: 22),
-                        ProfileTabs(
-                          selected: _tab,
-                          postsLabel: l10n.myPosts,
-                          achievementsLabel: l10n.achievements,
-                          rankLabel: l10n.currentRank,
-                          onSelected: (tab) => setState(() => _tab = tab),
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 680),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 14, 18, 0),
+                        child: Column(
+                          children: [
+                            if (user != null)
+                              _ProfileHeader(user: user, dashboard: dashboard)
+                            else
+                              const _ProfileLoading(),
+                            const SizedBox(height: 22),
+                            ProfileTabs(
+                              selected: _tab,
+                              postsLabel: l10n.myPosts,
+                              achievementsLabel: l10n.achievements,
+                              rankLabel: l10n.currentRank,
+                              onSelected: (tab) => setState(() => _tab = tab),
+                            ),
+                            const SizedBox(height: 18),
+                            AnimatedSwitcher(
+                              duration: RiksaMotion.resolve(
+                                context,
+                                RiksaMotion.standard,
+                              ),
+                              child: user == null
+                                  ? const _ProfileLoading()
+                                  : switch (_tab) {
+                                      ProfileTab.posts => _PostsTab(user: user),
+                                      ProfileTab.achievements =>
+                                        _AchievementsTab(dashboard: dashboard),
+                                      ProfileTab.rank => const _RankTab(),
+                                    },
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 18),
-                        AnimatedSwitcher(
-                          duration: RiksaMotion.resolve(
-                            context,
-                            RiksaMotion.standard,
-                          ),
-                          child: user == null
-                              ? const _ProfileLoading()
-                              : switch (_tab) {
-                                  ProfileTab.posts => _PostsTab(user: user),
-                                  ProfileTab.achievements => _AchievementsTab(
-                                    dashboard: dashboard,
-                                  ),
-                                  ProfileTab.rank => const _RankTab(),
-                                },
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+                const SliverToBoxAdapter(child: SizedBox(height: 112)),
+              ],
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 112)),
-          ],
+          ),
         ),
       ),
     );
@@ -468,7 +473,7 @@ class _ProfileVerificationBadge extends StatelessWidget {
     key: const ValueKey('profile-verification-badge'),
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     decoration: BoxDecoration(
-      color: const Color(0xFF159B6C),
+      color: ProfilePalette.pink(context),
       borderRadius: AppRadii.fullBorder,
     ),
     child: Row(
@@ -477,7 +482,7 @@ class _ProfileVerificationBadge extends StatelessWidget {
         Icon(
           Icons.verified_rounded,
           size: 15,
-          color: ProfilePalette.onAubergine(context),
+          color: ProfilePalette.aubergine(context),
         ),
         const SizedBox(width: 5),
         Flexible(
@@ -486,7 +491,7 @@ class _ProfileVerificationBadge extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: ProfilePalette.onAubergine(context),
+              color: ProfilePalette.aubergine(context),
               fontSize: 11.5,
               fontWeight: FontWeight.w800,
             ),

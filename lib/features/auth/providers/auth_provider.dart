@@ -82,7 +82,7 @@ class AuthUnavailable extends AuthState {
 }
 
 class AuthNotifier extends Notifier<AuthState> {
-  static const _minimumAuthenticationLoading = Duration(milliseconds: 1200);
+  static const _minimumAuthenticationLoading = Duration(milliseconds: 500);
 
   StreamSubscription<void>? _sessionExpiredSubscription;
   StreamSubscription<GoogleAuthEvent>? _googleAuthSubscription;

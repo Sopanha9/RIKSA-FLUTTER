@@ -48,7 +48,7 @@ class RiksaBottomNavigationBar extends StatelessWidget {
               key: const ValueKey('bottom-nav-morph'),
               width: collapsed ? 58 : constraints.maxWidth,
               height: 66,
-              duration: const Duration(milliseconds: 230),
+              duration: const Duration(milliseconds: 380),
               curve: Curves.easeInOutCubic,
               child: _NavigationSurface(
                 expandedWidth: constraints.maxWidth,
@@ -82,22 +82,22 @@ class _NavigationSurface extends StatelessWidget {
   final ValueChanged<int> onSelected;
   final VoidCallback onCollapsedTap;
 
-  double _itemCenter(int index) {
-    const edgeCenter = 29.0;
-    final spacing = (expandedWidth - (edgeCenter * 2)) / (items.length - 1);
-    return edgeCenter + (spacing * index);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final barColor = isDark ? const Color(0xFF161716) : const Color(0xFF20211F);
-    const barForeground = Color(0xFFF3F3EF);
-    final effectiveIndex = collapsed ? 0 : currentIndex;
-    const activeSize = 44.0;
-    final activeLeft = collapsed
-        ? 5.0
-        : _itemCenter(effectiveIndex) - (activeSize / 2);
+    final theme = Theme.of(context);
+    final palette = context.riksa;
+    final isDark = theme.brightness == Brightness.dark;
+    final barColor = isDark
+        ? AppColors.editorialAubergineRaised
+        : AppColors.editorialNeutralSurface;
+    final barForeground = isDark
+        ? AppColors.editorialPinkSoft
+        : AppColors.editorialMuted;
+    final activeBackground = isDark
+        ? AppColors.editorialPink
+        : AppColors.editorialPinkSoft;
+    const activeForeground = AppColors.editorialAubergine;
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -105,100 +105,324 @@ class _NavigationSurface extends StatelessWidget {
           left: 0,
           right: 0,
           bottom: 0,
+          height: 58,
+          child: IgnorePointer(
+            ignoring: collapsed,
+            child: _ExpandedNavigationBar(
+              expandedWidth: expandedWidth,
+              items: items,
+              currentIndex: currentIndex,
+              collapsed: collapsed,
+              barColor: barColor,
+              barForeground: barForeground,
+              activeBackground: activeBackground,
+              activeForeground: activeForeground,
+              isDark: isDark,
+              onSelected: onSelected,
+            ),
+          ),
+        ),
+        Positioned(
+          key: const ValueKey('bottom-nav-active-circle'),
+          left: 3,
+          bottom: 0,
+          width: 52,
           height: 52,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: barColor,
-              borderRadius: AppRadii.extraLargeBorder,
-              boxShadow: [
+          child: IgnorePointer(
+            ignoring: !collapsed,
+            child: AnimatedScale(
+              scale: collapsed ? 1 : .78,
+              duration: const Duration(milliseconds: 380),
+              curve: collapsed
+                  ? const Interval(.45, 1, curve: Curves.easeOutBack)
+                  : const Interval(0, .45, curve: Curves.easeInCubic),
+              child: AnimatedOpacity(
+                key: const ValueKey('bottom-nav-collapsed-content'),
+                opacity: collapsed ? 1 : 0,
+                duration: const Duration(milliseconds: 380),
+                curve: collapsed
+                    ? const Interval(.45, 1, curve: Curves.easeOutCubic)
+                    : const Interval(0, .45, curve: Curves.easeInCubic),
+                child: _CollapsedNavigationButton(
+                  item: items.first,
+                  backgroundColor: activeBackground,
+                  foregroundColor: activeForeground,
+                  borderColor: isDark
+                      ? palette.canvas.withValues(alpha: .18)
+                      : AppColors.editorialPink.withValues(alpha: .55),
+                  isDark: isDark,
+                  onTap: onCollapsedTap,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ExpandedNavigationBar extends StatelessWidget {
+  const _ExpandedNavigationBar({
+    required this.expandedWidth,
+    required this.items,
+    required this.currentIndex,
+    required this.collapsed,
+    required this.barColor,
+    required this.barForeground,
+    required this.activeBackground,
+    required this.activeForeground,
+    required this.isDark,
+    required this.onSelected,
+  });
+
+  final double expandedWidth;
+  final List<_RiksaNavigationItem> items;
+  final int currentIndex;
+  final bool collapsed;
+  final Color barColor;
+  final Color barForeground;
+  final Color activeBackground;
+  final Color activeForeground;
+  final bool isDark;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      key: const ValueKey('bottom-nav-surface'),
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeInOutCubic,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: collapsed ? barColor.withValues(alpha: 0) : barColor,
+        borderRadius: AppRadii.extraLargeBorder,
+        border: Border.all(
+          color: collapsed
+              ? Colors.transparent
+              : isDark
+              ? AppColors.editorialPink.withValues(alpha: .22)
+              : AppColors.editorialOutline,
+        ),
+        boxShadow: collapsed
+            ? const []
+            : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? .24 : .16),
+                  color: (isDark ? Colors.black : AppColors.editorialAubergine)
+                      .withValues(alpha: isDark ? .24 : .12),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
               ],
+      ),
+      child: OverflowBox(
+        alignment: AlignmentDirectional.centerStart,
+        minWidth: expandedWidth,
+        maxWidth: expandedWidth,
+        child: SizedBox(
+          width: expandedWidth,
+          height: 58,
+          child: AnimatedOpacity(
+            key: const ValueKey('bottom-nav-expanded-content'),
+            opacity: collapsed ? 0 : 1,
+            duration: const Duration(milliseconds: 380),
+            curve: collapsed
+                ? const Interval(0, .65, curve: Curves.easeOutCubic)
+                : const Interval(.35, 1, curve: Curves.easeInCubic),
+            child: Padding(
+              padding: const EdgeInsets.all(5),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final labelStyle =
+                      Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: activeForeground,
+                        fontWeight: FontWeight.w800,
+                      ) ??
+                      TextStyle(
+                        color: activeForeground,
+                        fontWeight: FontWeight.w800,
+                      );
+                  final labelPainter = TextPainter(
+                    text: TextSpan(
+                      text: items[currentIndex].label,
+                      style: labelStyle,
+                    ),
+                    maxLines: 1,
+                    textDirection: Directionality.of(context),
+                  )..layout();
+                  final calculatedMaximum =
+                      constraints.maxWidth - ((items.length - 1) * 44);
+                  final maximumActiveWidth = calculatedMaximum < 88
+                      ? 88.0
+                      : calculatedMaximum;
+                  final minimumActiveWidth = maximumActiveWidth < 112
+                      ? maximumActiveWidth
+                      : 112.0;
+                  final activeWidth = (labelPainter.width + 59).clamp(
+                    minimumActiveWidth,
+                    maximumActiveWidth,
+                  );
+                  final inactiveWidth =
+                      (constraints.maxWidth - activeWidth) / (items.length - 1);
+
+                  return Row(
+                    children: [
+                      for (var index = 0; index < items.length; index++)
+                        _ExpandedNavigationDestination(
+                          index: index,
+                          item: items[index],
+                          selected: index == currentIndex,
+                          width: index == currentIndex
+                              ? activeWidth
+                              : inactiveWidth,
+                          activeBackground: activeBackground,
+                          activeForeground: activeForeground,
+                          inactiveForeground: barForeground,
+                          labelStyle: labelStyle,
+                          onTap: () => onSelected(index),
+                        ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),
-        AnimatedPositioned(
-          key: const ValueKey('bottom-nav-active-circle'),
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeOutBack,
-          top: 18,
-          left: activeLeft,
-          width: activeSize,
-          height: activeSize,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: effectiveIndex == 2
-                    ? const Color(0xFFE9E4FA)
-                    : const Color(0xFFFAFAF7),
-                shape: BoxShape.circle,
-              ),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 150),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: ScaleTransition(
-                    scale: Tween<double>(begin: .78, end: 1).animate(animation),
-                    child: child,
+      ),
+    );
+  }
+}
+
+class _ExpandedNavigationDestination extends StatelessWidget {
+  const _ExpandedNavigationDestination({
+    required this.index,
+    required this.item,
+    required this.selected,
+    required this.width,
+    required this.activeBackground,
+    required this.activeForeground,
+    required this.inactiveForeground,
+    required this.labelStyle,
+    required this.onTap,
+  });
+
+  final int index;
+  final _RiksaNavigationItem item;
+  final bool selected;
+  final double width;
+  final Color activeBackground;
+  final Color activeForeground;
+  final Color inactiveForeground;
+  final TextStyle labelStyle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      key: ValueKey('bottom-nav-destination-$index'),
+      width: width,
+      height: 48,
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeInOutCubic,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: selected ? activeBackground : Colors.transparent,
+        borderRadius: AppRadii.fullBorder,
+      ),
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: item.label,
+        child: Tooltip(
+          message: item.label,
+          child: InkWell(
+            key: ValueKey('bottom-nav-item-$index'),
+            onTap: onTap,
+            borderRadius: AppRadii.fullBorder,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: selected ? 13 : 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    item.icon,
+                    size: selected ? 25 : 24,
+                    color: selected ? activeForeground : inactiveForeground,
                   ),
-                ),
-                child: Icon(
-                  items[effectiveIndex].icon,
-                  key: ValueKey(effectiveIndex),
-                  size: collapsed ? 24 : 27,
-                  color: const Color(0xFF20211F),
-                ),
-              ),
-            ),
-          ),
-        ),
-        for (var index = 0; index < items.length; index++)
-          Positioned(
-            left: _itemCenter(index) - 26,
-            bottom: 0,
-            width: 52,
-            height: 52,
-            child: IgnorePointer(
-              ignoring: collapsed && index != 0,
-              child: Semantics(
-                button: true,
-                selected: effectiveIndex == index,
-                label: items[index].label,
-                child: Tooltip(
-                  message: items[index].label,
-                  child: InkResponse(
-                    key: ValueKey('bottom-nav-item-$index'),
-                    onTap: collapsed
-                        ? (index == 0 ? onCollapsedTap : null)
-                        : () => onSelected(index),
-                    radius: 27,
-                    containedInkWell: true,
-                    highlightShape: BoxShape.circle,
-                    child: Center(
-                      child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 130),
-                        curve: collapsed
-                            ? Curves.easeOutCubic
-                            : Curves.easeInCubic,
-                        opacity: collapsed || currentIndex == index ? 0 : 1,
-                        child: Icon(
-                          items[index].icon,
-                          size: 24,
-                          color: barForeground.withValues(alpha: .58),
+                  if (selected) ...[
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          item.label,
+                          key: ValueKey('bottom-nav-label-$index'),
+                          maxLines: 1,
+                          style: labelStyle,
                         ),
                       ),
                     ),
-                  ),
-                ),
+                  ],
+                ],
               ),
             ),
           ),
-      ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CollapsedNavigationButton extends StatelessWidget {
+  const _CollapsedNavigationButton({
+    required this.item,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    required this.borderColor,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  final _RiksaNavigationItem item;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final Color borderColor;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      key: const ValueKey('bottom-nav-active-indicator'),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        shape: BoxShape.circle,
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.editorialAubergine.withValues(
+              alpha: isDark ? .3 : .2,
+            ),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Semantics(
+        button: true,
+        selected: true,
+        label: item.label,
+        child: Tooltip(
+          message: item.label,
+          child: InkWell(
+            key: const ValueKey('bottom-nav-collapsed-item'),
+            onTap: onTap,
+            customBorder: const CircleBorder(),
+            child: Icon(item.icon, size: 27, color: foregroundColor),
+          ),
+        ),
+      ),
     );
   }
 }

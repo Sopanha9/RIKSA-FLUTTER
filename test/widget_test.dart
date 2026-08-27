@@ -167,8 +167,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.byKey(const Key('auth_loading_overlay')), findsOneWidget);
+    expect(find.byKey(const Key('auth_loading_animation')), findsOneWidget);
     expect(find.text('Preparing your space'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsWidgets);
   });
 
   testWidgets('splash offline actions have finite button constraints', (

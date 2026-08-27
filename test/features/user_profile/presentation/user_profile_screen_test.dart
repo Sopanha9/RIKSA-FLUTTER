@@ -131,10 +131,25 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
+    final scaffold = tester.widget<Scaffold>(
+      find.byKey(const ValueKey('personal-profile-scaffold')),
+    );
+    expect(scaffold.backgroundColor, AppColors.editorialNeutralCanvas);
+    expect(
+      tester.widget<RefreshIndicator>(find.byType(RefreshIndicator)).color,
+      AppColors.editorialPink,
+    );
     expect(find.text('Sok Sophea'), findsNWidgets(2));
     expect(find.text('@sophea'), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-cover')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-hero-avatar')), findsOneWidget);
+    final verificationBadge = tester.widget<Container>(
+      find.byKey(const ValueKey('profile-verification-badge')),
+    );
+    expect(
+      (verificationBadge.decoration! as BoxDecoration).color,
+      AppColors.editorialPink,
+    );
     expect(
       tester.getCenter(find.byKey(const ValueKey('profile-hero-avatar'))).dx,
       tester.getCenter(find.byKey(const ValueKey('profile-cover'))).dx,
