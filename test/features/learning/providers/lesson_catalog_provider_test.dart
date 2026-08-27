@@ -6,6 +6,12 @@ import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.da
 
 class _FakeLearningApi implements LearningApi {
   @override
+  Future<LessonCompletionResult> completeLesson({
+    required String lessonId,
+    required String reflectionText,
+  }) => throw UnimplementedError();
+
+  @override
   Future<List<LearningCategory>> categories() async => const [
     LearningCategory(id: 'math', name: 'Mathematics'),
   ];
@@ -37,6 +43,29 @@ class _FakeLearningApi implements LearningApi {
     totalElements: 1,
     totalPages: 1,
   );
+
+  @override
+  Future<LessonDetail> lesson(String lessonId) => throw UnimplementedError();
+
+  @override
+  Future<LearningRoadmap> roadmap(String categoryId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> resumeRoadmapUnit(String unitId) => throw UnimplementedError();
+
+  @override
+  Future<void> skipRoadmapUnit(String unitId) => throw UnimplementedError();
+
+  @override
+  Future<void> startLesson(String lessonId) => throw UnimplementedError();
+
+  @override
+  Future<LessonAnswerResult> submitAnswer({
+    required String lessonId,
+    required String exerciseId,
+    required String answer,
+  }) => throw UnimplementedError();
 }
 
 void main() {

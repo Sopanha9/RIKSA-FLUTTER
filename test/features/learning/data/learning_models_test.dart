@@ -39,4 +39,69 @@ void main() {
     expect(numeric.grade, 10);
     expect(labelled.grade, 12);
   });
+
+  test('LearningRoadmap parses nested units, resume state, and reward XP', () {
+    final roadmap = LearningRoadmap.fromJson({
+      'categoryId': 'math',
+      'categoryName': 'Mathematics',
+      'completedLessons': 2,
+      'totalLessons': 5,
+      'progress': 0.4,
+      'currentLessonId': 'lesson-3',
+      'activeDates': ['2026-08-27'],
+      'units': [
+        {
+          'id': 'foundation',
+          'title': 'Foundations',
+          'description': 'Basic concepts',
+          'position': 1,
+          'status': 'CURRENT',
+          'completedLessons': 2,
+          'totalLessons': 5,
+          'skippable': true,
+          'lessons': [
+            {
+              'id': 'lesson-3',
+              'title': 'Equations',
+              'description': 'Solve equations',
+              'difficulty': 'MEDIUM',
+              'baseXp': 20,
+              'rewardXp': 55,
+              'estimatedMinutes': 10,
+              'exerciseCount': 2,
+              'progress': 0.5,
+              'status': 'IN_PROGRESS',
+              'current': true,
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(roadmap.units.single.lessons.single.rewardXp, 55);
+    expect(
+      roadmap.units.single.lessons.single.status,
+      RoadmapLessonStatus.inProgress,
+    );
+    expect(roadmap.currentLessonId, 'lesson-3');
+    expect(roadmap.activeDates.single, DateTime(2026, 8, 27));
+  });
+
+  test('LessonDetail restores completed exercise state', () {
+    final detail = LessonDetail.fromJson({
+      'id': 'lesson-1',
+      'title': 'Numbers',
+      'exercises': [
+        {
+          'id': 'exercise-1',
+          'question': 'What is 2 + 2?',
+          'difficulty': 'EASY',
+          'points': 5,
+          'completed': true,
+        },
+      ],
+    });
+
+    expect(detail.exercises.single.completed, isTrue);
+  });
 }

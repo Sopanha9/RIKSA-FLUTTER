@@ -1,118 +1,196 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../data/learning_models.dart';
+import '../providers/learning_roadmap_provider.dart';
+import '../providers/lesson_catalog_provider.dart';
 
-class MathematicsRoadmapScreen extends StatelessWidget {
+class MathematicsRoadmapScreen extends ConsumerWidget {
   const MathematicsRoadmapScreen({super.key, this.currentLesson});
 
   final LessonSummary? currentLesson;
 
-  static const _steps = [
-    _RoadmapLesson(
-      number: '01',
-      title: 'Foundations',
-      subtitle: 'Basic concepts and numbers',
-      state: _RoadmapState.completed,
-    ),
-    _RoadmapLesson(
-      number: '02',
-      title: 'Functions & Graphs',
-      subtitle: 'Understand functions and their graphs',
-      state: _RoadmapState.completed,
-    ),
-    _RoadmapLesson(
-      number: '03',
-      title: 'Derivatives & Tangent Lines',
-      subtitle: 'Find rates of change and tangent lines',
-      state: _RoadmapState.current,
-    ),
-    _RoadmapLesson(
-      number: '04',
-      title: 'Applications of Derivatives',
-      subtitle: 'Real world problems and optimization',
-      state: _RoadmapState.locked,
-    ),
-    _RoadmapLesson(
-      number: '05',
-      title: 'Integrals',
-      subtitle: 'Introduction to integration',
-      state: _RoadmapState.locked,
-    ),
-    _RoadmapLesson(
-      number: '06',
-      title: 'Integral Applications',
-      subtitle: 'Area, volume and more',
-      state: _RoadmapState.locked,
-    ),
-    _RoadmapLesson(
-      number: '07',
-      title: 'Differential Equations',
-      subtitle: 'Coming soon',
-      state: _RoadmapState.comingSoon,
-    ),
-    _RoadmapLesson(
-      number: '08',
-      title: 'Mathematics Challenge',
-      subtitle: "Test what you've learned",
-      state: _RoadmapState.locked,
-      milestone: true,
-    ),
-  ];
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categoryId = currentLesson?.categoryId;
+    if (categoryId == null || categoryId.isEmpty) {
+      return _RoadmapFailure(
+        message: 'This lesson is not connected to a mathematics roadmap yet.',
+        onRetry: context.pop,
+        actionLabel: 'Back to learning',
+      );
+    }
+
+    final roadmap = ref.watch(learningRoadmapProvider(categoryId));
+    return roadmap.when(
+      loading: () => const _RoadmapLoading(),
+      error: (error, _) => _RoadmapFailure(
+        message: 'We couldn’t load your roadmap. ${_friendlyError(error)}',
+        onRetry: () => ref.invalidate(learningRoadmapProvider(categoryId)),
+      ),
+      data: (data) => _RoadmapContent(
+        roadmap: data,
+        onRefresh: () =>
+            ref.refresh(learningRoadmapProvider(categoryId).future),
+        onOpenLesson: (lesson) =>
+            _openLesson(context, ref, roadmap: data, lesson: lesson),
+        onSkipUnit: (unit) =>
+            _skipUnit(context, ref, categoryId: categoryId, unit: unit),
+        onResumeUnit: (unit) =>
+            _resumeUnit(context, ref, categoryId: categoryId, unit: unit),
+      ),
+    );
+  }
+
+  Future<void> _openLesson(
+    BuildContext context,
+    WidgetRef ref, {
+    required LearningRoadmap roadmap,
+    required RoadmapLesson lesson,
+  }) async {
+    try {
+      await ref.read(learningApiProvider).startLesson(lesson.id);
+      ref.invalidate(learningRoadmapProvider(roadmap.categoryId));
+      if (!context.mounted) return;
+      await context.push(
+        '/learn/${lesson.id}',
+        extra: lesson.toSummary(
+          categoryId: roadmap.categoryId,
+          categoryName: roadmap.categoryName,
+        ),
+      );
+      ref.invalidate(learningRoadmapProvider(roadmap.categoryId));
+      await ref.read(lessonCatalogProvider.notifier).load();
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_friendlyError(error))));
+    }
+  }
+
+  Future<void> _skipUnit(
+    BuildContext context,
+    WidgetRef ref, {
+    required String categoryId,
+    required RoadmapUnit unit,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Skip ${unit.title}?'),
+        content: const Text(
+          'You will not earn XP for skipped lessons. The next unit will unlock, and you can resume this unit later.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Keep learning'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Skip for now'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(learningApiProvider).skipRoadmapUnit(unit.id);
+      ref.invalidate(learningRoadmapProvider(categoryId));
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_friendlyError(error))));
+    }
+  }
+
+  Future<void> _resumeUnit(
+    BuildContext context,
+    WidgetRef ref, {
+    required String categoryId,
+    required RoadmapUnit unit,
+  }) async {
+    try {
+      await ref.read(learningApiProvider).resumeRoadmapUnit(unit.id);
+      ref.invalidate(learningRoadmapProvider(categoryId));
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_friendlyError(error))));
+    }
+  }
+}
+
+class _RoadmapContent extends StatelessWidget {
+  const _RoadmapContent({
+    required this.roadmap,
+    required this.onRefresh,
+    required this.onOpenLesson,
+    required this.onSkipUnit,
+    required this.onResumeUnit,
+  });
+
+  final LearningRoadmap roadmap;
+  final Future<void> Function() onRefresh;
+  final ValueChanged<RoadmapLesson> onOpenLesson;
+  final ValueChanged<RoadmapUnit> onSkipUnit;
+  final ValueChanged<RoadmapUnit> onResumeUnit;
 
   @override
-  Widget build(BuildContext context) {
-    final palette = context.riksa;
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAF9F6),
-      body: SafeArea(
-        bottom: false,
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: const Color(0xFFFAF9F6),
+    body: SafeArea(
+      bottom: false,
+      child: RefreshIndicator(
+        color: context.riksa.math,
+        onRefresh: onRefresh,
         child: ListView(
-          // AppShell already reserves space for the persistent bottom navbar.
-          // Keep only a natural ending after the final roadmap milestone.
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+          key: const PageStorageKey('mathematics-roadmap-scroll'),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
           children: [
-            _RoadmapHeader(onBack: context.pop),
+            _RoadmapHeader(title: roadmap.categoryName, onBack: context.pop),
             const SizedBox(height: 14),
-            const _MathHero(),
+            _MathHero(roadmap: roadmap),
             const SizedBox(height: 12),
-            const _WeeklyLearningStrip(),
-            const SizedBox(height: 20),
+            _WeeklyLearningStrip(activeDates: roadmap.activeDates),
+            const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.only(left: 4),
               child: Text(
                 'Your path',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: palette.ink,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 20,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: context.riksa.ink,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
             ),
             const SizedBox(height: 14),
-            for (var index = 0; index < _steps.length; index++)
-              _RoadmapStepItem(
-                step: _steps[index],
+            for (var index = 0; index < roadmap.units.length; index++)
+              _RoadmapUnitItem(
+                unit: roadmap.units[index],
                 isFirst: index == 0,
-                isLast: index == _steps.length - 1,
-                onOpen: _steps[index].state == _RoadmapState.current &&
-                        currentLesson != null
-                    ? () => context.push(
-                        '/learn/${currentLesson!.id}',
-                        extra: currentLesson,
-                      )
-                    : null,
+                isLast: index == roadmap.units.length - 1,
+                onOpenLesson: onOpenLesson,
+                onSkip: () => onSkipUnit(roadmap.units[index]),
+                onResume: () => onResumeUnit(roadmap.units[index]),
               ),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _RoadmapHeader extends StatelessWidget {
-  const _RoadmapHeader({required this.onBack});
+  const _RoadmapHeader({required this.title, required this.onBack});
+
+  final String title;
   final VoidCallback onBack;
 
   @override
@@ -121,19 +199,14 @@ class _RoadmapHeader extends StatelessWidget {
       Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onBack,
-          borderRadius: BorderRadius.circular(16),
-          child: const SizedBox(
-            width: 44,
-            height: 44,
-            child: Icon(Icons.arrow_back_rounded, size: 20),
-          ),
+        child: IconButton(
+          onPressed: onBack,
+          icon: const Icon(Icons.arrow_back_rounded, size: 20),
         ),
       ),
       const SizedBox(width: 12),
       Text(
-        'MATHEMATICS',
+        title.toUpperCase(),
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
           letterSpacing: 1.25,
           fontWeight: FontWeight.w900,
@@ -145,139 +218,157 @@ class _RoadmapHeader extends StatelessWidget {
 }
 
 class _MathHero extends StatelessWidget {
-  const _MathHero();
+  const _MathHero({required this.roadmap});
+
+  final LearningRoadmap roadmap;
 
   @override
-  Widget build(BuildContext context) {
-    final palette = context.riksa;
-    return Container(
-      height: 188,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFECE5F5), Color(0xFFF5F0FA)],
-        ),
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: Colors.white.withValues(alpha: .72)),
-        boxShadow: RiksaElevation.low(Theme.of(context).brightness),
+  Widget build(BuildContext context) => Container(
+    height: 188,
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFFECE5F5), Color(0xFFF5F0FA)],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(26),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -10,
-              top: 4,
-              width: 170,
-              height: 165,
-              child: CustomPaint(painter: _MathHeroPainter(palette.math)),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'MATHEMATICS',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      letterSpacing: 1.2,
-                      fontWeight: FontWeight.w900,
-                      color: palette.math,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  SizedBox(
-                    width: 190,
-                    child: Text(
-                      'Your Learning\nRoadmap',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        height: 1.1,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: palette.ink,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '2 of 8 lessons completed',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                      color: palette.inkMuted,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    width: 180,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(99),
-                      child: const LinearProgressIndicator(
-                        value: 2 / 8,
-                        minHeight: 7,
-                        backgroundColor: Color(0xFFDCD2E8),
-                        valueColor: AlwaysStoppedAnimation(Color(0xFF76528F)),
-                      ),
-                    ),
-                  ),
-                ],
+      borderRadius: BorderRadius.circular(26),
+      border: Border.all(color: Colors.white.withValues(alpha: .72)),
+      boxShadow: RiksaElevation.low(Theme.of(context).brightness),
+    ),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(26),
+      child: Stack(
+        children: [
+          const Positioned(
+            right: 22,
+            top: 28,
+            child: Text(
+              '√x',
+              style: TextStyle(
+                fontSize: 72,
+                fontWeight: FontWeight.w300,
+                color: Color(0x3376528F),
               ),
             ),
-          ],
-        ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  roadmap.categoryName.toUpperCase(),
+                  style: TextStyle(
+                    letterSpacing: 1.2,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: context.riksa.math,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Your Learning\nRoadmap',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    height: 1.1,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: context.riksa.ink,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${roadmap.completedLessons} of ${roadmap.totalLessons} lessons completed',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: context.riksa.inkMuted,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                SizedBox(
+                  width: 190,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(99),
+                    child: LinearProgressIndicator(
+                      value: roadmap.progress,
+                      minHeight: 7,
+                      backgroundColor: const Color(0xFFDCD2E8),
+                      valueColor: const AlwaysStoppedAnimation(
+                        Color(0xFF76528F),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _WeeklyLearningStrip extends StatelessWidget {
-  const _WeeklyLearningStrip();
+  const _WeeklyLearningStrip({required this.activeDates});
+
+  final List<DateTime> activeDates;
+
+  bool _sameDate(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
   @override
   Widget build(BuildContext context) {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final today = DateTime.now();
+    final monday = DateTime(
+      today.year,
+      today.month,
+      today.day,
+    ).subtract(Duration(days: today.weekday - 1));
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .84),
-        borderRadius: BorderRadius.circular(18),
+        color: Colors.white.withValues(alpha: .9),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: RiksaElevation.low(Theme.of(context).brightness),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(days.length, (index) {
-          final complete = index < 2;
-          final today = index == 2;
-          final color = complete
+        children: List.generate(7, (index) {
+          final date = monday.add(Duration(days: index));
+          final complete = activeDates.any((value) => _sameDate(value, date));
+          final isToday = _sameDate(today, date);
+          final fill = complete
               ? context.riksa.jade
-              : today
-                  ? context.riksa.math
-                  : context.riksa.outline;
+              : isToday
+              ? context.riksa.math
+              : const Color(0xFFF0E5CF);
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                days[index],
+                labels[index],
                 style: TextStyle(
                   fontSize: 10,
-                  fontWeight: today ? FontWeight.w800 : FontWeight.w500,
-                  color: today ? context.riksa.math : context.riksa.inkMuted,
+                  fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
+                  color: isToday ? context.riksa.math : context.riksa.inkMuted,
                 ),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 6),
               Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
                 child: Icon(
                   complete
                       ? Icons.check_rounded
-                      : today
-                          ? Icons.circle
-                          : Icons.circle_outlined,
-                  size: today ? 8 : 12,
-                  color: complete || today ? Colors.white : context.riksa.inkFaint,
+                      : isToday
+                      ? Icons.circle
+                      : Icons.circle_outlined,
+                  size: isToday ? 8 : 14,
+                  color: complete || isToday
+                      ? Colors.white
+                      : context.riksa.inkMuted,
                 ),
               ),
             ],
@@ -288,336 +379,70 @@ class _WeeklyLearningStrip extends StatelessWidget {
   }
 }
 
-class _RoadmapStepItem extends StatelessWidget {
-  const _RoadmapStepItem({
-    required this.step,
+class _RoadmapUnitItem extends StatelessWidget {
+  const _RoadmapUnitItem({
+    required this.unit,
     required this.isFirst,
     required this.isLast,
-    this.onOpen,
+    required this.onOpenLesson,
+    required this.onSkip,
+    required this.onResume,
   });
 
-  final _RoadmapLesson step;
+  final RoadmapUnit unit;
   final bool isFirst;
   final bool isLast;
-  final VoidCallback? onOpen;
+  final ValueChanged<RoadmapLesson> onOpenLesson;
+  final VoidCallback onSkip;
+  final VoidCallback onResume;
 
   @override
   Widget build(BuildContext context) {
-    final isCurrent = step.state == _RoadmapState.current;
-    final isCompleted = step.state == _RoadmapState.completed;
-
-    // Node top offset relative to top of step row
-    final double nodeCenterY = isCurrent ? 24.0 : 20.0;
+    final completed = unit.status == RoadmapUnitStatus.completed;
+    final current = unit.status == RoadmapUnitStatus.current;
+    final skipped = unit.status == RoadmapUnitStatus.skipped;
+    final color = completed
+        ? context.riksa.jade
+        : current
+        ? context.riksa.math
+        : skipped
+        ? const Color(0xFFD8922B)
+        : const Color(0xFFCEC8D5);
 
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Timeline Node + Continuous Line Column
           SizedBox(
-            width: 40,
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.topCenter,
+            width: 42,
+            child: Column(
               children: [
-                // Continuous Vertical Path Line
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _ContinuousTimelinePainter(
-                      isFirst: isFirst,
-                      isLast: isLast,
-                      nodeCenterY: nodeCenterY,
-                      isCompleted: isCompleted,
-                      isCurrent: isCurrent,
-                      color: context.riksa.jade,
-                      currentColor: context.riksa.math,
-                      futureColor: const Color(0xFFDDD8E6),
+                if (!isFirst)
+                  Expanded(child: Container(width: 2, color: color)),
+                _RoadmapNode(unit: unit, color: color),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      color: completed || skipped
+                          ? color
+                          : const Color(0xFFDDD8E6),
                     ),
                   ),
-                ),
-                // Timeline Node
-                Positioned(
-                  top: nodeCenterY - (isCurrent ? 20.0 : 16.0),
-                  child: _RoadmapNode(step: step),
-                ),
-              ],
-            ),
-          ),
-
-          // Short Horizontal Connector Arm (Attachment)
-          SizedBox(
-            width: 12,
-            child: CustomPaint(
-              painter: _ConnectorArmPainter(
-                nodeCenterY: nodeCenterY,
-                color: isCompleted
-                    ? context.riksa.jade.withValues(alpha: .5)
-                    : isCurrent
-                        ? context.riksa.math.withValues(alpha: .5)
-                        : const Color(0xFFDDD8E6),
-              ),
-            ),
-          ),
-
-          // Card Content
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: isCurrent
-                  ? _CurrentRoadmapCard(step: step, onTap: onOpen)
-                  : _CompactRoadmapCard(step: step),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ContinuousTimelinePainter extends CustomPainter {
-  const _ContinuousTimelinePainter({
-    required this.isFirst,
-    required this.isLast,
-    required this.nodeCenterY,
-    required this.isCompleted,
-    required this.isCurrent,
-    required this.color,
-    required this.currentColor,
-    required this.futureColor,
-  });
-
-  final bool isFirst;
-  final bool isLast;
-  final double nodeCenterY;
-  final bool isCompleted;
-  final bool isCurrent;
-  final Color color;
-  final Color currentColor;
-  final Color futureColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final centerX = size.width / 2;
-
-    // Top segment (from y=0 down to node center)
-    if (!isFirst) {
-      final topColor = (isCompleted || isCurrent) ? color : futureColor;
-      final topPaint = Paint()
-        ..color = topColor
-        ..strokeWidth = 2.5
-        ..strokeCap = StrokeCap.round;
-      canvas.drawLine(Offset(centerX, 0), Offset(centerX, nodeCenterY), topPaint);
-    }
-
-    // Bottom segment (from node center down to y=height)
-    if (!isLast) {
-      if (isCompleted) {
-        final solidPaint = Paint()
-          ..color = color
-          ..strokeWidth = 2.5
-          ..strokeCap = StrokeCap.round;
-        canvas.drawLine(
-          Offset(centerX, nodeCenterY),
-          Offset(centerX, size.height),
-          solidPaint,
-        );
-      } else {
-        // Dashed line for current / future
-        final futurePaint = Paint()
-          ..color = futureColor
-          ..strokeWidth = 2.0
-          ..strokeCap = StrokeCap.round;
-        final startY = nodeCenterY;
-        final endY = size.height;
-        for (var y = startY; y < endY; y += 7) {
-          final drawY = (y + 4 > endY) ? endY : y + 4;
-          canvas.drawLine(Offset(centerX, y), Offset(centerX, drawY), futurePaint);
-        }
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ContinuousTimelinePainter old) =>
-      old.isFirst != isFirst ||
-      old.isLast != isLast ||
-      old.nodeCenterY != nodeCenterY ||
-      old.isCompleted != isCompleted ||
-      old.isCurrent != isCurrent;
-}
-
-class _ConnectorArmPainter extends CustomPainter {
-  const _ConnectorArmPainter({
-    required this.nodeCenterY,
-    required this.color,
-  });
-
-  final double nodeCenterY;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(Offset(0, nodeCenterY), Offset(size.width, nodeCenterY), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _ConnectorArmPainter old) =>
-      old.nodeCenterY != nodeCenterY || old.color != color;
-}
-
-class _RoadmapNode extends StatelessWidget {
-  const _RoadmapNode({required this.step});
-  final _RoadmapLesson step;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.riksa;
-    final completed = step.state == _RoadmapState.completed;
-    final current = step.state == _RoadmapState.current;
-
-    if (current) {
-      return Container(
-        width: 40,
-        height: 40,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: palette.math.withValues(alpha: .18),
-          shape: BoxShape.circle,
-        ),
-        child: Container(
-          width: 32,
-          height: 32,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: palette.math,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: palette.math.withValues(alpha: .35),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Text(
-            step.number,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-      );
-    }
-
-    final fill = completed
-        ? palette.jade
-        : step.milestone
-            ? const Color(0xFFFFF0D0)
-            : const Color(0xFFEFEBF5);
-
-    final textColor = completed
-        ? Colors.white
-        : step.milestone
-            ? const Color(0xFFD48800)
-            : palette.inkMuted;
-
-    return Container(
-      width: 32,
-      height: 32,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: fill,
-        shape: BoxShape.circle,
-        border: step.milestone
-            ? Border.all(color: const Color(0xFFFCE3B0), width: 1.5)
-            : null,
-      ),
-      child: Text(
-        step.number,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
-class _CompactRoadmapCard extends StatelessWidget {
-  const _CompactRoadmapCard({required this.step});
-  final _RoadmapLesson step;
-
-  @override
-  Widget build(BuildContext context) {
-    final completed = step.state == _RoadmapState.completed;
-    final palette = context.riksa;
-
-    final bgColor = completed
-        ? const Color(0xFFF2F9F5)
-        : step.milestone
-            ? const Color(0xFFFFF9EE)
-            : const Color(0xFFFAF8F5);
-
-    final borderColor = completed
-        ? const Color(0xFFD5EBDC)
-        : step.milestone
-            ? const Color(0xFFFCEACD)
-            : const Color(0xFFEEEAE3);
-
-    return Container(
-      constraints: const BoxConstraints(minHeight: 74),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  step.title,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: completed ? palette.ink : palette.inkMuted,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  step.subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: palette.inkMuted.withValues(alpha: completed ? .84 : .68),
-                    fontSize: 11,
-                  ),
-                ),
               ],
             ),
           ),
           const SizedBox(width: 10),
-          Icon(
-            completed
-                ? Icons.check_circle_rounded
-                : step.milestone
-                    ? Icons.emoji_events_rounded
-                    : Icons.lock_outline_rounded,
-            color: completed
-                ? palette.jade
-                : step.milestone
-                    ? const Color(0xFFE5A000)
-                    : palette.inkFaint,
-            size: 20,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: _RoadmapUnitCard(
+                unit: unit,
+                onOpenLesson: onOpenLesson,
+                onSkip: onSkip,
+                onResume: onResume,
+              ),
+            ),
           ),
         ],
       ),
@@ -625,137 +450,337 @@ class _CompactRoadmapCard extends StatelessWidget {
   }
 }
 
-class _CurrentRoadmapCard extends StatefulWidget {
-  const _CurrentRoadmapCard({required this.step, this.onTap});
-  final _RoadmapLesson step;
-  final VoidCallback? onTap;
+class _RoadmapNode extends StatelessWidget {
+  const _RoadmapNode({required this.unit, required this.color});
+
+  final RoadmapUnit unit;
+  final Color color;
 
   @override
-  State<_CurrentRoadmapCard> createState() => _CurrentRoadmapCardState();
+  Widget build(BuildContext context) => Container(
+    key: ValueKey('roadmap-node-${unit.id}'),
+    width: unit.status == RoadmapUnitStatus.current ? 40 : 34,
+    height: unit.status == RoadmapUnitStatus.current ? 40 : 34,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: color,
+      shape: BoxShape.circle,
+      boxShadow: unit.status == RoadmapUnitStatus.current
+          ? [
+              BoxShadow(
+                color: color.withValues(alpha: .3),
+                blurRadius: 8,
+                spreadRadius: 4,
+              ),
+            ]
+          : null,
+    ),
+    child: Text(
+      unit.position.toString().padLeft(2, '0'),
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 11,
+        fontWeight: FontWeight.w900,
+      ),
+    ),
+  );
 }
 
-class _CurrentRoadmapCardState extends State<_CurrentRoadmapCard> {
-  bool _pressed = false;
+class _RoadmapUnitCard extends StatefulWidget {
+  const _RoadmapUnitCard({
+    required this.unit,
+    required this.onOpenLesson,
+    required this.onSkip,
+    required this.onResume,
+  });
+
+  final RoadmapUnit unit;
+  final ValueChanged<RoadmapLesson> onOpenLesson;
+  final VoidCallback onSkip;
+  final VoidCallback onResume;
+
+  @override
+  State<_RoadmapUnitCard> createState() => _RoadmapUnitCardState();
+}
+
+class _RoadmapUnitCardState extends State<_RoadmapUnitCard> {
+  late bool _expanded;
+
+  RoadmapUnit get unit => widget.unit;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = unit.status == RoadmapUnitStatus.current;
+  }
+
+  @override
+  void didUpdateWidget(covariant _RoadmapUnitCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.unit.status != unit.status &&
+        unit.status == RoadmapUnitStatus.current) {
+      _expanded = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.riksa;
-    return GestureDetector(
-      onTap: widget.onTap,
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTapUp: (_) => setState(() => _pressed = false),
-      child: AnimatedScale(
-        duration: RiksaMotion.resolve(context, RiksaMotion.fast),
-        scale: _pressed ? .985 : 1,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 175, maxHeight: 195),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFEADDF2), Color(0xFFF3EEF8)],
-            ),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: palette.math.withValues(alpha: .28),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: palette.math.withValues(alpha: .12),
-                blurRadius: 14,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              // dy/dx Background Artwork on Right
-              Positioned(
-                right: -8,
-                top: 0,
-                bottom: 0,
-                width: 125,
-                child: IgnorePointer(
-                  child: CustomPaint(
-                    painter: _TangentPainter(palette.math),
-                  ),
-                ),
-              ),
-              // Left Content Layout
-              Column(
+    final completed = unit.status == RoadmapUnitStatus.completed;
+    final current = unit.status == RoadmapUnitStatus.current;
+    final skipped = unit.status == RoadmapUnitStatus.skipped;
+    final locked = unit.status == RoadmapUnitStatus.locked;
+    final background = current
+        ? const Color(0xFFF0E7F6)
+        : completed
+        ? const Color(0xFFF2F9F5)
+        : skipped
+        ? const Color(0xFFFFF7E9)
+        : const Color(0xFFFAF8F5);
+    final border = current
+        ? context.riksa.math.withValues(alpha: .35)
+        : completed
+        ? const Color(0xFFD5EBDC)
+        : skipped
+        ? const Color(0xFFF1D6A7)
+        : const Color(0xFFEEEAE3);
+
+    return Material(
+      key: ValueKey('roadmap-unit-${unit.id}'),
+      color: background,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(color: border, width: current ? 1.5 : 1),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            key: PageStorageKey('roadmap-unit-expansion-${unit.id}'),
+            onTap: locked ? null : () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Top: Badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .75),
-                      borderRadius: BorderRadius.circular(99),
+                  if (current) ...[
+                    _StatusPill(
+                      label: 'YOU ARE HERE',
+                      color: context.riksa.math,
                     ),
-                    child: Text(
-                      'YOU ARE HERE',
-                      style: TextStyle(
-                        color: palette.math,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: .8,
-                      ),
-                    ),
-                  ),
-
-                  // Middle: Title
-                  Padding(
-                    padding: const EdgeInsets.only(right: 60),
-                    child: Text(
-                      widget.step.title,
-                      maxLines: 2,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: palette.ink,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 18,
-                        height: 1.15,
-                      ),
-                    ),
-                  ),
-
-                  // Bottom: Metadata Chips + Arrow CTA Button
+                    const SizedBox(height: 10),
+                  ],
                   Row(
                     children: [
                       Expanded(
-                        child: Wrap(
-                          spacing: 5,
-                          runSpacing: 4,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: const [
-                            _RoadmapFact(Icons.schedule_rounded, '8 min'),
-                            _RoadmapFact(Icons.edit_note_rounded, '2 exercises'),
-                            _RoadmapFact(Icons.bolt_rounded, 'Easy'),
-                          ],
+                        child: Text(
+                          unit.title,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: locked
+                                    ? context.riksa.inkMuted
+                                    : context.riksa.ink,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 16,
+                              ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: palette.ink,
-                          borderRadius: BorderRadius.circular(13),
-                        ),
-                        child: Icon(
-                          Icons.arrow_forward_rounded,
-                          color: palette.canvas,
-                          size: 18,
-                        ),
+                      Icon(
+                        completed
+                            ? Icons.check_circle_rounded
+                            : skipped
+                            ? Icons.fast_forward_rounded
+                            : locked
+                            ? Icons.lock_outline_rounded
+                            : _expanded
+                            ? Icons.expand_less_rounded
+                            : Icons.expand_more_rounded,
+                        color: completed
+                            ? context.riksa.jade
+                            : skipped
+                            ? const Color(0xFFD8922B)
+                            : locked
+                            ? context.riksa.inkFaint
+                            : context.riksa.math,
                       ),
                     ],
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    locked
+                        ? unit.description
+                        : '${unit.completedLessons} of ${unit.totalLessons} lessons • ${unit.description}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: context.riksa.inkMuted,
+                      fontSize: 11,
+                    ),
+                  ),
                 ],
               ),
-            ],
+            ),
+          ),
+          if (_expanded) ...[
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final lesson in unit.lessons)
+                    _RoadmapLessonTile(
+                      lesson: lesson,
+                      onTap:
+                          lesson.status == RoadmapLessonStatus.locked ||
+                              lesson.status == RoadmapLessonStatus.skipped
+                          ? null
+                          : () => widget.onOpenLesson(lesson),
+                    ),
+                  const SizedBox(height: 6),
+                  if (unit.skippable)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        key: ValueKey('skip-roadmap-unit-${unit.id}'),
+                        onPressed: widget.onSkip,
+                        icon: const Icon(Icons.fast_forward_rounded, size: 18),
+                        label: const Text('Skip this unit'),
+                      ),
+                    ),
+                  if (skipped)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        key: ValueKey('resume-roadmap-unit-${unit.id}'),
+                        onPressed: widget.onResume,
+                        icon: const Icon(Icons.replay_rounded, size: 18),
+                        label: const Text('Resume this unit'),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: .78),
+      borderRadius: BorderRadius.circular(99),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(
+        color: color,
+        fontSize: 8,
+        letterSpacing: .4,
+        fontWeight: FontWeight.w900,
+      ),
+    ),
+  );
+}
+
+class _RoadmapLessonTile extends StatelessWidget {
+  const _RoadmapLessonTile({required this.lesson, this.onTap});
+
+  final RoadmapLesson lesson;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final complete = lesson.status == RoadmapLessonStatus.completed;
+    final active =
+        lesson.status == RoadmapLessonStatus.inProgress ||
+        lesson.status == RoadmapLessonStatus.available;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.white.withValues(alpha: active ? .92 : .65),
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          key: ValueKey('roadmap-lesson-${lesson.id}'),
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Icon(
+                  complete
+                      ? Icons.check_circle_rounded
+                      : active
+                      ? Icons.play_circle_fill_rounded
+                      : Icons.lock_outline_rounded,
+                  color: complete
+                      ? context.riksa.jade
+                      : active
+                      ? context.riksa.math
+                      : context.riksa.inkFaint,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        lesson.title,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: onTap == null
+                              ? context.riksa.inkMuted
+                              : context.riksa.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          _LessonMeta(
+                            icon: Icons.schedule_rounded,
+                            label: '${lesson.estimatedMinutes} min',
+                          ),
+                          _LessonMeta(
+                            icon: Icons.edit_note_rounded,
+                            label: '${lesson.exerciseCount} exercises',
+                          ),
+                          _LessonMeta(
+                            icon: Icons.bolt_rounded,
+                            label: '+${lesson.rewardXp} XP',
+                          ),
+                        ],
+                      ),
+                      if (lesson.progress > 0 && !complete) ...[
+                        const SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: lesson.progress,
+                          minHeight: 4,
+                          borderRadius: BorderRadius.circular(99),
+                          color: context.riksa.math,
+                          backgroundColor: const Color(0xFFE4DCE9),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (active) const Icon(Icons.chevron_right_rounded, size: 20),
+              ],
+            ),
           ),
         ),
       ),
@@ -763,145 +788,78 @@ class _CurrentRoadmapCardState extends State<_CurrentRoadmapCard> {
   }
 }
 
-class _RoadmapFact extends StatelessWidget {
-  const _RoadmapFact(this.icon, this.label);
+class _LessonMeta extends StatelessWidget {
+  const _LessonMeta({required this.icon, required this.label});
+
   final IconData icon;
   final String label;
 
   @override
-  Widget build(BuildContext context) {
-    final palette = context.riksa;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .70),
-        borderRadius: BorderRadius.circular(99),
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 13, color: context.riksa.inkMuted),
+      const SizedBox(width: 3),
+      Text(
+        label,
+        style: TextStyle(
+          color: context.riksa.inkMuted,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: palette.inkMuted),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            softWrap: false,
-            style: TextStyle(
-              color: palette.ink,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    ],
+  );
 }
 
-enum _RoadmapState { completed, current, locked, comingSoon }
+class _RoadmapLoading extends StatelessWidget {
+  const _RoadmapLoading();
 
-class _RoadmapLesson {
-  const _RoadmapLesson({
-    required this.number,
-    required this.title,
-    required this.subtitle,
-    required this.state,
-    this.milestone = false,
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: const Color(0xFFFAF9F6),
+    appBar: AppBar(backgroundColor: Colors.transparent),
+    body: const Center(child: CircularProgressIndicator()),
+  );
+}
+
+class _RoadmapFailure extends StatelessWidget {
+  const _RoadmapFailure({
+    required this.message,
+    required this.onRetry,
+    this.actionLabel = 'Try again',
   });
 
-  final String number;
-  final String title;
-  final String subtitle;
-  final _RoadmapState state;
-  final bool milestone;
-}
-
-class _MathHeroPainter extends CustomPainter {
-  const _MathHeroPainter(this.color);
-  final Color color;
+  final String message;
+  final VoidCallback onRetry;
+  final String actionLabel;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final line = Paint()
-      ..color = color.withValues(alpha: .24)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8;
-    final fill = Paint()
-      ..color = color.withValues(alpha: .10)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(size.width * .58, size.height * .5), 38, line);
-    canvas.drawLine(
-      Offset(12, size.height * .78),
-      Offset(size.width - 5, size.height * .22),
-      line,
-    );
-    canvas.drawLine(Offset(32, 12), Offset(32, size.height - 12), line);
-    canvas.drawLine(
-      Offset(16, size.height - 24),
-      Offset(size.width - 16, size.height - 24),
-      line,
-    );
-    canvas.drawCircle(Offset(size.width * .72, size.height * .33), 8, fill);
-    final text = TextPainter(
-      text: TextSpan(
-        text: '√x',
-        style: TextStyle(
-          color: color.withValues(alpha: .38),
-          fontSize: 28,
-          fontWeight: FontWeight.w800,
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(),
+    body: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.route_outlined, size: 56),
+            const SizedBox(height: 16),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            FilledButton(onPressed: onRetry, child: Text(actionLabel)),
+          ],
         ),
       ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    text.paint(canvas, Offset(size.width * .56, size.height * .60));
-  }
-
-  @override
-  bool shouldRepaint(covariant _MathHeroPainter old) => old.color != color;
+    ),
+  );
 }
 
-class _TangentPainter extends CustomPainter {
-  const _TangentPainter(this.color);
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: .28)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path()
-      ..moveTo(0, size.height * .72)
-      ..quadraticBezierTo(
-        size.width * .38,
-        size.height * .08,
-        size.width,
-        size.height * .48,
-      );
-    canvas.drawPath(path, paint);
-
-    // Tangent line
-    canvas.drawLine(
-      Offset(2, size.height * .62),
-      Offset(size.width - 2, size.height * .32),
-      paint,
-    );
-
-    final text = TextPainter(
-      text: TextSpan(
-        text: 'dy/dx',
-        style: TextStyle(
-          color: color.withValues(alpha: .38),
-          fontSize: 14,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    text.paint(canvas, Offset(size.width * .36, 10));
+String _friendlyError(Object error) {
+  final text = error.toString();
+  if (text.contains('404')) {
+    return 'No roadmap is published for this subject yet.';
   }
-
-  @override
-  bool shouldRepaint(covariant _TangentPainter old) => old.color != color;
+  if (text.contains('401')) return 'Please sign in again.';
+  return 'Please check your connection and try again.';
 }

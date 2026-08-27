@@ -46,4 +46,60 @@ class LearningApi {
         .where((category) => category.id.isNotEmpty)
         .toList();
   }
+
+  Future<LearningRoadmap> roadmap(String categoryId) async {
+    final response = await _client.dio.get(
+      '/lessons/roadmap',
+      queryParameters: {'categoryId': categoryId},
+    );
+    return LearningRoadmap.fromJson(
+      (response.data as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<void> startLesson(String lessonId) async {
+    await _client.dio.post('/lessons/$lessonId/start');
+  }
+
+  Future<void> skipRoadmapUnit(String unitId) async {
+    await _client.dio.post('/lessons/roadmap/units/$unitId/skip');
+  }
+
+  Future<void> resumeRoadmapUnit(String unitId) async {
+    await _client.dio.post('/lessons/roadmap/units/$unitId/resume');
+  }
+
+  Future<LessonDetail> lesson(String lessonId) async {
+    final response = await _client.dio.get('/lessons/$lessonId');
+    return LessonDetail.fromJson(
+      (response.data as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<LessonAnswerResult> submitAnswer({
+    required String lessonId,
+    required String exerciseId,
+    required String answer,
+  }) async {
+    final response = await _client.dio.post(
+      '/lessons/$lessonId/exercises/$exerciseId/attempt',
+      data: {'answer': answer},
+    );
+    return LessonAnswerResult.fromJson(
+      (response.data as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<LessonCompletionResult> completeLesson({
+    required String lessonId,
+    required String reflectionText,
+  }) async {
+    final response = await _client.dio.post(
+      '/lessons/$lessonId/complete',
+      data: {'reflectionText': reflectionText},
+    );
+    return LessonCompletionResult.fromJson(
+      (response.data as Map).cast<String, dynamic>(),
+    );
+  }
 }
