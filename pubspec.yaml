@@ -53,6 +53,7 @@ dependencies:
   path_provider: ^2.1.6
   rive: ^0.14.11
   loading_animation_widget: ^1.3.0
+  flutter_markdown_plus: ^1.0.12
 
 dev_dependencies:
   flutter_test:
@@ -111,6 +112,13 @@ flutter:
     - family: Noto Sans Khmer
       fonts:
         - asset: assets/fonts/NotoSansKhmer-Variable.ttf
+    - family: Koulen
+      fonts:
+        - asset: assets/fonts/Koulen-Regular.ttf
+          weight: 400
+    - family: Kantumruy Pro
+      fonts:
+        - asset: assets/fonts/KantumruyPro-Variable.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

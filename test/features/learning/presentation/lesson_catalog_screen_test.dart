@@ -199,6 +199,13 @@ void main() {
       find.byKey(const ValueKey('lesson-progress-lesson-1')),
       findsOneWidget,
     );
+    final firstCard = tester.getRect(
+      find.byKey(const ValueKey('lesson-card-lesson-1')),
+    );
+    final secondCard = tester.getRect(
+      find.byKey(const ValueKey('lesson-card-lesson-2')),
+    );
+    expect(secondCard.top - firstCard.bottom, 14);
 
     await tester.tap(find.byKey(const ValueKey('lesson-category-math')));
     await tester.pumpAndSettle();

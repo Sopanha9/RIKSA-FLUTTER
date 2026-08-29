@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -122,10 +123,19 @@ class _LessonExperienceScreenState
             ).textTheme.labelSmall?.copyWith(color: color, letterSpacing: .7),
           ),
           const SizedBox(height: 6),
-          Text(detail.title, style: Theme.of(context).textTheme.displaySmall),
+          Text(detail.title, style: _lessonTitleStyle(context, detail.title)),
           if (detail.description.trim().isNotEmpty) ...[
             const SizedBox(height: 10),
-            Text(detail.description),
+            MarkdownBody(
+              key: const ValueKey('lesson-description-markdown'),
+              data: detail.description,
+              selectable: true,
+              softLineBreak: true,
+              styleSheet: _lessonMarkdownStyleSheet(
+                context,
+                hasKhmer: _containsKhmer(detail.description),
+              ),
+            ),
           ],
           const SizedBox(height: 18),
           Wrap(
@@ -303,6 +313,112 @@ class _LessonExperienceScreenState
       context,
     ).showSnackBar(SnackBar(content: Text(_friendlyLessonError(error))));
   }
+}
+
+bool _containsKhmer(String text) =>
+    RegExp(r'[\u1780-\u17FF\u19E0-\u19FF]').hasMatch(text);
+
+MarkdownStyleSheet _lessonMarkdownStyleSheet(
+  BuildContext context, {
+  required bool hasKhmer,
+}) {
+  final theme = Theme.of(context);
+  final palette = context.riksa;
+  final bodyFontFamily = hasKhmer
+      ? RiksaTypography.khmerBodyFamily
+      : RiksaTypography.latinFamily;
+  final titleFontFamily = hasKhmer
+      ? RiksaTypography.khmerTitleFamily
+      : RiksaTypography.latinFamily;
+  final bodyFallback = hasKhmer
+      ? const [RiksaTypography.khmerFamily, RiksaTypography.latinFamily]
+      : RiksaTypography.fallback;
+  final titleFallback = hasKhmer
+      ? const [
+          RiksaTypography.khmerBodyFamily,
+          RiksaTypography.khmerFamily,
+          RiksaTypography.latinFamily,
+        ]
+      : RiksaTypography.fallback;
+
+  TextStyle bodyStyle(TextStyle? style) => (style ?? const TextStyle())
+      .copyWith(fontFamily: bodyFontFamily, fontFamilyFallback: bodyFallback);
+
+  TextStyle titleStyle(TextStyle? style) =>
+      (style ?? const TextStyle()).copyWith(
+        fontFamily: titleFontFamily,
+        fontFamilyFallback: titleFallback,
+        fontWeight: hasKhmer ? FontWeight.w400 : style?.fontWeight,
+        letterSpacing: hasKhmer ? 0 : style?.letterSpacing,
+      );
+
+  final paragraph = bodyStyle(
+    theme.textTheme.bodyLarge?.copyWith(height: 1.75),
+  );
+  final heading1 = titleStyle(
+    theme.textTheme.headlineLarge?.copyWith(height: 1.4),
+  );
+  final heading2 = titleStyle(
+    theme.textTheme.headlineMedium?.copyWith(height: 1.4),
+  );
+  final heading3 = titleStyle(
+    theme.textTheme.titleLarge?.copyWith(height: 1.5),
+  );
+
+  return MarkdownStyleSheet.fromTheme(theme).copyWith(
+    a: paragraph.copyWith(
+      color: palette.jadeStrong,
+      decoration: TextDecoration.underline,
+    ),
+    p: paragraph,
+    pPadding: const EdgeInsets.only(bottom: 4),
+    h1: heading1,
+    h1Padding: const EdgeInsets.only(top: 8, bottom: 6),
+    h2: heading2,
+    h2Padding: const EdgeInsets.only(top: 8, bottom: 5),
+    h3: heading3,
+    h3Padding: const EdgeInsets.only(top: 8, bottom: 4),
+    h4: bodyStyle(theme.textTheme.titleMedium?.copyWith(height: 1.5)),
+    h5: bodyStyle(theme.textTheme.titleSmall?.copyWith(height: 1.5)),
+    h6: bodyStyle(theme.textTheme.labelLarge?.copyWith(height: 1.5)),
+    strong: bodyStyle(const TextStyle(fontWeight: FontWeight.w700)),
+    em: bodyStyle(const TextStyle(fontStyle: FontStyle.italic)),
+    code: bodyStyle(
+      theme.textTheme.bodyMedium?.copyWith(
+        color: palette.ink,
+        backgroundColor: palette.surfaceRaised,
+      ),
+    ),
+    blockquote: paragraph.copyWith(color: palette.inkMuted),
+    listBullet: paragraph,
+    tableHead: bodyStyle(
+      theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+    ),
+    tableBody: bodyStyle(theme.textTheme.bodyMedium?.copyWith(height: 1.6)),
+    tableBorder: TableBorder.all(color: palette.outline),
+    tableCellsPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    blockSpacing: 12,
+    listIndent: 22,
+    horizontalRuleDecoration: BoxDecoration(
+      border: Border(top: BorderSide(color: palette.outline)),
+    ),
+  );
+}
+
+TextStyle? _lessonTitleStyle(BuildContext context, String title) {
+  final style = Theme.of(context).textTheme.displaySmall;
+  if (!_containsKhmer(title)) return style;
+  return style?.copyWith(
+    fontFamily: RiksaTypography.khmerTitleFamily,
+    fontFamilyFallback: const [
+      RiksaTypography.khmerBodyFamily,
+      RiksaTypography.khmerFamily,
+      RiksaTypography.latinFamily,
+    ],
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0,
+    height: 1.35,
+  );
 }
 
 class _ExerciseCard extends StatelessWidget {

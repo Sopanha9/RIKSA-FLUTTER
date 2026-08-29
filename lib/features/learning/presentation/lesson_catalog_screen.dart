@@ -166,7 +166,7 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
                 key: ValueKey('lesson-card-${lesson.id}'),
                 lesson: lesson,
                 index: index,
-                hasTopNotch: !isFirst,
+                hasTopNotch: false,
                 eyebrow: isFirst && progress != null && progress < 1
                     ? l10n.continueLearning
                     : _subject(l10n, lesson),
@@ -525,21 +525,16 @@ class _LessonCardSlot extends StatelessWidget {
     required this.child,
   });
 
-  static const overlap = 16.0;
+  static const spacing = 14.0;
 
   final double height;
   final bool isLast;
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: height - (isLast ? 0 : overlap),
-    child: OverflowBox(
-      alignment: Alignment.topCenter,
-      minHeight: height,
-      maxHeight: height,
-      child: SizedBox(height: height, child: child),
-    ),
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.only(bottom: isLast ? 0 : spacing),
+    child: SizedBox(height: height, child: child),
   );
 }
 

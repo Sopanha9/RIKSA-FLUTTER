@@ -316,6 +316,8 @@ class RiksaTypography {
   RiksaTypography._();
   static const latinFamily = 'Poppins';
   static const khmerFamily = 'Noto Sans Khmer';
+  static const khmerTitleFamily = 'Koulen';
+  static const khmerBodyFamily = 'Kantumruy Pro';
   static const fallback = <String>[khmerFamily];
 
   static TextTheme textTheme(Color ink, Color muted) => TextTheme(
