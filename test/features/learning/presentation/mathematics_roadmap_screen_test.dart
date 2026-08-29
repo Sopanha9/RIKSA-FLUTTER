@@ -139,7 +139,10 @@ void main() {
           ],
           child: MaterialApp(
             theme: AppTheme.light,
-            home: const MathematicsRoadmapScreen(currentLesson: _summary),
+            home: const LearningRoadmapScreen(
+              categoryId: 'math',
+              currentLesson: _summary,
+            ),
           ),
         ),
       );
@@ -182,4 +185,40 @@ void main() {
       expect(find.text('Skip for now'), findsOneWidget);
     },
   );
+
+  testWidgets('uses dark semantic surfaces throughout the roadmap', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          learningRoadmapProvider('math').overrideWith((ref) async => _roadmap),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: ThemeMode.dark,
+          home: const LearningRoadmapScreen(
+            categoryId: 'math',
+            currentLesson: _summary,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+    final unitCard = tester.widget<Material>(
+      find.byKey(const ValueKey('roadmap-unit-foundation')),
+    );
+
+    expect(scaffold.backgroundColor, RiksaPalette.dark.canvas);
+    expect(unitCard.color!.computeLuminance(), lessThan(.2));
+    expect(tester.takeException(), isNull);
+  });
 }

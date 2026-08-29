@@ -101,9 +101,15 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
           Future<List<LearningCategory>>.value(state.categories),
       ]);
       final page = results[0] as LessonPage;
+      final stemLessons = page.content
+          .where((lesson) => isStemLearningCategory(lesson.categoryName))
+          .toList(growable: false);
+      final stemCategories = (results[1] as List<LearningCategory>)
+          .where((category) => isStemLearningCategory(category.name))
+          .toList(growable: false);
       state = state.copyWith(
-        lessons: page.content,
-        categories: results[1] as List<LearningCategory>,
+        lessons: stemLessons,
+        categories: stemCategories,
         page: page.page,
         totalPages: page.totalPages,
         isLoading: false,
@@ -172,7 +178,12 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
             size: _pageSize,
           );
       state = state.copyWith(
-        lessons: [...snapshot.lessons, ...page.content],
+        lessons: [
+          ...snapshot.lessons,
+          ...page.content.where(
+            (lesson) => isStemLearningCategory(lesson.categoryName),
+          ),
+        ],
         page: page.page,
         totalPages: page.totalPages,
         isLoadingMore: false,

@@ -3,21 +3,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_components.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_roadmap_provider.dart';
 import '../providers/lesson_catalog_provider.dart';
 
-class MathematicsRoadmapScreen extends ConsumerWidget {
-  const MathematicsRoadmapScreen({super.key, this.currentLesson});
+class LearningRoadmapScreen extends ConsumerWidget {
+  const LearningRoadmapScreen({
+    super.key,
+    required this.categoryId,
+    this.currentLesson,
+  });
 
+  final String categoryId;
   final LessonSummary? currentLesson;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final categoryId = currentLesson?.categoryId;
-    if (categoryId == null || categoryId.isEmpty) {
+    if (categoryId.isEmpty) {
       return _RoadmapFailure(
-        message: 'This lesson is not connected to a mathematics roadmap yet.',
+        message: 'This lesson is not connected to a roadmap yet.',
         onRetry: context.pop,
         actionLabel: 'Back to learning',
       );
@@ -143,7 +148,7 @@ class _RoadmapContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFFAF9F6),
+    backgroundColor: context.riksa.canvas,
     body: SafeArea(
       bottom: false,
       child: RefreshIndicator(
@@ -155,7 +160,7 @@ class _RoadmapContent extends StatelessWidget {
           children: [
             _RoadmapHeader(title: roadmap.categoryName, onBack: context.pop),
             const SizedBox(height: 14),
-            _MathHero(roadmap: roadmap),
+            _SubjectRoadmapHero(roadmap: roadmap),
             const SizedBox(height: 12),
             _WeeklyLearningStrip(activeDates: roadmap.activeDates),
             const SizedBox(height: 24),
@@ -197,7 +202,7 @@ class _RoadmapHeader extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     children: [
       Material(
-        color: Colors.white,
+        color: context.riksa.surfaceRaised,
         borderRadius: BorderRadius.circular(16),
         child: IconButton(
           onPressed: onBack,
@@ -217,95 +222,94 @@ class _RoadmapHeader extends StatelessWidget {
   );
 }
 
-class _MathHero extends StatelessWidget {
-  const _MathHero({required this.roadmap});
+class _SubjectRoadmapHero extends StatelessWidget {
+  const _SubjectRoadmapHero({required this.roadmap});
 
   final LearningRoadmap roadmap;
 
   @override
-  Widget build(BuildContext context) => Container(
-    height: 188,
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFFECE5F5), Color(0xFFF5F0FA)],
+  Widget build(BuildContext context) {
+    final kind = subjectKindFor(roadmap.categoryName);
+    final color = subjectColor(context, kind);
+    final surface = context.riksa.surface;
+    return Container(
+      height: 188,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.alphaBlend(color.withValues(alpha: .2), surface),
+            Color.alphaBlend(color.withValues(alpha: .08), surface),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: context.riksa.outline),
+        boxShadow: RiksaElevation.low(Theme.of(context).brightness),
       ),
-      borderRadius: BorderRadius.circular(26),
-      border: Border.all(color: Colors.white.withValues(alpha: .72)),
-      boxShadow: RiksaElevation.low(Theme.of(context).brightness),
-    ),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(26),
-      child: Stack(
-        children: [
-          const Positioned(
-            right: 22,
-            top: 28,
-            child: Text(
-              '√x',
-              style: TextStyle(
-                fontSize: 72,
-                fontWeight: FontWeight.w300,
-                color: Color(0x3376528F),
-              ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(26),
+        child: Stack(
+          children: [
+            Positioned(
+              right: 22,
+              top: 40,
+              child: SubjectArtwork(kind: kind, color: color, size: 104),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  roadmap.categoryName.toUpperCase(),
-                  style: TextStyle(
-                    letterSpacing: 1.2,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: context.riksa.math,
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    roadmap.categoryName.toUpperCase(),
+                    style: TextStyle(
+                      letterSpacing: 1.2,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: color,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Your Learning\nRoadmap',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    height: 1.1,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: context.riksa.ink,
+                  const SizedBox(height: 4),
+                  Text(
+                    'Your Learning\nRoadmap',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      height: 1.1,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: context.riksa.ink,
+                    ),
                   ),
-                ),
-                const Spacer(),
-                Text(
-                  '${roadmap.completedLessons} of ${roadmap.totalLessons} lessons completed',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: context.riksa.inkMuted,
+                  const Spacer(),
+                  Text(
+                    '${roadmap.completedLessons} of ${roadmap.totalLessons} lessons completed',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: context.riksa.inkMuted,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 7),
-                SizedBox(
-                  width: 190,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(99),
-                    child: LinearProgressIndicator(
-                      value: roadmap.progress,
-                      minHeight: 7,
-                      backgroundColor: const Color(0xFFDCD2E8),
-                      valueColor: const AlwaysStoppedAnimation(
-                        Color(0xFF76528F),
+                  const SizedBox(height: 7),
+                  SizedBox(
+                    width: 190,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(99),
+                      child: LinearProgressIndicator(
+                        value: roadmap.progress,
+                        minHeight: 7,
+                        backgroundColor: context.riksa.outline,
+                        valueColor: AlwaysStoppedAnimation(color),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _WeeklyLearningStrip extends StatelessWidget {
@@ -328,7 +332,7 @@ class _WeeklyLearningStrip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .9),
+        color: context.riksa.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: RiksaElevation.low(Theme.of(context).brightness),
       ),
@@ -342,7 +346,7 @@ class _WeeklyLearningStrip extends StatelessWidget {
               ? context.riksa.jade
               : isToday
               ? context.riksa.math
-              : const Color(0xFFF0E5CF);
+              : context.riksa.creamSoft;
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -406,8 +410,8 @@ class _RoadmapUnitItem extends StatelessWidget {
         : current
         ? context.riksa.math
         : skipped
-        ? const Color(0xFFD8922B)
-        : const Color(0xFFCEC8D5);
+        ? context.riksa.saffron
+        : context.riksa.outline;
 
     return IntrinsicHeight(
       child: Row(
@@ -426,7 +430,7 @@ class _RoadmapUnitItem extends StatelessWidget {
                       width: 2,
                       color: completed || skipped
                           ? color
-                          : const Color(0xFFDDD8E6),
+                          : context.riksa.outline,
                     ),
                   ),
               ],
@@ -530,19 +534,28 @@ class _RoadmapUnitCardState extends State<_RoadmapUnitCard> {
     final skipped = unit.status == RoadmapUnitStatus.skipped;
     final locked = unit.status == RoadmapUnitStatus.locked;
     final background = current
-        ? const Color(0xFFF0E7F6)
+        ? Color.alphaBlend(
+            context.riksa.math.withValues(alpha: .14),
+            context.riksa.surface,
+          )
         : completed
-        ? const Color(0xFFF2F9F5)
+        ? Color.alphaBlend(
+            context.riksa.jade.withValues(alpha: .1),
+            context.riksa.surface,
+          )
         : skipped
-        ? const Color(0xFFFFF7E9)
-        : const Color(0xFFFAF8F5);
+        ? Color.alphaBlend(
+            context.riksa.saffron.withValues(alpha: .1),
+            context.riksa.surface,
+          )
+        : context.riksa.surface;
     final border = current
         ? context.riksa.math.withValues(alpha: .35)
         : completed
-        ? const Color(0xFFD5EBDC)
+        ? context.riksa.jade.withValues(alpha: .35)
         : skipped
-        ? const Color(0xFFF1D6A7)
-        : const Color(0xFFEEEAE3);
+        ? context.riksa.saffron.withValues(alpha: .35)
+        : context.riksa.outline;
 
     return Material(
       key: ValueKey('roadmap-unit-${unit.id}'),
@@ -602,7 +615,7 @@ class _RoadmapUnitCardState extends State<_RoadmapUnitCard> {
                         color: completed
                             ? context.riksa.jade
                             : skipped
-                            ? const Color(0xFFD8922B)
+                            ? context.riksa.saffron
                             : locked
                             ? context.riksa.inkFaint
                             : context.riksa.math,
@@ -682,7 +695,7 @@ class _StatusPill extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
     decoration: BoxDecoration(
-      color: Colors.white.withValues(alpha: .78),
+      color: context.riksa.surfaceRaised,
       borderRadius: BorderRadius.circular(99),
     ),
     child: Text(
@@ -712,7 +725,7 @@ class _RoadmapLessonTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: Colors.white.withValues(alpha: active ? .92 : .65),
+        color: active ? context.riksa.surfaceRaised : context.riksa.surface,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           key: ValueKey('roadmap-lesson-${lesson.id}'),
@@ -779,7 +792,7 @@ class _RoadmapLessonTile extends StatelessWidget {
                           minHeight: 4,
                           borderRadius: BorderRadius.circular(99),
                           color: context.riksa.math,
-                          backgroundColor: const Color(0xFFE4DCE9),
+                          backgroundColor: context.riksa.outline,
                         ),
                       ],
                     ],
@@ -824,7 +837,7 @@ class _RoadmapLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFFAF9F6),
+    backgroundColor: context.riksa.canvas,
     appBar: AppBar(backgroundColor: Colors.transparent),
     body: const Center(child: CircularProgressIndicator()),
   );

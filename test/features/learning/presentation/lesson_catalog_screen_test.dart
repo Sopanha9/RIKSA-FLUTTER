@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_catalog_screen.dart';
@@ -98,6 +99,71 @@ class _CatalogNotifier extends LessonCatalogNotifier {
 }
 
 void main() {
+  testWidgets('opens every STEM lesson through its category roadmap', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final router = GoRouter(
+      initialLocation: '/learn',
+      routes: [
+        GoRoute(
+          path: '/learn',
+          builder: (_, _) => const LessonCatalogScreen(),
+          routes: [
+            GoRoute(
+              path: 'roadmap/:categoryId',
+              builder: (_, state) => Scaffold(
+                body: Text('roadmap-${state.pathParameters['categoryId']}'),
+              ),
+            ),
+            GoRoute(
+              path: ':id',
+              builder: (_, _) => const Scaffold(body: Text('detail-screen')),
+            ),
+          ],
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          lessonCatalogProvider.overrideWith(_CatalogNotifier.new),
+          communityStreakProvider.overrideWith(
+            (ref) async => CommunityStreak(
+              current: 0,
+              highest: 0,
+              lastTrackedDate: null,
+              activityDates: const [],
+            ),
+          ),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light,
+          routerConfig: router,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('lesson-card-lesson-2')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('roadmap-biology'), findsOneWidget);
+  });
+
   testWidgets('keeps the Learning header below the device top inset', (
     tester,
   ) async {

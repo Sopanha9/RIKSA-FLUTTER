@@ -215,9 +215,9 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
   }
 
   void _open(LessonSummary lesson) {
-    final category = lesson.categoryName.toLowerCase();
-    if (category.contains('math')) {
-      context.push('/learn/mathematics', extra: lesson);
+    final categoryId = lesson.categoryId;
+    if (categoryId != null && categoryId.isNotEmpty) {
+      context.push('/learn/roadmap/$categoryId', extra: lesson);
       return;
     }
     context.push('/learn/${lesson.id}', extra: lesson);

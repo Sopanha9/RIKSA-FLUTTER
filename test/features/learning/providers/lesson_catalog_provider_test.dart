@@ -14,6 +14,9 @@ class _FakeLearningApi implements LearningApi {
   @override
   Future<List<LearningCategory>> categories() async => const [
     LearningCategory(id: 'math', name: 'Mathematics'),
+    LearningCategory(id: 'biology', name: 'Biology'),
+    LearningCategory(id: 'english', name: 'English Learning'),
+    LearningCategory(id: 'general', name: 'General Discussion'),
   ];
 
   @override
@@ -33,6 +36,18 @@ class _FakeLearningApi implements LearningApi {
         baseXp: 20,
         categoryId: 'math',
         categoryName: 'Mathematics',
+        exerciseCount: 2,
+        completed: false,
+        createdAt: null,
+      ),
+      LessonSummary(
+        id: 'lesson-2',
+        title: 'Conditional Sentences',
+        description: 'English grammar.',
+        difficulty: LessonDifficulty.easy,
+        baseXp: 20,
+        categoryId: 'english',
+        categoryName: 'English Learning',
         exerciseCount: 2,
         completed: false,
         createdAt: null,
@@ -83,7 +98,10 @@ void main() {
     final state = container.read(lessonCatalogProvider);
     expect(state.isLoading, isFalse);
     expect(state.errorMessage, isNull);
-    expect(state.lessons.single.title, 'Derivatives');
-    expect(state.categories.single.name, 'Mathematics');
+    expect(state.lessons.map((lesson) => lesson.title), ['Derivatives']);
+    expect(state.categories.map((category) => category.name), [
+      'Mathematics',
+      'Biology',
+    ]);
   });
 }

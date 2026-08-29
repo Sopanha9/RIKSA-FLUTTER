@@ -17,6 +17,7 @@ RiksaSubjectKind subjectKindFor(String value) {
     return RiksaSubjectKind.math;
   }
   if (subject.contains('science') ||
+      subject.contains('physics') ||
       subject.contains('chem') ||
       subject.contains('bio') ||
       subject.contains('វិទ្យាសាស្ត្រ') ||

@@ -1,5 +1,19 @@
 library;
 
+/// Learning currently focuses on the five STEM subject families.
+/// Keep this classification at the catalog boundary because the category API
+/// is also shared by community and blog features.
+bool isStemLearningCategory(String name) {
+  final normalized = name.trim().toLowerCase();
+  return normalized.contains('math') ||
+      normalized.contains('computer science') ||
+      normalized.contains('technology') ||
+      normalized.contains('engineering') ||
+      normalized.contains('physics') ||
+      normalized.contains('chemistry') ||
+      normalized.contains('biology');
+}
+
 enum LessonDifficulty {
   easy,
   medium,

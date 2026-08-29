@@ -143,8 +143,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const LessonCatalogScreen(),
                 routes: [
                   GoRoute(
-                    path: 'mathematics',
-                    builder: (context, state) => MathematicsRoadmapScreen(
+                    path: 'roadmap/:categoryId',
+                    builder: (context, state) => LearningRoadmapScreen(
+                      categoryId: state.pathParameters['categoryId']!,
                       currentLesson: state.extra is LessonSummary
                           ? state.extra! as LessonSummary
                           : null,
