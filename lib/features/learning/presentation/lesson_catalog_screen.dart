@@ -616,14 +616,17 @@ class _EditorialLessonCard extends StatelessWidget {
                         lesson.title,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(
-                              color: tone.foreground,
-                              fontSize: 25,
-                              height: 1.08,
-                              letterSpacing: -.45,
-                              fontWeight: FontWeight.w900,
-                            ),
+                        style: RiksaTypography.titleStyleFor(
+                          lesson.title,
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: tone.foreground,
+                            fontSize: 25,
+                            height: 1.08,
+                            letterSpacing: -.45,
+                            fontWeight: FontWeight.w900,
+                          ),
+                          khmerHeight: 1.15,
+                        ),
                       ),
                     ),
                     const Spacer(),
@@ -1017,7 +1020,11 @@ class _LessonSearchDelegate extends SearchDelegate<LessonSummary?> {
             lesson.title,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w800),
+            style: RiksaTypography.titleStyleFor(
+              lesson.title,
+              const TextStyle(fontWeight: FontWeight.w800),
+              khmerHeight: 1.3,
+            ),
           ),
           subtitle: Text(subject(lesson)),
           trailing: const Icon(Icons.arrow_forward_rounded),

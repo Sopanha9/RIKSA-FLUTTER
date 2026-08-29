@@ -22,7 +22,7 @@ const _summary = LessonSummary(
 const _foundationLessons = [
   RoadmapLesson(
     id: 'lesson-1',
-    title: 'Number Systems & Operations',
+    title: 'ប្រព័ន្ធចំនួន និងប្រមាណវិធី',
     description: 'Work with numbers.',
     difficulty: LessonDifficulty.easy,
     baseXp: 15,
@@ -98,7 +98,7 @@ const _roadmap = LearningRoadmap(
   units: [
     RoadmapUnit(
       id: 'foundation',
-      title: 'Foundations',
+      title: 'មូលដ្ឋានគ្រឹះ',
       description: 'Basic concepts and numbers',
       position: 1,
       status: RoadmapUnitStatus.current,
@@ -147,8 +147,19 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.text('0 of 6 lessons completed'), findsOneWidget);
-      expect(find.text('Foundations'), findsOneWidget);
-      expect(find.text('Number Systems & Operations'), findsOneWidget);
+      expect(find.text('មូលដ្ឋានគ្រឹះ'), findsOneWidget);
+      expect(find.text('ប្រព័ន្ធចំនួន និងប្រមាណវិធី'), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.text('មូលដ្ឋានគ្រឹះ')).style?.fontFamily,
+        RiksaTypography.khmerTitleFamily,
+      );
+      expect(
+        tester
+            .widget<Text>(find.text('ប្រព័ន្ធចំនួន និងប្រមាណវិធី'))
+            .style
+            ?.fontFamily,
+        RiksaTypography.khmerTitleFamily,
+      );
       expect(find.text('Exponents & Radicals'), findsOneWidget);
       expect(find.text('+33 XP'), findsOneWidget);
       expect(
@@ -167,7 +178,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Skip Foundations?'), findsOneWidget);
+      expect(find.text('Skip មូលដ្ឋានគ្រឹះ?'), findsOneWidget);
       expect(find.text('Skip for now'), findsOneWidget);
     },
   );

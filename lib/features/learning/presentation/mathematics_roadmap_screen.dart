@@ -575,14 +575,17 @@ class _RoadmapUnitCardState extends State<_RoadmapUnitCard> {
                       Expanded(
                         child: Text(
                           unit.title,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: locked
-                                    ? context.riksa.inkMuted
-                                    : context.riksa.ink,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 16,
-                              ),
+                          style: RiksaTypography.titleStyleFor(
+                            unit.title,
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: locked
+                                  ? context.riksa.inkMuted
+                                  : context.riksa.ink,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                            ),
+                            khmerHeight: 1.3,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -738,12 +741,16 @@ class _RoadmapLessonTile extends StatelessWidget {
                     children: [
                       Text(
                         lesson.title,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: onTap == null
-                              ? context.riksa.inkMuted
-                              : context.riksa.ink,
+                        style: RiksaTypography.titleStyleFor(
+                          lesson.title,
+                          TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: onTap == null
+                                ? context.riksa.inkMuted
+                                : context.riksa.ink,
+                          ),
+                          khmerHeight: 1.3,
                         ),
                       ),
                       const SizedBox(height: 4),

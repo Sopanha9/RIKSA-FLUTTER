@@ -27,7 +27,7 @@ const _lesson = LessonSummary(
 
 const _biologyLesson = LessonSummary(
   id: 'lesson-2',
-  title: 'Journey inside the cell',
+  title: 'ស្វែងយល់ពីកោសិកា',
   description: 'Explore the structures that keep living cells working.',
   difficulty: LessonDifficulty.easy,
   baseXp: 25,
@@ -206,6 +206,8 @@ void main() {
       find.byKey(const ValueKey('lesson-card-lesson-2')),
     );
     expect(secondCard.top - firstCard.bottom, 14);
+    final khmerCardTitle = tester.widget<Text>(find.text(_biologyLesson.title));
+    expect(khmerCardTitle.style?.fontFamily, RiksaTypography.khmerTitleFamily);
 
     await tester.tap(find.byKey(const ValueKey('lesson-category-math')));
     await tester.pumpAndSettle();

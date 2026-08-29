@@ -123,7 +123,14 @@ class _LessonExperienceScreenState
             ).textTheme.labelSmall?.copyWith(color: color, letterSpacing: .7),
           ),
           const SizedBox(height: 6),
-          Text(detail.title, style: _lessonTitleStyle(context, detail.title)),
+          Text(
+            detail.title,
+            style: RiksaTypography.titleStyleFor(
+              detail.title,
+              Theme.of(context).textTheme.displaySmall,
+              khmerHeight: 1.35,
+            ),
+          ),
           if (detail.description.trim().isNotEmpty) ...[
             const SizedBox(height: 10),
             MarkdownBody(
@@ -133,7 +140,7 @@ class _LessonExperienceScreenState
               softLineBreak: true,
               styleSheet: _lessonMarkdownStyleSheet(
                 context,
-                hasKhmer: _containsKhmer(detail.description),
+                hasKhmer: RiksaTypography.containsKhmer(detail.description),
               ),
             ),
           ],
@@ -315,9 +322,6 @@ class _LessonExperienceScreenState
   }
 }
 
-bool _containsKhmer(String text) =>
-    RegExp(r'[\u1780-\u17FF\u19E0-\u19FF]').hasMatch(text);
-
 MarkdownStyleSheet _lessonMarkdownStyleSheet(
   BuildContext context, {
   required bool hasKhmer,
@@ -334,11 +338,7 @@ MarkdownStyleSheet _lessonMarkdownStyleSheet(
       ? const [RiksaTypography.khmerFamily, RiksaTypography.latinFamily]
       : RiksaTypography.fallback;
   final titleFallback = hasKhmer
-      ? const [
-          RiksaTypography.khmerBodyFamily,
-          RiksaTypography.khmerFamily,
-          RiksaTypography.latinFamily,
-        ]
+      ? RiksaTypography.khmerTitleFallback
       : RiksaTypography.fallback;
 
   TextStyle bodyStyle(TextStyle? style) => (style ?? const TextStyle())
@@ -402,22 +402,6 @@ MarkdownStyleSheet _lessonMarkdownStyleSheet(
     horizontalRuleDecoration: BoxDecoration(
       border: Border(top: BorderSide(color: palette.outline)),
     ),
-  );
-}
-
-TextStyle? _lessonTitleStyle(BuildContext context, String title) {
-  final style = Theme.of(context).textTheme.displaySmall;
-  if (!_containsKhmer(title)) return style;
-  return style?.copyWith(
-    fontFamily: RiksaTypography.khmerTitleFamily,
-    fontFamilyFallback: const [
-      RiksaTypography.khmerBodyFamily,
-      RiksaTypography.khmerFamily,
-      RiksaTypography.latinFamily,
-    ],
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0,
-    height: 1.35,
   );
 }
 

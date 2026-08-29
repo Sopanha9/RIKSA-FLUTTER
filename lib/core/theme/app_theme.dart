@@ -319,6 +319,29 @@ class RiksaTypography {
   static const khmerTitleFamily = 'Koulen';
   static const khmerBodyFamily = 'Kantumruy Pro';
   static const fallback = <String>[khmerFamily];
+  static const khmerTitleFallback = <String>[
+    khmerBodyFamily,
+    khmerFamily,
+    latinFamily,
+  ];
+
+  static bool containsKhmer(String text) =>
+      RegExp(r'[\u1780-\u17FF\u19E0-\u19FF]').hasMatch(text);
+
+  static TextStyle? titleStyleFor(
+    String text,
+    TextStyle? style, {
+    double khmerHeight = 1.25,
+  }) {
+    if (style == null || !containsKhmer(text)) return style;
+    return style.copyWith(
+      fontFamily: khmerTitleFamily,
+      fontFamilyFallback: khmerTitleFallback,
+      fontWeight: FontWeight.w400,
+      letterSpacing: 0,
+      height: khmerHeight,
+    );
+  }
 
   static TextTheme textTheme(Color ink, Color muted) => TextTheme(
     displayLarge: _style(36, FontWeight.w800, ink, 1.12),
