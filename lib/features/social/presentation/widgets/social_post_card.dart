@@ -64,23 +64,29 @@ class SocialPostCard extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     post.title,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w900,
-                      height: 1.2,
-                      letterSpacing: -.35,
-                      color: SocialPalette.text(context),
+                    style: RiksaTypography.bodyStyleFor(
+                      post.title,
+                      theme.textTheme.titleLarge?.copyWith(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w900,
+                        height: 1.35,
+                        letterSpacing: -.35,
+                        color: SocialPalette.text(context),
+                      ),
                     ),
                   ),
                   if (post.content.trim().isNotEmpty) ...[
                     const SizedBox(height: 9),
                     Text(
-                      post.content,
+                      post.plainTextPreview,
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: SocialPalette.muted(context),
-                        height: 1.55,
+                      style: RiksaTypography.bodyStyleFor(
+                        post.plainTextPreview,
+                        theme.textTheme.bodyMedium?.copyWith(
+                          color: SocialPalette.muted(context),
+                          height: 1.65,
+                        ),
                       ),
                     ),
                   ],

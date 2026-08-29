@@ -181,6 +181,8 @@ class SocialPost {
   final DateTime updatedAt;
 
   bool get hasMedia => mediaUrl != null && mediaUrl!.trim().isNotEmpty;
+  String get markdownContent => normalizeSocialMarkdown(content);
+  String get plainTextPreview => socialMarkdownPreview(content);
 
   factory SocialPost.fromJson(Map<String, dynamic> json) => SocialPost(
     id: json['id']?.toString() ?? '',
@@ -226,6 +228,18 @@ class SocialPost {
     updatedAt: updatedAt,
   );
 }
+
+String normalizeSocialMarkdown(String value) => value
+    .replaceAll(r'\r\n', '\n')
+    .replaceAll(r'\n', '\n')
+    .replaceAll(r'\t', '\t');
+
+String socialMarkdownPreview(String value) => normalizeSocialMarkdown(value)
+    .replaceAll(RegExp(r'^[ \t]{0,3}#{1,6}[ \t]+', multiLine: true), '')
+    .replaceAll(RegExp(r'^[ \t]*[-+][ \t]+', multiLine: true), '• ')
+    .replaceAll('**', '')
+    .replaceAll('__', '')
+    .replaceAll('`', '');
 
 class SocialComment {
   const SocialComment({

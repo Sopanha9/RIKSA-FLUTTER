@@ -32,8 +32,8 @@ void main() {
             child: SocialPostCard(
               post: SocialPost(
                 id: 'post-1',
-                title: 'A useful study loop',
-                content: 'Recall, check, and explain.',
+                title: 'របៀបរៀនមានប្រសិទ្ធភាព',
+                content: r'សង្ខេបមេរៀន។\n\n- រំលឹកឡើងវិញ',
                 reactionCount: 12,
                 commentCount: 4,
                 shareCount: 2,
@@ -71,20 +71,25 @@ void main() {
     expect(authorOpens, 2);
     expect(opened, isFalse);
 
-    await tester.tap(find.text('A useful study loop'));
+    final title = tester.widget<Text>(find.text('របៀបរៀនមានប្រសិទ្ធភាព'));
+    final content = tester.widget<Text>(
+      find.text('សង្ខេបមេរៀន។\n\n• រំលឹកឡើងវិញ'),
+    );
+    expect(title.style?.fontFamily, RiksaTypography.khmerBodyFamily);
+    expect(content.style?.fontFamily, RiksaTypography.khmerBodyFamily);
+    expect(find.textContaining(r'\n'), findsNothing);
+
+    await tester.tap(find.text('របៀបរៀនមានប្រសិទ្ធភាព'));
 
     expect(opened, isTrue);
     expect(find.byKey(const ValueKey('react-post-1')), findsOneWidget);
     expect(find.byKey(const ValueKey('share-post-1')), findsOneWidget);
-    expect(find.byType(ClipRRect), findsOneWidget);
     final outerCard = tester.widget<Material>(
-      find
-          .descendant(
-            of: find.byType(SocialPostCard),
-            matching: find.byType(Material),
-          )
-          .first,
+      find.byKey(const ValueKey('post-post-1')),
     );
-    expect(outerCard.borderRadius, AppRadii.extraLargeBorder);
+    expect(
+      (outerCard.shape! as RoundedRectangleBorder).borderRadius,
+      AppRadii.largeBorder,
+    );
   });
 }

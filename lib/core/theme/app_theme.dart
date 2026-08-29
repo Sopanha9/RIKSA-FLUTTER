@@ -343,6 +343,15 @@ class RiksaTypography {
     );
   }
 
+  static TextStyle? bodyStyleFor(String text, TextStyle? style) {
+    if (style == null || !containsKhmer(text)) return style;
+    return style.copyWith(
+      fontFamily: khmerBodyFamily,
+      fontFamilyFallback: const [khmerFamily, latinFamily],
+      letterSpacing: 0,
+    );
+  }
+
   static TextTheme textTheme(Color ink, Color muted) => TextTheme(
     displayLarge: _style(36, FontWeight.w800, ink, 1.12),
     displayMedium: _style(32, FontWeight.w800, ink, 1.15),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,8 +30,8 @@ const _commentAuthor = SocialAuthor(
 
 final _post = SocialPost(
   id: 'post-1',
-  title: 'A public discussion',
-  content: 'A useful note.',
+  title: 'គន្លឹះដោះស្រាយសមីការ',
+  content: r'សួស្តីអ្នកទាំងអស់គ្នា!\n\n- **ជំហានទី១**: រកសមីការ',
   reactionCount: 3,
   commentCount: 1,
   shareCount: 0,
@@ -134,6 +135,13 @@ void main() {
           ?.fillColor,
       AppColors.editorialField,
     );
+    expect(
+      tester.widget<Text>(find.text(_post.title)).style?.fontFamily,
+      RiksaTypography.khmerBodyFamily,
+    );
+    final markdown = tester.widget<MarkdownBody>(find.byType(MarkdownBody));
+    expect(markdown.data, isNot(contains(r'\n')));
+    expect(markdown.styleSheet?.p?.fontFamily, RiksaTypography.khmerBodyFamily);
 
     await tester.tap(find.byKey(const ValueKey('detail-author-avatar-user-2')));
     await tester.pumpAndSettle();

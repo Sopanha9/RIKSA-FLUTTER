@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -339,19 +340,25 @@ class _PostBody extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             post.title,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: SocialPalette.ink(context),
-              fontWeight: FontWeight.w900,
-              height: 1.2,
+            style: RiksaTypography.bodyStyleFor(
+              post.title,
+              theme.textTheme.headlineSmall?.copyWith(
+                color: SocialPalette.ink(context),
+                fontWeight: FontWeight.w800,
+                height: 1.4,
+              ),
             ),
           ),
           if (post.content.trim().isNotEmpty) ...[
             const SizedBox(height: 10),
-            Text(
-              post.content,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: SocialPalette.muted(context),
-                height: 1.55,
+            MarkdownBody(
+              key: const ValueKey('social-post-markdown'),
+              data: post.markdownContent,
+              selectable: true,
+              softLineBreak: true,
+              styleSheet: _socialMarkdownStyleSheet(
+                context,
+                post.markdownContent,
               ),
             ),
           ],
@@ -522,9 +529,12 @@ class _CommentCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   comment.content,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: SocialPalette.ink(context),
-                    height: 1.45,
+                  style: RiksaTypography.bodyStyleFor(
+                    comment.content,
+                    theme.textTheme.bodyMedium?.copyWith(
+                      color: SocialPalette.ink(context),
+                      height: 1.55,
+                    ),
                   ),
                 ),
               ],
@@ -534,6 +544,63 @@ class _CommentCard extends StatelessWidget {
       ),
     );
   }
+}
+
+MarkdownStyleSheet _socialMarkdownStyleSheet(
+  BuildContext context,
+  String content,
+) {
+  final theme = Theme.of(context);
+  final hasKhmer = RiksaTypography.containsKhmer(content);
+
+  TextStyle socialStyle(TextStyle? style) =>
+      RiksaTypography.bodyStyleFor(content, style) ?? const TextStyle();
+
+  final paragraph = socialStyle(
+    theme.textTheme.bodyLarge?.copyWith(
+      color: SocialPalette.muted(context),
+      height: 1.7,
+    ),
+  );
+  final heading = socialStyle(
+    theme.textTheme.titleLarge?.copyWith(
+      color: SocialPalette.ink(context),
+      fontWeight: FontWeight.w800,
+      height: hasKhmer ? 1.5 : 1.35,
+    ),
+  );
+
+  return MarkdownStyleSheet.fromTheme(theme).copyWith(
+    p: paragraph,
+    pPadding: const EdgeInsets.only(bottom: 5),
+    h1: heading.copyWith(fontSize: 22),
+    h2: heading.copyWith(fontSize: 20),
+    h3: heading.copyWith(fontSize: 18),
+    h1Padding: const EdgeInsets.only(top: 8, bottom: 6),
+    h2Padding: const EdgeInsets.only(top: 7, bottom: 5),
+    h3Padding: const EdgeInsets.only(top: 6, bottom: 4),
+    strong: socialStyle(const TextStyle(fontWeight: FontWeight.w700)),
+    em: socialStyle(const TextStyle(fontStyle: FontStyle.italic)),
+    code: socialStyle(
+      theme.textTheme.bodyMedium?.copyWith(
+        color: SocialPalette.ink(context),
+        backgroundColor: SocialPalette.surfaceRaised(context),
+      ),
+    ),
+    codeblockDecoration: BoxDecoration(
+      color: SocialPalette.surfaceRaised(context),
+      borderRadius: AppRadii.smallBorder,
+      border: Border.all(color: SocialPalette.outline(context)),
+    ),
+    codeblockPadding: const EdgeInsets.all(12),
+    blockquote: paragraph.copyWith(color: SocialPalette.muted(context)),
+    listBullet: paragraph,
+    blockSpacing: 10,
+    listIndent: 22,
+    horizontalRuleDecoration: BoxDecoration(
+      border: Border(top: BorderSide(color: SocialPalette.outline(context))),
+    ),
+  );
 }
 
 class _Avatar extends StatelessWidget {
