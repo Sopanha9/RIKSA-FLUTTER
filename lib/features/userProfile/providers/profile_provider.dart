@@ -31,6 +31,10 @@ final profileRankProvider = FutureProvider<LeaderboardRank>((ref) {
   return ref.watch(profileApiProvider).leaderboardRank(provinceId: provinceId);
 });
 
+final rankHistoryProvider = FutureProvider<List<RankHistoryEntry>>(
+  (ref) => ref.watch(profileApiProvider).rankHistory(),
+);
+
 /// Ranked board rows for a scope, sourced from `GET /leaderboard`.
 ///
 /// The country board is scoped to `CAMBODIA`; the province board uses the

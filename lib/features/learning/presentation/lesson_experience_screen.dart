@@ -288,26 +288,7 @@ class _LessonExperienceScreenState
       }
       await ref.read(lessonCatalogProvider.notifier).load();
       if (!mounted) return;
-      await showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) => AlertDialog(
-          icon: Icon(Icons.emoji_events_rounded, color: context.riksa.saffron),
-          title: const Text('Lesson completed!'),
-          content: Text(
-            'You earned ${result.xpEarned} XP. Your roadmap and streak are now up to date.',
-            textAlign: TextAlign.center,
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Continue roadmap'),
-            ),
-          ],
-        ),
-      );
-      if (mounted) context.pop();
+      context.go('/learn/completion', extra: result.xpEarned);
     } catch (error) {
       if (mounted) _showError(error);
     } finally {

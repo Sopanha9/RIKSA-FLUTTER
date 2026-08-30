@@ -131,6 +131,29 @@ class XpActivityPage {
   );
 }
 
+class RankHistoryEntry {
+  const RankHistoryEntry({
+    required this.id,
+    required this.scope,
+    required this.oldRank,
+    required this.newRank,
+    this.changedAt,
+  });
+  final String id;
+  final String scope;
+  final int oldRank;
+  final int newRank;
+  final DateTime? changedAt;
+  factory RankHistoryEntry.fromJson(Map<String, dynamic> json) =>
+      RankHistoryEntry(
+        id: json['id']?.toString() ?? '',
+        scope: json['scope'] as String? ?? 'GLOBAL',
+        oldRank: (json['oldRank'] as num?)?.toInt() ?? 0,
+        newRank: (json['newRank'] as num?)?.toInt() ?? 0,
+        changedAt: DateTime.tryParse(json['changedAt']?.toString() ?? ''),
+      );
+}
+
 class ProfileDashboardData {
   const ProfileDashboardData({
     required this.gamification,

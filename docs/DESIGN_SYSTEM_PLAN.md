@@ -7,6 +7,147 @@
 primary audience  
 **Product context:** Competition entry; Android and iOS Flutter app
 
+## 0. Product-to-build frame: Idea → Define → Design → Build
+
+This is the decision frame for the rest of the document. The product is not
+ready to move forward merely because a screen looks polished: each phase has a
+clear question, output, and approval gate.
+
+```text
+Idea → Define → Design → Build
+          ↑          ↑
+     product truth   validated experience
+```
+
+### Idea
+
+**Riksa helps Cambodian students turn studying into visible, personally
+meaningful progress.** It combines active learning, reflection, local identity,
+and encouraging competition in a bilingual mobile experience.
+
+The idea succeeds only if students remember what they learned and feel that
+their effort belongs to them. A busy social feed or a points system without a
+strong learning loop does not satisfy the idea.
+
+### Define
+
+| Question | Riksa decision | Validation needed |
+|---|---|---|
+| **Customer** | Cambodian high-school and university students; Khmer-first and bilingual learners are the primary design audience | Interview 5–8 students across language preference, province, device quality, and study level |
+| **Pain** | Learning resources feel fragmented or passive; progress is hard to see; many global products do not feel locally relevant in language, identity, or peer context | Ask students to show their current study workflow and identify abandonment points rather than asking only whether they “like” Riksa |
+| **Outcome** | A learner always knows what to study next, can explain the idea in their own words, and can see momentum across lessons, XP, streak, rank, and a personal journal | Test whether users can state what they learned and find their next action without assistance |
+| **Mechanism** | `Read → Practice → Reflect → Reward`: understand a source, retrieve the idea, explain it personally, then receive an earned progress reveal and optional community recognition | Prototype one complete lesson and measure completion, recovery after a wrong answer, and recall of the three stages |
+| **Pricing** | **MVP assumption: free for learners.** Monetization is outside the competition scope and must not distort the first-run or learning loop. Possible institution or premium models require separate discovery before entering the UI | Confirm competition/business requirements; do not add paywalls, fake premium badges, or pricing claims until a model is approved |
+| **Proof** | Existing proof: working bilingual Flutter shell, authentication, learning APIs, community, profiles, gamification, and leaderboard. Product proof still required: target-user comprehension, lesson completion, reflection quality, retention intent, and Khmer copy quality | Record usability results and product metrics; technical completeness alone is not proof of value |
+
+#### Product promise
+
+> **Learn it. Explain it. See your progress.**
+
+Khmer copy must be written or reviewed natively rather than translated
+word-for-word after the English version is fixed.
+
+#### Magic moment
+
+The signature moment is lesson completion: the learner sees their own
+reflection return as the hero artifact, followed by a short XP/rank/streak
+reveal. This connects understanding to visible momentum. The leaderboard,
+profile journal, and community sharing extend this moment; they do not replace
+it.
+
+#### Scope decisions
+
+- **Today** becomes the default destination and presents one obvious next
+  learning action.
+- **Learn** owns discovery and the full Read → Practice → Reflect loop.
+- **Community** combines discussions and stories, with deliberate stopping
+  points rather than an endless attention loop.
+- **Rank** combines personal progress, achievements, and local leaderboards.
+- **Me** centers identity and the learning journal.
+- **Ask Riksa** remains contextual inside lessons until the tutor has a complete
+  product and backend experience; an unavailable feature does not receive a
+  permanent primary-navigation slot.
+- Pricing, subscriptions, teacher dashboards, and institution administration
+  remain outside the student MVP until separately defined.
+
+### Design
+
+Design work proceeds from the magic moment outward, not screen-by-screen in
+router order.
+
+1. **Signature loop:** lesson detail → Read → Practice → Reflect → Completion.
+2. **Momentum loop:** Completion → Journal → Rank/achievement → next lesson.
+3. **First-run loop:** language → value onboarding → auth → province → Today.
+4. **Community loop:** learning artifact → optional share → useful discussion →
+   clear return to learning.
+5. **System layer:** bilingual type, semantic color, layout, components, states,
+   motion, accessibility, and compact/expanded behavior.
+
+The first high-fidelity prototype must contain one real lesson in English and
+Khmer, including an incorrect-answer recovery and a reduced-motion completion
+variant. The current editorial aubergine/pink screens and the warm jade learning
+system must be reconciled into one approved semantic palette before more feature
+screens are styled.
+
+#### Design approval gates
+
+| Gate | Evidence required | Decision |
+|---|---|---|
+| **D1 — Product comprehension** | Low-fidelity signature loop tested with target learners | Users understand Read → Practice → Reflect and can identify the next action |
+| **D2 — Riksa identity** | Style tiles for lesson, completion, and community in EN/KM and light/dark | The product feels recognizably Riksa, locally relevant, mature, and cohesive |
+| **D3 — System coverage** | Components and state matrix for core flows at compact and expanded widths | Hero screens can be assembled without new one-off styles |
+| **D4 — Prototype proof** | Clickable first-run and signature-loop prototype tested with 5–8 learners | Critical tasks work without verbal rescue; repeated failures cause system-level revision |
+| **D5 — Build handoff** | Tokens, assets, copy, behavior, accessibility notes, and golden acceptance screens | Flutter implementation can proceed without inventing visual or interaction decisions |
+
+### Build
+
+Build in vertical slices so every milestone produces a coherent, testable
+experience.
+
+| Slice | Product result | Main implementation work | Exit check |
+|---|---|---|---|
+| **B0 — Align foundations** | One visual language across existing screens | Reconcile palette/type, semantic tokens, shared state components, navigation labels, EN/KM fixtures | Component gallery passes light/dark, EN/KM, 200% text, and compact/expanded checks |
+| **B1 — Signature learning** | A learner can complete the differentiated Riksa loop | Split the current combined lesson page into staged Read, Practice, Reflect, and Completion experiences; preserve progress and recovery | End-to-end lesson test plus golden and semantics coverage |
+| **B2 — Today and momentum** | The app opens on a useful next step and carries completion forward | New Today destination, progress hero, journal artifact, rank movement, next-lesson action | A returning learner reaches the next lesson in one obvious action |
+| **B3 — First run** | A new learner reaches personalized Today with minimal friction | Value-led onboarding, auth/province refinement, native Khmer copy, offline/error states | First-run prototype and live API smoke path both pass |
+| **B4 — Community and identity** | Learning can become healthy local connection | Discussions/Stories destination, optional artifact sharing, journal-first profile, privacy controls | Sharing is explicit, reversible where supported, and never required for progress |
+| **B5 — Release evidence** | Competition-ready, credible product | Adaptive layout, reduced motion, low-end performance, analytics plan, final goldens, demo data and narrative | Three-minute demo works offline or with a controlled fallback and needs no verbal rescue |
+
+### Immediate design backlog
+
+Do these next, in order:
+
+1. Create the low-fidelity signature-loop wireflow using one real lesson and
+   real Khmer/English copy.
+2. Choose one semantic brand system by reconciling the implemented warm
+   jade/saffron palette with the newer aubergine/pink editorial screens.
+3. Design the Completion screen first at high fidelity; use it to set the
+   emotional ceiling for motion, reward, and personal ownership.
+4. Design Today as the bridge into and out of that loop.
+5. Replace the current primary AI tab in the navigation concept with Community,
+   and rename Home/Leaderboard/Profile to Today/Rank/Me.
+6. Test the low-fidelity flow with 5–8 target learners before reskinning the
+   remaining production screens.
+7. Freeze tokens and shared components only after those tests reveal the actual
+   system needs.
+
+### Measurements
+
+For the prototype and MVP, collect evidence around:
+
+- primary-action recognition within 5 seconds;
+- lesson start-to-completion rate;
+- recovery rate after an incorrect practice answer;
+- percentage of reflections meeting a simple quality rubric;
+- ability to recall and explain the three-stage loop;
+- next-lesson intent after completion;
+- Khmer comprehension and perceived naturalness;
+- accessibility task completion at 200% text and reduced motion;
+- performance on a representative low/mid-range Android device.
+
+Avoid optimizing feed engagement, raw time-in-app, or leaderboard checking as
+primary success metrics. They can reward attention without proving learning.
+
 ## 1. Recommendation
 
 Riksa should not look like a generic school dashboard, an X/Reddit clone, or a

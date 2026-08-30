@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/ai/presentation/ai_tutor_screen.dart';
+import '../../features/ai/presentation/ai_chat_screen.dart';
+import '../../features/dashboard/presentation/home_dashboard_screen.dart';
 import '../../features/auth/presentation/auth_switcher_screen.dart';
+import '../../features/auth/presentation/account_recovery_screen.dart';
 import '../../features/auth/presentation/splash_animation_screen.dart';
 import '../../features/auth/presentation/language_select_screen.dart';
 import '../../features/auth/presentation/onboarding_splash_screen.dart';
@@ -17,8 +20,10 @@ import '../../features/blog/presentation/my_posts_screen.dart';
 import '../../features/learning/presentation/lesson_catalog_screen.dart';
 import '../../features/learning/presentation/lesson_experience_screen.dart';
 import '../../features/learning/presentation/mathematics_roadmap_screen.dart';
+import '../../features/learning/presentation/learning_result_screens.dart';
 import '../../features/learning/data/learning_models.dart';
 import '../../features/social/presentation/social_feed_screen.dart';
+import '../../features/social/presentation/communities_screen.dart';
 import '../../features/social/presentation/compose_community_post_screen.dart';
 import '../../features/social/presentation/social_post_detail_screen.dart';
 import '../../features/userProfile/presentation/profile_setup_overview_screen.dart';
@@ -27,6 +32,7 @@ import '../../features/userProfile/presentation/edit_profile_screen.dart';
 import '../../features/leaderBoard/presentation/leaderboard_screen.dart';
 import '../../features/userProfile/presentation/public_profile_screen.dart';
 import '../../features/userProfile/presentation/user_profile_screen.dart';
+import '../../features/userProfile/presentation/progress_history_screen.dart';
 import 'app_shell.dart';
 
 final _authRouterRefreshProvider = Provider<ValueNotifier<AuthState>>((ref) {
@@ -83,7 +89,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/auth/login',
-        builder: (context, state) => const AuthSwitcherScreen(),
+        builder: (context, state) => AuthSwitcherScreen(
+          onForgotPassword: () => context.push('/auth/recover'),
+        ),
+      ),
+      GoRoute(
+        path: '/auth/recover',
+        builder: (context, state) => const AccountRecoveryScreen(),
+      ),
+      GoRoute(
+        path: '/auth/verify-email',
+        builder: (context, state) => EmailVerificationScreen(
+          token: state.uri.queryParameters['token'] ?? '',
+        ),
       ),
       GoRoute(
         path: '/auth/register',
@@ -105,6 +123,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/home',
                 builder: (context, state) => const SocialFeedScreen(),
+              ),
+              GoRoute(
+                path: '/dashboard',
+                builder: (context, state) => const HomeDashboardScreen(),
+              ),
+              GoRoute(
+                path: '/community',
+                builder: (context, state) => const SocialFeedScreen(),
+              ),
+              GoRoute(
+                path: '/communities',
+                builder: (context, state) => const CommunitiesScreen(),
+              ),
+              GoRoute(
+                path: '/progress',
+                builder: (context, state) => const ProgressHistoryScreen(),
               ),
               GoRoute(
                 path: '/community/create',
@@ -143,6 +177,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const LessonCatalogScreen(),
                 routes: [
                   GoRoute(
+                    path: 'resume',
+                    builder: (context, state) => const ResumeLearningScreen(),
+                  ),
+                  GoRoute(
+                    path: 'completion',
+                    builder: (context, state) => LessonCompletionScreen(
+                      xpEarned: state.extra is int ? state.extra! as int : 0,
+                    ),
+                  ),
+                  GoRoute(
                     path: 'roadmap/:categoryId',
                     builder: (context, state) => LearningRoadmapScreen(
                       categoryId: state.pathParameters['categoryId']!,
@@ -169,6 +213,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/ai',
                 builder: (context, state) => const AiTutorScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'chat/:id',
+                    builder: (context, state) => AiChatScreen(
+                      sessionId: state.pathParameters['id'] == 'new'
+                          ? null
+                          : state.pathParameters['id'],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

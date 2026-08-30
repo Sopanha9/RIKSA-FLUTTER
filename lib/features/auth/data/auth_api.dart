@@ -106,6 +106,40 @@ class AuthApi {
     });
   }
 
+  Future<String> forgotPassword(String identifier) async => _guard(() async {
+    final res = await _client.dio.post(
+      '/auth/forgot-password',
+      data: {'identifier': identifier},
+    );
+    return _json(res.data)['message'] as String? ??
+        'A verification code has been sent.';
+  });
+
+  Future<String> resetPassword({
+    required String identifier,
+    required String code,
+    required String newPassword,
+  }) async => _guard(() async {
+    final res = await _client.dio.post(
+      '/auth/reset-password',
+      data: {
+        'identifier': identifier,
+        'code': code,
+        'newPassword': newPassword,
+      },
+    );
+    return _json(res.data)['message'] as String? ??
+        'Password reset successfully.';
+  });
+
+  Future<bool> verifyEmail(String token) async => _guard(() async {
+    final res = await _client.dio.post(
+      '/auth/verify-email',
+      data: {'token': token},
+    );
+    return _json(res.data)['verified'] as bool? ?? false;
+  });
+
   Future<T> _guard<T>(Future<T> Function() request) async {
     try {
       return await request();

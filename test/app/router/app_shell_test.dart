@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riksa_app/app/router/app_shell.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/features/ai/presentation/ai_tutor_screen.dart';
+import 'package:riksa_app/features/ai/providers/ai_chat_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 void main() {
@@ -93,6 +96,72 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.getSize(navigationMorph).width, greaterThan(300));
+  });
+
+  testWidgets('AI primary action stays clear of persistent navigation', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final router = GoRouter(
+      initialLocation: '/ai',
+      routes: [
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) =>
+              AppShell(navigationShell: navigationShell),
+          branches: [
+            _branch('/home', 'Home'),
+            _branch('/learn', 'Learn'),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/ai',
+                  builder: (context, state) => const AiTutorScreen(),
+                ),
+              ],
+            ),
+            _branch('/leaderboard', 'Leaderboard'),
+            _branch('/profile', 'Profile'),
+          ],
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          aiChatSessionsProvider.overrideWith((ref) async => const []),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light,
+          routerConfig: router,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final actionRect = tester.getRect(
+      find.byKey(const ValueKey('new-ai-chat')),
+    );
+    final navigationRect = tester.getRect(
+      find.byKey(const ValueKey('persistent-bottom-navigation')),
+    );
+    expect(
+      actionRect.bottom,
+      lessThanOrEqualTo(navigationRect.top),
+      reason: 'The AI action must not render behind the persistent navigation.',
+    );
   });
 }
 
