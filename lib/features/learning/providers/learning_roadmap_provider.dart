@@ -4,7 +4,7 @@ import '../data/learning_models.dart';
 import 'lesson_catalog_provider.dart';
 
 final learningRoadmapProvider = FutureProvider.autoDispose
-    .family<LearningRoadmap, String>((ref, categoryId) {
+    .family<LessonRoadmap, String>((ref, categoryId) {
       return ref.watch(learningApiProvider).roadmap(categoryId);
     });
 

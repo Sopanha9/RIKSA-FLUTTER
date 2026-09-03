@@ -73,19 +73,25 @@ class AuthApi {
 
   /// Public province catalog used before authentication during first run.
   Future<List<ProvinceOption>> listProvinces() async {
-    return _guard(() async {
+    try {
+      return await _guard(() async {
       final res = await _client.dio.get('/auth/provinces');
-      final values = res.data;
-      if (values is! List) {
-        throw const FormatException('Expected a province list');
-      }
-      return values
-          .map(
-            (value) =>
-                ProvinceOption.fromJson((value as Map).cast<String, dynamic>()),
-          )
-          .toList();
-    });
+        final values = res.data;
+        if (values is! List) {
+          throw const FormatException('Expected a province list');
+        }
+        final list = values
+            .map(
+              (value) =>
+                  ProvinceOption.fromJson((value as Map).cast<String, dynamic>()),
+            )
+            .toList();
+        if (list.isEmpty) return defaultProvinces;
+        return list;
+      });
+    } catch (_) {
+      return defaultProvinces;
+    }
   }
 
   /// Saves a province on the authenticated user profile.

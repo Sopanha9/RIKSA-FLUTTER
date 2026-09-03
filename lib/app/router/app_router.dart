@@ -184,15 +184,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                     path: 'completion',
                     builder: (context, state) => LessonCompletionScreen(
                       xpEarned: state.extra is int ? state.extra! as int : 0,
+                      roadmapCategoryId:
+                          state.uri.queryParameters['roadmapCategoryId'],
                     ),
                   ),
                   GoRoute(
                     path: 'roadmap/:categoryId',
                     builder: (context, state) => LearningRoadmapScreen(
                       categoryId: state.pathParameters['categoryId']!,
-                      currentLesson: state.extra is LessonSummary
-                          ? state.extra! as LessonSummary
-                          : null,
                     ),
                   ),
                   GoRoute(

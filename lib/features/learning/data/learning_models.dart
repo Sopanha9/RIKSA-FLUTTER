@@ -31,6 +31,32 @@ enum LessonDifficulty {
   }
 }
 
+enum LessonProgressState {
+  available,
+  locked,
+  completed;
+
+  static LessonProgressState fromWire(Object? value) =>
+      switch (value?.toString().toUpperCase()) {
+        'LOCKED' => locked,
+        'COMPLETED' => completed,
+        _ => available,
+      };
+}
+
+enum LessonExerciseType {
+  text,
+  multipleChoice,
+  trueFalse;
+
+  static LessonExerciseType fromWire(Object? value) =>
+      switch (value?.toString().toUpperCase()) {
+        'MULTIPLE_CHOICE' => multipleChoice,
+        'TRUE_FALSE' => trueFalse,
+        _ => text,
+      };
+}
+
 class LearningCategory {
   const LearningCategory({required this.id, required this.name});
 
@@ -59,6 +85,8 @@ class LessonSummary {
     this.grade,
     this.durationMinutes,
     this.progress,
+    this.state = LessonProgressState.available,
+    this.position = 0,
   });
 
   final String id;
@@ -81,6 +109,8 @@ class LessonSummary {
 
   /// Normalized lesson progress from 0 to 1 when supplied by the API.
   final double? progress;
+  final LessonProgressState state;
+  final int position;
 
   factory LessonSummary.fromJson(Map<String, dynamic> json) => LessonSummary(
     id: json['id']?.toString() ?? '',
@@ -98,6 +128,8 @@ class LessonSummary {
         (json['durationMinutes'] as num?)?.toInt() ??
         (json['estimatedMinutes'] as num?)?.toInt(),
     progress: _progressFromJson(json['progress']),
+    state: LessonProgressState.fromWire(json['state']),
+    position: (json['position'] as num?)?.toInt() ?? 0,
   );
 
   static int? _gradeFromJson(Object? value) {
@@ -223,6 +255,28 @@ class LearningRoadmap {
       );
 }
 
+/// The real, category-ordered learner roadmap returned by `/lessons/roadmap`.
+class LessonRoadmap {
+  const LessonRoadmap({
+    required this.categoryId,
+    required this.categoryName,
+    required this.lessons,
+  });
+
+  final String categoryId;
+  final String categoryName;
+  final List<LessonSummary> lessons;
+
+  factory LessonRoadmap.fromJson(Map<String, dynamic> json) => LessonRoadmap(
+    categoryId: json['categoryId']?.toString() ?? '',
+    categoryName: json['categoryName'] as String? ?? '',
+    lessons: ((json['lessons'] as List?) ?? const [])
+        .map((item) => LessonSummary.fromJson((item as Map).cast<String, dynamic>()))
+        .toList()
+      ..sort((a, b) => a.position.compareTo(b.position)),
+  );
+}
+
 class RoadmapUnit {
   const RoadmapUnit({
     required this.id,
@@ -331,6 +385,11 @@ class LessonExercise {
     required this.difficulty,
     required this.points,
     required this.completed,
+    this.sectionIndex = 1,
+    this.type = LessonExerciseType.text,
+    this.options = const [],
+    this.hint,
+    this.explanation,
   });
 
   final String id;
@@ -338,6 +397,11 @@ class LessonExercise {
   final LessonDifficulty? difficulty;
   final int points;
   final bool completed;
+  final int sectionIndex;
+  final LessonExerciseType type;
+  final List<String> options;
+  final String? hint;
+  final String? explanation;
 
   factory LessonExercise.fromJson(Map<String, dynamic> json) => LessonExercise(
     id: json['id']?.toString() ?? '',
@@ -345,6 +409,13 @@ class LessonExercise {
     difficulty: LessonDifficulty.fromWire(json['difficulty'] as String?),
     points: (json['points'] as num?)?.toInt() ?? 0,
     completed: json['completed'] as bool? ?? false,
+    sectionIndex: (json['sectionIndex'] as num?)?.toInt() ?? 1,
+    type: LessonExerciseType.fromWire(json['type']),
+    options: ((json['options'] as List?) ?? const [])
+        .map((option) => option.toString())
+        .toList(),
+    hint: json['hint'] as String?,
+    explanation: json['explanation'] as String?,
   );
 }
 
@@ -359,6 +430,7 @@ class LessonDetail {
     required this.categoryName,
     required this.reflectionPrompt,
     required this.exercises,
+    this.state = LessonProgressState.available,
   });
 
   final String id;
@@ -370,6 +442,7 @@ class LessonDetail {
   final String categoryName;
   final String reflectionPrompt;
   final List<LessonExercise> exercises;
+  final LessonProgressState state;
 
   factory LessonDetail.fromJson(Map<String, dynamic> json) => LessonDetail(
     id: json['id']?.toString() ?? '',
@@ -380,6 +453,7 @@ class LessonDetail {
     categoryId: json['categoryId']?.toString(),
     categoryName: json['categoryName'] as String? ?? '',
     reflectionPrompt: json['reflectionPrompt'] as String? ?? '',
+    state: LessonProgressState.fromWire(json['state']),
     exercises: ((json['exercises'] as List?) ?? const [])
         .map(
           (value) =>
@@ -395,12 +469,16 @@ class LessonAnswerResult {
     required this.correct,
     required this.points,
     required this.message,
+    this.hint,
+    this.explanation,
   });
 
   final String exerciseId;
   final bool correct;
   final int points;
   final String message;
+  final String? hint;
+  final String? explanation;
 
   factory LessonAnswerResult.fromJson(Map<String, dynamic> json) =>
       LessonAnswerResult(
@@ -408,6 +486,8 @@ class LessonAnswerResult {
         correct: json['correct'] as bool? ?? false,
         points: (json['points'] as num?)?.toInt() ?? 0,
         message: json['message'] as String? ?? '',
+        hint: json['hint'] as String?,
+        explanation: json['explanation'] as String?,
       );
 }
 

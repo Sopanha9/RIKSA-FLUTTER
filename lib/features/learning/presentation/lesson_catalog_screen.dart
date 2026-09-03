@@ -215,9 +215,8 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
   }
 
   void _open(LessonSummary lesson) {
-    final categoryId = lesson.categoryId;
-    if (categoryId != null && categoryId.isNotEmpty) {
-      context.push('/learn/roadmap/$categoryId', extra: lesson);
+    if (lesson.categoryName.toLowerCase().contains('math')) {
+      context.push('/learn/roadmap/${lesson.categoryId}');
       return;
     }
     context.push('/learn/${lesson.id}', extra: lesson);
@@ -252,10 +251,9 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
             difficultyTitle: l10n.difficultyFilter,
             applyLabel: l10n.applyFilters,
             resetLabel: l10n.resetFilters,
-            grades: [
-              for (var grade = 7; grade <= 12; grade++)
-                RiksaFilterOption(id: '$grade', label: l10n.gradeNumber(grade)),
-            ],
+            // Grade is not supported by the learning API yet, so do not
+            // present a filter that cannot affect the results.
+            grades: const [],
             subjects: [
               for (final category in state.categories)
                 RiksaFilterOption(id: category.id, label: category.name),
@@ -268,14 +266,14 @@ class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
                 ),
             ],
             selection: RiksaFilterSelection(
-              grade: state.selectedGrade?.toString(),
+              grade: null,
               subject: state.selectedCategoryId,
               difficulty: state.selectedDifficulty?.name,
             ),
             onApply: (selection) => ref
                 .read(lessonCatalogProvider.notifier)
                 .applyFilters(
-                  grade: int.tryParse(selection.grade ?? ''),
+                  grade: null,
                   categoryId: selection.subject,
                   difficulty: LessonDifficulty.values
                       .where((item) => item.name == selection.difficulty)

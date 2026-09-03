@@ -97,11 +97,21 @@ void main() {
           'question': 'What is 2 + 2?',
           'difficulty': 'EASY',
           'points': 5,
+          'sectionIndex': 3,
+          'type': 'MULTIPLE_CHOICE',
+          'options': ['4', '5'],
+          'hint': 'Add carefully.',
+          'explanation': 'Two plus two is four.',
           'completed': true,
         },
       ],
     });
 
     expect(detail.exercises.single.completed, isTrue);
+    expect(detail.exercises.single.sectionIndex, 3);
+    expect(detail.exercises.single.type, LessonExerciseType.multipleChoice);
+    expect(detail.exercises.single.options, ['4', '5']);
+    expect(detail.exercises.single.hint, 'Add carefully.');
+    expect(detail.exercises.single.explanation, 'Two plus two is four.');
   });
 }

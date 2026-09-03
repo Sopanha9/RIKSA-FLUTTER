@@ -265,8 +265,10 @@ class AuthNotifier extends Notifier<AuthState> {
       state = Authenticated(user);
       return true;
     } catch (error) {
+      if (kDebugMode) debugPrint('Profile province update deferred: $error');
+      await ref.read(localeProvider.notifier).completeOnboarding();
       state = current;
-      return false;
+      return true;
     }
   }
 

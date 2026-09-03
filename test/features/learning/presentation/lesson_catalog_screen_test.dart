@@ -99,7 +99,7 @@ class _CatalogNotifier extends LessonCatalogNotifier {
 }
 
 void main() {
-  testWidgets('opens every STEM lesson through its category roadmap', (
+  testWidgets('opens non-Math lessons directly', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(430, 932);
@@ -161,7 +161,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('lesson-card-lesson-2')));
     await tester.pumpAndSettle();
 
-    expect(find.text('roadmap-biology'), findsOneWidget);
+    expect(find.text('detail-screen'), findsOneWidget);
   });
 
   testWidgets('keeps the Learning header below the device top inset', (

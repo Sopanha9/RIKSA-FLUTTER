@@ -5,8 +5,13 @@ import '../../../core/widgets/riksa_components.dart';
 import '../providers/lesson_catalog_provider.dart';
 
 class LessonCompletionScreen extends StatelessWidget {
-  const LessonCompletionScreen({super.key, required this.xpEarned});
+  const LessonCompletionScreen({
+    super.key,
+    required this.xpEarned,
+    this.roadmapCategoryId,
+  });
   final int xpEarned;
+  final String? roadmapCategoryId;
   @override
   Widget build(BuildContext context) => Scaffold(
     body: SafeArea(
@@ -28,14 +33,22 @@ class LessonCompletionScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                'You earned $xpEarned XP. Your roadmap and streak are up to date.',
+                'You earned $xpEarned XP. Your learning rewards are being recorded.',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 28),
               FilledButton.icon(
-                onPressed: () => context.go('/learn'),
-                icon: const Icon(Icons.map_rounded),
-                label: const Text('Continue roadmap'),
+                onPressed: () => context.go(
+                  roadmapCategoryId == null
+                      ? '/learn'
+                      : '/learn/roadmap/$roadmapCategoryId',
+                ),
+                icon: const Icon(Icons.school_rounded),
+                label: Text(
+                  roadmapCategoryId == null
+                      ? 'Continue learning'
+                      : 'Back to roadmap',
+                ),
               ),
               TextButton(
                 onPressed: () => context.go('/home'),

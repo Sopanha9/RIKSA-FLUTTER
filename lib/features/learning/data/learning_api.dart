@@ -47,26 +47,14 @@ class LearningApi {
         .toList();
   }
 
-  Future<LearningRoadmap> roadmap(String categoryId) async {
+  Future<LessonRoadmap> roadmap(String categoryId) async {
     final response = await _client.dio.get(
       '/lessons/roadmap',
       queryParameters: {'categoryId': categoryId},
     );
-    return LearningRoadmap.fromJson(
+    return LessonRoadmap.fromJson(
       (response.data as Map).cast<String, dynamic>(),
     );
-  }
-
-  Future<void> startLesson(String lessonId) async {
-    await _client.dio.post('/lessons/$lessonId/start');
-  }
-
-  Future<void> skipRoadmapUnit(String unitId) async {
-    await _client.dio.post('/lessons/roadmap/units/$unitId/skip');
-  }
-
-  Future<void> resumeRoadmapUnit(String unitId) async {
-    await _client.dio.post('/lessons/roadmap/units/$unitId/resume');
   }
 
   Future<LessonDetail> lesson(String lessonId) async {

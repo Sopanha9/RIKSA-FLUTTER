@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The local Docker API is reached over HTTP during development. Keep this
+         permission in main so debug, profile, and release builds can call it. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="riksa_app"
         android:name="${applicationName}"

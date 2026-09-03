@@ -810,13 +810,15 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                 ],
               ),
               const SizedBox(height: RiksaSpacing.md),
-              _FilterSection(
-                title: widget.gradeTitle,
-                options: widget.grades,
-                selected: _grade,
-                onSelected: (value) => setState(() => _grade = value),
-              ),
-              const SizedBox(height: RiksaSpacing.lg),
+              if (widget.grades.isNotEmpty) ...[
+                _FilterSection(
+                  title: widget.gradeTitle,
+                  options: widget.grades,
+                  selected: _grade,
+                  onSelected: (value) => setState(() => _grade = value),
+                ),
+                const SizedBox(height: RiksaSpacing.lg),
+              ],
               Text(
                 widget.subjectTitle,
                 style: Theme.of(context).textTheme.titleSmall,

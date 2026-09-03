@@ -136,6 +136,134 @@ class ProvinceOption {
   );
 }
 
+const List<ProvinceOption> defaultProvinces = [
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000011',
+    nameKhmer: 'ភ្នំពេញ',
+    nameLatin: 'Phnom Penh',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000012',
+    nameKhmer: 'សៀមរាប',
+    nameLatin: 'Siem Reap',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000013',
+    nameKhmer: 'បាត់ដំបង',
+    nameLatin: 'Battambang',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000014',
+    nameKhmer: 'កណ្តាល',
+    nameLatin: 'Kandal',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000015',
+    nameKhmer: 'កំពង់ចាម',
+    nameLatin: 'Kampong Cham',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000016',
+    nameKhmer: 'ព្រះសីហនុ',
+    nameLatin: 'Preah Sihanouk',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000017',
+    nameKhmer: 'កំពត',
+    nameLatin: 'Kampot',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000018',
+    nameKhmer: 'កំពង់ស្ពឺ',
+    nameLatin: 'Kampong Speu',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000019',
+    nameKhmer: 'តាកែវ',
+    nameLatin: 'Takeo',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000020',
+    nameKhmer: 'ព្រៃវែង',
+    nameLatin: 'Prey Veng',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000021',
+    nameKhmer: 'ស្វាយរៀង',
+    nameLatin: 'Svay Rieng',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000022',
+    nameKhmer: 'កំពង់ឆ្នាំង',
+    nameLatin: 'Kampong Chhnang',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000023',
+    nameKhmer: 'កំពង់ធំ',
+    nameLatin: 'Kampong Thom',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000024',
+    nameKhmer: 'ក្រចេះ',
+    nameLatin: 'Kratie',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000025',
+    nameKhmer: 'ស្ទឹងត្រែង',
+    nameLatin: 'Stung Treng',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000026',
+    nameKhmer: 'រតនគិរី',
+    nameLatin: 'Ratanakiri',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000027',
+    nameKhmer: 'មណ្ឌលគិរី',
+    nameLatin: 'Mondulkiri',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000028',
+    nameKhmer: 'ព្រះវិហារ',
+    nameLatin: 'Preah Vihear',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000029',
+    nameKhmer: 'ឧត្តរមានជ័យ',
+    nameLatin: 'Oddar Meanchey',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000030',
+    nameKhmer: 'បន្ទាយមានជ័យ',
+    nameLatin: 'Banteay Meanchey',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000031',
+    nameKhmer: 'ប៉ៃលិន',
+    nameLatin: 'Pailin',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000032',
+    nameKhmer: 'ពោធិ៍សាត់',
+    nameLatin: 'Pursat',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000033',
+    nameKhmer: 'កោះកុង',
+    nameLatin: 'Koh Kong',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000034',
+    nameKhmer: 'ត្បូងឃ្មុំ',
+    nameLatin: 'Tboung Khmum',
+  ),
+  ProvinceOption(
+    id: '00000000-0000-0000-0000-000000000035',
+    nameKhmer: 'កែប',
+    nameLatin: 'Kep',
+  ),
+];
+
 class LoginRequest {
   LoginRequest({required this.username, required this.password});
 
