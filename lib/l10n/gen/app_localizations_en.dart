@@ -630,6 +630,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get difficultyDifficult => 'Advanced';
 
   @override
+  String get contentTypeLesson => 'Lesson';
+
+  @override
+  String get contentTypeChallenge => 'Challenge';
+
+  @override
+  String get contentTypeRoadmap => 'Roadmap';
+
+  @override
   String exerciseCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -645,6 +654,125 @@ class AppLocalizationsEn extends AppLocalizations {
   String baseXpLabel(int xp) {
     return 'Base $xp XP';
   }
+
+  @override
+  String greetingNamed(String name) {
+    return 'Hi, $name';
+  }
+
+  @override
+  String get gradeStemLabel => 'Grade 12 · STEM';
+
+  @override
+  String get yourSubjects => 'Your subjects';
+
+  @override
+  String get continueReading => 'Continue reading';
+
+  @override
+  String xpRewardAmount(int xp) {
+    return '+$xp XP';
+  }
+
+  @override
+  String lessonsDoneOfTotal(int done, int total) {
+    return '$done of $total lessons';
+  }
+
+  @override
+  String subjectCountShort(int done, int total) {
+    return '$done / $total';
+  }
+
+  @override
+  String get examDestination => 'Bac II · Grade 12';
+
+  @override
+  String daysRemaining(int days) {
+    return '${days}d';
+  }
+
+  @override
+  String get subjectUnavailable => 'Could not load';
+
+  @override
+  String get noSubjectsYet => 'No STEM subjects yet';
+
+  @override
+  String get noSubjectsYetBody =>
+      'Grade 12 subjects appear here as soon as they are published.';
+
+  @override
+  String get everySubjectFinished => 'Every subject is finished';
+
+  @override
+  String get everySubjectFinishedBody =>
+      'You have worked through the whole Grade 12 STEM syllabus.';
+
+  @override
+  String unitOfTotal(int current, int total) {
+    return 'Unit $current of $total';
+  }
+
+  @override
+  String wholeSyllabusSummary(int units, int lessons) {
+    String _temp0 = intl.Intl.pluralLogic(
+      units,
+      locale: localeName,
+      other: '$units units',
+      one: '1 unit',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      lessons,
+      locale: localeName,
+      other: '$lessons lessons',
+      one: '1 lesson',
+    );
+    return '$_temp0, $_temp1';
+  }
+
+  @override
+  String unitProgressShort(int done, int total) {
+    return '$done of $total done';
+  }
+
+  @override
+  String get youAreHere => 'You are here';
+
+  @override
+  String opensAfterUnit(int number) {
+    return 'Opens after Unit $number';
+  }
+
+  @override
+  String get lessonLockedShort => 'Locked';
+
+  @override
+  String lessonCountLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lessons',
+      one: '1 lesson',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get readyForExam => 'Ready for Bac II';
+
+  @override
+  String get roadmapLoadFailed => 'We couldn’t load this roadmap';
+
+  @override
+  String get roadmapEmpty => 'This subject has no lessons yet';
+
+  @override
+  String get roadmapEmptyBody =>
+      'Lessons appear here as soon as they are published.';
+
+  @override
+  String get lessonLocked => 'Finish the lessons before this one to unlock it';
 
   @override
   String get lessonLoadFailed => 'We couldn’t load lessons';

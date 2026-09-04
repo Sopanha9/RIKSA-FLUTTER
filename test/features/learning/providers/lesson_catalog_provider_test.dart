@@ -63,7 +63,7 @@ class _FakeLearningApi implements LearningApi {
   Future<LessonDetail> lesson(String lessonId) => throw UnimplementedError();
 
   @override
-  Future<LessonRoadmap> roadmap(String categoryId) =>
+  Future<LearningRoadmap> roadmap(String categoryId) =>
       throw UnimplementedError();
 
   @override

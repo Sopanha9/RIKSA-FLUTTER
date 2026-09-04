@@ -47,12 +47,16 @@ class LearningApi {
         .toList();
   }
 
-  Future<LessonRoadmap> roadmap(String categoryId) async {
+  /// `GET /lessons/roadmap` returns the syllabus grouped into ordered units,
+  /// each carrying its own lessons and the learner's state for them. It is the
+  /// only endpoint that knows both the size of a subject and how far into it
+  /// the learner is, so the home screen and the roadmap screen share it.
+  Future<LearningRoadmap> roadmap(String categoryId) async {
     final response = await _client.dio.get(
       '/lessons/roadmap',
       queryParameters: {'categoryId': categoryId},
     );
-    return LessonRoadmap.fromJson(
+    return LearningRoadmap.fromJson(
       (response.data as Map).cast<String, dynamic>(),
     );
   }

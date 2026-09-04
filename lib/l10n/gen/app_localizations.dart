@@ -1220,6 +1220,24 @@ abstract class AppLocalizations {
   /// **'Advanced'**
   String get difficultyDifficult;
 
+  /// No description provided for @contentTypeLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson'**
+  String get contentTypeLesson;
+
+  /// No description provided for @contentTypeChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge'**
+  String get contentTypeChallenge;
+
+  /// No description provided for @contentTypeRoadmap.
+  ///
+  /// In en, this message translates to:
+  /// **'Roadmap'**
+  String get contentTypeRoadmap;
+
   /// No description provided for @exerciseCount.
   ///
   /// In en, this message translates to:
@@ -1231,6 +1249,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Base {xp} XP'**
   String baseXpLabel(int xp);
+
+  /// Learning home greeting
+  ///
+  /// In en, this message translates to:
+  /// **'Hi, {name}'**
+  String greetingNamed(String name);
+
+  /// No description provided for @gradeStemLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade 12 · STEM'**
+  String get gradeStemLabel;
+
+  /// No description provided for @yourSubjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Your subjects'**
+  String get yourSubjects;
+
+  /// No description provided for @continueReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue reading'**
+  String get continueReading;
+
+  /// XP a lesson awards, shown on a pill
+  ///
+  /// In en, this message translates to:
+  /// **'+{xp} XP'**
+  String xpRewardAmount(int xp);
+
+  /// No description provided for @lessonsDoneOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} lessons'**
+  String lessonsDoneOfTotal(int done, int total);
+
+  /// Compact progress on a subject tile
+  ///
+  /// In en, this message translates to:
+  /// **'{done} / {total}'**
+  String subjectCountShort(int done, int total);
+
+  /// No description provided for @examDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Bac II · Grade 12'**
+  String get examDestination;
+
+  /// Compact days-until-exam badge
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d'**
+  String daysRemaining(int days);
+
+  /// No description provided for @subjectUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load'**
+  String get subjectUnavailable;
+
+  /// No description provided for @noSubjectsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No STEM subjects yet'**
+  String get noSubjectsYet;
+
+  /// No description provided for @noSubjectsYetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade 12 subjects appear here as soon as they are published.'**
+  String get noSubjectsYetBody;
+
+  /// No description provided for @everySubjectFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Every subject is finished'**
+  String get everySubjectFinished;
+
+  /// No description provided for @everySubjectFinishedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have worked through the whole Grade 12 STEM syllabus.'**
+  String get everySubjectFinishedBody;
+
+  /// No description provided for @unitOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit {current} of {total}'**
+  String unitOfTotal(int current, int total);
+
+  /// No description provided for @wholeSyllabusSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{units, plural, =1 {1 unit} other {{units} units}}, {lessons, plural, =1 {1 lesson} other {{lessons} lessons}}'**
+  String wholeSyllabusSummary(int units, int lessons);
+
+  /// No description provided for @unitProgressShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done'**
+  String unitProgressShort(int done, int total);
+
+  /// No description provided for @youAreHere.
+  ///
+  /// In en, this message translates to:
+  /// **'You are here'**
+  String get youAreHere;
+
+  /// No description provided for @opensAfterUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens after Unit {number}'**
+  String opensAfterUnit(int number);
+
+  /// No description provided for @lessonLockedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get lessonLockedShort;
+
+  /// No description provided for @lessonCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 lesson} other {{count} lessons}}'**
+  String lessonCountLabel(int count);
+
+  /// No description provided for @readyForExam.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for Bac II'**
+  String get readyForExam;
+
+  /// No description provided for @roadmapLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load this roadmap'**
+  String get roadmapLoadFailed;
+
+  /// No description provided for @roadmapEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'This subject has no lessons yet'**
+  String get roadmapEmpty;
+
+  /// No description provided for @roadmapEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Lessons appear here as soon as they are published.'**
+  String get roadmapEmptyBody;
+
+  /// No description provided for @lessonLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish the lessons before this one to unlock it'**
+  String get lessonLocked;
 
   /// No description provided for @lessonLoadFailed.
   ///

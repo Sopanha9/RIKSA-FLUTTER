@@ -36,14 +36,11 @@ class LeaderboardPodium extends StatelessWidget {
             ? context.riksa.surface
             : AppColors.editorialNeutralSurface,
         borderRadius: AppRadii.extraLargeBorder,
-        border: Border.all(
-          color: isDark ? context.riksa.outline : AppColors.editorialOutline,
-        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? .18 : .06),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: isDark ? .18 : .045),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -142,14 +139,7 @@ class _PodiumPlace extends StatelessWidget {
           borderRadius: AppRadii.largeBorder,
           child: Container(
             padding: EdgeInsets.fromLTRB(6, isWinner ? 10 : 6, 6, 8),
-            decoration: BoxDecoration(
-              borderRadius: AppRadii.largeBorder,
-              border: isWinner || isCurrentUser
-                  ? Border.all(
-                      color: AppColors.editorialPink.withValues(alpha: .65),
-                    )
-                  : null,
-            ),
+            decoration: const BoxDecoration(borderRadius: AppRadii.largeBorder),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -271,9 +261,6 @@ class _EmptyPodium extends StatelessWidget {
             ? context.riksa.surface
             : AppColors.editorialNeutralSurface,
         borderRadius: AppRadii.extraLargeBorder,
-        border: Border.all(
-          color: isDark ? context.riksa.outline : AppColors.editorialOutline,
-        ),
       ),
       child: Column(
         children: [

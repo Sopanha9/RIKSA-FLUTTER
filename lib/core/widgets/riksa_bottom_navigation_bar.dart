@@ -95,8 +95,10 @@ class _NavigationSurface extends StatelessWidget {
         : AppColors.editorialMuted;
     final activeBackground = isDark
         ? AppColors.editorialPink
-        : AppColors.editorialPinkSoft;
-    const activeForeground = AppColors.editorialAubergine;
+        : AppColors.editorialBlack;
+    final activeForeground = isDark
+        ? AppColors.editorialAubergine
+        : Colors.white;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -149,7 +151,7 @@ class _NavigationSurface extends StatelessWidget {
                   foregroundColor: activeForeground,
                   borderColor: isDark
                       ? palette.canvas.withValues(alpha: .18)
-                      : AppColors.editorialPink.withValues(alpha: .55),
+                      : Colors.transparent,
                   isDark: isDark,
                   onTap: onCollapsedTap,
                 ),
@@ -197,21 +199,13 @@ class _ExpandedNavigationBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: collapsed ? barColor.withValues(alpha: 0) : barColor,
         borderRadius: AppRadii.extraLargeBorder,
-        border: Border.all(
-          color: collapsed
-              ? Colors.transparent
-              : isDark
-              ? AppColors.editorialPink.withValues(alpha: .22)
-              : AppColors.editorialOutline,
-        ),
         boxShadow: collapsed
             ? const []
             : [
                 BoxShadow(
-                  color: (isDark ? Colors.black : AppColors.editorialAubergine)
-                      .withValues(alpha: isDark ? .24 : .12),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
+                  color: Colors.black.withValues(alpha: isDark ? .24 : .1),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
                 ),
               ],
       ),
@@ -236,11 +230,11 @@ class _ExpandedNavigationBar extends StatelessWidget {
                   final labelStyle =
                       Theme.of(context).textTheme.labelLarge?.copyWith(
                         color: activeForeground,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ) ??
                       TextStyle(
                         color: activeForeground,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       );
                   final labelPainter = TextPainter(
                     text: TextSpan(

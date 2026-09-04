@@ -21,7 +21,7 @@ class LeaderboardHeader extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
               color: isDark ? context.riksa.ink : AppColors.editorialAubergine,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               letterSpacing: -0.8,
             ),
           ),
@@ -35,9 +35,6 @@ class LeaderboardHeader extends StatelessWidget {
                 ? context.riksa.surfaceRaised
                 : AppColors.editorialPinkSoft,
             shape: BoxShape.circle,
-            border: Border.all(
-              color: AppColors.editorialPink.withValues(alpha: .5),
-            ),
           ),
           child: IconButton(
             onPressed: () {},

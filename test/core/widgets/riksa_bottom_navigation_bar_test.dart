@@ -53,10 +53,7 @@ void main() {
       _decoration(tester, 'bottom-nav-surface').color,
       AppColors.editorialNeutralSurface,
     );
-    expect(
-      _destinationDecoration(tester, 0).color,
-      AppColors.editorialPinkSoft,
-    );
+    expect(_destinationDecoration(tester, 0).color, AppColors.editorialBlack);
     expect(find.byKey(const ValueKey('bottom-nav-label-0')), findsOneWidget);
     expect(find.byKey(const ValueKey('bottom-nav-label-1')), findsNothing);
 
@@ -66,7 +63,7 @@ void main() {
         matching: find.byType(Icon),
       ),
     );
-    expect(activeIcon.color, AppColors.editorialAubergine);
+    expect(activeIcon.color, Colors.white);
   });
 
   testWidgets('dark navigation uses the dark editorial palette', (

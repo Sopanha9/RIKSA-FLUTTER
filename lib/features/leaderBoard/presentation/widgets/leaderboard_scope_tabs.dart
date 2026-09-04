@@ -21,13 +21,8 @@ class LeaderboardScopeTabs extends StatelessWidget {
       height: 52,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark
-            ? context.riksa.surface
-            : AppColors.editorialNeutralSurface,
+        color: isDark ? context.riksa.surfaceRaised : AppColors.editorialField,
         borderRadius: AppRadii.fullBorder,
-        border: Border.all(
-          color: isDark ? context.riksa.outline : AppColors.editorialOutline,
-        ),
       ),
       child: Row(
         children: [
@@ -78,9 +73,7 @@ class LeaderboardPillTab extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: selected
-                ? (isDark
-                      ? AppColors.editorialPink
-                      : AppColors.editorialAubergine)
+                ? (isDark ? AppColors.editorialPink : AppColors.editorialBlack)
                 : Colors.transparent,
             borderRadius: AppRadii.fullBorder,
           ),

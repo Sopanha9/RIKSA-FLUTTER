@@ -36,7 +36,7 @@ class RankingsSheet extends StatelessWidget {
                     ? context.riksa.ink
                     : AppColors.editorialAubergine,
                 fontSize: 20,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
                 letterSpacing: -.3,
               ),
             ),
@@ -60,11 +60,6 @@ class RankingsSheet extends StatelessWidget {
                 ? context.riksa.surface
                 : AppColors.editorialNeutralSurface,
             borderRadius: AppRadii.extraLargeBorder,
-            border: Border.all(
-              color: isDark
-                  ? context.riksa.outline
-                  : AppColors.editorialOutline,
-            ),
           ),
           clipBehavior: Clip.antiAlias,
           child: listRows.isEmpty

@@ -79,15 +79,13 @@ class _OnboardingSplashScreenState
     ];
 
     return Scaffold(
-      backgroundColor: theme.brightness == Brightness.dark
-          ? context.riksa.canvas
-          : AppColors.editorialNeutralCanvas,
+      backgroundColor: context.riksa.canvas,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -101,22 +99,21 @@ class _OnboardingSplashScreenState
                       itemBuilder: (context, index) => Padding(
                         padding: const EdgeInsets.only(bottom: RiksaSpacing.md),
                         child: Container(
-                          padding: const EdgeInsets.all(RiksaSpacing.lg),
+                          clipBehavior: Clip.antiAlias,
+                          padding: const EdgeInsets.all(RiksaSpacing.xs),
                           decoration: BoxDecoration(
                             color: theme.brightness == Brightness.dark
                                 ? context.riksa.surface
-                                : AppColors.editorialNeutralSurface,
+                                : _sceneColor(_scenes[index]),
                             borderRadius: AppRadii.extraLargeBorder,
-                            border: Border.all(
-                              color: theme.brightness == Brightness.dark
-                                  ? context.riksa.outline
-                                  : AppColors.editorialOutline,
-                            ),
                           ),
-                          child: OnboardingArt(
-                            scene: _scenes[index],
-                            active: index == _currentPage,
-                            semanticLabel: l10n.onboardingTitle,
+                          child: Transform.scale(
+                            scale: 1.1,
+                            child: OnboardingArt(
+                              scene: _scenes[index],
+                              active: index == _currentPage,
+                              semanticLabel: l10n.onboardingTitle,
+                            ),
                           ),
                         ),
                       ),
@@ -130,7 +127,11 @@ class _OnboardingSplashScreenState
                   Text(
                     l10n.onboardingTitle,
                     textAlign: TextAlign.start,
-                    style: theme.textTheme.headlineLarge,
+                    style: theme.textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -.55,
+                      height: 1.17,
+                    ),
                   ),
                   const SizedBox(height: RiksaSpacing.xs),
                   AnimatedSwitcher(
@@ -147,14 +148,14 @@ class _OnboardingSplashScreenState
                   ),
                   const SizedBox(height: RiksaSpacing.lg),
                   SizedBox(
-                    height: 54,
+                    height: 56,
                     child: FilledButton(
                       key: const Key('onboarding_continue'),
                       onPressed: _finishing ? null : _continue,
                       style: FilledButton.styleFrom(
                         backgroundColor: theme.brightness == Brightness.dark
                             ? AppColors.editorialPink
-                            : AppColors.editorialAubergine,
+                            : AppColors.editorialBlack,
                         foregroundColor: theme.brightness == Brightness.dark
                             ? AppColors.editorialAubergine
                             : Colors.white,
@@ -175,6 +176,12 @@ class _OnboardingSplashScreenState
       ),
     );
   }
+
+  Color _sceneColor(OnboardingScene scene) => switch (scene) {
+    OnboardingScene.learning => AppColors.editorialPinkSoft,
+    OnboardingScene.achievement => AppColors.editorialCreamSoft,
+    OnboardingScene.community => AppColors.editorialMint,
+  };
 }
 
 class _PageIndicator extends StatelessWidget {

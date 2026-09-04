@@ -35,41 +35,36 @@ class SocialPostCard extends StatelessWidget {
       container: true,
       label: '${post.author.displayName}: ${post.title}',
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+        padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
         child: Material(
           key: ValueKey('post-${post.id}'),
           color: isOfficial
               ? (isDark
                     ? SocialPalette.editorialSurface(context)
-                    : SocialPalette.pinkSoft(context).withValues(alpha: .28))
+                    : SocialPalette.pinkSoft(context).withValues(alpha: .58))
               : SocialPalette.surface(context),
           elevation: 0,
-          shape: RoundedRectangleBorder(
+          shape: const RoundedRectangleBorder(
             borderRadius: AppRadii.largeBorder,
-            side: BorderSide(
-              color: isOfficial
-                  ? SocialPalette.pink(context).withValues(alpha: .4)
-                  : SocialPalette.border(context).withValues(alpha: .35),
-            ),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _PostMetadata(post: post, onAuthorTap: onAuthorTap),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   Text(
                     post.title,
                     style: RiksaTypography.bodyStyleFor(
                       post.title,
                       theme.textTheme.titleLarge?.copyWith(
-                        fontSize: 21,
-                        fontWeight: FontWeight.w900,
-                        height: 1.35,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        height: 1.28,
                         letterSpacing: -.35,
                         color: SocialPalette.text(context),
                       ),
@@ -112,7 +107,7 @@ class SocialPostCard extends StatelessWidget {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 17),
+                  const SizedBox(height: 15),
                   Row(
                     children: [
                       _PrimaryReactionButton(

@@ -40,6 +40,21 @@ void main() {
     expect(labelled.grade, 12);
   });
 
+  test('LessonSummary distinguishes explicit and legacy content types', () {
+    final explicit = LessonSummary.fromJson({
+      'title': 'Weekly review',
+      'contentType': 'CHALLENGE',
+    });
+    final legacy = LessonSummary.fromJson({
+      'title': 'Mathematics Roadmap Challenge',
+    });
+    final regular = LessonSummary.fromJson({'title': 'Linear equations'});
+
+    expect(explicit.contentType, LessonContentType.challenge);
+    expect(legacy.contentType, LessonContentType.challenge);
+    expect(regular.contentType, LessonContentType.lesson);
+  });
+
   test('LearningRoadmap parses nested units, resume state, and reward XP', () {
     final roadmap = LearningRoadmap.fromJson({
       'categoryId': 'math',

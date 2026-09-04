@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_search_bar.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../blog/data/blog_models.dart';
 import '../../blog/providers/blog_provider.dart';
@@ -77,6 +78,7 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
             _CommunityAppBar(
               onSearchChanged: (value) =>
                   setState(() => _searchQuery = value.trim().toLowerCase()),
+              onFilter: _showContentFilter,
             ),
             SliverToBoxAdapter(
               child: _FeedSectionTabs(
@@ -272,6 +274,45 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
     }
   }
 
+  Future<void> _showContentFilter() async {
+    final l10n = AppLocalizations.of(context)!;
+    final selected = await showModalBottomSheet<_SocialSection>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.filters, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppRadii.mediumBorder,
+                ),
+                selected: _section == _SocialSection.feed,
+                leading: const Icon(Icons.forum_outlined),
+                title: Text(l10n.forYou),
+                onTap: () => Navigator.pop(context, _SocialSection.feed),
+              ),
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppRadii.mediumBorder,
+                ),
+                selected: _section == _SocialSection.blog,
+                leading: const Icon(Icons.auto_stories_outlined),
+                title: Text(l10n.blog),
+                onTap: () => Navigator.pop(context, _SocialSection.blog),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (selected != null && mounted) _selectSection(selected);
+  }
+
   bool _matchesPostSearch(SocialPost post) {
     if (_searchQuery.isEmpty) return true;
     return [
@@ -309,9 +350,13 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
 }
 
 class _CommunityAppBar extends ConsumerWidget {
-  const _CommunityAppBar({required this.onSearchChanged});
+  const _CommunityAppBar({
+    required this.onSearchChanged,
+    required this.onFilter,
+  });
 
   final ValueChanged<String> onSearchChanged;
+  final VoidCallback onFilter;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -321,85 +366,36 @@ class _CommunityAppBar extends ConsumerWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 6),
-          child: Row(
+          padding: const EdgeInsetsDirectional.fromSTEB(20, 16, 20, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+              Row(
                 children: [
-                  Text(
-                    'RIKSA',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: SocialPalette.aubergine(context),
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
+                  Expanded(
+                    child: Text(
+                      l10n.community,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        color: SocialPalette.text(context),
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -.6,
+                      ),
                     ),
                   ),
-                  Text(
-                    l10n.community,
-                    style: TextStyle(
-                      color: SocialPalette.muted(context),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  _StreakPill(
+                    key: const ValueKey('streak-pill'),
+                    streak: ref.watch(communityStreakProvider),
                   ),
                 ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  key: const ValueKey('community-search'),
-                  onChanged: onSearchChanged,
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    hintText: l10n.searchCommunity,
-                    hintStyle: TextStyle(
-                      color: SocialPalette.muted(context),
-                      fontSize: 14,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.search_rounded,
-                      size: 20,
-                      color: SocialPalette.muted(context),
-                    ),
-                    filled: true,
-                    fillColor: SocialPalette.editorialSurface(context),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 10,
-                      horizontal: 14,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: AppRadii.fullBorder,
-                      borderSide: BorderSide(
-                        color: SocialPalette.border(
-                          context,
-                        ).withValues(alpha: .4),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: AppRadii.fullBorder,
-                      borderSide: BorderSide(
-                        color: SocialPalette.border(
-                          context,
-                        ).withValues(alpha: .4),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: AppRadii.fullBorder,
-                      borderSide: BorderSide(
-                        color: SocialPalette.pink(context),
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              _StreakPill(
-                key: const ValueKey('streak-pill'),
-                streak: ref.watch(communityStreakProvider),
+              const SizedBox(height: 16),
+              RiksaSearchBar(
+                key: const ValueKey('community-search'),
+                hintText: l10n.searchCommunity,
+                onChanged: onSearchChanged,
+                onFilter: onFilter,
               ),
             ],
           ),
@@ -418,23 +414,24 @@ class _CommunityComposerPrompt extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
       child: Semantics(
         button: true,
         label: l10n.communityComposerPrompt,
         child: Material(
-          color: SocialPalette.surface(context),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? context.riksa.surfaceRaised
+              : AppColors.editorialField,
           borderRadius: AppRadii.fullBorder,
           child: InkWell(
             key: const ValueKey('create-community-button'),
             onTap: onTap,
             borderRadius: AppRadii.fullBorder,
             child: Container(
-              constraints: const BoxConstraints(minHeight: 54),
+              constraints: const BoxConstraints(minHeight: 52),
               padding: const EdgeInsets.fromLTRB(9, 7, 9, 7),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 borderRadius: AppRadii.fullBorder,
-                border: Border.all(color: SocialPalette.outline(context)),
               ),
               child: Row(
                 children: [
@@ -505,14 +502,15 @@ class _FeedSectionTabsState extends State<_FeedSectionTabs> {
     final l10n = AppLocalizations.of(context)!;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
       child: Container(
-        height: 48,
+        height: 44,
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: SocialPalette.surface(context),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? context.riksa.surfaceRaised
+              : AppColors.editorialField,
           borderRadius: AppRadii.fullBorder,
-          border: Border.all(color: SocialPalette.outline(context)),
         ),
         child: Row(
           children: [
@@ -587,7 +585,7 @@ class _CapsuleTabItem extends StatelessWidget {
                       ? (isDark ? AppColors.editorialAubergine : Colors.white)
                       : SocialPalette.ink(context),
                   fontSize: 14,
-                  fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                   letterSpacing: -0.1,
                 ),
               ),
@@ -608,60 +606,45 @@ class _StreakPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final value = streak.value;
-    return Container(
-      decoration: BoxDecoration(
+    return Material(
+      color: theme.brightness == Brightness.dark
+          ? AppColors.editorialAubergineRaised
+          : SocialPalette.pinkSoft(context),
+      borderRadius: AppRadii.fullBorder,
+      child: InkWell(
         borderRadius: AppRadii.fullBorder,
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: .1),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Material(
-        color: SocialPalette.pinkSoft(context),
-        borderRadius: AppRadii.fullBorder,
-        child: InkWell(
-          borderRadius: AppRadii.fullBorder,
-          onTap: value == null
-              ? null
-              : () => showStreakDetailsSheet(context, value),
-          child: Container(
-            height: 40,
-            constraints: const BoxConstraints(minWidth: 60),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              borderRadius: AppRadii.fullBorder,
-              border: Border.all(
-                color: SocialPalette.pink(context).withValues(alpha: .28),
+        onTap: value == null
+            ? null
+            : () => showStreakDetailsSheet(context, value),
+        child: Container(
+          height: 40,
+          constraints: const BoxConstraints(minWidth: 60),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: const BoxDecoration(borderRadius: AppRadii.fullBorder),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.local_fire_department_rounded,
+                color: SocialPalette.pink(context),
+                size: 20,
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.local_fire_department_rounded,
-                  color: SocialPalette.pink(context),
-                  size: 20,
-                ),
-                const SizedBox(width: 4),
-                if (streak.isLoading)
-                  const SizedBox(
-                    width: 13,
-                    height: 13,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                else
-                  Text(
-                    '${value?.current ?? 0}',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: SocialPalette.aubergine(context),
-                      fontWeight: FontWeight.w900,
-                    ),
+              const SizedBox(width: 4),
+              if (streak.isLoading)
+                const SizedBox(
+                  width: 13,
+                  height: 13,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Text(
+                  '${value?.current ?? 0}',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: SocialPalette.aubergine(context),
+                    fontWeight: FontWeight.w900,
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),

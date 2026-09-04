@@ -75,7 +75,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
-      AppColors.lightCanvas,
+      AppColors.editorialNeutralCanvas,
     );
 
     await tester.pumpWidget(

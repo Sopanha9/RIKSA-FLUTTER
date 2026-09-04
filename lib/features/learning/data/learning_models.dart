@@ -31,6 +31,25 @@ enum LessonDifficulty {
   }
 }
 
+enum LessonContentType {
+  lesson,
+  challenge,
+  roadmap;
+
+  static LessonContentType fromWire(Object? value, {required String title}) {
+    final normalized = value?.toString().trim().toLowerCase() ?? '';
+    if (normalized.contains('challenge')) return challenge;
+    if (normalized.contains('roadmap')) return roadmap;
+
+    // Older lesson responses do not expose a type yet. Preserve a useful
+    // visual distinction until the API field is available everywhere.
+    final normalizedTitle = title.toLowerCase();
+    if (normalizedTitle.contains('challenge')) return challenge;
+    if (normalizedTitle.contains('roadmap')) return roadmap;
+    return lesson;
+  }
+}
+
 enum LessonProgressState {
   available,
   locked,
@@ -87,6 +106,7 @@ class LessonSummary {
     this.progress,
     this.state = LessonProgressState.available,
     this.position = 0,
+    this.contentType = LessonContentType.lesson,
   });
 
   final String id;
@@ -111,26 +131,34 @@ class LessonSummary {
   final double? progress;
   final LessonProgressState state;
   final int position;
+  final LessonContentType contentType;
 
-  factory LessonSummary.fromJson(Map<String, dynamic> json) => LessonSummary(
-    id: json['id']?.toString() ?? '',
-    title: json['title'] as String? ?? '',
-    description: json['description'] as String? ?? '',
-    difficulty: LessonDifficulty.fromWire(json['difficulty'] as String?),
-    baseXp: (json['baseXp'] as num?)?.toInt() ?? 0,
-    categoryId: json['categoryId']?.toString(),
-    categoryName: json['categoryName'] as String? ?? '',
-    exerciseCount: (json['exerciseCount'] as num?)?.toInt() ?? 0,
-    completed: json['completed'] as bool? ?? false,
-    createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? ''),
-    grade: _gradeFromJson(json['grade']),
-    durationMinutes:
-        (json['durationMinutes'] as num?)?.toInt() ??
-        (json['estimatedMinutes'] as num?)?.toInt(),
-    progress: _progressFromJson(json['progress']),
-    state: LessonProgressState.fromWire(json['state']),
-    position: (json['position'] as num?)?.toInt() ?? 0,
-  );
+  factory LessonSummary.fromJson(Map<String, dynamic> json) {
+    final title = json['title'] as String? ?? '';
+    return LessonSummary(
+      id: json['id']?.toString() ?? '',
+      title: title,
+      description: json['description'] as String? ?? '',
+      difficulty: LessonDifficulty.fromWire(json['difficulty'] as String?),
+      baseXp: (json['baseXp'] as num?)?.toInt() ?? 0,
+      categoryId: json['categoryId']?.toString(),
+      categoryName: json['categoryName'] as String? ?? '',
+      exerciseCount: (json['exerciseCount'] as num?)?.toInt() ?? 0,
+      completed: json['completed'] as bool? ?? false,
+      createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? ''),
+      grade: _gradeFromJson(json['grade']),
+      durationMinutes:
+          (json['durationMinutes'] as num?)?.toInt() ??
+          (json['estimatedMinutes'] as num?)?.toInt(),
+      progress: _progressFromJson(json['progress']),
+      state: LessonProgressState.fromWire(json['state']),
+      position: (json['position'] as num?)?.toInt() ?? 0,
+      contentType: LessonContentType.fromWire(
+        json['contentType'] ?? json['type'],
+        title: title,
+      ),
+    );
+  }
 
   static int? _gradeFromJson(Object? value) {
     if (value is num) return value.toInt();
@@ -255,28 +283,6 @@ class LearningRoadmap {
       );
 }
 
-/// The real, category-ordered learner roadmap returned by `/lessons/roadmap`.
-class LessonRoadmap {
-  const LessonRoadmap({
-    required this.categoryId,
-    required this.categoryName,
-    required this.lessons,
-  });
-
-  final String categoryId;
-  final String categoryName;
-  final List<LessonSummary> lessons;
-
-  factory LessonRoadmap.fromJson(Map<String, dynamic> json) => LessonRoadmap(
-    categoryId: json['categoryId']?.toString() ?? '',
-    categoryName: json['categoryName'] as String? ?? '',
-    lessons: ((json['lessons'] as List?) ?? const [])
-        .map((item) => LessonSummary.fromJson((item as Map).cast<String, dynamic>()))
-        .toList()
-      ..sort((a, b) => a.position.compareTo(b.position)),
-  );
-}
-
 class RoadmapUnit {
   const RoadmapUnit({
     required this.id,
@@ -359,9 +365,15 @@ class RoadmapLesson {
     current: json['current'] as bool? ?? false,
   );
 
+  /// Flattens a roadmap lesson into the summary the lesson screens take as
+  /// their `extra` route argument.
+  ///
+  /// [position] is the lesson's place in the whole subject, not in its unit,
+  /// because that is what the roadmap spine numbers.
   LessonSummary toSummary({
     required String categoryId,
     required String categoryName,
+    int position = 0,
   }) => LessonSummary(
     id: id,
     title: title,
@@ -375,6 +387,14 @@ class RoadmapLesson {
     createdAt: null,
     durationMinutes: estimatedMinutes,
     progress: progress,
+    position: position,
+    // Carry the gate across, so a locked lesson opened from anywhere in the
+    // app stays locked rather than silently becoming available.
+    state: switch (status) {
+      RoadmapLessonStatus.completed => LessonProgressState.completed,
+      RoadmapLessonStatus.locked => LessonProgressState.locked,
+      _ => LessonProgressState.available,
+    },
   );
 }
 

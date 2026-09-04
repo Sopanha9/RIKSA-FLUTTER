@@ -4,185 +4,326 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/features/auth/data/auth_models.dart';
+import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_catalog_screen.dart';
-import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.dart';
+import 'package:riksa_app/features/learning/providers/learning_home_provider.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 import 'package:riksa_app/features/social/providers/social_feed_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
-const _lesson = LessonSummary(
-  id: 'lesson-1',
-  title: 'Derivatives & Tangent Lines',
-  description: 'Learn the power rule and find tangent-line equations.',
-  difficulty: LessonDifficulty.easy,
-  baseXp: 20,
-  categoryId: 'math',
-  categoryName: 'Mathematics',
-  exerciseCount: 2,
-  completed: false,
-  createdAt: null,
-  durationMinutes: 12,
-  progress: .68,
-);
+class _SignedInNotifier extends AuthNotifier {
+  @override
+  AuthState build() => Authenticated(
+    AuthUser(
+      id: 'user-1',
+      username: 'sophea',
+      displayName: 'Sokha',
+      email: 'sokha@example.com',
+      emailVerified: true,
+      phoneVerified: false,
+      role: 'USER',
+      createdAt: DateTime.utc(2026),
+    ),
+  );
+}
 
-const _biologyLesson = LessonSummary(
-  id: 'lesson-2',
-  title: 'ស្វែងយល់ពីកោសិកា',
-  description: 'Explore the structures that keep living cells working.',
+LessonSummary _lesson({
+  required String id,
+  required String title,
+  required String category,
+  bool completed = false,
+  double? progress,
+  int? minutes,
+}) => LessonSummary(
+  id: id,
+  title: title,
+  description: '',
   difficulty: LessonDifficulty.easy,
   baseXp: 25,
-  categoryId: 'biology',
-  categoryName: 'Biology',
-  exerciseCount: 4,
-  completed: false,
+  categoryId: category.toLowerCase(),
+  categoryName: category,
+  exerciseCount: 0,
+  completed: completed,
   createdAt: null,
+  durationMinutes: minutes,
+  progress: progress,
 );
 
-const _physicsLesson = LessonSummary(
-  id: 'lesson-3',
-  title: 'Motion, forces and everyday life',
-  description: 'Connect force and motion to familiar examples.',
-  difficulty: LessonDifficulty.medium,
-  baseXp: 30,
-  categoryId: 'physics',
-  categoryName: 'Physics',
-  exerciseCount: 5,
-  completed: false,
-  createdAt: null,
+final _math = SubjectProgress(
+  category: const LearningCategory(id: 'math', name: 'Mathematics'),
+  completed: 1,
+  total: 3,
+  currentLessonId: 'm2',
+  lessons: [
+    _lesson(id: 'm1', title: 'Antiderivatives', category: 'Mathematics', completed: true),
+    _lesson(
+      id: 'm2',
+      title: 'Definite integrals and area',
+      category: 'Mathematics',
+      progress: .43,
+      minutes: 8,
+    ),
+    _lesson(id: 'm3', title: 'Volumes of revolution', category: 'Mathematics'),
+  ],
 );
 
-const _technologyLesson = LessonSummary(
-  id: 'lesson-4',
-  title: 'Think like a programmer',
-  description: 'Break a problem into clear, reusable steps.',
-  difficulty: LessonDifficulty.medium,
-  baseXp: 35,
-  categoryId: 'technology',
-  categoryName: 'Computer Science',
-  exerciseCount: 6,
-  completed: false,
-  createdAt: null,
+final _biology = SubjectProgress(
+  category: const LearningCategory(id: 'biology', name: 'Biology'),
+  completed: 0,
+  total: 1,
+  lessons: [
+    _lesson(id: 'b1', title: 'ស្វែងយល់ពីកោសិកា', category: 'Biology'),
+  ],
 );
 
-class _CatalogNotifier extends LessonCatalogNotifier {
-  @override
-  LessonCatalogState build() => const LessonCatalogState(
-    lessons: [_lesson, _biologyLesson, _physicsLesson, _technologyLesson],
-    categories: [LearningCategory(id: 'math', name: 'Mathematics')],
-    totalPages: 1,
+final _offline = SubjectProgress(
+  category: const LearningCategory(id: 'physics', name: 'Physics'),
+  lessons: const [],
+  unavailable: true,
+);
+
+LearningHomeData _home({List<SubjectProgress>? subjects}) {
+  final list = subjects ?? [_math, _biology, _offline];
+  final resume = list.firstWhere(
+    (subject) => subject.resumable != null,
+    orElse: () => list.first,
   );
+  return LearningHomeData(
+    subjects: list,
+    resumeSubject: resume.resumable == null ? null : resume,
+    resumeLesson: resume.resumable,
+  );
+}
 
-  @override
-  Future<void> applyFilters({
-    int? grade,
-    String? categoryId,
-    LessonDifficulty? difficulty,
-  }) async {
-    state = state.copyWith(
-      selectedGrade: grade,
-      clearGrade: grade == null,
-      selectedCategoryId: categoryId,
-      clearCategory: categoryId == null,
-      selectedDifficulty: difficulty,
-      clearDifficulty: difficulty == null,
-    );
-  }
+Widget _app({
+  required GoRouter router,
+  required Future<LearningHomeData> Function() home,
+}) => ProviderScope(
+  overrides: [
+    authProvider.overrideWith(_SignedInNotifier.new),
+    communityStreakProvider.overrideWith(
+      (ref) async => const CommunityStreak(current: 12, highest: 21),
+    ),
+    learningHomeProvider.overrideWith((ref) => home()),
+  ],
+  child: MaterialApp.router(
+    theme: AppTheme.light,
+    routerConfig: router,
+    localizationsDelegates: const [
+      AppLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: const [Locale('en'), Locale('km')],
+  ),
+);
 
-  @override
-  Future<void> selectCategory(String? categoryId) async {
-    state = state.copyWith(
-      selectedCategoryId: categoryId,
-      clearCategory: categoryId == null,
-    );
-  }
+GoRouter _router() => GoRouter(
+  initialLocation: '/learn',
+  routes: [
+    GoRoute(
+      path: '/learn',
+      builder: (_, _) => const LessonCatalogScreen(),
+      routes: [
+        GoRoute(
+          path: 'roadmap/:categoryId',
+          builder: (_, state) => Scaffold(
+            body: Text('roadmap-${state.pathParameters['categoryId']}'),
+          ),
+        ),
+        GoRoute(
+          path: ':id',
+          builder: (_, state) =>
+              Scaffold(body: Text('lesson-${state.pathParameters['id']}')),
+        ),
+      ],
+    ),
+  ],
+);
+
+void _sizePhone(WidgetTester tester) {
+  tester.view.physicalSize = const Size(393, 852);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
 }
 
 void main() {
-  testWidgets('opens non-Math lessons directly', (
+  testWidgets('offers one lesson to resume and the subject index', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(430, 932);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    final router = GoRouter(
-      initialLocation: '/learn',
-      routes: [
-        GoRoute(
-          path: '/learn',
-          builder: (_, _) => const LessonCatalogScreen(),
-          routes: [
-            GoRoute(
-              path: 'roadmap/:categoryId',
-              builder: (_, state) => Scaffold(
-                body: Text('roadmap-${state.pathParameters['categoryId']}'),
-              ),
-            ),
-            GoRoute(
-              path: ':id',
-              builder: (_, _) => const Scaffold(body: Text('detail-screen')),
-            ),
-          ],
-        ),
-      ],
-    );
+    _sizePhone(tester);
+    final router = _router();
     addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          lessonCatalogProvider.overrideWith(_CatalogNotifier.new),
-          communityStreakProvider.overrideWith(
-            (ref) async => CommunityStreak(
-              current: 0,
-              highest: 0,
-              lastTrackedDate: null,
-              activityDates: const [],
+      _app(router: router, home: () async => _home()),
+    );
+    await tester.pumpAndSettle();
+
+    // Exactly one resumable lesson is offered, and it is the started one.
+    expect(find.byKey(const ValueKey('continue-lesson-m2')), findsOneWidget);
+    expect(find.byKey(const ValueKey('continue-lesson-m1')), findsNothing);
+    expect(find.text('Definite integrals and area'), findsOneWidget);
+
+    // Every subject appears, including the one whose roadmap failed to load.
+    expect(find.byKey(const ValueKey('subject-tile-math')), findsOneWidget);
+    expect(find.byKey(const ValueKey('subject-tile-biology')), findsOneWidget);
+    expect(find.byKey(const ValueKey('subject-tile-physics')), findsOneWidget);
+    expect(find.text('1 / 3'), findsOneWidget);
+    expect(find.text('Could not load'), findsOneWidget);
+
+    // The destination never scrolls away, and it aggregates every subject.
+    expect(
+      find.byKey(const ValueKey('learning-destination-bar')),
+      findsOneWidget,
+    );
+    expect(find.text('1 of 4 lessons'), findsOneWidget);
+
+    expect(find.byKey(const ValueKey('learning-streak-chip')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('continue opens the lesson, a tile opens the roadmap', (
+    tester,
+  ) async {
+    _sizePhone(tester);
+    final router = _router();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      _app(router: router, home: () async => _home()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('continue-lesson-m2')));
+    await tester.pumpAndSettle();
+    expect(find.text('lesson-m2'), findsOneWidget);
+
+    router.go('/learn');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('subject-tile-biology')));
+    await tester.pumpAndSettle();
+    expect(find.text('roadmap-biology'), findsOneWidget);
+  });
+
+  testWidgets('renders Khmer subject titles with the Khmer display face', (
+    tester,
+  ) async {
+    _sizePhone(tester);
+    final router = _router();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      _app(
+        router: router,
+        home: () async => _home(
+          subjects: [
+            SubjectProgress(
+              category: const LearningCategory(
+                id: 'khmer-science',
+                name: 'ជីវវិទ្យា',
+              ),
+              completed: 0,
+              total: 1,
+              lessons: [
+                _lesson(
+                  id: 'k1',
+                  title: 'ស្វែងយល់ពីកោសិកា',
+                  category: 'ជីវវិទ្យា',
+                  progress: .2,
+                ),
+              ],
             ),
-          ),
-        ],
-        child: MaterialApp.router(
-          theme: AppTheme.light,
-          routerConfig: router,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
           ],
-          supportedLocales: const [Locale('en'), Locale('km')],
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('lesson-card-lesson-2')));
-    await tester.pumpAndSettle();
+    final title = tester.widget<Text>(
+      find.descendant(
+        of: find.byKey(const ValueKey('subject-tile-khmer-science')),
+        matching: find.text('ជីវវិទ្យា'),
+      ),
+    );
+    expect(title.style?.fontFamily, RiksaTypography.khmerTitleFamily);
 
-    expect(find.text('detail-screen'), findsOneWidget);
+    // The Khmer lesson title on the resume card gets the same treatment, so a
+    // long Khmer title cannot fall back to the Latin face mid-screen.
+    final resumeTitle = tester.widget<Text>(find.text('ស្វែងយល់ពីកោសិកា'));
+    expect(resumeTitle.style?.fontFamily, RiksaTypography.khmerTitleFamily);
+    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('keeps the Learning header below the device top inset', (
+  testWidgets('surfaces a retry when the whole screen fails to load', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(430, 932);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+    _sizePhone(tester);
+    final router = _router();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      _app(router: router, home: () async => throw StateError('offline')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('We couldn’t load lessons'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
+  });
+
+  testWidgets('replaces the resume card once every subject is finished', (
+    tester,
+  ) async {
+    _sizePhone(tester);
+    final router = _router();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      _app(
+        router: router,
+        home: () async => _home(
+          subjects: [
+            SubjectProgress(
+              category: const LearningCategory(
+                id: 'math',
+                name: 'Mathematics',
+              ),
+              completed: 1,
+              total: 1,
+              lessons: [
+                _lesson(
+                  id: 'm1',
+                  title: 'Antiderivatives',
+                  category: 'Mathematics',
+                  completed: true,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Every subject is finished'), findsOneWidget);
+    expect(find.byKey(const ValueKey('continue-lesson-m1')), findsNothing);
+  });
+
+  testWidgets('keeps the greeting below the device top inset', (tester) async {
+    _sizePhone(tester);
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          lessonCatalogProvider.overrideWith(_CatalogNotifier.new),
+          authProvider.overrideWith(_SignedInNotifier.new),
+          learningHomeProvider.overrideWith((ref) async => _home()),
           communityStreakProvider.overrideWith(
-            (ref) async => CommunityStreak(
-              current: 7,
-              highest: 12,
-              lastTrackedDate: DateTime(2026, 8, 22),
-              activityDates: const [],
-            ),
+            (ref) async => const CommunityStreak(current: 3, highest: 9),
           ),
         ],
         child: MaterialApp(
@@ -208,124 +349,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      tester.getTopLeft(find.text('Learning')).dy,
+      tester.getTopLeft(find.text('Hi, Sokha')).dy,
       greaterThanOrEqualTo(59),
     );
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('renders the stacked library and keeps real filters working', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(430, 932);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          lessonCatalogProvider.overrideWith(_CatalogNotifier.new),
-          communityStreakProvider.overrideWith(
-            (ref) async => CommunityStreak(
-              current: 7,
-              highest: 12,
-              lastTrackedDate: DateTime(2026, 8, 22),
-              activityDates: [
-                DateTime(2026, 8, 20),
-                DateTime(2026, 8, 21),
-                DateTime(2026, 8, 22),
-              ],
-            ),
-          ),
-        ],
-        child: MaterialApp(
-          theme: AppTheme.light,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [Locale('en'), Locale('km')],
-          home: const LessonCatalogScreen(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(tester.takeException(), isNull);
-    expect(find.text('Learning'), findsOneWidget);
-    expect(find.byKey(const ValueKey('lesson-subject-strip')), findsOneWidget);
-    expect(find.byKey(const ValueKey('lesson-card-lesson-1')), findsOneWidget);
-    expect(find.text('Continue learning'), findsOneWidget);
-    expect(find.text('Derivatives & Tangent Lines'), findsOneWidget);
-    expect(find.text('68%'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('lesson-progress-lesson-1')),
-      findsOneWidget,
-    );
-    final firstCard = tester.getRect(
-      find.byKey(const ValueKey('lesson-card-lesson-1')),
-    );
-    final secondCard = tester.getRect(
-      find.byKey(const ValueKey('lesson-card-lesson-2')),
-    );
-    expect(secondCard.top - firstCard.bottom, 14);
-    final khmerCardTitle = tester.widget<Text>(find.text(_biologyLesson.title));
-    expect(khmerCardTitle.style?.fontFamily, RiksaTypography.khmerTitleFamily);
-
-    await tester.tap(find.byKey(const ValueKey('lesson-category-math')));
-    await tester.pumpAndSettle();
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(LessonCatalogScreen)),
-    );
-    expect(container.read(lessonCatalogProvider).selectedCategoryId, 'math');
-
-    await tester.tap(find.byKey(const ValueKey('lesson-category-all')));
-    await tester.pumpAndSettle();
-    expect(container.read(lessonCatalogProvider).selectedCategoryId, isNull);
-
-    await tester.tap(find.byKey(const ValueKey('lesson-filter-button')));
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey('lesson-filter-sheet')), findsOneWidget);
-    expect(find.text('Grade'), findsOneWidget);
-    await tester.tap(find.text('Grade 10'));
-    await tester.ensureVisible(find.byKey(const ValueKey('apply-filters')));
-    await tester.tap(find.byKey(const ValueKey('apply-filters')));
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey('active-filter-count')), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('active-filter-count')),
-        matching: find.text('1'),
-      ),
-      findsOneWidget,
-    );
-    expect(find.text('Derivatives & Tangent Lines'), findsOneWidget);
-
-    await tester.tap(find.byKey(const ValueKey('learning-streak-button')));
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey('streak-details-sheet')), findsOneWidget);
-    expect(find.text('Current streak'), findsOneWidget);
-    expect(find.text('Best streak'), findsOneWidget);
-    expect(find.text('Last tracked'), findsOneWidget);
-    expect(find.text('Aug 22, 2026'), findsOneWidget);
-
-    Navigator.of(
-      tester.element(find.byKey(const ValueKey('streak-details-sheet'))),
-    ).pop();
-    await tester.pumpAndSettle();
-    await tester.fling(
-      find.byKey(const PageStorageKey('lesson-catalog-scroll')),
-      const Offset(0, -1200),
-      2200,
-    );
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('lesson-card-lesson-4')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

@@ -1,1063 +1,814 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../../social/presentation/widgets/streak_details_sheet.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../social/providers/social_feed_provider.dart';
 import '../data/learning_models.dart';
-import '../providers/lesson_catalog_provider.dart';
+import '../providers/learning_home_provider.dart';
+import 'learning_design.dart';
+import 'widgets/learning_atoms.dart';
+import 'widgets/lesson_search_delegate.dart';
 
-class LessonCatalogScreen extends ConsumerStatefulWidget {
+/// The learning tab's home.
+///
+/// It answers one question before any other: what should I study next. So the
+/// screen is a single resumable lesson, the subject index, and the syllabus the
+/// learner is working towards. Browsing a flat lesson list is gone; search
+/// remains as a shortcut rather than the way in.
+class LessonCatalogScreen extends ConsumerWidget {
   const LessonCatalogScreen({super.key});
 
   @override
-  ConsumerState<LessonCatalogScreen> createState() =>
-      _LessonCatalogScreenState();
-}
-
-class _LessonCatalogScreenState extends ConsumerState<LessonCatalogScreen> {
-  late final ScrollController _scrollController;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController()..addListener(_loadMore);
-  }
-
-  void _loadMore() {
-    if (_scrollController.hasClients &&
-        _scrollController.position.extentAfter < 520) {
-      ref.read(lessonCatalogProvider.notifier).loadMore();
-    }
-  }
-
-  @override
-  void dispose() {
-    _scrollController
-      ..removeListener(_loadMore)
-      ..dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final state = ref.watch(lessonCatalogProvider);
-    final streak = ref.watch(communityStreakProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final lessons = _orderedLessons(state.lessons);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final home = ref.watch(learningHomeProvider);
 
     return Scaffold(
-      backgroundColor: isDark
-          ? context.riksa.canvas
-          : AppColors.editorialCanvas,
+      backgroundColor: context.riksa.canvas,
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
-          color: AppColors.editorialPink,
-          onRefresh: ref.read(lessonCatalogProvider.notifier).load,
-          child: CustomScrollView(
-            key: const PageStorageKey('lesson-catalog-scroll'),
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(18, 22, 18, 0),
-                sliver: SliverToBoxAdapter(
-                  child: _CatalogHeader(
-                    title: l10n.learningTitle,
-                    searchLabel: l10n.searchLessons,
-                    filterLabel: l10n.filterLessons,
-                    filterCount: state.filterCount,
-                    onSearch: () => _showSearch(lessons),
-                    onFilter: () => _showFilters(state),
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.only(top: 24),
-                sliver: SliverToBoxAdapter(
-                  child: _SubjectStrip(
-                    categories: state.categories,
-                    selectedCategoryId: state.selectedCategoryId,
-                    allLabel: l10n.forYou,
-                    streak: streak.value?.current,
-                    streakLoading: streak.isLoading,
-                    onSelected: (id) => ref
-                        .read(lessonCatalogProvider.notifier)
-                        .selectCategory(id),
-                    onStreak: streak.value == null
-                        ? null
-                        : () => showStreakDetailsSheet(context, streak.value!),
-                  ),
-                ),
-              ),
-              if (state.isLoading && state.lessons.isNotEmpty)
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(18, 12, 18, 0),
-                    child: LinearProgressIndicator(
-                      minHeight: 3,
-                      color: AppColors.editorialPink,
-                    ),
-                  ),
-                ),
-              ..._lessonSlivers(state: state, lessons: lessons, l10n: l10n),
-              const SliverToBoxAdapter(child: SizedBox(height: 112)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _lessonSlivers({
-    required LessonCatalogState state,
-    required List<LessonSummary> lessons,
-    required AppLocalizations l10n,
-  }) {
-    if (state.isLoading && state.lessons.isEmpty) {
-      return const [
-        SliverPadding(
-          padding: EdgeInsets.fromLTRB(18, 18, 18, 0),
-          sliver: SliverToBoxAdapter(child: _LessonStackPlaceholder()),
-        ),
-      ];
-    }
-
-    if (lessons.isEmpty) {
-      return [
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 28, 18, 112),
-            child: IllustratedEmptyState(
-              title: state.errorMessage == null
-                  ? l10n.noLessonsFound
-                  : l10n.lessonLoadFailed,
-              body: state.errorMessage ?? l10n.noLessonsForFilters,
+          color: learningAnchor(context),
+          onRefresh: () async => ref.invalidate(learningHomeProvider),
+          child: home.when(
+            loading: () => const _HomeSkeleton(),
+            error: (_, _) => _HomeMessage(
+              title: l10n.lessonLoadFailed,
+              body: l10n.noLessonsForFilters,
               actionLabel: l10n.tryAgain,
-              onAction: ref.read(lessonCatalogProvider.notifier).load,
+              onAction: () => ref.invalidate(learningHomeProvider),
             ),
+            data: (data) => _HomeBody(data: data),
           ),
         ),
-      ];
-    }
-
-    return [
-      SliverPadding(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
-        sliver: SliverList.builder(
-          itemCount: lessons.length,
-          itemBuilder: (context, index) {
-            final lesson = lessons[index];
-            final progress = _lessonProgress(lesson);
-            final isFirst = index == 0;
-            final height = isFirst && progress != null ? 278.0 : 246.0;
-            return _LessonCardSlot(
-              height: height,
-              isLast: index == lessons.length - 1,
-              child: _EditorialLessonCard(
-                key: ValueKey('lesson-card-${lesson.id}'),
-                lesson: lesson,
-                index: index,
-                hasTopNotch: false,
-                eyebrow: isFirst && progress != null && progress < 1
-                    ? l10n.continueLearning
-                    : _subject(l10n, lesson),
-                subject: _subject(l10n, lesson),
-                duration: l10n.minutesShort(_duration(lesson)),
-                difficulty: _difficulty(l10n, lesson.difficulty),
-                exercises: l10n.exerciseCount(lesson.exerciseCount),
-                completedLabel: l10n.completedLabel,
-                progress: progress,
-                onTap: () => _open(lesson),
-              ),
-            );
-          },
-        ),
-      ),
-      if (state.isLoadingMore)
-        const SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(
-              child: CircularProgressIndicator(color: AppColors.editorialPink),
-            ),
-          ),
-        ),
-    ];
-  }
-
-  List<LessonSummary> _orderedLessons(List<LessonSummary> lessons) {
-    final indexed = lessons.indexed.toList();
-    indexed.sort((a, b) {
-      final aPriority = _lessonPriority(a.$2);
-      final bPriority = _lessonPriority(b.$2);
-      if (aPriority != bPriority) return aPriority.compareTo(bPriority);
-      return a.$1.compareTo(b.$1);
-    });
-    return [for (final item in indexed) item.$2];
-  }
-
-  int _lessonPriority(LessonSummary lesson) {
-    final progress = lesson.progress;
-    if (!lesson.completed && progress != null && progress > 0 && progress < 1) {
-      return 0;
-    }
-    if (!lesson.completed) return 1;
-    return 2;
-  }
-
-  void _open(LessonSummary lesson) {
-    if (lesson.categoryName.toLowerCase().contains('math')) {
-      context.push('/learn/roadmap/${lesson.categoryId}');
-      return;
-    }
-    context.push('/learn/${lesson.id}', extra: lesson);
-  }
-
-  Future<void> _showSearch(List<LessonSummary> lessons) async {
-    final l10n = AppLocalizations.of(context)!;
-    final selected = await showSearch<LessonSummary?>(
-      context: context,
-      delegate: _LessonSearchDelegate(
-        lessons: lessons,
-        hint: l10n.searchLessons,
-        emptyLabel: l10n.noLessonsFound,
-        subject: (lesson) => _subject(l10n, lesson),
       ),
     );
-    if (selected != null && mounted) _open(selected);
   }
+}
 
-  Future<void> _showFilters(LessonCatalogState state) =>
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        builder: (sheetContext) {
-          final l10n = AppLocalizations.of(sheetContext)!;
-          return FilterBottomSheet(
-            key: const ValueKey('lesson-filter-sheet'),
-            title: l10n.filterLessons,
-            gradeTitle: l10n.gradeFilter,
-            subjectTitle: l10n.subjectFilter,
-            difficultyTitle: l10n.difficultyFilter,
-            applyLabel: l10n.applyFilters,
-            resetLabel: l10n.resetFilters,
-            // Grade is not supported by the learning API yet, so do not
-            // present a filter that cannot affect the results.
-            grades: const [],
-            subjects: [
-              for (final category in state.categories)
-                RiksaFilterOption(id: category.id, label: category.name),
-            ],
-            difficulties: [
-              for (final value in LessonDifficulty.values)
-                RiksaFilterOption(
-                  id: value.name,
-                  label: _difficulty(l10n, value),
-                ),
-            ],
-            selection: RiksaFilterSelection(
-              grade: null,
-              subject: state.selectedCategoryId,
-              difficulty: state.selectedDifficulty?.name,
-            ),
-            onApply: (selection) => ref
-                .read(lessonCatalogProvider.notifier)
-                .applyFilters(
-                  grade: null,
-                  categoryId: selection.subject,
-                  difficulty: LessonDifficulty.values
-                      .where((item) => item.name == selection.difficulty)
-                      .firstOrNull,
-                ),
-          );
-        },
+class _HomeBody extends ConsumerWidget {
+  const _HomeBody({required this.data});
+
+  final LearningHomeData data;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
+    if (data.subjects.isEmpty) {
+      return _HomeMessage(
+        title: l10n.noSubjectsYet,
+        body: l10n.noSubjectsYetBody,
+        actionLabel: l10n.tryAgain,
+        onAction: () => ref.invalidate(learningHomeProvider),
       );
-}
+    }
 
-class _CatalogHeader extends StatelessWidget {
-  const _CatalogHeader({
-    required this.title,
-    required this.searchLabel,
-    required this.filterLabel,
-    required this.filterCount,
-    required this.onSearch,
-    required this.onFilter,
-  });
-
-  final String title;
-  final String searchLabel;
-  final String filterLabel;
-  final int filterCount;
-  final VoidCallback onSearch;
-  final VoidCallback onFilter;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Expanded(
-        child: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.displaySmall?.copyWith(
-            color: context.riksa.ink,
-            fontSize: 48,
-            height: 1,
-            letterSpacing: -1.5,
-            fontWeight: FontWeight.w900,
-          ),
+    return Stack(
+      children: [
+        ListView(
+          key: const PageStorageKey('learning-home-scroll'),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 196),
+          children: [
+            const _GreetingRow(),
+            const SizedBox(height: RiksaSpacing.lg),
+            if (data.resumeLesson case final lesson?)
+              _ContinueCard(
+                lesson: lesson,
+                subject: data.resumeSubject!,
+                onTap: () => _openLesson(context, lesson),
+              )
+            else
+              _AllDoneCard(),
+            const SizedBox(height: RiksaSpacing.lg + RiksaSpacing.xxs),
+            Text(
+              l10n.yourSubjects,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: -.3,
+              ),
+            ),
+            const SizedBox(height: RiksaSpacing.sm),
+            _SubjectGrid(subjects: data.subjects),
+          ],
         ),
-      ),
-      _CatalogActionButton(
-        key: const ValueKey('lesson-search-button'),
-        tooltip: searchLabel,
-        icon: Icons.search_rounded,
-        onTap: onSearch,
-      ),
-      const SizedBox(width: 10),
-      _CatalogActionButton(
-        key: const ValueKey('lesson-filter-button'),
-        tooltip: filterLabel,
-        icon: Icons.tune_rounded,
-        badgeCount: filterCount,
-        onTap: onFilter,
-      ),
-    ],
-  );
-}
-
-class _CatalogActionButton extends StatelessWidget {
-  const _CatalogActionButton({
-    super.key,
-    required this.tooltip,
-    required this.icon,
-    required this.onTap,
-    this.badgeCount = 0,
-  });
-
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onTap;
-  final int badgeCount;
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-    message: tooltip,
-    child: Material(
-      color: Theme.of(context).brightness == Brightness.dark
-          ? context.riksa.surfaceRaised
-          : AppColors.editorialSurface,
-      shape: const CircleBorder(),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: SizedBox.square(
-          dimension: 52,
-          child: Center(
-            child: Badge(
-              key: badgeCount > 0
-                  ? const ValueKey('active-filter-count')
-                  : null,
-              isLabelVisible: badgeCount > 0,
-              label: Text('$badgeCount'),
-              backgroundColor: AppColors.editorialPink,
-              textColor: AppColors.editorialAubergine,
-              child: Icon(icon, color: context.riksa.ink, size: 23),
+        if (data.hasCounts) ...[
+          // The destination bar is pinned, so content passes underneath it.
+          // Fade the canvas in behind it rather than letting a subject tile be
+          // sliced in half by an opaque bar.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 200,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      context.riksa.canvas,
+                      context.riksa.canvas,
+                      context.riksa.canvas.withValues(alpha: 0),
+                    ],
+                    stops: const [0, .55, 1],
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    ),
-  );
-}
-
-class _SubjectStrip extends StatelessWidget {
-  const _SubjectStrip({
-    required this.categories,
-    required this.selectedCategoryId,
-    required this.allLabel,
-    required this.streak,
-    required this.streakLoading,
-    required this.onSelected,
-    required this.onStreak,
-  });
-
-  final List<LearningCategory> categories;
-  final String? selectedCategoryId;
-  final String allLabel;
-  final int? streak;
-  final bool streakLoading;
-  final ValueChanged<String?> onSelected;
-  final VoidCallback? onStreak;
-
-  @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    key: const ValueKey('lesson-subject-strip'),
-    scrollDirection: Axis.horizontal,
-    padding: const EdgeInsets.symmetric(horizontal: 18),
-    child: Row(
-      children: [
-        _SubjectChip(
-          key: const ValueKey('lesson-category-all'),
-          label: allLabel,
-          selected: selectedCategoryId == null,
-          onTap: () => onSelected(null),
-        ),
-        for (final category in categories) ...[
-          const SizedBox(width: 9),
-          _SubjectChip(
-            key: ValueKey('lesson-category-${category.id}'),
-            label: category.name,
-            selected: selectedCategoryId == category.id,
-            onTap: () => onSelected(category.id),
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: 108,
+            child: _DestinationBar(data: data),
           ),
         ],
-        const SizedBox(width: 9),
-        _StreakChip(streak: streak, loading: streakLoading, onTap: onStreak),
       ],
-    ),
-  );
+    );
+  }
 }
 
-class _SubjectChip extends StatelessWidget {
-  const _SubjectChip({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+void _openLesson(BuildContext context, LessonSummary lesson) =>
+    context.push('/learn/${lesson.id}', extra: lesson);
 
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
+// ---------------------------------------------------------------------------
+// Greeting
+// ---------------------------------------------------------------------------
+
+class _GreetingRow extends ConsumerWidget {
+  const _GreetingRow();
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: selected
-        ? AppColors.editorialAubergine
-        : Theme.of(context).brightness == Brightness.dark
-        ? context.riksa.surfaceRaised
-        : AppColors.editorialSurface,
-    borderRadius: AppRadii.fullBorder,
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: AppRadii.fullBorder,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
-        child: Text(
-          label,
-          maxLines: 1,
-          style: TextStyle(
-            color: selected ? const Color(0xFFFFF8FC) : context.riksa.ink,
-            fontWeight: FontWeight.w700,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final palette = context.riksa;
+    final auth = ref.watch(authProvider);
+    final user = auth is Authenticated ? auth.user : null;
+    final name = user?.displayName.trim().isNotEmpty ?? false
+        ? user!.displayName.trim()
+        : user?.username ?? '';
+    final tone = subjectTone(context, StemSubject.mathematics);
+
+    return Row(
+      children: [
+        RiksaAvatarImage(
+          value: user?.avatarUrl,
+          label: name.isEmpty ? '?' : name,
+          size: 44,
+          backgroundColor: tone.surface,
+          foregroundColor: tone.accent,
+        ),
+        const SizedBox(width: RiksaSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                name.isEmpty ? l10n.learningTitle : l10n.greetingNamed(name),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: RiksaTypography.titleStyleFor(
+                  name,
+                  Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -.2,
+                  ),
+                ),
+              ),
+              Text(
+                l10n.gradeStemLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: palette.inkMuted),
+              ),
+            ],
           ),
         ),
-      ),
-    ),
-  );
+        const SizedBox(width: RiksaSpacing.xs),
+        const _StreakChip(),
+        const SizedBox(width: RiksaSpacing.xs),
+        const _SearchButton(),
+      ],
+    );
+  }
 }
 
-class _StreakChip extends StatelessWidget {
-  const _StreakChip({
-    required this.streak,
-    required this.loading,
-    required this.onTap,
-  });
-
-  final int? streak;
-  final bool loading;
-  final VoidCallback? onTap;
+/// Reads the same streak the social tab shows, so the number never disagrees
+/// between tabs. Renders nothing at all rather than a zero while it loads.
+class _StreakChip extends ConsumerWidget {
+  const _StreakChip();
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: context.riksa.saffronSoft,
-    borderRadius: AppRadii.fullBorder,
-    child: InkWell(
-      key: const ValueKey('learning-streak-button'),
-      onTap: onTap,
-      borderRadius: AppRadii.fullBorder,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final streak = ref.watch(communityStreakProvider);
+    final days = streak.asData?.value.current ?? 0;
+    if (days <= 0) return const SizedBox.shrink();
+
+    final tone = statusTone(context, LearningStatus.current);
+    return Semantics(
+      label: l10n.streakDays(days),
+      child: Container(
+        key: const ValueKey('learning-streak-chip'),
+        height: 36,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: tone.surface,
+          borderRadius: AppRadii.fullBorder,
+        ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.local_fire_department_rounded,
-              color: context.riksa.saffron,
-              size: 22,
+              size: 16,
+              color: tone.accent,
             ),
-            const SizedBox(width: 4),
-            if (loading)
-              const SizedBox.square(
-                dimension: 15,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              Text(
-                '${streak ?? 0}',
-                style: TextStyle(
-                  color: context.riksa.ink,
-                  fontWeight: FontWeight.w900,
-                ),
+            const SizedBox(width: RiksaSpacing.xxs + 2),
+            Text(
+              '$days',
+              style: TextStyle(
+                color: tone.accent,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
               ),
+            ),
           ],
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
-class _LessonCardSlot extends StatelessWidget {
-  const _LessonCardSlot({
-    required this.height,
-    required this.isLast,
-    required this.child,
-  });
-
-  static const spacing = 14.0;
-
-  final double height;
-  final bool isLast;
-  final Widget child;
+/// Search survived the redesign as a shortcut, not as the way in. Filtering by
+/// grade or difficulty moved with it: those only make sense over results, not
+/// over a four subject index.
+class _SearchButton extends ConsumerWidget {
+  const _SearchButton();
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.only(bottom: isLast ? 0 : spacing),
-    child: SizedBox(height: height, child: child),
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    return Semantics(
+      button: true,
+      label: l10n.searchLessons,
+      child: Material(
+        color: context.riksa.surface,
+        shape: const CircleBorder(),
+        child: InkWell(
+          key: const ValueKey('learning-search-button'),
+          customBorder: const CircleBorder(),
+          onTap: () => _openSearch(context, ref),
+          child: SizedBox(
+            width: 42,
+            height: 42,
+            child: Icon(
+              Icons.search_rounded,
+              size: 20,
+              color: context.riksa.ink,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openSearch(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final lessons = [
+      for (final subject in ref.read(learningHomeProvider).asData?.value.subjects ??
+          const <SubjectProgress>[])
+        ...subject.lessons,
+    ];
+    final selected = await showSearch<LessonSummary?>(
+      context: context,
+      delegate: LessonSearchDelegate(
+        lessons: lessons,
+        hint: l10n.searchLessons,
+        emptyLabel: l10n.noLessonsFound,
+      ),
+    );
+    if (selected != null && context.mounted) _openLesson(context, selected);
+  }
 }
 
-class _EditorialLessonCard extends StatelessWidget {
-  const _EditorialLessonCard({
-    super.key,
+// ---------------------------------------------------------------------------
+// Continue
+// ---------------------------------------------------------------------------
+
+/// The one focal surface on the screen. Pink means "resume this now", which is
+/// why nothing else on the home screen is allowed to be pink.
+class _ContinueCard extends StatelessWidget {
+  const _ContinueCard({
     required this.lesson,
-    required this.index,
-    required this.hasTopNotch,
-    required this.eyebrow,
     required this.subject,
-    required this.duration,
-    required this.difficulty,
-    required this.exercises,
-    required this.completedLabel,
-    required this.progress,
     required this.onTap,
   });
 
   final LessonSummary lesson;
-  final int index;
-  final bool hasTopNotch;
-  final String eyebrow;
-  final String subject;
-  final String duration;
-  final String difficulty;
-  final String exercises;
-  final String completedLabel;
-  final double? progress;
+  final SubjectProgress subject;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final tone = _LessonTone.forSubject(context, subject, index);
-    return PhysicalShape(
-      clipper: _LessonCardClipper(hasTopNotch: hasTopNotch),
-      color: tone.background,
-      shadowColor: Colors.black.withValues(alpha: .12),
-      elevation: 1,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          child: Stack(
-            children: [
-              PositionedDirectional(
-                end: 4,
-                top: 30,
-                width: 150,
-                height: 150,
-                child: CustomPaint(
-                  painter: _DashedRingsPainter(color: tone.accent),
+    final l10n = AppLocalizations.of(context)!;
+    final tone = statusTone(context, LearningStatus.current);
+    final theme = Theme.of(context);
+    final minutes = lesson.durationMinutes;
+    final progress = lesson.progress ?? 0;
+
+    return Material(
+      color: tone.surface,
+      borderRadius: AppRadii.featureBorder,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: ValueKey('continue-lesson-${lesson.id}'),
+        onTap: onTap,
+        child: Stack(
+          children: [
+            PositionedDirectional(
+              top: -44,
+              end: -48,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: tone.accent.withValues(alpha: .13),
+                  shape: BoxShape.circle,
                 ),
+                child: const SizedBox.square(dimension: 152),
               ),
-              PositionedDirectional(
-                end: 28,
-                top: 62,
-                child: _SubjectArtwork(tone: tone),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(26, hasTopNotch ? 30 : 24, 22, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      eyebrow,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: tone.accentStrong,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      LearningBadge(
+                        icon: stemSubjectIcon(subject.subject),
+                        foreground: tone.accent,
+                        background: context.riksa.surface,
                       ),
-                    ),
-                    const SizedBox(height: 9),
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 112),
-                      child: Text(
-                        lesson.title,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: RiksaTypography.titleStyleFor(
-                          lesson.title,
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: tone.foreground,
-                            fontSize: 25,
-                            height: 1.08,
-                            letterSpacing: -.45,
-                            fontWeight: FontWeight.w900,
-                          ),
-                          khmerHeight: 1.15,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 7,
-                      children: [
-                        _LessonMeta(
-                          icon: tone.icon,
-                          label: subject,
-                          tone: tone,
-                        ),
-                        _LessonMeta(
-                          icon: Icons.schedule_rounded,
-                          label: duration,
-                          tone: tone,
-                        ),
-                        _LessonMeta(
-                          icon: Icons.signal_cellular_alt_rounded,
-                          label: difficulty,
-                          tone: tone,
-                        ),
-                      ],
-                    ),
-                    if (progress != null) ...[
-                      const SizedBox(height: 13),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: AppRadii.fullBorder,
-                              child: LinearProgressIndicator(
-                                key: ValueKey('lesson-progress-${lesson.id}'),
-                                value: progress,
-                                minHeight: 7,
-                                color: tone.accentStrong,
-                                backgroundColor: tone.foreground.withValues(
-                                  alpha: .12,
-                                ),
+                      const SizedBox(width: RiksaSpacing.sm - 2),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              subject.category.name.toUpperCase(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: tone.accent,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: .9,
+                                fontSize: 10.5,
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            lesson.completed
-                                ? completedLabel
-                                : '${(progress! * 100).round()}%',
-                            style: TextStyle(
-                              color: tone.foreground,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
+                            Text(
+                              l10n.continueLearning,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: context.riksa.inkMuted,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ] else ...[
-                      const SizedBox(height: 10),
-                      Text(
-                        '$exercises · ${lesson.baseXp} XP',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: tone.foreground.withValues(alpha: .7),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                          ],
                         ),
                       ),
                     ],
-                  ],
-                ),
-              ),
-              PositionedDirectional(
-                end: 20,
-                bottom: 20,
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: const BoxDecoration(
-                    color: AppColors.editorialAubergine,
-                    shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.arrow_forward_rounded,
-                    color: Color(0xFFFFF8FC),
+                  const SizedBox(height: RiksaSpacing.md - 2),
+                  Text(
+                    lesson.title,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: RiksaTypography.titleStyleFor(
+                      lesson.title,
+                      theme.textTheme.headlineSmall?.copyWith(
+                        color: tone.ink,
+                        fontSize: 24,
+                        height: 1.16,
+                        letterSpacing: -.6,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      khmerHeight: 1.3,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: RiksaSpacing.md - 2),
+                  Wrap(
+                    spacing: RiksaSpacing.xs - 1,
+                    runSpacing: RiksaSpacing.xs - 1,
+                    children: [
+                      if (minutes != null)
+                        LearningPill(
+                          icon: Icons.schedule_rounded,
+                          label: l10n.minutesShort(minutes),
+                          accent: tone.accent,
+                        ),
+                      if (lesson.baseXp > 0)
+                        LearningPill(
+                          icon: Icons.auto_awesome_rounded,
+                          label: l10n.xpRewardAmount(lesson.baseXp),
+                          accent: tone.accent,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: RiksaSpacing.md + 2),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: LearningTrack(
+                          key: ValueKey('continue-progress-${lesson.id}'),
+                          value: progress,
+                          color: tone.accent,
+                          background: tone.accent.withValues(alpha: .22),
+                        ),
+                      ),
+                      const SizedBox(width: RiksaSpacing.md),
+                      _AnchorCircle(
+                        icon: Icons.arrow_forward_rounded,
+                        semanticLabel: l10n.continueReading,
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _LessonMeta extends StatelessWidget {
-  const _LessonMeta({
-    required this.icon,
-    required this.label,
-    required this.tone,
-  });
+class _AnchorCircle extends StatelessWidget {
+  const _AnchorCircle({required this.icon, required this.semanticLabel});
 
   final IconData icon;
-  final String label;
-  final _LessonTone tone;
+  final String semanticLabel;
 
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Icon(icon, size: 15, color: tone.accentStrong),
-      const SizedBox(width: 4),
-      Text(
-        label,
-        style: TextStyle(
-          color: tone.foreground.withValues(alpha: .78),
-          fontSize: 11.5,
-          fontWeight: FontWeight.w700,
-        ),
+  Widget build(BuildContext context) => Semantics(
+    label: semanticLabel,
+    child: Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: learningAnchor(context),
+        shape: BoxShape.circle,
       ),
-    ],
-  );
-}
-
-class _SubjectArtwork extends StatelessWidget {
-  const _SubjectArtwork({required this.tone});
-
-  final _LessonTone tone;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 82,
-    height: 82,
-    decoration: BoxDecoration(
-      color: tone.accent.withValues(alpha: .24),
-      shape: BoxShape.circle,
-      border: Border.all(color: tone.accent.withValues(alpha: .48), width: 2),
+      child: Icon(icon, size: 20, color: onLearningAnchor(context)),
     ),
-    child: Icon(tone.icon, color: tone.accentStrong, size: 38),
   );
 }
 
-class _LessonTone {
-  const _LessonTone({
-    required this.background,
-    required this.foreground,
-    required this.accent,
-    required this.accentStrong,
-    required this.icon,
-  });
-
-  final Color background;
-  final Color foreground;
-  final Color accent;
-  final Color accentStrong;
-  final IconData icon;
-
-  static _LessonTone forSubject(
-    BuildContext context,
-    String subject,
-    int index,
-  ) {
-    final value = subject.toLowerCase();
-    final palette = context.riksa;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final spec = switch (value) {
-      final s when s.contains('math') => const (
-        Color(0xFFF7C9E9),
-        Color(0xFFCF4C9C),
-        Icons.functions_rounded,
+/// Shown in place of the continue card once no subject has an open lesson.
+class _AllDoneCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final tone = statusTone(context, LearningStatus.done);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
+      decoration: BoxDecoration(
+        color: tone.surface,
+        borderRadius: AppRadii.featureBorder,
       ),
-      final s when s.contains('bio') => const (
-        Color(0xFFFFFBF5),
-        Color(0xFF45A76B),
-        Icons.eco_rounded,
-      ),
-      final s when s.contains('phys') || s.contains('chem') => const (
-        Color(0xFFFFD467),
-        Color(0xFFD68C00),
-        Icons.science_rounded,
-      ),
-      final s
-          when s.contains('tech') ||
-              s.contains('computer') ||
-              s.contains('code') =>
-        const (Color(0xFFC9F1D7), Color(0xFF25885A), Icons.code_rounded),
-      final s when s.contains('language') || s.contains('khmer') => const (
-        Color(0xFFDCCEFF),
-        Color(0xFF7B58B3),
-        Icons.translate_rounded,
-      ),
-      _ => _fallbackTone(index),
-    };
-    final background = isDark
-        ? Color.alphaBlend(
-            spec.$1.withValues(alpha: .15),
-            palette.surfaceRaised,
-          )
-        : spec.$1;
-    return _LessonTone(
-      background: background,
-      foreground: palette.ink,
-      accent: spec.$2,
-      accentStrong: isDark ? Color.lerp(spec.$2, Colors.white, .25)! : spec.$2,
-      icon: spec.$3,
-    );
-  }
-
-  static (Color, Color, IconData) _fallbackTone(int index) {
-    const tones = [
-      (Color(0xFFF7C9E9), Color(0xFFCF4C9C), Icons.auto_awesome_rounded),
-      (Color(0xFFFFFBF5), Color(0xFF6A8F5A), Icons.menu_book_rounded),
-      (Color(0xFFFFD467), Color(0xFFD68C00), Icons.lightbulb_rounded),
-      (Color(0xFFC9F1D7), Color(0xFF25885A), Icons.school_rounded),
-      (Color(0xFFDCCEFF), Color(0xFF7B58B3), Icons.public_rounded),
-    ];
-    return tones[index % tones.length];
-  }
-}
-
-class _LessonCardClipper extends CustomClipper<Path> {
-  const _LessonCardClipper({required this.hasTopNotch});
-
-  final bool hasTopNotch;
-
-  @override
-  Path getClip(Size size) {
-    const radius = 28.0;
-    const notchHalfWidth = 30.0;
-    const notchDepth = 14.0;
-    final path = Path()..moveTo(radius, 0);
-    if (hasTopNotch) {
-      path
-        ..lineTo((size.width / 2) - notchHalfWidth, 0)
-        ..cubicTo(
-          (size.width / 2) - 18,
-          0,
-          (size.width / 2) - 17,
-          notchDepth,
-          size.width / 2,
-          notchDepth,
-        )
-        ..cubicTo(
-          (size.width / 2) + 17,
-          notchDepth,
-          (size.width / 2) + 18,
-          0,
-          (size.width / 2) + notchHalfWidth,
-          0,
-        );
-    }
-    path
-      ..lineTo(size.width - radius, 0)
-      ..quadraticBezierTo(size.width, 0, size.width, radius)
-      ..lineTo(size.width, size.height - radius)
-      ..quadraticBezierTo(
-        size.width,
-        size.height,
-        size.width - radius,
-        size.height,
-      )
-      ..lineTo(radius, size.height)
-      ..quadraticBezierTo(0, size.height, 0, size.height - radius)
-      ..lineTo(0, radius)
-      ..quadraticBezierTo(0, 0, radius, 0)
-      ..close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(covariant _LessonCardClipper oldClipper) =>
-      oldClipper.hasTopNotch != hasTopNotch;
-}
-
-class _DashedRingsPainter extends CustomPainter {
-  const _DashedRingsPainter({required this.color});
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final paint = Paint()
-      ..color = color.withValues(alpha: .28)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.7
-      ..strokeCap = StrokeCap.round;
-    for (final radius in [48.0, 67.0]) {
-      const segments = 18;
-      for (var index = 0; index < segments; index += 2) {
-        canvas.drawArc(
-          Rect.fromCircle(center: center, radius: radius),
-          (math.pi * 2 / segments) * index,
-          math.pi * 2 / segments * .72,
-          false,
-          paint,
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedRingsPainter oldDelegate) =>
-      oldDelegate.color != color;
-}
-
-class _LessonStackPlaceholder extends StatelessWidget {
-  const _LessonStackPlaceholder();
-
-  @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      for (final color in const [
-        AppColors.editorialPinkSoft,
-        AppColors.editorialSurface,
-        Color(0xFFFFD467),
-      ])
-        Container(
-          height: 220,
-          margin: const EdgeInsets.only(bottom: 4),
-          decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? context.riksa.surfaceRaised
-                : color,
-            borderRadius: AppRadii.extraLargeBorder,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          LearningBadge(
+            icon: Icons.check_rounded,
+            foreground: tone.accent,
+            background: context.riksa.surface,
           ),
-        ),
-    ],
-  );
-}
-
-class _LessonSearchDelegate extends SearchDelegate<LessonSummary?> {
-  _LessonSearchDelegate({
-    required this.lessons,
-    required this.hint,
-    required this.emptyLabel,
-    required this.subject,
-  }) : super(searchFieldLabel: hint);
-
-  final List<LessonSummary> lessons;
-  final String hint;
-  final String emptyLabel;
-  final String Function(LessonSummary lesson) subject;
-
-  @override
-  List<Widget>? buildActions(BuildContext context) => [
-    if (query.isNotEmpty)
-      IconButton(
-        onPressed: () => query = '',
-        icon: const Icon(Icons.close_rounded),
-      ),
-  ];
-
-  @override
-  Widget? buildLeading(BuildContext context) => IconButton(
-    onPressed: () => close(context, null),
-    icon: const Icon(Icons.arrow_back_rounded),
-  );
-
-  @override
-  Widget buildResults(BuildContext context) => _results(context);
-
-  @override
-  Widget buildSuggestions(BuildContext context) => _results(context);
-
-  Widget _results(BuildContext context) {
-    final normalized = query.trim().toLowerCase();
-    final results = normalized.isEmpty
-        ? lessons
-        : lessons.where((lesson) {
-            return lesson.title.toLowerCase().contains(normalized) ||
-                lesson.description.toLowerCase().contains(normalized) ||
-                subject(lesson).toLowerCase().contains(normalized);
-          }).toList();
-    if (results.isEmpty) return Center(child: Text(emptyLabel));
-    return ListView.separated(
-      padding: const EdgeInsets.all(18),
-      itemCount: results.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final lesson = results[index];
-        return ListTile(
-          shape: RoundedRectangleBorder(borderRadius: AppRadii.mediumBorder),
-          tileColor: context.riksa.surface,
-          leading: const CircleAvatar(
-            backgroundColor: AppColors.editorialPinkSoft,
-            foregroundColor: AppColors.editorialAubergine,
-            child: Icon(Icons.menu_book_rounded),
-          ),
-          title: Text(
-            lesson.title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: RiksaTypography.titleStyleFor(
-              lesson.title,
-              const TextStyle(fontWeight: FontWeight.w800),
-              khmerHeight: 1.3,
+          const SizedBox(height: RiksaSpacing.md),
+          Text(
+            l10n.everySubjectFinished,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontSize: 22,
+              letterSpacing: -.5,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          subtitle: Text(subject(lesson)),
-          trailing: const Icon(Icons.arrow_forward_rounded),
-          onTap: () => close(context, lesson),
+          const SizedBox(height: RiksaSpacing.xs - 2),
+          Text(
+            l10n.everySubjectFinishedBody,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: context.riksa.inkMuted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Subject index
+// ---------------------------------------------------------------------------
+
+class _SubjectGrid extends StatelessWidget {
+  const _SubjectGrid({required this.subjects});
+
+  final List<SubjectProgress> subjects;
+
+  @override
+  Widget build(BuildContext context) {
+    // A fixed aspect ratio would clip Khmer subject names, which run taller
+    // than their English equivalents, so the tiles size to their content.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = 11.0;
+        final columns = constraints.maxWidth >= 520 ? 3 : 2;
+        final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final subject in subjects)
+              SizedBox(
+                width: width,
+                child: _SubjectTile(subject: subject),
+              ),
+          ],
         );
       },
     );
   }
 }
 
-double? _lessonProgress(LessonSummary lesson) {
-  if (lesson.completed) return 1;
-  return lesson.progress;
+class _SubjectTile extends StatelessWidget {
+  const _SubjectTile({required this.subject});
+
+  final SubjectProgress subject;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final tone = subjectTone(context, subject.subject);
+    final name = subject.category.name;
+
+    return Material(
+      color: tone.surface,
+      borderRadius: AppRadii.panelBorder,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: ValueKey('subject-tile-${subject.category.id}'),
+        onTap: () => context.push('/learn/roadmap/${subject.category.id}'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(15, 15, 15, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              LearningBadge(
+                icon: stemSubjectIcon(subject.subject),
+                foreground: tone.accent,
+                background: context.riksa.surface.withValues(alpha: .72),
+              ),
+              const SizedBox(height: RiksaSpacing.lg + RiksaSpacing.xxs),
+              Text(
+                name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: RiksaTypography.titleStyleFor(
+                  name,
+                  Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -.25,
+                    height: 1.2,
+                  ),
+                  khmerHeight: 1.35,
+                ),
+              ),
+              const SizedBox(height: RiksaSpacing.xs + 1),
+              if (subject.unavailable)
+                Text(
+                  l10n.subjectUnavailable,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: context.riksa.inkMuted),
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.subjectCountShort(subject.completed, subject.total),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: tone.accent,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: RiksaSpacing.xs),
+                    SizedBox(
+                      width: 42,
+                      child: LearningTrack(
+                        key: ValueKey('subject-progress-${subject.category.id}'),
+                        value: subject.fraction,
+                        color: tone.accent,
+                        background: tone.accent.withValues(alpha: .2),
+                        height: 5,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-String _subject(AppLocalizations l10n, LessonSummary lesson) =>
-    lesson.categoryName.trim().isEmpty
-    ? l10n.generalSubject
-    : lesson.categoryName;
+// ---------------------------------------------------------------------------
+// Destination
+// ---------------------------------------------------------------------------
 
-int _duration(LessonSummary lesson) =>
-    lesson.durationMinutes ?? math.max(5, lesson.exerciseCount * 4);
+/// Pinned above the bottom navigation because it is the one thing that should
+/// never scroll away: progress is only meaningful against a visible end.
+class _DestinationBar extends StatelessWidget {
+  const _DestinationBar({required this.data});
 
-String _difficulty(AppLocalizations l10n, LessonDifficulty? value) =>
-    switch (value) {
-      LessonDifficulty.easy => l10n.difficultyEasy,
-      LessonDifficulty.medium => l10n.difficultyMedium,
-      LessonDifficulty.hard => l10n.difficultyHard,
-      LessonDifficulty.difficult => l10n.difficultyDifficult,
-      null => l10n.allLevels,
-    };
+  final LearningHomeData data;
 
-extension on LessonCatalogState {
-  int get filterCount =>
-      (selectedGrade == null ? 0 : 1) +
-      (selectedCategoryId == null ? 0 : 1) +
-      (selectedDifficulty == null ? 0 : 1);
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final anchor = learningAnchor(context);
+    final onAnchor = onLearningAnchor(context);
+    final days = data.examDate?.difference(DateTime.now()).inDays;
+
+    return Container(
+      key: const ValueKey('learning-destination-bar'),
+      height: 68,
+      padding: const EdgeInsets.fromLTRB(13, 0, 14, 0),
+      decoration: BoxDecoration(
+        color: anchor,
+        borderRadius: AppRadii.panelBorder,
+        boxShadow: RiksaElevation.low(Theme.of(context).brightness),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: onAnchor.withValues(alpha: .14),
+              borderRadius: AppRadii.rowBorder,
+            ),
+            child: Icon(Icons.flag_rounded, size: 20, color: onAnchor),
+          ),
+          const SizedBox(width: RiksaSpacing.sm + 1),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.examDestination,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: onAnchor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  l10n.lessonsDoneOfTotal(
+                    data.completedLessons,
+                    data.totalLessons,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: onAnchor.withValues(alpha: .64),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (days != null && days > 0) ...[
+            const SizedBox(width: RiksaSpacing.xs),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: statusTone(context, LearningStatus.current).surface,
+                borderRadius: AppRadii.fullBorder,
+              ),
+              child: Text(
+                l10n.daysRemaining(days),
+                style: TextStyle(
+                  color: AppColors.editorialAubergine,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Loading and messages
+// ---------------------------------------------------------------------------
+
+class _HomeSkeleton extends StatelessWidget {
+  const _HomeSkeleton();
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    physics: const AlwaysScrollableScrollPhysics(),
+    padding: const EdgeInsets.fromLTRB(20, 4, 20, 196),
+    children: [
+      Row(
+        children: [
+          const RiksaSkeleton(width: 44, height: 44, radius: AppRadii.full),
+          const SizedBox(width: RiksaSpacing.sm),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              RiksaSkeleton(width: 120, height: 14),
+              SizedBox(height: 6),
+              RiksaSkeleton(width: 80, height: 10),
+            ],
+          ),
+        ],
+      ),
+      const SizedBox(height: RiksaSpacing.lg),
+      const RiksaSkeleton(height: 232, radius: AppRadii.feature),
+      const SizedBox(height: RiksaSpacing.lg + RiksaSpacing.xxs),
+      const RiksaSkeleton(width: 130, height: 18),
+      const SizedBox(height: RiksaSpacing.sm),
+      Row(
+        children: const [
+          Expanded(child: RiksaSkeleton(height: 132, radius: AppRadii.panel)),
+          SizedBox(width: 11),
+          Expanded(child: RiksaSkeleton(height: 132, radius: AppRadii.panel)),
+        ],
+      ),
+      const SizedBox(height: 11),
+      Row(
+        children: const [
+          Expanded(child: RiksaSkeleton(height: 132, radius: AppRadii.panel)),
+          SizedBox(width: 11),
+          Expanded(child: RiksaSkeleton(height: 132, radius: AppRadii.panel)),
+        ],
+      ),
+    ],
+  );
+}
+
+class _HomeMessage extends StatelessWidget {
+  const _HomeMessage({
+    required this.title,
+    required this.body,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  final String title;
+  final String body;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    physics: const AlwaysScrollableScrollPhysics(),
+    padding: const EdgeInsets.fromLTRB(20, 40, 20, 160),
+    children: [
+      IllustratedEmptyState(
+        title: title,
+        body: body,
+        actionLabel: actionLabel,
+        onAction: onAction,
+      ),
+    ],
+  );
 }

@@ -611,6 +611,15 @@ class AppLocalizationsKm extends AppLocalizations {
   String get difficultyDifficult => 'កម្រិតខ្ពស់';
 
   @override
+  String get contentTypeLesson => 'មេរៀន';
+
+  @override
+  String get contentTypeChallenge => 'ការប្រកួតប្រជែង';
+
+  @override
+  String get contentTypeRoadmap => 'ផែនទីសិក្សា';
+
+  @override
   String exerciseCount(int count) {
     return 'លំហាត់ $count';
   }
@@ -619,6 +628,106 @@ class AppLocalizationsKm extends AppLocalizations {
   String baseXpLabel(int xp) {
     return '$xp XP មូលដ្ឋាន';
   }
+
+  @override
+  String greetingNamed(String name) {
+    return 'សួស្តី $name';
+  }
+
+  @override
+  String get gradeStemLabel => 'ថ្នាក់ទី១២ · STEM';
+
+  @override
+  String get yourSubjects => 'មុខវិជ្ជារបស់អ្នក';
+
+  @override
+  String get continueReading => 'បន្តអាន';
+
+  @override
+  String xpRewardAmount(int xp) {
+    return '+$xp XP';
+  }
+
+  @override
+  String lessonsDoneOfTotal(int done, int total) {
+    return 'មេរៀន $done ក្នុងចំណោម $total';
+  }
+
+  @override
+  String subjectCountShort(int done, int total) {
+    return '$done / $total';
+  }
+
+  @override
+  String get examDestination => 'បាក់ឌុប · ថ្នាក់ទី១២';
+
+  @override
+  String daysRemaining(int days) {
+    return '$days ថ្ងៃ';
+  }
+
+  @override
+  String get subjectUnavailable => 'មិនអាចផ្ទុកបាន';
+
+  @override
+  String get noSubjectsYet => 'មិនទាន់មានមុខវិជ្ជា STEM';
+
+  @override
+  String get noSubjectsYetBody =>
+      'មុខវិជ្ជាថ្នាក់ទី១២ នឹងបង្ហាញនៅទីនេះ ពេលបានផ្សព្វផ្សាយ។';
+
+  @override
+  String get everySubjectFinished => 'អ្នកបានបញ្ចប់គ្រប់មុខវិជ្ជា';
+
+  @override
+  String get everySubjectFinishedBody =>
+      'អ្នកបានរៀនកម្មវិធីសិក្សា STEM ថ្នាក់ទី១២ ទាំងមូលហើយ។';
+
+  @override
+  String unitOfTotal(int current, int total) {
+    return 'ជំពូកទី $current ក្នុងចំណោម $total';
+  }
+
+  @override
+  String wholeSyllabusSummary(int units, int lessons) {
+    return 'ជំពូក $units, មេរៀន $lessons';
+  }
+
+  @override
+  String unitProgressShort(int done, int total) {
+    return 'រួច $done ក្នុងចំណោម $total';
+  }
+
+  @override
+  String get youAreHere => 'អ្នកនៅទីនេះ';
+
+  @override
+  String opensAfterUnit(int number) {
+    return 'បើកបន្ទាប់ពីជំពូកទី $number';
+  }
+
+  @override
+  String get lessonLockedShort => 'ជាប់សោ';
+
+  @override
+  String lessonCountLabel(int count) {
+    return 'មេរៀន $count';
+  }
+
+  @override
+  String get readyForExam => 'ត្រៀមរួចសម្រាប់បាក់ឌុប';
+
+  @override
+  String get roadmapLoadFailed => 'យើងមិនអាចផ្ទុកផែនទីសិក្សានេះបានទេ';
+
+  @override
+  String get roadmapEmpty => 'មុខវិជ្ជានេះមិនទាន់មានមេរៀន';
+
+  @override
+  String get roadmapEmptyBody => 'មេរៀននឹងបង្ហាញនៅទីនេះ ពេលបានផ្សព្វផ្សាយ។';
+
+  @override
+  String get lessonLocked => 'សូមបញ្ចប់មេរៀនមុន ដើម្បីបើកមេរៀននេះ';
 
   @override
   String get lessonLoadFailed => 'យើងមិនអាចផ្ទុកមេរៀនបានទេ';

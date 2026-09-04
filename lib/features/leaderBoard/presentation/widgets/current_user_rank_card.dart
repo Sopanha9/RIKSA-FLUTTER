@@ -35,7 +35,7 @@ class CurrentUserRankCard extends StatelessWidget {
       child: Material(
         color: isDark
             ? AppColors.editorialAubergineRaised
-            : AppColors.editorialPinkSoft.withValues(alpha: .34),
+            : AppColors.editorialBlack,
         borderRadius: AppRadii.extraLargeBorder,
         child: InkWell(
           onTap: onTap,
@@ -44,12 +44,8 @@ class CurrentUserRankCard extends StatelessWidget {
             key: const ValueKey('current-user-rank-card'),
             constraints: const BoxConstraints(minHeight: 82),
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               borderRadius: AppRadii.extraLargeBorder,
-              border: Border.all(
-                color: AppColors.editorialPink.withValues(alpha: .78),
-                width: 1.25,
-              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +55,7 @@ class CurrentUserRankCard extends StatelessWidget {
                   style: TextStyle(
                     color: isDark
                         ? AppColors.editorialPink
-                        : AppColors.editorialAubergine,
+                        : AppColors.editorialPink,
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                   ),
@@ -92,9 +88,7 @@ class CurrentUserRankCard extends StatelessWidget {
                           '#$rank',
                           key: const ValueKey('current-user-rank-number'),
                           style: TextStyle(
-                            color: isDark
-                                ? Colors.white
-                                : AppColors.editorialAubergine,
+                            color: isDark ? Colors.white : Colors.white,
                             fontSize: 25,
                             fontWeight: FontWeight.w900,
                             height: 1,

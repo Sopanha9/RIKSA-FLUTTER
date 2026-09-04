@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../data/learning_models.dart';
+import '../providers/learning_home_provider.dart';
 import '../providers/learning_roadmap_provider.dart';
 import '../providers/lesson_catalog_provider.dart';
 
@@ -352,10 +353,15 @@ class _LessonExperienceScreenState
             reflectionText: _reflection.text.trim(),
           );
       await ref.read(lessonCatalogProvider.notifier).load();
+      // The roadmap owns this lesson's completed state, and the home screen
+      // derives its counts and its resume target from every roadmap. Both are
+      // stale the moment a lesson is finished, so drop them together.
+      if (detail.categoryId != null) {
+        ref.invalidate(learningRoadmapProvider(detail.categoryId!));
+      }
+      ref.invalidate(learningHomeProvider);
       if (mounted) {
-        final roadmapCategoryId = detail.categoryName.toLowerCase().contains('math')
-            ? detail.categoryId
-            : null;
+        final roadmapCategoryId = detail.categoryId;
         final suffix = roadmapCategoryId == null
             ? ''
             : '?roadmapCategoryId=$roadmapCategoryId';

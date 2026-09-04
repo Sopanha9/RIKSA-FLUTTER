@@ -19,7 +19,7 @@ import '../../features/blog/presentation/create_blog_post_screen.dart';
 import '../../features/blog/presentation/my_posts_screen.dart';
 import '../../features/learning/presentation/lesson_catalog_screen.dart';
 import '../../features/learning/presentation/lesson_experience_screen.dart';
-import '../../features/learning/presentation/mathematics_roadmap_screen.dart';
+import '../../features/learning/presentation/subject_roadmap_screen.dart';
 import '../../features/learning/presentation/learning_result_screens.dart';
 import '../../features/learning/data/learning_models.dart';
 import '../../features/social/presentation/social_feed_screen.dart';

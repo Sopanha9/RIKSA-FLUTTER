@@ -117,17 +117,18 @@ void main() {
       tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
       AppColors.editorialNeutralCanvas,
     );
-    expect(find.text('RIKSA'), findsOneWidget);
+    expect(find.text('Community'), findsOneWidget);
     expect(find.byKey(const ValueKey('bottom-nav-morph')), findsNothing);
     expect(find.byKey(const ValueKey('community-drawer-button')), findsNothing);
     expect(find.byType(Drawer), findsNothing);
     expect(find.byKey(const ValueKey('community-search')), findsOneWidget);
+    final communitySearchField = find.descendant(
+      of: find.byKey(const ValueKey('community-search')),
+      matching: find.byType(TextField),
+    );
     expect(
-      tester
-          .widget<TextField>(find.byKey(const ValueKey('community-search')))
-          .decoration
-          ?.fillColor,
-      AppColors.editorialNeutralSurface,
+      tester.widget<TextField>(communitySearchField).decoration?.border,
+      InputBorder.none,
     );
     expect(find.byKey(const ValueKey('streak-pill')), findsOneWidget);
     expect(
@@ -141,10 +142,7 @@ void main() {
     expect(find.text('The two-minute recall habit'), findsOneWidget);
     expect(find.byKey(const ValueKey('react-post-1')), findsOneWidget);
 
-    await tester.enterText(
-      find.byKey(const ValueKey('community-search')),
-      'missing topic',
-    );
+    await tester.enterText(communitySearchField, 'missing topic');
     await tester.pump();
     expect(find.text('The two-minute recall habit'), findsNothing);
     expect(find.text('No matching results'), findsOneWidget);

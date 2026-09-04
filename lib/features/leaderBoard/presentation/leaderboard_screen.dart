@@ -210,7 +210,6 @@ class _LeaderboardSearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final outline = isDark ? context.riksa.outline : AppColors.editorialOutline;
 
     return TextField(
       controller: controller,
@@ -223,19 +222,19 @@ class _LeaderboardSearchField extends StatelessWidget {
         prefixIcon: const Icon(Icons.search_rounded),
         filled: true,
         fillColor: isDark
-            ? context.riksa.surface
-            : AppColors.editorialNeutralSurface,
+            ? context.riksa.surfaceRaised
+            : AppColors.editorialField,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: RiksaSpacing.md,
           vertical: 14,
         ),
-        border: OutlineInputBorder(
+        border: const OutlineInputBorder(
           borderRadius: AppRadii.fullBorder,
-          borderSide: BorderSide(color: outline),
+          borderSide: BorderSide.none,
         ),
-        enabledBorder: OutlineInputBorder(
+        enabledBorder: const OutlineInputBorder(
           borderRadius: AppRadii.fullBorder,
-          borderSide: BorderSide(color: outline),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: const OutlineInputBorder(
           borderRadius: AppRadii.fullBorder,
