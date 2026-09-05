@@ -129,4 +129,34 @@ void main() {
     expect(detail.exercises.single.hint, 'Add carefully.');
     expect(detail.exercises.single.explanation, 'Two plus two is four.');
   });
+
+  test('ContinueLearningResponse parses the server progress read model', () {
+    final response = ContinueLearningResponse.fromJson({
+      'allCompleted': false,
+      'lesson': {
+        'lessonId': 'lesson-1',
+        'lessonTitle': 'Algebraic Expressions',
+        'categoryId': 'math',
+        'categoryName': 'Mathematics',
+        'roadmapState': 'AVAILABLE',
+        'totalExerciseCount': 4,
+        'attemptedExerciseCount': 3,
+        'correctExerciseCount': 2,
+        'progressPercentage': 50.0,
+        'currentSectionIndex': 3,
+        'lastActivityAt': '2026-09-04T06:00:00Z',
+        'completed': false,
+        'canResume': true,
+        'difficulty': 'EASY',
+        'baseXp': 60,
+        'position': 1,
+      },
+    });
+
+    expect(response.allCompleted, isFalse);
+    expect(response.lesson!.lessonTitle, 'Algebraic Expressions');
+    expect(response.lesson!.progress, 0.5);
+    expect(response.lesson!.currentSectionIndex, 3);
+    expect(response.lesson!.canResume, isTrue);
+  });
 }
