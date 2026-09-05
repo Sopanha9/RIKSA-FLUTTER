@@ -169,6 +169,44 @@ class SocialApi {
     );
   }
 
+  /// Rewrites a post the signed-in user owns (`updatePost`, owner only).
+  ///
+  /// `UpdatePostInput` is assumed to mirror `CreatePostInput` plus the post
+  /// id; the category stays put because moving a post would also have to
+  /// satisfy the join-before-posting rule.
+  Future<SocialPost> updatePost({
+    required String id,
+    required String title,
+    required String content,
+  }) async {
+    final data = await _query(
+      '''
+      mutation UpdatePost(\$input: UpdatePostInput!) {
+        updatePost(input: \$input) { $_postFields }
+      }
+      ''',
+      variables: {
+        'input': {'id': id, 'title': title, 'content': content},
+      },
+    );
+    return SocialPost.fromJson(
+      (data['updatePost'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// Removes a post the signed-in user owns (`deletePost`, owner only).
+  Future<void> deletePost(String id) async {
+    final data = await _query(
+      r'''
+      mutation DeletePost($id: UUID!) { deletePost(id: $id) }
+      ''',
+      variables: {'id': id},
+    );
+    if (data['deletePost'] == false) {
+      throw const SocialApiException('This post could not be deleted.');
+    }
+  }
+
   Future<SocialPost> share(String postId) async {
     final data = await _query(
       '''

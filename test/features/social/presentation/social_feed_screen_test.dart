@@ -186,6 +186,7 @@ void main() {
     expect(find.text('Create in Community'), findsOneWidget);
     expect(find.text('Create a post'), findsOneWidget);
     expect(find.text('Ask the community'), findsOneWidget);
+    expect(find.text('Write an article'), findsOneWidget);
   });
 
   testWidgets('opens profiles from post author identity', (tester) async {
@@ -234,5 +235,162 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('profile-user-2'), findsOneWidget);
     expect(router.canPop(), isTrue);
+  });
+
+  testWidgets('the create menu routes an article to the blog composer', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const SocialFeedScreen()),
+        GoRoute(
+          path: '/blog/create',
+          builder: (_, _) => const Scaffold(body: Text('blog-composer')),
+        ),
+        GoRoute(
+          path: '/community/create',
+          builder: (_, _) => const Scaffold(body: Text('community-composer')),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          socialFeedProvider.overrideWith(_FeedNotifier.new),
+          blogFeedProvider.overrideWith(_BlogNotifier.new),
+          communityStreakProvider.overrideWith(
+            (ref) async => const CommunityStreak(current: 7, highest: 12),
+          ),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light,
+          routerConfig: router,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('create-community-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('create-article-option')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('blog-composer'), findsOneWidget);
+    expect(find.text('community-composer'), findsNothing);
+  });
+
+  testWidgets('the blog tab points authors at their own articles', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const SocialFeedScreen()),
+        GoRoute(
+          path: '/blog/my-posts',
+          builder: (_, _) => const Scaffold(body: Text('my-posts')),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          socialFeedProvider.overrideWith(_FeedNotifier.new),
+          blogFeedProvider.overrideWith(_BlogNotifier.new),
+          pendingBlogPostCountProvider.overrideWith((ref) async => 2),
+          communityStreakProvider.overrideWith(
+            (ref) async => const CommunityStreak(current: 7, highest: 12),
+          ),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light,
+          routerConfig: router,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The link belongs to the blog tab, not the community feed.
+    expect(find.byKey(const ValueKey('your-articles-link')), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('blog-tab')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('your-articles-link')), findsOneWidget);
+    // A post in review is absent from the feed, so the count says where it is.
+    expect(find.text('2 in review'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('your-articles-link')));
+    await tester.pumpAndSettle();
+    expect(find.text('my-posts'), findsOneWidget);
+  });
+
+  testWidgets('no badge appears when nothing is waiting on review', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          socialFeedProvider.overrideWith(_FeedNotifier.new),
+          blogFeedProvider.overrideWith(_BlogNotifier.new),
+          pendingBlogPostCountProvider.overrideWith((ref) async => 0),
+          communityStreakProvider.overrideWith(
+            (ref) async => const CommunityStreak(current: 7, highest: 12),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: const SocialFeedScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('blog-tab')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Your articles'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('articles-in-review-badge')),
+      findsNothing,
+    );
   });
 }

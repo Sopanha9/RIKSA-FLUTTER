@@ -328,6 +328,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Get help from learners who have been there.';
 
   @override
+  String get writeArticle => 'Write an article';
+
+  @override
+  String get writeArticleSubtitle =>
+      'A longer piece for the blog, reviewed before it appears.';
+
+  @override
+  String get yourArticles => 'Your articles';
+
+  @override
+  String articlesInReview(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count in review',
+      one: '1 in review',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get communityComposerPrompt => 'What are your doubts?';
 
   @override
@@ -429,6 +450,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get postDetail => 'Post detail';
+
+  @override
+  String get editPost => 'Edit post';
+
+  @override
+  String get deletePost => 'Delete post';
+
+  @override
+  String get postOptions => 'Post options';
+
+  @override
+  String get deletePostTitle => 'Delete this post?';
+
+  @override
+  String get deletePostMessage =>
+      'The post and its replies are removed for everyone. This cannot be undone.';
+
+  @override
+  String get keepPost => 'Keep post';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get postUpdated => 'Changes saved';
+
+  @override
+  String get postDeleted => 'Post deleted';
+
+  @override
+  String get saveFailed => 'We couldn’t save your changes. Try again.';
+
+  @override
+  String get deleteFailed => 'We couldn’t delete this post. Try again.';
+
+  @override
+  String get editPostSubtitle => 'Update what you shared with the community.';
 
   @override
   String get discussion => 'Discussion';

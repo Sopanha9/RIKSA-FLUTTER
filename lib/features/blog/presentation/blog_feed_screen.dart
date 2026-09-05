@@ -1,13 +1,23 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../userProfile/data/public_profile.dart';
+import '../../userProfile/presentation/public_profile_navigation.dart';
+import '../data/blog_api.dart';
 import '../data/blog_models.dart';
 import '../providers/blog_provider.dart';
+import 'widgets/blog_ui.dart';
 
+/// Timeline of approved community articles.
+///
+/// The layout follows a social timeline rather than a card grid: one sheet,
+/// author-first rows, and a hairline between posts. Colour, type, and radii
+/// all come from the Riksa palette.
 class BlogFeedScreen extends ConsumerStatefulWidget {
   const BlogFeedScreen({super.key});
 
@@ -45,38 +55,34 @@ class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
   @override
   Widget build(BuildContext context) {
     final feedState = ref.watch(blogFeedProvider);
-    final categories = ref.watch(blogCategoriesProvider);
     final selectedCategoryId = feedState is BlogFeedLoaded
         ? feedState.categoryId
         : null;
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
+      backgroundColor: blogSheetColor(context),
+      floatingActionButton: FloatingActionButton(
         onPressed: _createPost,
-        icon: const Icon(Icons.edit_outlined),
-        label: const Text('Write'),
+        tooltip: 'Write a post',
+        child: const Icon(Icons.edit_outlined),
       ),
       body: Column(
         children: [
-          RiksaPageHeader(
-            title: 'Stories',
-            subtitle: 'Ideas and lessons from the Riksa community',
-            leading: RiksaRoundedIconButton(
-              icon: Icons.arrow_back_rounded,
-              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-              onPressed: () => context.pop(),
-            ),
-            trailing: RiksaRoundedIconButton(
-              icon: Icons.article_outlined,
-              tooltip: 'My posts',
+          BlogTopBar(
+            title: 'Blog',
+            onBack: () => context.pop(),
+            trailing: IconButton(
               onPressed: () => context.push('/blog/my-posts'),
+              tooltip: 'Your posts',
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                foregroundColor: context.riksa.ink,
+              ),
+              icon: const Icon(Icons.article_outlined, size: 22),
             ),
           ),
-          _CategoryChips(
-            categories: categories,
-            selectedCategoryId: selectedCategoryId,
-          ),
-          const SizedBox(height: RiksaSpacing.sm),
+          _CategoryTabs(selectedCategoryId: selectedCategoryId),
+          const BlogDivider(),
           Expanded(child: _buildBody(feedState)),
         ],
       ),
@@ -84,13 +90,14 @@ class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
   }
 
   Widget _buildBody(BlogFeedState state) => switch (state) {
-    BlogFeedLoading() => const RiksaStateView(
-      title: 'Finding fresh stories',
-      body: 'Gathering the latest posts for you.',
-      loading: true,
+    BlogFeedLoading() => ListView.separated(
+      padding: EdgeInsets.zero,
+      itemCount: 5,
+      separatorBuilder: (_, _) => const BlogDivider(),
+      itemBuilder: (_, _) => const BlogRowSkeleton(),
     ),
-    BlogFeedError(:final message) => RiksaStateView(
-      title: 'Stories are taking a break',
+    BlogFeedError(:final message) => BlogNotice(
+      title: 'Posts are taking a break',
       body: message,
       icon: Icons.cloud_off_outlined,
       actionLabel: 'Try again',
@@ -98,81 +105,85 @@ class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
     ),
     BlogFeedLoaded(:final posts, :final hasMore, :final isLoadingMore) =>
       posts.isEmpty
-          ? RiksaStateView(
-              title: 'A blank first page',
-              body: 'Be the first learner to share something useful.',
+          ? BlogNotice(
+              title: 'Nothing posted yet',
+              body:
+                  'Be the first learner to share something useful with the '
+                  'Riksa community.',
               icon: Icons.menu_book_outlined,
-              actionLabel: 'Write a story',
+              actionLabel: 'Write a post',
               onAction: _createPost,
             )
           : RefreshIndicator(
               onRefresh: () => ref.read(blogFeedProvider.notifier).load(),
-              child: ListView.builder(
+              child: ListView.separated(
                 key: const PageStorageKey('blog-feed-scroll'),
                 controller: _scrollController,
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: const EdgeInsets.fromLTRB(
-                  RiksaSpacing.md,
-                  0,
-                  RiksaSpacing.md,
-                  112,
-                ),
+                padding: const EdgeInsets.only(bottom: 96),
                 itemCount: posts.length + (hasMore ? 1 : 0),
+                separatorBuilder: (_, _) => const BlogDivider(),
                 itemBuilder: (context, index) {
                   if (index == posts.length) {
                     return Padding(
                       padding: const EdgeInsets.all(RiksaSpacing.lg),
                       child: Center(
                         child: isLoadingMore
-                            ? const CircularProgressIndicator()
+                            ? const SizedBox.square(
+                                dimension: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                ),
+                              )
                             : const SizedBox.shrink(),
                       ),
                     );
                   }
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: RiksaSpacing.md),
-                    child: _PostCard(post: posts[index], index: index),
-                  );
+                  return BlogTimelineRow(post: posts[index]);
                 },
               ),
             ),
   };
 }
 
-class _CategoryChips extends ConsumerWidget {
-  const _CategoryChips({
-    required this.categories,
-    required this.selectedCategoryId,
-  });
+/// Horizontal tab strip. `All` plus one tab per category, with the underline
+/// indicator marking the active feed.
+class _CategoryTabs extends ConsumerWidget {
+  const _CategoryTabs({required this.selectedCategoryId});
 
-  final AsyncValue<List<BlogCategory>> categories;
   final String? selectedCategoryId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final categories = ref.watch(blogCategoriesProvider);
     return SizedBox(
-      height: 48,
+      height: 46,
       child: categories.when(
         loading: () => const Padding(
-          padding: EdgeInsets.symmetric(horizontal: RiksaSpacing.md),
-          child: RiksaSkeleton(height: 44, radius: AppRadii.full),
+          padding: EdgeInsets.fromLTRB(BlogMetrics.gutter, 12, 0, 16),
+          child: Row(
+            children: [
+              RiksaSkeleton(height: 14, width: 54, radius: AppRadii.full),
+              SizedBox(width: 26),
+              RiksaSkeleton(height: 14, width: 78, radius: AppRadii.full),
+              SizedBox(width: 26),
+              RiksaSkeleton(height: 14, width: 62, radius: AppRadii.full),
+            ],
+          ),
         ),
         error: (_, _) => const SizedBox.shrink(),
-        data: (items) => ListView.separated(
+        data: (items) => ListView.builder(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.md),
+          padding: EdgeInsets.zero,
           itemCount: items.length + 1,
-          separatorBuilder: (_, _) => const SizedBox(width: RiksaSpacing.xs),
           itemBuilder: (context, index) {
-            final isAll = index == 0;
-            final category = isAll ? null : items[index - 1];
+            final category = index == 0 ? null : items[index - 1];
             final id = category?.id;
-            return RiksaChoicePill(
+            return BlogTab(
               label: category?.name ?? 'All',
-              icon: isAll ? Icons.grid_view_rounded : Icons.bookmark_outline,
               selected: selectedCategoryId == id,
-              onSelected: (_) =>
+              onTap: () =>
                   ref.read(blogFeedProvider.notifier).load(categoryId: id),
             );
           },
@@ -182,151 +193,152 @@ class _CategoryChips extends ConsumerWidget {
   }
 }
 
-class _PostCard extends ConsumerWidget {
-  const _PostCard({required this.post, required this.index});
+/// One post in the timeline: author line, headline, preview, cover, actions.
+class BlogTimelineRow extends ConsumerWidget {
+  const BlogTimelineRow({super.key, required this.post});
 
   final BlogPost post;
-  final int index;
-
-  RiksaPastelTone get _tone => switch (index % 3) {
-    0 => RiksaPastelTone.cream,
-    1 => RiksaPastelTone.jade,
-    _ => RiksaPastelTone.blush,
-  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final palette = context.riksa;
-    return RiksaPastelCard(
-      tone: _tone,
-      padding: EdgeInsets.zero,
-      semanticLabel: post.title,
+    final profile = ref.watch(blogAuthorProvider(post.authorId)).value;
+    final isOwner = ref.watch(currentUserIdProvider) == post.authorId;
+    final preview = post.plainTextPreview;
+
+    return InkWell(
       onTap: () => context.push('/blog/${post.id}'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (post.hasCover)
-            AspectRatio(
-              aspectRatio: 2,
-              child: Image.network(
-                post.coverUrl!,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => ColoredBox(
-                  color: palette.surfaceRaised,
-                  child: Icon(
-                    Icons.auto_stories_outlined,
-                    size: 52,
-                    color: palette.jadeStrong,
-                  ),
-                ),
-              ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(BlogMetrics.gutter, 12, 12, 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            BlogAvatar(
+              profile: profile,
+              size: BlogMetrics.rowAvatar,
+              onTap: () => _openProfile(context, profile),
             ),
-          Padding(
-            padding: const EdgeInsets.all(RiksaSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    DecoratedBox(
-                      decoration: ShapeDecoration(
-                        color: palette.surface.withValues(alpha: .72),
-                        shape: const StadiumBorder(),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: RiksaSpacing.sm,
-                          vertical: RiksaSpacing.xxs,
-                        ),
-                        child: Text(
-                          DateFormat.yMMMd().format(post.createdAt),
-                          style: Theme.of(context).textTheme.labelSmall,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: BlogAuthorMetaLine(
+                          profile: profile,
+                          createdAt: post.createdAt,
                         ),
                       ),
+                      if (isOwner)
+                        BlogOwnerMenu(
+                          onEdit: () => _edit(context, ref),
+                          onDelete: () => _delete(context, ref),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    post.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: RiksaTypography.bodyStyleFor(
+                      post.title,
+                      theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        height: 1.3,
+                        letterSpacing: -.2,
+                        color: palette.ink,
+                      ),
                     ),
-                    const Spacer(),
-                    Icon(
-                      Icons.visibility_outlined,
-                      size: 16,
-                      color: palette.inkMuted,
-                    ),
-                    const SizedBox(width: RiksaSpacing.xxs),
+                  ),
+                  if (preview.isNotEmpty) ...[
+                    const SizedBox(height: 4),
                     Text(
-                      '${post.viewCount}',
-                      style: Theme.of(context).textTheme.labelSmall,
+                      preview,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: RiksaTypography.bodyStyleFor(
+                        preview,
+                        theme.textTheme.bodyMedium?.copyWith(
+                          color: palette.inkMuted,
+                          height: 1.5,
+                        ),
+                      ),
                     ),
                   ],
-                ),
-                const SizedBox(height: RiksaSpacing.sm),
-                Text(
-                  post.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: RiksaSpacing.xs),
-                Text(
-                  post.content,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: RiksaSpacing.sm),
-                Row(
-                  children: [
-                    Text(
-                      'Read story',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: palette.jadeStrong,
-                      ),
-                    ),
-                    const SizedBox(width: RiksaSpacing.xxs),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 18,
-                      color: palette.jadeStrong,
-                    ),
-                    const Spacer(),
-                    Semantics(
-                      button: true,
-                      label: post.liked ? 'Unlike' : 'Like',
-                      child: InkResponse(
+                  if (post.hasCover) ...[
+                    const SizedBox(height: 12),
+                    BlogCoverImage(url: post.coverUrl!),
+                  ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      BlogAction(
+                        icon: Icons.favorite_border_rounded,
+                        activeIcon: Icons.favorite_rounded,
+                        label: blogCountLabel(post.likeCount),
+                        semanticLabel: post.liked
+                            ? 'Unlike, ${post.likeCount} likes'
+                            : 'Like, ${post.likeCount} likes',
+                        selected: post.liked,
+                        selectedColor: theme.colorScheme.error,
                         onTap: () => ref
                             .read(blogFeedProvider.notifier)
                             .toggleLike(post.id),
-                        radius: 24,
-                        child: SizedBox.square(
-                          dimension: 48,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                post.liked
-                                    ? Icons.favorite_rounded
-                                    : Icons.favorite_border_rounded,
-                                size: 20,
-                                color: post.liked
-                                    ? Theme.of(context).colorScheme.error
-                                    : palette.inkMuted,
-                              ),
-                              const SizedBox(width: RiksaSpacing.xxs),
-                              Text(
-                                '${post.likeCount}',
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: RiksaSpacing.md),
+                      BlogAction(
+                        icon: Icons.bar_chart_rounded,
+                        label: blogCountLabel(post.viewCount),
+                        semanticLabel: '${post.viewCount} views',
+                      ),
+                      const Spacer(),
+                      Flexible(
+                        child: BlogCategoryTag(categoryId: post.categoryId),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  Future<void> _edit(BuildContext context, WidgetRef ref) async {
+    final saved = await context.push<bool>(
+      '/blog/${post.id}/edit',
+      extra: post,
+    );
+    if (saved == true && context.mounted) {
+      await ref.read(blogFeedProvider.notifier).load();
+    }
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    if (!await confirmBlogPostDeletion(context)) return;
+    if (!context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(blogApiProvider).deletePost(post.id);
+      ref.read(blogFeedProvider.notifier).removePost(post.id);
+      messenger.showSnackBar(const SnackBar(content: Text('Post deleted')));
+    } on DioException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(blogOwnerActionError(e, BlogOwnerAction.delete)),
+        ),
+      );
+    }
+  }
+
+  void _openProfile(BuildContext context, PublicProfile? profile) {
+    final path = publicProfilePath(profile?.id ?? post.authorId);
+    if (path != null) context.push(path);
   }
 }

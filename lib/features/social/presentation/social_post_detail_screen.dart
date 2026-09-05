@@ -10,10 +10,12 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../userProfile/presentation/public_profile_navigation.dart';
 import '../data/social_api.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
+import 'widgets/social_owner_menu.dart';
 import 'widgets/social_palette.dart';
 
 class SocialPostDetailScreen extends ConsumerStatefulWidget {
@@ -174,6 +176,41 @@ class _SocialPostDetailScreenState
     }
   }
 
+  Future<void> _edit() async {
+    final post = _post;
+    if (post == null) return;
+    final saved = await context.push<bool>(
+      '/community/posts/${post.id}/edit',
+      extra: post,
+    );
+    if (saved != true || !mounted) return;
+    await _load();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.postUpdated)),
+      );
+  }
+
+  Future<void> _delete() async {
+    final post = _post;
+    if (post == null) return;
+    if (!await confirmSocialPostDeletion(context)) return;
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final failure = await ref
+        .read(socialFeedProvider.notifier)
+        .deletePost(post.id);
+    if (!mounted) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(failure ?? l10n.postDeleted)));
+    // The post is gone, so the detail screen has nothing left to show.
+    if (failure == null) context.pop();
+  }
+
   void _showFailure() {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -195,6 +232,16 @@ class _SocialPostDetailScreenState
           l10n.postDetail,
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
+        actions: [
+          if (_post != null &&
+              _post!.author.id == ref.watch(currentUserIdProvider))
+            SocialOwnerMenu(
+              postId: _post!.id,
+              onEdit: _edit,
+              onDelete: _delete,
+            ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: _loading
           ? const Center(

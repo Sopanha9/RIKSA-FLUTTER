@@ -81,6 +81,15 @@ class AuthUnavailable extends AuthState {
   final String message;
 }
 
+/// Id of the signed-in user, or null when no session is ready.
+///
+/// Ownership checks read this: feeds carry only an author id, so edit and
+/// delete affordances compare against it (the server stays the authority).
+final currentUserIdProvider = Provider<String?>((ref) {
+  final auth = ref.watch(authProvider);
+  return auth is Authenticated ? auth.user.id : null;
+});
+
 class AuthNotifier extends Notifier<AuthState> {
   static const _minimumAuthenticationLoading = Duration(milliseconds: 500);
 

@@ -6,9 +6,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/blog/data/blog_models.dart';
 import 'package:riksa_app/features/blog/presentation/blog_feed_screen.dart';
 import 'package:riksa_app/features/blog/providers/blog_provider.dart';
+import 'package:riksa_app/features/userProfile/data/public_profile.dart';
+import 'package:riksa_app/features/userProfile/data/public_profile_api.dart';
+import 'package:riksa_app/features/userProfile/providers/public_profile_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 Future<void> _loadFonts() async {
@@ -38,6 +42,29 @@ Future<void> _loadFonts() async {
       ).readAsBytes().then(ByteData.sublistView),
     );
   await Future.wait([poppins.load(), khmer.load(), materialIcons.load()]);
+}
+
+/// Keeps the golden hermetic: the timeline resolves author identities
+/// through this repository instead of the network.
+class _PreviewProfiles implements PublicProfileRepository {
+  static const _names = {
+    'riksa-learner': ('Sokha Chan', 'sokha'),
+    'riksa-learner-2': ('Dara Pich', 'darapich'),
+  };
+
+  @override
+  Future<PublicProfile> fetch(String userId) async {
+    final (displayName, username) = _names[userId] ?? ('Riksa', 'riksa');
+    return PublicProfile(
+      id: userId,
+      username: username,
+      displayName: displayName,
+      isVerified: userId == 'riksa-learner',
+      totalXp: 0,
+      currentTier: 'STARTER',
+      achievements: const [],
+    );
+  }
 }
 
 class _PreviewBlogNotifier extends BlogFeedNotifier {
@@ -109,6 +136,9 @@ void main() {
       ProviderScope(
         overrides: [
           blogFeedProvider.overrideWith(_PreviewBlogNotifier.new),
+          publicProfileRepositoryProvider.overrideWithValue(_PreviewProfiles()),
+          // The preview is the signed-out reading view, so no owner controls.
+          currentUserIdProvider.overrideWithValue(null),
           blogCategoriesProvider.overrideWith(
             (ref) async => [
               BlogCategory(

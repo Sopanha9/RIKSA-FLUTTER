@@ -323,6 +323,26 @@ class AppLocalizationsKm extends AppLocalizations {
   String get askCommunitySubtitle => 'សុំជំនួយពីអ្នកសិក្សាផ្សេងទៀត។';
 
   @override
+  String get writeArticle => 'សរសេរអត្ថបទ';
+
+  @override
+  String get writeArticleSubtitle =>
+      'អត្ថបទវែងសម្រាប់ប្លុក ដែលត្រូវពិនិត្យមុនបង្ហាញ។';
+
+  @override
+  String get yourArticles => 'អត្ថបទរបស់អ្នក';
+
+  @override
+  String articlesInReview(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count កំពុងពិនិត្យ',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get communityComposerPrompt => 'តើអ្នកមានចម្ងល់អ្វី?';
 
   @override
@@ -409,6 +429,46 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get postDetail => 'ព័ត៌មានលម្អិតនៃការបង្ហោះ';
+
+  @override
+  String get editPost => 'កែសម្រួលការបង្ហោះ';
+
+  @override
+  String get deletePost => 'លុបការបង្ហោះ';
+
+  @override
+  String get postOptions => 'ជម្រើសការបង្ហោះ';
+
+  @override
+  String get deletePostTitle => 'លុបការបង្ហោះនេះមែនទេ?';
+
+  @override
+  String get deletePostMessage =>
+      'ការបង្ហោះ និងមតិយោបល់របស់វា នឹងត្រូវលុបចេញសម្រាប់អ្នកទាំងអស់គ្នា។ សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។';
+
+  @override
+  String get keepPost => 'រក្សាទុកការបង្ហោះ';
+
+  @override
+  String get delete => 'លុប';
+
+  @override
+  String get postUpdated => 'បានរក្សាទុកការផ្លាស់ប្ដូរ';
+
+  @override
+  String get postDeleted => 'បានលុបការបង្ហោះ';
+
+  @override
+  String get saveFailed =>
+      'យើងមិនអាចរក្សាទុកការផ្លាស់ប្ដូរបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get deleteFailed =>
+      'យើងមិនអាចលុបការបង្ហោះនេះបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get editPostSubtitle =>
+      'ធ្វើបច្ចុប្បន្នភាពអ្វីដែលអ្នកបានចែករំលែកជាមួយសហគមន៍។';
 
   @override
   String get discussion => 'ការពិភាក្សា';

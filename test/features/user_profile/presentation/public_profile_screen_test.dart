@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 import 'package:riksa_app/features/userProfile/data/public_profile.dart';
 import 'package:riksa_app/features/userProfile/data/public_profile_api.dart';
@@ -331,6 +332,8 @@ Future<void> _pump(
     ProviderScope(
       key: UniqueKey(),
       overrides: [
+        // Reading a stranger's profile: no session, so no owner controls.
+        currentUserIdProvider.overrideWithValue(null),
         publicProfileRepositoryProvider.overrideWithValue(profiles),
         publicProfileSocialRepositoryProvider.overrideWithValue(
           social ?? _Social(page: _page(const [])),

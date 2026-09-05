@@ -7,8 +7,11 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../social/data/social_models.dart';
+import '../../social/presentation/widgets/social_owner_menu.dart';
 import '../../social/presentation/widgets/social_post_card.dart';
+import '../../social/providers/social_feed_provider.dart';
 import '../data/public_profile.dart';
 import '../providers/public_profile_provider.dart';
 import 'public_profile_navigation.dart';
@@ -180,6 +183,10 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                               onLoadMore: controller.loadMorePosts,
                               onReact: controller.react,
                               onShare: (postId) => _share(postId, controller),
+                              currentUserId: ref.watch(currentUserIdProvider),
+                              onEditPost: (post) => _editPost(post, controller),
+                              onDeletePost: (post) =>
+                                  _deletePost(post, controller),
                             ),
                             ProfileTab.achievements => _PublicAchievements(
                               achievements: profile.achievements,
@@ -198,6 +205,42 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _editPost(
+    SocialPost post,
+    PublicProfileController controller,
+  ) async {
+    final saved = await context.push<bool>(
+      '/community/posts/${post.id}/edit',
+      extra: post,
+    );
+    if (saved != true || !mounted) return;
+    await controller.refresh();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.postUpdated)),
+      );
+  }
+
+  Future<void> _deletePost(
+    SocialPost post,
+    PublicProfileController controller,
+  ) async {
+    if (!await confirmSocialPostDeletion(context)) return;
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final failure = await ref
+        .read(socialFeedProvider.notifier)
+        .deletePost(post.id);
+    if (!mounted) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(failure ?? l10n.postDeleted)));
+    if (failure == null) await controller.refresh();
   }
 
   Future<void> _share(String postId, PublicProfileController controller) async {
@@ -277,6 +320,9 @@ class _PublicPosts extends StatelessWidget {
     required this.onLoadMore,
     required this.onReact,
     required this.onShare,
+    required this.currentUserId,
+    required this.onEditPost,
+    required this.onDeletePost,
   });
 
   final PublicProfileState state;
@@ -284,6 +330,11 @@ class _PublicPosts extends StatelessWidget {
   final Future<void> Function() onLoadMore;
   final Future<bool> Function(String) onReact;
   final Future<void> Function(String) onShare;
+
+  /// Set when the reader is looking at their own public profile.
+  final String? currentUserId;
+  final void Function(SocialPost) onEditPost;
+  final void Function(SocialPost) onDeletePost;
 
   @override
   Widget build(BuildContext context) {
@@ -318,6 +369,12 @@ class _PublicPosts extends StatelessWidget {
                 : () => context.push(publicProfilePath(post.author.id)!),
             onReact: () => onReact(post.id),
             onShare: () => onShare(post.id),
+            onEdit: post.author.id == currentUserId
+                ? () => onEditPost(post)
+                : null,
+            onDelete: post.author.id == currentUserId
+                ? () => onDeletePost(post)
+                : null,
           ),
         if (state.isLoadingMore)
           const ProfileLoadingState(key: ValueKey('public-posts-loading-more')),

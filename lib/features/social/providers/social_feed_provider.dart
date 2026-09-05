@@ -231,6 +231,52 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
     }
   }
 
+  /// Rewrites a post the signed-in user owns. Returns null on success, or a
+  /// message to show the author when the server refuses.
+  Future<String?> updatePost({
+    required String id,
+    required String title,
+    required String content,
+  }) async {
+    try {
+      final updated = await ref
+          .read(socialApiProvider)
+          .updatePost(id: id, title: title, content: content);
+      syncPost(updated);
+      // The author's profile tab reads its own copy of the feed.
+      ref.invalidate(userPostsProvider);
+      return null;
+    } catch (error) {
+      return _message(error);
+    }
+  }
+
+  /// Deletes a post the signed-in user owns. Returns null on success, or a
+  /// message to show the author when the server refuses.
+  Future<String?> deletePost(String id) async {
+    try {
+      await ref.read(socialApiProvider).deletePost(id);
+      removePost(id);
+      ref.invalidate(userPostsProvider);
+      return null;
+    } catch (error) {
+      return _message(error);
+    }
+  }
+
+  /// Drops a deleted post from the cached feed.
+  void removePost(String postId) {
+    final current = state;
+    if (current is! SocialFeedLoaded) return;
+    if (!current.posts.any((post) => post.id == postId)) return;
+    state = current.copyWith(
+      posts: [
+        for (final post in current.posts)
+          if (post.id != postId) post,
+      ],
+    );
+  }
+
   Future<bool> sharePost(String postId) async {
     try {
       final updated = await ref.read(socialApiProvider).share(postId);

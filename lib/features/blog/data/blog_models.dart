@@ -47,6 +47,12 @@ class BlogPost {
 
   bool get hasCover => coverUrl != null && coverUrl!.isNotEmpty;
 
+  /// Article body prepared for markdown rendering.
+  String get markdownContent => normalizeBlogMarkdown(content);
+
+  /// Flattened body used for timeline previews.
+  String get plainTextPreview => blogMarkdownPreview(content);
+
   factory BlogPost.fromJson(Map<String, dynamic> json) => BlogPost(
     id: json['id']?.toString() ?? '',
     authorId: json['authorId']?.toString() ?? '',
@@ -95,8 +101,9 @@ class BlogPage {
   );
 }
 
-class CreateBlogPostRequest {
-  CreateBlogPostRequest({
+/// Body for both `POST /blog` (create) and `PUT /blog/{id}` (author edit).
+class BlogPostRequest {
+  BlogPostRequest({
     required this.title,
     required this.content,
     this.coverUrl,
@@ -146,3 +153,18 @@ class BlogCategory {
     joined: json['joined'] as bool? ?? false,
   );
 }
+
+/// Unescapes literal `\n` sequences some editors submit as plain text.
+String normalizeBlogMarkdown(String value) => value
+    .replaceAll(r'\r\n', '\n')
+    .replaceAll(r'\n', '\n')
+    .replaceAll(r'\t', '\t');
+
+/// Strips the markdown syntax that reads badly inside a one-line preview.
+String blogMarkdownPreview(String value) => normalizeBlogMarkdown(value)
+    .replaceAll(RegExp(r'^[ \t]{0,3}#{1,6}[ \t]+', multiLine: true), '')
+    .replaceAll(RegExp(r'^[ \t]*[-+][ \t]+', multiLine: true), '\u2022 ')
+    .replaceAll('**', '')
+    .replaceAll('__', '')
+    .replaceAll('`', '')
+    .trim();

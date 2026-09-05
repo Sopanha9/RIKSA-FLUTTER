@@ -12,6 +12,7 @@ import '../../auth/data/auth_models.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../social/data/social_api.dart';
 import '../../social/data/social_models.dart';
+import '../../social/presentation/widgets/social_owner_menu.dart';
 import '../../social/presentation/widgets/social_post_card.dart';
 import '../../social/providers/social_feed_provider.dart';
 import '../data/profile_models.dart';
@@ -785,6 +786,29 @@ class _PostsTab extends ConsumerWidget {
                 onShare: () async {
                   await ref.read(socialApiProvider).share(post.id);
                   ref.invalidate(userPostsProvider(user.id));
+                },
+                // This tab only ever lists the signed-in user's own posts.
+                onEdit: () async {
+                  final saved = await context.push<bool>(
+                    '/community/posts/${post.id}/edit',
+                    extra: post,
+                  );
+                  if (saved == true) ref.invalidate(userPostsProvider(user.id));
+                },
+                onDelete: () async {
+                  if (!await confirmSocialPostDeletion(context)) return;
+                  if (!context.mounted) return;
+                  final l10n = AppLocalizations.of(context)!;
+                  final messenger = ScaffoldMessenger.of(context);
+                  final failure = await ref
+                      .read(socialFeedProvider.notifier)
+                      .deletePost(post.id);
+                  ref.invalidate(userPostsProvider(user.id));
+                  messenger
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(content: Text(failure ?? l10n.postDeleted)),
+                    );
                 },
               ),
           ],

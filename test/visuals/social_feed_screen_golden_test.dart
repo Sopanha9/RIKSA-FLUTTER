@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/core/network/dio_client.dart';
 import 'package:riksa_app/core/storage/session_store.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/core/widgets/riksa_bottom_navigation_bar.dart';
 import 'package:riksa_app/features/social/data/social_api.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
@@ -149,6 +150,8 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          // Signed-out reading view: no owner controls in the golden.
+          currentUserIdProvider.overrideWithValue(null),
           socialFeedProvider.overrideWith(_PreviewFeedNotifier.new),
           communityStreakProvider.overrideWith(
             (ref) async => const CommunityStreak(current: 20, highest: 24),
@@ -209,6 +212,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          currentUserIdProvider.overrideWithValue(null),
           socialApiProvider.overrideWithValue(_PreviewSocialApi(client)),
         ],
         child: MaterialApp(

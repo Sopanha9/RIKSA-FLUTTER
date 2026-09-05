@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../data/social_models.dart';
+import 'social_owner_menu.dart';
 import 'social_palette.dart';
 
 class SocialPostCard extends StatelessWidget {
@@ -15,6 +16,8 @@ class SocialPostCard extends StatelessWidget {
     required this.onReact,
     required this.onShare,
     this.onAuthorTap,
+    this.onEdit,
+    this.onDelete,
   });
 
   final SocialPost post;
@@ -22,6 +25,10 @@ class SocialPostCard extends StatelessWidget {
   final VoidCallback onReact;
   final VoidCallback onShare;
   final VoidCallback? onAuthorTap;
+
+  /// Set only for the reader's own posts; both together show the owner menu.
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +62,12 @@ class SocialPostCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _PostMetadata(post: post, onAuthorTap: onAuthorTap),
+                  _PostMetadata(
+                    post: post,
+                    onAuthorTap: onAuthorTap,
+                    onEdit: onEdit,
+                    onDelete: onDelete,
+                  ),
                   const SizedBox(height: 14),
                   Text(
                     post.title,
@@ -141,10 +153,17 @@ class SocialPostCard extends StatelessWidget {
 }
 
 class _PostMetadata extends StatelessWidget {
-  const _PostMetadata({required this.post, this.onAuthorTap});
+  const _PostMetadata({
+    required this.post,
+    this.onAuthorTap,
+    this.onEdit,
+    this.onDelete,
+  });
 
   final SocialPost post;
   final VoidCallback? onAuthorTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -232,6 +251,12 @@ class _PostMetadata extends StatelessWidget {
             ],
           ),
         ),
+        if (onEdit != null && onDelete != null)
+          SocialOwnerMenu(
+            postId: post.id,
+            onEdit: onEdit!,
+            onDelete: onDelete!,
+          ),
       ],
     );
   }

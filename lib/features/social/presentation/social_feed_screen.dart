@@ -7,12 +7,14 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_search_bar.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../blog/data/blog_models.dart';
 import '../../blog/providers/blog_provider.dart';
 import '../../userProfile/presentation/public_profile_navigation.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
 import 'social_post_detail_screen.dart';
+import 'widgets/social_owner_menu.dart';
 import 'widgets/social_palette.dart';
 import 'widgets/social_post_card.dart';
 import 'widgets/streak_details_sheet.dart';
@@ -89,6 +91,8 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
             SliverToBoxAdapter(
               child: _CommunityComposerPrompt(onTap: _showCreateMenu),
             ),
+            if (_section == _SocialSection.blog)
+              SliverToBoxAdapter(child: _YourArticlesLink(onTap: _openMyPosts)),
             if (_section == _SocialSection.feed)
               ..._contentSlivers(state)
             else
@@ -102,6 +106,7 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
 
   List<Widget> _contentSlivers(SocialFeedState state) {
     final l10n = AppLocalizations.of(context)!;
+    final currentUserId = ref.watch(currentUserIdProvider);
     return switch (state) {
       SocialFeedLoading() => [const SliverToBoxAdapter(child: _FeedSkeleton())],
       SocialFeedFailure(:final message) => [
@@ -154,6 +159,12 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
                         : () => _openProfile(post.author.id),
                     onReact: () => _react(post.id),
                     onShare: () => _share(post.id),
+                    onEdit: post.author.id == currentUserId
+                        ? () => _editPost(post)
+                        : null,
+                    onDelete: post.author.id == currentUserId
+                        ? () => _deletePost(post)
+                        : null,
                   );
                 },
               ),
@@ -254,6 +265,34 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
     }
   }
 
+  Future<void> _editPost(SocialPost post) async {
+    final saved = await context.push<bool>(
+      '/community/posts/${post.id}/edit',
+      extra: post,
+    );
+    if (saved == true && mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.postUpdated)),
+        );
+    }
+  }
+
+  Future<void> _deletePost(SocialPost post) async {
+    if (!await confirmSocialPostDeletion(context)) return;
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final failure = await ref
+        .read(socialFeedProvider.notifier)
+        .deletePost(post.id);
+    if (!mounted) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(failure ?? l10n.postDeleted)));
+  }
+
   void _openProfile(String userId) {
     final path = publicProfilePath(userId);
     if (path != null) context.push(path);
@@ -271,6 +310,12 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
     setState(() => _section = section);
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(0);
+    }
+    // Moderation happens elsewhere, so an article approved since the last
+    // fetch is only ever seen by asking again on the way in.
+    if (section == _SocialSection.blog) {
+      ref.read(blogFeedProvider.notifier).refreshIfStale();
+      ref.invalidate(pendingBlogPostCountProvider);
     }
   }
 
@@ -338,14 +383,28 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
       builder: (context) => const _CreateMenuSheet(),
     );
     if (!mounted || action == null) return;
-    final created = await context.push<bool>(
-      action == _CreateAction.question
-          ? '/community/create?type=question'
-          : '/community/create',
-    );
-    if (created == true) {
+    final created = await context.push<bool>(switch (action) {
+      _CreateAction.article => '/blog/create',
+      _CreateAction.question => '/community/create?type=question',
+      _CreateAction.post => '/community/create',
+    });
+    if (created != true || !mounted) return;
+    // An article lands in the blog tab, where it waits for moderation.
+    if (action == _CreateAction.article) {
+      _selectSection(_SocialSection.blog);
+      ref.invalidate(pendingBlogPostCountProvider);
+      await ref.read(blogFeedProvider.notifier).load();
+    } else {
       _selectSection(_SocialSection.feed);
     }
+  }
+
+  /// The author's own articles, moderation status included. A pending post
+  /// shows up nowhere else, so this is the only way back to it.
+  Future<void> _openMyPosts() async {
+    await context.push<void>('/blog/my-posts');
+    if (!mounted) return;
+    ref.invalidate(pendingBlogPostCountProvider);
   }
 }
 
@@ -478,6 +537,84 @@ class _CommunityComposerPrompt extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Doorway to the author's own articles, sitting at the top of the blog
+/// list.
+///
+/// A post in review is absent from the feed below, so the count carries the
+/// reassurance: the writing is somewhere, and this is where.
+class _YourArticlesLink extends ConsumerWidget {
+  const _YourArticlesLink({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final pending = ref.watch(pendingBlogPostCountProvider).value ?? 0;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: AppRadii.fullBorder,
+        child: InkWell(
+          key: const ValueKey('your-articles-link'),
+          onTap: onTap,
+          borderRadius: AppRadii.fullBorder,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.drafts_outlined,
+                  size: 18,
+                  color: SocialPalette.muted(context),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.yourArticles,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: SocialPalette.text(context),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (pending > 0) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    key: const ValueKey('articles-in-review-badge'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: SocialPalette.pinkSoft(context),
+                      borderRadius: AppRadii.fullBorder,
+                    ),
+                    child: Text(
+                      l10n.articlesInReview(pending),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: SocialPalette.pink(context),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+                const Spacer(),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: SocialPalette.muted(context),
+                ),
+              ],
             ),
           ),
         ),
@@ -652,7 +789,7 @@ class _StreakPill extends StatelessWidget {
   }
 }
 
-enum _CreateAction { post, question }
+enum _CreateAction { post, question, article }
 
 class _CreateMenuSheet extends StatelessWidget {
   const _CreateMenuSheet();
@@ -716,6 +853,15 @@ class _CreateMenuSheet extends StatelessWidget {
               color: SocialPalette.aubergine(context),
               onTap: () => Navigator.pop(context, _CreateAction.question),
             ),
+            const SizedBox(height: 10),
+            _CreateOption(
+              key: const ValueKey('create-article-option'),
+              icon: Icons.auto_stories_rounded,
+              title: l10n.writeArticle,
+              subtitle: l10n.writeArticleSubtitle,
+              color: theme.colorScheme.primary,
+              onTap: () => Navigator.pop(context, _CreateAction.article),
+            ),
           ],
         ),
       ),
@@ -725,6 +871,7 @@ class _CreateMenuSheet extends StatelessWidget {
 
 class _CreateOption extends StatelessWidget {
   const _CreateOption({
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,

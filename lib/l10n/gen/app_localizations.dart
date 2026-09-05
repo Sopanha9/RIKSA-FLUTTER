@@ -692,6 +692,30 @@ abstract class AppLocalizations {
   /// **'Get help from learners who have been there.'**
   String get askCommunitySubtitle;
 
+  /// No description provided for @writeArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'Write an article'**
+  String get writeArticle;
+
+  /// No description provided for @writeArticleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A longer piece for the blog, reviewed before it appears.'**
+  String get writeArticleSubtitle;
+
+  /// No description provided for @yourArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'Your articles'**
+  String get yourArticles;
+
+  /// No description provided for @articlesInReview.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 in review} other{{count} in review}}'**
+  String articlesInReview(int count);
+
   /// No description provided for @communityComposerPrompt.
   ///
   /// In en, this message translates to:
@@ -853,6 +877,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Post detail'**
   String get postDetail;
+
+  /// No description provided for @editPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit post'**
+  String get editPost;
+
+  /// No description provided for @deletePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete post'**
+  String get deletePost;
+
+  /// No description provided for @postOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Post options'**
+  String get postOptions;
+
+  /// No description provided for @deletePostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this post?'**
+  String get deletePostTitle;
+
+  /// No description provided for @deletePostMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The post and its replies are removed for everyone. This cannot be undone.'**
+  String get deletePostMessage;
+
+  /// No description provided for @keepPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep post'**
+  String get keepPost;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @postUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes saved'**
+  String get postUpdated;
+
+  /// No description provided for @postDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Post deleted'**
+  String get postDeleted;
+
+  /// No description provided for @saveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t save your changes. Try again.'**
+  String get saveFailed;
+
+  /// No description provided for @deleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t delete this post. Try again.'**
+  String get deleteFailed;
+
+  /// No description provided for @editPostSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update what you shared with the community.'**
+  String get editPostSubtitle;
 
   /// No description provided for @discussion.
   ///

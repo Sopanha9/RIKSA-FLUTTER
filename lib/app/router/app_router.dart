@@ -13,9 +13,10 @@ import '../../features/auth/presentation/onboarding_splash_screen.dart';
 import '../../features/auth/presentation/province_select_screen.dart';
 import '../../features/auth/presentation/telegram_otp_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../features/blog/data/blog_models.dart';
+import '../../features/blog/presentation/blog_composer_screen.dart';
 import '../../features/blog/presentation/blog_detail_screen.dart';
 import '../../features/blog/presentation/blog_feed_screen.dart';
-import '../../features/blog/presentation/create_blog_post_screen.dart';
 import '../../features/blog/presentation/my_posts_screen.dart';
 import '../../features/learning/presentation/lesson_catalog_screen.dart';
 import '../../features/learning/presentation/lesson_experience_screen.dart';
@@ -24,6 +25,7 @@ import '../../features/learning/presentation/learning_result_screens.dart';
 import '../../features/learning/data/learning_models.dart';
 import '../../features/social/presentation/social_feed_screen.dart';
 import '../../features/social/presentation/communities_screen.dart';
+import '../../features/social/data/social_models.dart';
 import '../../features/social/presentation/compose_community_post_screen.dart';
 import '../../features/social/presentation/social_post_detail_screen.dart';
 import '../../features/userProfile/presentation/profile_setup_overview_screen.dart';
@@ -147,6 +149,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 ),
               ),
               GoRoute(
+                path: '/community/posts/:id/edit',
+                builder: (context, state) => SocialPostEditScreen(
+                  id: state.pathParameters['id']!,
+                  post: state.extra as SocialPost?,
+                ),
+              ),
+              GoRoute(
                 path: '/community/posts/:id',
                 builder: (context, state) =>
                     SocialPostDetailScreen(postId: state.pathParameters['id']!),
@@ -157,11 +166,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: '/blog/create',
-                builder: (context, state) => const CreateBlogPostScreen(),
+                builder: (context, state) => const BlogComposerScreen(),
               ),
               GoRoute(
                 path: '/blog/my-posts',
                 builder: (context, state) => const MyPostsScreen(),
+              ),
+              GoRoute(
+                path: '/blog/:id/edit',
+                builder: (context, state) => BlogPostEditScreen(
+                  id: state.pathParameters['id']!,
+                  post: state.extra as BlogPost?,
+                ),
               ),
               GoRoute(
                 path: '/blog/:id',
