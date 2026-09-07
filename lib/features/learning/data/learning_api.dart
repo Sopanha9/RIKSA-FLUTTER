@@ -94,4 +94,11 @@ class LearningApi {
       (response.data as Map).cast<String, dynamic>(),
     );
   }
+
+  Future<ContinueLearningResponse> continueLearning() async {
+    final response = await _client.dio.get('/learning/me/continue');
+    return ContinueLearningResponse.fromJson(
+      (response.data as Map).cast<String, dynamic>(),
+    );
+  }
 }

@@ -12,3 +12,8 @@ final lessonDetailProvider = FutureProvider.autoDispose
     .family<LessonDetail, String>((ref, lessonId) {
       return ref.watch(learningApiProvider).lesson(lessonId);
     });
+
+final continueLearningProvider =
+    FutureProvider.autoDispose<ContinueLearningResponse>((ref) {
+      return ref.watch(learningApiProvider).continueLearning();
+    });

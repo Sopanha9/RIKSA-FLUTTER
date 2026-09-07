@@ -283,6 +283,114 @@ class LearningRoadmap {
       );
 }
 
+/// Server-backed recommendation returned by `GET /learning/me/continue`.
+class ContinueLearningResponse {
+  const ContinueLearningResponse({
+    required this.allCompleted,
+    this.lesson,
+  });
+
+  final bool allCompleted;
+  final LessonProgress? lesson;
+
+  factory ContinueLearningResponse.fromJson(Map<String, dynamic> json) =>
+      ContinueLearningResponse(
+        allCompleted: json['allCompleted'] as bool? ?? false,
+        lesson: json['lesson'] is Map
+            ? LessonProgress.fromJson(
+                (json['lesson'] as Map).cast<String, dynamic>(),
+              )
+            : null,
+      );
+}
+
+class LessonProgress {
+  const LessonProgress({
+    required this.lessonId,
+    required this.lessonTitle,
+    required this.roadmapState,
+    required this.totalExerciseCount,
+    required this.attemptedExerciseCount,
+    required this.correctExerciseCount,
+    required this.progressPercentage,
+    required this.currentSectionIndex,
+    required this.completed,
+    required this.canResume,
+    this.categoryId,
+    this.categoryName,
+    this.lastActivityAt,
+    this.completedAt,
+    this.difficulty,
+    this.baseXp = 0,
+    this.position = 0,
+  });
+
+  final String lessonId;
+  final String lessonTitle;
+  final String? categoryId;
+  final String? categoryName;
+  final LessonProgressState roadmapState;
+  final int totalExerciseCount;
+  final int attemptedExerciseCount;
+  final int correctExerciseCount;
+  final double progressPercentage;
+  final int currentSectionIndex;
+  final DateTime? lastActivityAt;
+  final bool completed;
+  final DateTime? completedAt;
+  final bool canResume;
+  final LessonDifficulty? difficulty;
+  final int baseXp;
+  final int position;
+
+  double get progress => (progressPercentage / 100).clamp(0, 1);
+
+  factory LessonProgress.fromJson(Map<String, dynamic> json) => LessonProgress(
+    lessonId: json['lessonId']?.toString() ?? '',
+    lessonTitle: json['lessonTitle'] as String? ?? '',
+    categoryId: json['categoryId']?.toString(),
+    categoryName: json['categoryName'] as String?,
+    roadmapState: LessonProgressState.fromWire(json['roadmapState']),
+    totalExerciseCount: (json['totalExerciseCount'] as num?)?.toInt() ?? 0,
+    attemptedExerciseCount:
+        (json['attemptedExerciseCount'] as num?)?.toInt() ?? 0,
+    correctExerciseCount:
+        (json['correctExerciseCount'] as num?)?.toInt() ?? 0,
+    progressPercentage:
+        (json['progressPercentage'] as num?)?.toDouble() ?? 0,
+    currentSectionIndex: (json['currentSectionIndex'] as num?)?.toInt() ?? 1,
+    lastActivityAt: DateTime.tryParse(json['lastActivityAt']?.toString() ?? ''),
+    completed: json['completed'] as bool? ?? false,
+    completedAt: DateTime.tryParse(json['completedAt']?.toString() ?? ''),
+    canResume: json['canResume'] as bool? ?? false,
+    difficulty: LessonDifficulty.fromWire(json['difficulty'] as String?),
+    baseXp: (json['baseXp'] as num?)?.toInt() ?? 0,
+    position: (json['position'] as num?)?.toInt() ?? 0,
+  );
+}
+
+/// The real, category-ordered learner roadmap returned by `/lessons/roadmap`.
+class LessonRoadmap {
+  const LessonRoadmap({
+    required this.categoryId,
+    required this.categoryName,
+    required this.lessons,
+  });
+
+  final String categoryId;
+  final String categoryName;
+  final List<LessonSummary> lessons;
+
+  factory LessonRoadmap.fromJson(Map<String, dynamic> json) => LessonRoadmap(
+    categoryId: json['categoryId']?.toString() ?? '',
+    categoryName: json['categoryName'] as String? ?? '',
+    lessons: ((json['lessons'] as List?) ?? const [])
+        .map((item) => LessonSummary.fromJson((item as Map).cast<String, dynamic>()))
+        .toList()
+      ..sort((a, b) => a.position.compareTo(b.position)),
+  );
+}
+
 class RoadmapUnit {
   const RoadmapUnit({
     required this.id,
