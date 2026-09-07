@@ -574,6 +574,10 @@ class _PostsTabState extends ConsumerState<_PostsTab> {
                               // own posts, so every card is editable.
                               onEdit: () => _edit(post),
                               onDelete: () => _delete(post),
+                              // The author already owns this screen, so an
+                              // official tint here would only make their own
+                              // posts look unlike the ones readers see.
+                              highlightOfficial: false,
                             ),
                           ),
                       ],
@@ -664,16 +668,8 @@ class _AchievementsTab extends StatelessWidget {
             message: l10n.noAchievements,
           );
         }
-        return GridView.builder(
+        return ProfileAchievementGrid(
           key: const ValueKey('profile-achievements-grid'),
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 1.08,
-          ),
           itemCount: earned.length,
           itemBuilder: (context, index) =>
               _AchievementTile(achievement: earned[index]),
@@ -692,6 +688,7 @@ class _AchievementTile extends StatelessWidget {
   Widget build(BuildContext context) => ProfileAchievementTile(
     name: achievement.name,
     description: achievement.description,
+    iconUrl: achievement.iconUrl,
     trailingLabel: '+${achievement.xpReward} XP',
   );
 }

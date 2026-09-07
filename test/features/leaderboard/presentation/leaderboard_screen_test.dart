@@ -105,9 +105,11 @@ void main() {
     final rankings = find.byKey(const ValueKey('leaderboard-rankings-section'));
     expect(card, findsOneWidget);
     expect(
-      tester.widget<RiksaRankBadge>(
-        find.descendant(of: card, matching: find.byType(RiksaRankBadge)),
-      ).tier,
+      tester
+          .widget<RiksaRankBadge>(
+            find.descendant(of: card, matching: find.byType(RiksaRankBadge)),
+          )
+          .tier,
       'Silver',
     );
     expect(find.text('Your rank'), findsOneWidget);
@@ -199,9 +201,11 @@ void main() {
 
     final card = find.byKey(const ValueKey('current-user-rank-card'));
     expect(
-      tester.widget<RiksaRankBadge>(
-        find.descendant(of: card, matching: find.byType(RiksaRankBadge)),
-      ).tier,
+      tester
+          .widget<RiksaRankBadge>(
+            find.descendant(of: card, matching: find.byType(RiksaRankBadge)),
+          )
+          .tier,
       'Gold',
     );
     expect(

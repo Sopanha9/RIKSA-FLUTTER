@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
+import '../../../../core/widgets/riksa_achievement_image.dart';
 import '../../../../core/widgets/riksa_rank_badge.dart';
 import '../../../auth/data/auth_models.dart';
 import '../../data/profile_models.dart';
@@ -520,7 +521,7 @@ class ProfileTierRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reached = ProfilePalette.aubergine(context);
+    final reached = ProfilePalette.text(context);
     final ahead = ProfilePalette.muted(context).withValues(alpha: .3);
 
     final segments = <Widget>[];
@@ -885,6 +886,35 @@ class _ProfileTabButton extends StatelessWidget {
   );
 }
 
+/// Content-sized cards switch to one column when width or text size needs it.
+class ProfileAchievementGrid extends StatelessWidget {
+  const ProfileAchievementGrid({
+    super.key,
+    required this.itemCount,
+    required this.itemBuilder,
+  });
+
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+      final columns = constraints.maxWidth >= 316 && textScale <= 1.3 ? 2 : 1;
+      final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
+      return Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: [
+          for (var index = 0; index < itemCount; index++)
+            SizedBox(width: width, child: itemBuilder(context, index)),
+        ],
+      );
+    },
+  );
+}
+
 class ProfileAchievementTile extends StatelessWidget {
   const ProfileAchievementTile({
     super.key,
@@ -903,39 +933,18 @@ class ProfileAchievementTile extends StatelessWidget {
   Widget build(BuildContext context) => ProfilePanel(
     padding: const EdgeInsets.all(16),
     child: Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Container(
-              width: 42,
-              height: 42,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: ProfilePalette.achievementSoft(context),
-                shape: BoxShape.circle,
-              ),
-              child: iconUrl?.trim().isNotEmpty == true
-                  ? Image.network(
-                      iconUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Icon(
-                        Icons.workspace_premium_rounded,
-                        color: ProfilePalette.xp(context),
-                      ),
-                    )
-                  : Icon(
-                      Icons.workspace_premium_rounded,
-                      color: ProfilePalette.xp(context),
-                    ),
-            ),
+            RiksaAchievementImage(iconUrl: iconUrl),
+            const SizedBox(width: 8),
             const Spacer(),
             if (trailingLabel?.isNotEmpty == true)
               Flexible(
                 child: Text(
                   trailingLabel!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: ProfilePalette.xp(context),
                     fontSize: 11,
@@ -945,18 +954,14 @@ class ProfileAchievementTile extends StatelessWidget {
               ),
           ],
         ),
-        const Spacer(),
+        const SizedBox(height: 16),
         Text(
           name,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.w900, height: 1.2),
         ),
         const SizedBox(height: 5),
         Text(
           description,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: ProfilePalette.muted(context),
             fontSize: 11,

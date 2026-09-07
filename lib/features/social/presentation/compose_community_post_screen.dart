@@ -3,12 +3,14 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../data/social_api.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
+import 'widgets/post_image_field.dart';
 import 'widgets/social_palette.dart';
 
 /// Writes a community post, or rewrites one the reader already owns.
@@ -40,6 +42,10 @@ class _ComposeCommunityPostScreenState
   String? _categoryId;
   bool _submitting = false;
 
+  /// The uploaded image's URL. Null means the post carries no picture.
+  String? _mediaUrl;
+  bool _uploadingImage = false;
+
   SocialPost? get _original => widget.post;
   bool get _isEditing => _original != null;
 
@@ -51,6 +57,7 @@ class _ComposeCommunityPostScreenState
       _titleController.text = post.title;
       _contentController.text = post.markdownContent;
       _categoryId = post.category.id;
+      _mediaUrl = post.mediaUrl;
     }
   }
 
@@ -59,6 +66,82 @@ class _ComposeCommunityPostScreenState
     _titleController.dispose();
     _contentController.dispose();
     super.dispose();
+  }
+
+  /// Picks an image and uploads it straight away, so a failure surfaces while
+  /// the author is still writing rather than when they hit publish.
+  Future<void> _pickImage() async {
+    final l10n = AppLocalizations.of(context)!;
+    final source = await _askImageSource();
+    if (source == null || !mounted) return;
+
+    final XFile? picked;
+    try {
+      picked = await ImagePicker().pickImage(
+        source: source,
+        // The API caps uploads at 2MB; downscaling here keeps a phone photo
+        // comfortably under that instead of failing after the round trip.
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 85,
+      );
+    } catch (_) {
+      if (mounted) _showMessage(l10n.photoFailed);
+      return;
+    }
+    if (picked == null || !mounted) return;
+
+    setState(() => _uploadingImage = true);
+    try {
+      final url = await ref
+          .read(socialApiProvider)
+          .uploadMedia(picked.path, filename: picked.name);
+      if (!mounted) return;
+      setState(() {
+        _mediaUrl = url;
+        _uploadingImage = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _uploadingImage = false);
+      _showMessage(
+        error is SocialApiException ? error.message : l10n.photoFailed,
+      );
+    }
+  }
+
+  Future<ImageSource?> _askImageSource() => showModalBottomSheet<ImageSource>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheetContext) {
+      final l10n = AppLocalizations.of(sheetContext)!;
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              key: const ValueKey('pick-from-gallery'),
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(l10n.photoFromGallery),
+              onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
+            ),
+            ListTile(
+              key: const ValueKey('pick-from-camera'),
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: Text(l10n.photoFromCamera),
+              onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _submit() async {
@@ -71,17 +154,19 @@ class _ComposeCommunityPostScreenState
 
     final String? failure;
     if (editing == null) {
-      final created = await notifier.createPost(
+      failure = await notifier.createPost(
         title: title,
         content: content,
         categoryId: _categoryId!,
+        mediaUrl: _mediaUrl,
       );
-      failure = created ? null : _publishFailure();
     } else {
       failure = await notifier.updatePost(
         id: editing.id,
         title: title,
         content: content,
+        // Always explicit on edit: blank tells the API to drop the image.
+        mediaUrl: _mediaUrl ?? '',
       );
     }
 
@@ -95,8 +180,6 @@ class _ComposeCommunityPostScreenState
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(failure)));
   }
-
-  String _publishFailure() => AppLocalizations.of(context)!.publishFailed;
 
   @override
   Widget build(BuildContext context) {
@@ -255,10 +338,19 @@ class _ComposeCommunityPostScreenState
                                 ? l10n.detailsLabel
                                 : null,
                           ),
+                          const SizedBox(height: 16),
+                          PostImageField(
+                            imageUrl: _mediaUrl,
+                            uploading: _uploadingImage,
+                            enabled: !_submitting,
+                            onPick: _pickImage,
+                            onRemove: () => setState(() => _mediaUrl = null),
+                          ),
                           const SizedBox(height: 22),
                           FilledButton.icon(
                             onPressed:
                                 _submitting ||
+                                    _uploadingImage ||
                                     (categories.isEmpty && !_isEditing)
                                 ? null
                                 : _submit,

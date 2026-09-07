@@ -364,6 +364,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get detailsLabel => 'Add details';
 
   @override
+  String get addPhoto => 'Add a photo';
+
+  @override
+  String get changePhoto => 'Change photo';
+
+  @override
+  String get removePhoto => 'Remove photo';
+
+  @override
+  String get photoUploading => 'Uploading photo…';
+
+  @override
+  String get photoFailed => 'That photo couldn’t be uploaded. Try another one.';
+
+  @override
+  String get photoTooLarge => 'That photo is too large. Pick one under 2MB.';
+
+  @override
+  String get photoFromGallery => 'Choose from gallery';
+
+  @override
+  String get photoFromCamera => 'Take a photo';
+
+  @override
   String get publish => 'Publish';
 
   @override

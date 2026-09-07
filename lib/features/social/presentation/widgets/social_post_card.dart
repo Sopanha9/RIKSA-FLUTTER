@@ -18,6 +18,7 @@ class SocialPostCard extends StatelessWidget {
     this.onAuthorTap,
     this.onEdit,
     this.onDelete,
+    this.highlightOfficial = true,
   });
 
   final SocialPost post;
@@ -30,6 +31,13 @@ class SocialPostCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
+  /// Whether an official Riksa post gets its tinted surface.
+  ///
+  /// The tint exists to pick official posts out of a mixed feed. On a profile
+  /// whose owner is already named in the header it says nothing, so the author's
+  /// own list renders every card the same way readers see everyone else's.
+  final bool highlightOfficial;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -37,6 +45,7 @@ class SocialPostCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final isReacted = post.myReaction != null;
     final isOfficial = isOfficialRiksaAuthor(post.author);
+    final tinted = isOfficial && highlightOfficial;
 
     return Semantics(
       container: true,
@@ -45,7 +54,7 @@ class SocialPostCard extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
         child: Material(
           key: ValueKey('post-${post.id}'),
-          color: isOfficial
+          color: tinted
               ? (isDark
                     ? SocialPalette.editorialSurface(context)
                     : SocialPalette.pinkSoft(context).withValues(alpha: .58))

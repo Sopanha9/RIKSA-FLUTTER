@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/core/widgets/riksa_achievement_image.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 import 'package:riksa_app/features/userProfile/data/public_profile.dart';
@@ -52,6 +53,7 @@ const _profile = PublicProfile(
     PublicProfileAchievement(
       id: 'achievement-1',
       name: 'Study Starter',
+      iconUrl: '/icons/ach-first-lesson.png',
       description: 'Completed a first lesson.',
       rarity: 'RARE',
       unlockedAt: null,
@@ -131,6 +133,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Study Starter'), findsOneWidget);
+    expect(
+      tester
+          .widget<RiksaAchievementImage>(find.byType(RiksaAchievementImage))
+          .iconUrl,
+      '/icons/ach-first-lesson.png',
+    );
     expect(find.textContaining('%'), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('profile-rank-tab')));

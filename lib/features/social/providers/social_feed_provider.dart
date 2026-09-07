@@ -191,18 +191,23 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
     }
   }
 
-  Future<bool> createPost({
+  /// Publishes a new post. Returns null on success, or a message to show the
+  /// author when the server refuses.
+  Future<String?> createPost({
     required String title,
     required String content,
     required String categoryId,
+    String? mediaUrl,
   }) async {
     final current = state;
-    if (current is! SocialFeedLoaded) return false;
+    if (current is! SocialFeedLoaded) {
+      return 'The community feed is still loading. Try again in a moment.';
+    }
 
     final category = current.categories
         .where((item) => item.id == categoryId)
         .firstOrNull;
-    if (category == null) return false;
+    if (category == null) return 'Pick a community for this post.';
 
     try {
       var categories = current.categories;
@@ -220,14 +225,19 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
       }
       final created = await ref
           .read(socialApiProvider)
-          .createPost(title: title, content: content, categoryId: categoryId);
+          .createPost(
+            title: title,
+            content: content,
+            categoryId: categoryId,
+            mediaUrl: mediaUrl,
+          );
       state = latest.copyWith(
         categories: categories,
         posts: [created, ...latest.posts],
       );
-      return true;
-    } catch (_) {
-      return false;
+      return null;
+    } catch (error) {
+      return _message(error);
     }
   }
 
@@ -237,11 +247,17 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
     required String id,
     required String title,
     required String content,
+    String? mediaUrl,
   }) async {
     try {
       final updated = await ref
           .read(socialApiProvider)
-          .updatePost(id: id, title: title, content: content);
+          .updatePost(
+            id: id,
+            title: title,
+            content: content,
+            mediaUrl: mediaUrl,
+          );
       syncPost(updated);
       // The author's profile tab reads its own copy of the feed.
       ref.invalidate(userPostsProvider);
