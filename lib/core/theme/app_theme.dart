@@ -16,6 +16,8 @@ class AppColors {
 
   static const brandJade = Color(0xFF237A5B);
   static const brandJadeStrong = Color(0xFF15543E);
+  /// Jade-tinted near-white for text on a filled jade surface.
+  static const jadeContrast = Color(0xFFF6FBF8);
   static const brandJadeSoft = Color(0xFFDDEFE5);
   static const achievementSaffron = Color(0xFFE69A18);
   static const achievementSaffronSoft = Color(0xFFFFE7B5);
@@ -102,6 +104,7 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     required this.jade,
     required this.jadeStrong,
     required this.jadeSoft,
+    required this.onJade,
     required this.saffron,
     required this.saffronSoft,
     required this.blushSoft,
@@ -124,6 +127,9 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
   final Color jade;
   final Color jadeStrong;
   final Color jadeSoft;
+
+  /// Text and icons drawn on a filled [jade] surface, never pure white.
+  final Color onJade;
   final Color saffron;
   final Color saffronSoft;
   final Color blushSoft;
@@ -146,6 +152,7 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     jade: AppColors.brandJade,
     jadeStrong: AppColors.brandJadeStrong,
     jadeSoft: AppColors.brandJadeSoft,
+    onJade: AppColors.jadeContrast,
     saffron: AppColors.achievementSaffron,
     saffronSoft: AppColors.achievementSaffronSoft,
     blushSoft: AppColors.supportingBlush,
@@ -169,6 +176,7 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     jade: Color(0xFF69B893),
     jadeStrong: Color(0xFF9AD4B7),
     jadeSoft: Color(0xFF243F33),
+    onJade: AppColors.darkCanvas,
     saffron: Color(0xFFF4B84D),
     saffronSoft: Color(0xFF49391D),
     blushSoft: Color(0xFF442F38),
@@ -193,6 +201,7 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     Color? jade,
     Color? jadeStrong,
     Color? jadeSoft,
+    Color? onJade,
     Color? saffron,
     Color? saffronSoft,
     Color? blushSoft,
@@ -214,6 +223,7 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     jade: jade ?? this.jade,
     jadeStrong: jadeStrong ?? this.jadeStrong,
     jadeSoft: jadeSoft ?? this.jadeSoft,
+    onJade: onJade ?? this.onJade,
     saffron: saffron ?? this.saffron,
     saffronSoft: saffronSoft ?? this.saffronSoft,
     blushSoft: blushSoft ?? this.blushSoft,
@@ -240,6 +250,7 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
       jade: Color.lerp(jade, other.jade, t)!,
       jadeStrong: Color.lerp(jadeStrong, other.jadeStrong, t)!,
       jadeSoft: Color.lerp(jadeSoft, other.jadeSoft, t)!,
+      onJade: Color.lerp(onJade, other.onJade, t)!,
       saffron: Color.lerp(saffron, other.saffron, t)!,
       saffronSoft: Color.lerp(saffronSoft, other.saffronSoft, t)!,
       blushSoft: Color.lerp(blushSoft, other.blushSoft, t)!,

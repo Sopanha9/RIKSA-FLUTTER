@@ -903,6 +903,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String tierBandProgress(String earned, String total) {
+    return '$earned / $total XP';
+  }
+
+  @override
+  String xpUntilFinalRank(int xp, String tier) {
+    return '$xp XP to $tier, the final rank';
+  }
+
+  @override
+  String tierPosition(int position, int total) {
+    return 'Rank $position of $total';
+  }
+
+  @override
   String get earned => 'Earned';
 
   @override
@@ -945,6 +960,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noPostsYet => 'Your community posts will appear here.';
+
+  @override
+  String get profileComposerPrompt => 'Share what you are learning';
+
+  @override
+  String profilePostCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count posts',
+      one: '1 post',
+      zero: 'No posts yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get writeFirstPost => 'Write your first post';
+
+  @override
+  String get managePost => 'Manage post';
 
   @override
   String get countryRank => 'Cambodia rank';
@@ -1098,4 +1134,138 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noPublicRank => 'No public ranking is available yet.';
+
+  @override
+  String get aiTutorSubtitle => 'Ask anything from your lessons';
+
+  @override
+  String get aiAskNewQuestion => 'Ask a new question';
+
+  @override
+  String get aiChatsToday => 'Today';
+
+  @override
+  String get aiChatsThisWeek => 'This week';
+
+  @override
+  String get aiChatsEarlier => 'Earlier';
+
+  @override
+  String get aiChatOptions => 'Chat options';
+
+  @override
+  String get aiDeleteChat => 'Delete chat';
+
+  @override
+  String get aiChatDeleted => 'Chat deleted';
+
+  @override
+  String get aiUndo => 'Undo';
+
+  @override
+  String get aiChatDeleteFailed => 'That chat could not be deleted.';
+
+  @override
+  String get aiChatsEmptyTitle => 'Ask anything you are learning';
+
+  @override
+  String get aiChatsEmptyBody =>
+      'Start a private conversation in Khmer or English about any lesson.';
+
+  @override
+  String get aiStartChat => 'Start a chat';
+
+  @override
+  String get aiTutorUnavailableTitle => 'Tutor unavailable';
+
+  @override
+  String get aiTutorUnavailableBody => 'Check your connection and try again.';
+
+  @override
+  String get aiSearchChats => 'Search your chats';
+
+  @override
+  String get aiNoChatMatches => 'No chat matches that.';
+
+  @override
+  String get aiChatFallbackTitle => 'Learning chat';
+
+  @override
+  String get aiComposerHint => 'Ask your tutor';
+
+  @override
+  String get aiSendMessage => 'Send message';
+
+  @override
+  String get aiThinking => 'Riksa is thinking';
+
+  @override
+  String get aiMessageNotSent => 'Not sent';
+
+  @override
+  String get aiRetryMessage => 'Send again';
+
+  @override
+  String get aiChatOpener => 'What would you like to understand today?';
+
+  @override
+  String get aiAskAboutLesson => 'Ask about this lesson';
+
+  @override
+  String aiLessonContext(String lesson) {
+    return 'About $lesson';
+  }
+
+  @override
+  String get aiStarterExplainAgain => 'Explain this again, more slowly';
+
+  @override
+  String get aiStarterStillUnsure => 'I am still unsure about one part';
+
+  @override
+  String get aiStarterWorkedExample => 'Give me a worked example';
+
+  @override
+  String get aiChatLoadFailed => 'Could not load this chat.';
+
+  @override
+  String get aiReplyFailed => 'The tutor could not answer. Please try again.';
+
+  @override
+  String get aiContinueChat => 'Continue';
+
+  @override
+  String get aiTimeNow => 'now';
+
+  @override
+  String aiTimeMinutes(int count) {
+    return '${count}m';
+  }
+
+  @override
+  String aiTimeHours(int count) {
+    return '${count}h';
+  }
+
+  @override
+  String aiTimeDays(int count) {
+    return '${count}d';
+  }
+
+  @override
+  String otpSentTo(String chatId) {
+    return 'Sent to Telegram chat $chatId';
+  }
+
+  @override
+  String otpResendCountdown(int seconds) {
+    return 'Resend in ${seconds}s';
+  }
+
+  @override
+  String get otpChangeAccount => 'Change Telegram account';
+
+  @override
+  String get otpDeliveryHelp =>
+      'Open your Riksa bot conversation to find the latest code. If it has expired, request a new one.';
 }

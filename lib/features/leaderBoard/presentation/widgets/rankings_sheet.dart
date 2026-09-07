@@ -80,6 +80,7 @@ class RankingsSheet extends StatelessWidget {
                     for (var index = 0; index < listRows.length; index++) ...[
                       RankingListRow(
                         rank: listRows[index].rank,
+                        tier: listRows[index].rankingTier,
                         name: listRows[index].fallbackName,
                         subtitle: listRows[index].rankingTier == null
                             ? 'Scholar'

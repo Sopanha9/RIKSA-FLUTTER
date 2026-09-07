@@ -99,6 +99,11 @@ class _LessonExperienceScreenState
             _practiceView(detail, sections, section)
           else
             _contentView(section),
+          const SizedBox(height: 24),
+          _AskTutorButton(
+            lessonTitle: detail.title,
+            learningContext: '$subject - ${section.title}',
+          ),
         ],
       ),
     );
@@ -830,4 +835,34 @@ MarkdownStyleSheet _lessonMarkdownStyleSheet(
     blockSpacing: 12,
     listIndent: 22,
   );
+}
+
+/// Contextual way into the tutor: the student is stuck on this lesson, right
+/// now, and the tutor is told which lesson that is.
+class _AskTutorButton extends StatelessWidget {
+  const _AskTutorButton({
+    required this.lessonTitle,
+    required this.learningContext,
+  });
+
+  final String lessonTitle;
+  final String learningContext;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        key: const ValueKey('ask-tutor-about-lesson'),
+        onPressed: () => context.push(
+          '/ai/chat/new'
+          '?lesson=${Uri.encodeQueryComponent(lessonTitle)}'
+          '&context=${Uri.encodeQueryComponent(learningContext)}',
+        ),
+        icon: const Icon(Icons.auto_awesome, size: 18),
+        label: Text(l10n.aiAskAboutLesson),
+      ),
+    );
+  }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
+import '../../../../core/widgets/riksa_rank_badge.dart';
 
 class RankingListRow extends StatelessWidget {
   const RankingListRow({
@@ -12,6 +13,7 @@ class RankingListRow extends StatelessWidget {
     required this.xp,
     required this.avatarLabel,
     this.avatarUrl,
+    this.tier,
     this.isCurrentUser = false,
     this.onTap,
   });
@@ -22,6 +24,7 @@ class RankingListRow extends StatelessWidget {
   final int xp;
   final String avatarLabel;
   final String? avatarUrl;
+  final String? tier;
   final bool isCurrentUser;
   final VoidCallback? onTap;
 
@@ -124,6 +127,10 @@ class RankingListRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
+              if (tier != null) ...[
+                RiksaRankBadge(tier: tier, size: 32),
+                const SizedBox(width: 4),
+              ],
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 11,

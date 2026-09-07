@@ -87,6 +87,7 @@ flutter:
   assets:
     - assets/images/logos/
     - assets/images/profile/
+    - assets/images/ranks/
     - assets/images/avatars/humation/
     - assets/images/splashScreen/
     - assets/images/onboarding/

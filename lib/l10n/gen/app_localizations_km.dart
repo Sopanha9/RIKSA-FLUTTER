@@ -860,6 +860,21 @@ class AppLocalizationsKm extends AppLocalizations {
   }
 
   @override
+  String tierBandProgress(String earned, String total) {
+    return '$earned / $total XP';
+  }
+
+  @override
+  String xpUntilFinalRank(int xp, String tier) {
+    return 'នៅ $xp XP ទៀតដល់ $tier ដែលជាឋានៈចុងក្រោយ';
+  }
+
+  @override
+  String tierPosition(int position, int total) {
+    return 'ឋានៈទី $position ក្នុងចំណោម $total';
+  }
+
+  @override
   String get earned => 'ទទួលបាន';
 
   @override
@@ -901,6 +916,27 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get noPostsYet => 'ការបង្ហោះក្នុងសហគមន៍របស់អ្នកនឹងបង្ហាញនៅទីនេះ។';
+
+  @override
+  String get profileComposerPrompt => 'ចែករំលែកអ្វីដែលអ្នកកំពុងរៀន';
+
+  @override
+  String profilePostCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ការបង្ហោះ $count',
+      one: 'ការបង្ហោះ ១',
+      zero: 'មិនទាន់មានការបង្ហោះ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get writeFirstPost => 'សរសេរការបង្ហោះដំបូងរបស់អ្នក';
+
+  @override
+  String get managePost => 'គ្រប់គ្រងការបង្ហោះ';
 
   @override
   String get countryRank => 'ចំណាត់ថ្នាក់កម្ពុជា';
@@ -1054,4 +1090,139 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get noPublicRank => 'មិនទាន់មានចំណាត់ថ្នាក់សាធារណៈសម្រាប់បង្ហាញទេ។';
+
+  @override
+  String get aiTutorSubtitle => 'សួរអ្វីក៏បាន ពីមេរៀនរបស់អ្នក';
+
+  @override
+  String get aiAskNewQuestion => 'សួរសំណួរថ្មី';
+
+  @override
+  String get aiChatsToday => 'ថ្ងៃនេះ';
+
+  @override
+  String get aiChatsThisWeek => 'សប្ដាហ៍នេះ';
+
+  @override
+  String get aiChatsEarlier => 'មុននេះ';
+
+  @override
+  String get aiChatOptions => 'ជម្រើសនៃការសន្ទនា';
+
+  @override
+  String get aiDeleteChat => 'លុបការសន្ទនា';
+
+  @override
+  String get aiChatDeleted => 'បានលុបការសន្ទនា';
+
+  @override
+  String get aiUndo => 'មិនធ្វើវិញ';
+
+  @override
+  String get aiChatDeleteFailed => 'មិនអាចលុបការសន្ទនានេះបានទេ។';
+
+  @override
+  String get aiChatsEmptyTitle => 'សួរអំពីអ្វីដែលអ្នកកំពុងរៀន';
+
+  @override
+  String get aiChatsEmptyBody =>
+      'ចាប់ផ្ដើមការសន្ទនាឯកជនជាភាសាខ្មែរ ឬអង់គ្លេស អំពីមេរៀនណាមួយ។';
+
+  @override
+  String get aiStartChat => 'ចាប់ផ្ដើមសន្ទនា';
+
+  @override
+  String get aiTutorUnavailableTitle => 'មិនអាចភ្ជាប់គ្រូ AI បានទេ';
+
+  @override
+  String get aiTutorUnavailableBody =>
+      'សូមពិនិត្យការតភ្ជាប់ រួចព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get aiSearchChats => 'ស្វែងរកការសន្ទនា';
+
+  @override
+  String get aiNoChatMatches => 'គ្មានការសន្ទនាត្រូវនឹងពាក្យនេះទេ។';
+
+  @override
+  String get aiChatFallbackTitle => 'ការសន្ទនាសិក្សា';
+
+  @override
+  String get aiComposerHint => 'សួរគ្រូ AI របស់អ្នក';
+
+  @override
+  String get aiSendMessage => 'ផ្ញើសារ';
+
+  @override
+  String get aiThinking => 'RIKSA កំពុងគិត';
+
+  @override
+  String get aiMessageNotSent => 'មិនបានផ្ញើ';
+
+  @override
+  String get aiRetryMessage => 'ផ្ញើម្ដងទៀត';
+
+  @override
+  String get aiChatOpener => 'ថ្ងៃនេះ អ្នកចង់យល់អំពីអ្វី?';
+
+  @override
+  String get aiAskAboutLesson => 'សួរអំពីមេរៀននេះ';
+
+  @override
+  String aiLessonContext(String lesson) {
+    return 'អំពី $lesson';
+  }
+
+  @override
+  String get aiStarterExplainAgain => 'សូមពន្យល់ម្ដងទៀត ឲ្យយឺតជាងមុន';
+
+  @override
+  String get aiStarterStillUnsure => 'ខ្ញុំនៅមិនទាន់ច្បាស់ចំណុចមួយ';
+
+  @override
+  String get aiStarterWorkedExample => 'សូមឧទាហរណ៍ដោះស្រាយជាជំហានៗ';
+
+  @override
+  String get aiChatLoadFailed => 'មិនអាចផ្ទុកការសន្ទនានេះបានទេ។';
+
+  @override
+  String get aiReplyFailed => 'គ្រូ AI មិនអាចឆ្លើយបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get aiContinueChat => 'បន្ត';
+
+  @override
+  String get aiTimeNow => 'ឥឡូវ';
+
+  @override
+  String aiTimeMinutes(int count) {
+    return '$count នាទី';
+  }
+
+  @override
+  String aiTimeHours(int count) {
+    return '$count ម៉ោង';
+  }
+
+  @override
+  String aiTimeDays(int count) {
+    return '$count ថ្ងៃ';
+  }
+
+  @override
+  String otpSentTo(String chatId) {
+    return 'បានផ្ញើទៅការជជែក Telegram $chatId';
+  }
+
+  @override
+  String otpResendCountdown(int seconds) {
+    return 'ផ្ញើម្ដងទៀតក្នុង $seconds វិនាទី';
+  }
+
+  @override
+  String get otpChangeAccount => 'ប្ដូរគណនី Telegram';
+
+  @override
+  String get otpDeliveryHelp =>
+      'បើកការសន្ទនាជាមួយបូត Riksa ដើម្បីរកលេខកូដចុងក្រោយ។ ប្រសិនបើលេខកូដផុតកំណត់ សូមស្នើសុំលេខកូដថ្មី។';
 }

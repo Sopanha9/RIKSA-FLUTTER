@@ -6,12 +6,14 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_rank_badge.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_api.dart';
 import '../../auth/data/auth_models.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../social/data/social_api.dart';
 import '../../social/data/social_models.dart';
+import '../../social/presentation/widgets/social_create_menu.dart';
 import '../../social/presentation/widgets/social_owner_menu.dart';
 import '../../social/presentation/widgets/social_post_card.dart';
 import '../../social/providers/social_feed_provider.dart';
@@ -19,6 +21,7 @@ import '../data/profile_models.dart';
 import '../providers/profile_cover_provider.dart';
 import '../providers/profile_provider.dart';
 import 'widgets/profile_cover.dart';
+import 'widgets/profile_post_actions.dart';
 import 'widgets/profile_ui.dart';
 import 'public_profile_navigation.dart';
 
@@ -69,60 +72,62 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                 SliverSafeArea(
                   bottom: false,
                   sliver: SliverToBoxAdapter(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 680),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
-                          child: _ProfileTopBar(
-                            title: l10n.profile,
-                            shareLabel: l10n.shareProfile,
-                            settingsLabel: l10n.settings,
-                            onShare: user == null ? null : () => _share(user),
-                            onSettings: () => context.push('/profile/settings'),
-                          ),
+                    child: centeredProfileColumn(
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 4, 18, 8),
+                        child: _ProfileTopBar(
+                          shareLabel: l10n.shareProfile,
+                          settingsLabel: l10n.settings,
+                          editLabel: l10n.editProfile,
+                          onShare: user == null ? null : () => _share(user),
+                          onSettings: () => context.push('/profile/settings'),
+                          onEdit: () => context.push('/profile/edit'),
                         ),
                       ),
                     ),
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 680),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(18, 14, 18, 0),
-                        child: Column(
-                          children: [
-                            if (user != null)
-                              _ProfileHeader(user: user, dashboard: dashboard)
-                            else
-                              const _ProfileLoading(),
-                            const SizedBox(height: 22),
-                            ProfileTabs(
-                              selected: _tab,
-                              postsLabel: l10n.myPosts,
-                              achievementsLabel: l10n.achievements,
-                              rankLabel: l10n.currentRank,
-                              onSelected: (tab) => setState(() => _tab = tab),
-                            ),
-                            const SizedBox(height: 18),
-                            AnimatedSwitcher(
-                              duration: RiksaMotion.resolve(
-                                context,
-                                RiksaMotion.standard,
-                              ),
-                              child: user == null
-                                  ? const _ProfileLoading()
-                                  : switch (_tab) {
-                                      ProfileTab.posts => _PostsTab(user: user),
-                                      ProfileTab.achievements =>
-                                        _AchievementsTab(dashboard: dashboard),
-                                      ProfileTab.rank => const _RankTab(),
-                                    },
-                            ),
-                          ],
+                  child: centeredProfileColumn(
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
+                      child: user == null
+                          ? const _ProfileLoading()
+                          : _ProfileHeader(user: user, dashboard: dashboard),
+                    ),
+                  ),
+                ),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: ProfileTabsHeaderDelegate(
+                    color: ProfilePalette.canvas(context),
+                    tabs: ProfileTabs(
+                      selected: _tab,
+                      postsLabel: l10n.myPosts,
+                      achievementsLabel: l10n.achievements,
+                      rankLabel: l10n.currentRank,
+                      onSelected: (tab) => setState(() => _tab = tab),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: centeredProfileColumn(
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+                      child: AnimatedSwitcher(
+                        duration: RiksaMotion.resolve(
+                          context,
+                          RiksaMotion.standard,
                         ),
+                        child: user == null
+                            ? const _ProfileLoading()
+                            : switch (_tab) {
+                                ProfileTab.posts => _PostsTab(user: user),
+                                ProfileTab.achievements => _AchievementsTab(
+                                  dashboard: dashboard,
+                                ),
+                                ProfileTab.rank => const _RankTab(),
+                              },
                       ),
                     ),
                   ),
@@ -149,81 +154,93 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   }
 }
 
+/// The screen's action row.
+///
+/// It carries no "Profile" title: the bottom navigation already labels this
+/// tab, and repeating it here spent a full row on a word the user can see.
+/// Utilities sit leading, the one primary action trailing.
 class _ProfileTopBar extends StatelessWidget {
   const _ProfileTopBar({
-    required this.title,
     required this.shareLabel,
     required this.settingsLabel,
+    required this.editLabel,
     required this.onShare,
     required this.onSettings,
+    required this.onEdit,
   });
 
-  final String title;
   final String shareLabel;
   final String settingsLabel;
+  final String editLabel;
   final VoidCallback? onShare;
   final VoidCallback onSettings;
+  final VoidCallback onEdit;
 
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-      Expanded(
-        child: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: ProfilePalette.text(context),
-            fontSize: 32,
-            letterSpacing: -0.5,
-            fontWeight: FontWeight.w900,
+  Widget build(BuildContext context) => SizedBox(
+    height: 44,
+    child: Row(
+      children: [
+        ProfileIconAction(
+          key: const ValueKey('profile-share'),
+          tooltip: shareLabel,
+          icon: Icons.ios_share_rounded,
+          onPressed: onShare ?? () {},
+        ),
+        const SizedBox(width: 8),
+        ProfileIconAction(
+          key: const ValueKey('profile-settings'),
+          tooltip: settingsLabel,
+          icon: Icons.settings_outlined,
+          onPressed: onSettings,
+        ),
+        // Expanded, not Spacer plus Flexible: those two compete for the free
+        // space and truncate a long Khmer label while room is still going
+        // spare. Here the button takes all of it and aligns itself trailing.
+        Expanded(
+          child: Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: _ProfileEditButton(
+              key: const ValueKey('profile-edit'),
+              label: editLabel,
+              onPressed: onEdit,
+            ),
           ),
         ),
-      ),
-      _ProfileHeaderAction(
-        key: const ValueKey('profile-share'),
-        tooltip: shareLabel,
-        icon: Icons.ios_share_rounded,
-        onPressed: onShare,
-      ),
-      const SizedBox(width: 10),
-      _ProfileHeaderAction(
-        key: const ValueKey('profile-settings'),
-        tooltip: settingsLabel,
-        icon: Icons.settings_outlined,
-        backgroundColor: ProfilePalette.pink(context),
-        onPressed: onSettings,
-      ),
-    ],
+      ],
+    ),
   );
 }
 
-class _ProfileHeaderAction extends StatelessWidget {
-  const _ProfileHeaderAction({
+/// The primary action on the signed-in user's own profile, matching the
+/// position X gives its edit control.
+class _ProfileEditButton extends StatelessWidget {
+  const _ProfileEditButton({
     super.key,
-    required this.tooltip,
-    required this.icon,
+    required this.label,
     required this.onPressed,
-    this.backgroundColor,
   });
 
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback? onPressed;
-  final Color? backgroundColor;
+  final String label;
+  final VoidCallback onPressed;
 
   @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: tooltip,
+  Widget build(BuildContext context) => OutlinedButton(
     onPressed: onPressed,
-    style: IconButton.styleFrom(
-      minimumSize: const Size.square(46),
-      backgroundColor:
-          backgroundColor ?? ProfilePalette.editorialSurface(context),
-      foregroundColor: AppColors.editorialAubergine,
+    style: OutlinedButton.styleFrom(
+      minimumSize: const Size(0, 44),
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      foregroundColor: ProfilePalette.text(context),
+      side: BorderSide(color: ProfilePalette.border(context)),
+      shape: const RoundedRectangleBorder(borderRadius: AppRadii.fullBorder),
     ),
-    icon: Icon(icon, size: 20),
+    // Styled on the child so the label keeps the theme's font family.
+    child: Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800),
+    ),
   );
 }
 
@@ -236,6 +253,7 @@ class _ProfileHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     final game = dashboard.asData?.value.gamification;
     final achievements = dashboard.asData?.value.achievements ?? const [];
     final earnedAchievements = achievements.where((item) => item.earned).length;
@@ -245,488 +263,224 @@ class _ProfileHeader extends ConsumerWidget {
     final tier = readableProfileName(game?.currentTier ?? l10n.startingTier);
     final coverId = ref.watch(profileCoverProvider);
     final localAvatar = ref.watch(profileAvatarProvider);
+    final decimal = NumberFormat.decimalPattern(locale);
 
-    return Column(
-      children: [
-        _ProfileHeroCard(
-          user: user,
-          displayName: name,
-          coverId: coverId,
-          avatarPath: localAvatar,
-          verifiedLabel: l10n.verified,
-          fallbackBio: l10n.learningHeaderSubtitle,
+    return ProfileIdentityHeader(
+      cover: ProfileCover(
+        key: const ValueKey('profile-cover'),
+        coverId: coverId,
+        height: ProfileIdentityHeader.coverHeight,
+        borderRadius: AppRadii.largeBorder,
+      ),
+      avatar: RiksaProfileAvatar(
+        key: const ValueKey('profile-hero-avatar'),
+        user: user,
+        radius: 44,
+        avatarPath: localAvatar,
+        // A ring in the page ground separates the avatar from the banner.
+        borderColor: ProfilePalette.canvas(context),
+        ringColor: ProfilePalette.canvas(context),
+      ),
+      displayName: name,
+      username: user.username,
+      bio: user.bio?.trim().isNotEmpty == true
+          ? user.bio
+          : l10n.learningHeaderSubtitle,
+      isVerified: user.emailVerified,
+      verifiedKey: const ValueKey('profile-verification-badge'),
+      metadata: [
+        ?_provinceMeta(ref, locale),
+        if (user.createdAt != null)
+          ProfileMetaItem(
+            icon: Icons.calendar_today_outlined,
+            label:
+                '${l10n.joined} ${DateFormat.yMMMM(locale).format(user.createdAt!.toLocal())}',
+          ),
+      ],
+      countsKey: const ValueKey('profile-stats'),
+      counts: [
+        ProfileCountItem(
+          value: decimal.format(game?.totalXp ?? 0),
+          label: l10n.totalXp,
         ),
-        const SizedBox(height: 14),
-        _ProfileStatsCard(
-          totalXp: game?.totalXp ?? 0,
-          currentStreak: game?.currentStreak ?? 0,
-          earnedAchievements: earnedAchievements,
+        ProfileCountItem(
+          itemKey: const ValueKey('profile-streak'),
+          value: decimal.format(game?.currentStreak ?? 0),
+          label: l10n.currentStreak,
         ),
-        const SizedBox(height: 14),
-        _ProfileLearningCard(
-          tier: tier,
-          gamification: game,
-          totalXpLabel: l10n.totalXp,
-          currentStreakLabel: l10n.currentStreak,
-          highestRankLabel: l10n.highestRankReached,
-          xpUntilNextRank: l10n.xpUntilNextRank,
+        ProfileCountItem(
+          value: decimal.format(earnedAchievements),
+          label: l10n.achievements,
         ),
       ],
-    );
-  }
-}
-
-class _ProfileHeroCard extends StatelessWidget {
-  const _ProfileHeroCard({
-    required this.user,
-    required this.displayName,
-    required this.coverId,
-    required this.avatarPath,
-    required this.verifiedLabel,
-    required this.fallbackBio,
-  });
-
-  final AuthUser user;
-  final String displayName;
-  final String coverId;
-  final String? avatarPath;
-  final String verifiedLabel;
-  final String fallbackBio;
-
-  @override
-  Widget build(BuildContext context) {
-    const height = 318.0;
-    return SizedBox(
-      height: height,
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: ProfileCover(
-              key: const ValueKey('profile-cover'),
-              coverId: coverId,
-              height: height,
-              borderRadius: AppRadii.extraLargeBorder,
-            ),
-          ),
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: AppRadii.extraLargeBorder,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.editorialAubergine.withValues(alpha: .94),
-                    AppColors.editorialAubergineRaised.withValues(alpha: .8),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          PositionedDirectional(
-            start: -38,
-            bottom: -68,
-            child: _ProfileBlob(
-              width: 210,
-              height: 172,
-              color: ProfilePalette.pink(context).withValues(alpha: .92),
-            ),
-          ),
-          PositionedDirectional(
-            start: 102,
-            bottom: -84,
-            child: _ProfileBlob(
-              width: 145,
-              height: 168,
-              color: ProfilePalette.pink(context).withValues(alpha: .58),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              children: [
-                RiksaProfileAvatar(
-                  key: const ValueKey('profile-hero-avatar'),
-                  user: user,
-                  radius: 52,
-                  avatarPath: avatarPath,
-                  borderColor: Colors.white,
-                  ringColor: ProfilePalette.pink(context),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: _ProfileHeroIdentity(
-                    user: user,
-                    displayName: displayName,
-                    verifiedLabel: verifiedLabel,
-                    fallbackBio: fallbackBio,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      footer: _ProfileLearningCard(
+        tier: tier,
+        gamification: game,
+        highestRankLabel: l10n.highestRankReached,
       ),
     );
   }
-}
 
-class _ProfileBlob extends StatelessWidget {
-  const _ProfileBlob({
-    required this.width,
-    required this.height,
-    required this.color,
-  });
-
-  final double width;
-  final double height;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => Transform.rotate(
-    angle: -.24,
-    child: Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(80),
-      ),
-    ),
-  );
-}
-
-class _ProfileHeroIdentity extends StatelessWidget {
-  const _ProfileHeroIdentity({
-    required this.user,
-    required this.displayName,
-    required this.verifiedLabel,
-    required this.fallbackBio,
-  });
-
-  final AuthUser user;
-  final String displayName;
-  final String verifiedLabel;
-  final String fallbackBio;
-
-  @override
-  Widget build(BuildContext context) {
-    final bio = user.bio?.trim().isNotEmpty == true
-        ? user.bio!.trim()
-        : fallbackBio;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          displayName,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: ProfilePalette.onAubergine(context),
-            fontSize: 25,
-            height: 1.05,
-            letterSpacing: -.5,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          '@${user.username}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: ProfilePalette.onAubergine(context).withValues(alpha: .82),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 10),
-        if (user.emailVerified) ...[
-          _ProfileVerificationBadge(label: verifiedLabel),
-          const SizedBox(height: 12),
-        ] else
-          const SizedBox(height: 10),
-        Text(
-          bio,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: ProfilePalette.onAubergine(context).withValues(alpha: .88),
-            fontSize: 13,
-            height: 1.35,
-          ),
-        ),
-      ],
-    );
+  /// The user's province, when the options list has already resolved. Absent
+  /// while it loads rather than showing a raw province id.
+  ProfileMetaItem? _provinceMeta(WidgetRef ref, String locale) {
+    final provinceId = user.provinceId;
+    if (provinceId == null || provinceId.isEmpty) return null;
+    final options = ref.watch(provinceOptionsProvider).asData?.value;
+    if (options == null) return null;
+    for (final option in options) {
+      if (option.id != provinceId) continue;
+      final label = locale == 'km' ? option.nameKhmer : option.nameLatin;
+      if (label.trim().isEmpty) return null;
+      return ProfileMetaItem(
+        icon: Icons.location_on_outlined,
+        label: label.trim(),
+      );
+    }
+    return null;
   }
 }
 
-class _ProfileVerificationBadge extends StatelessWidget {
-  const _ProfileVerificationBadge({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    key: const ValueKey('profile-verification-badge'),
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-    decoration: BoxDecoration(
-      color: ProfilePalette.pink(context),
-      borderRadius: AppRadii.fullBorder,
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.verified_rounded,
-          size: 15,
-          color: ProfilePalette.aubergine(context),
-        ),
-        const SizedBox(width: 5),
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: ProfilePalette.aubergine(context),
-              fontSize: 11.5,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class _ProfileStatsCard extends StatelessWidget {
-  const _ProfileStatsCard({
-    required this.totalXp,
-    required this.currentStreak,
-    required this.earnedAchievements,
+/// Where the learner sits on the rank ladder, and how far the end is.
+///
+/// It deliberately shows neither total XP nor the streak: the counts line
+/// directly above already carries both, and XP is a consequence of studying,
+/// not the headline.
+class _ProfileLearningCard extends StatelessWidget {
+  const _ProfileLearningCard({
+    required this.tier,
+    required this.gamification,
+    required this.highestRankLabel,
   });
 
-  final int totalXp;
-  final int currentStreak;
-  final int earnedAchievements;
+  final String tier;
+  final GamificationProfile? gamification;
+  final String highestRankLabel;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    return Container(
-      key: const ValueKey('profile-stats'),
-      padding: const EdgeInsets.symmetric(vertical: 17, horizontal: 8),
-      decoration: BoxDecoration(
-        color: ProfilePalette.editorialSurface(context),
-        borderRadius: AppRadii.extraLargeBorder,
-        border: Border.all(
-          color: ProfilePalette.border(context).withValues(alpha: .45),
-        ),
-      ),
-      child: Row(
-        children: [
-          _ProfileStat(
-            value: NumberFormat.compact(locale: locale).format(totalXp),
-            label: l10n.totalXp,
-          ),
-          const _ProfileStatDivider(),
-          _ProfileStat(
-            key: const ValueKey('profile-streak'),
-            value: NumberFormat.decimalPattern(locale).format(currentStreak),
-            label: l10n.currentStreak,
-          ),
-          const _ProfileStatDivider(),
-          _ProfileStat(
-            value: NumberFormat.decimalPattern(
-              locale,
-            ).format(earnedAchievements),
-            label: l10n.achievements,
-          ),
-        ],
-      ),
-    );
-  }
-}
+    final decimal = NumberFormat.decimalPattern(locale);
+    final game = gamification;
 
-class _ProfileStat extends StatelessWidget {
-  const _ProfileStat({super.key, required this.value, required this.label});
+    final currentTier = game?.currentTier;
+    final ladderIndex = currentTier == null
+        ? -1
+        : profileTierLadder.indexOf(currentTier.toUpperCase());
+    final nextTier = game?.nextTier;
+    final isFinalStep =
+        nextTier != null &&
+        profileTierLadder.indexOf(nextTier.toUpperCase()) ==
+            profileTierLadder.length - 1;
 
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Expanded(
-    child: Column(
-      children: [
-        Text(
-          value,
-          maxLines: 1,
-          style: TextStyle(
-            color: ProfilePalette.text(context),
-            fontSize: 23,
-            height: 1,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: ProfilePalette.muted(context),
-            fontSize: 11,
-            height: 1.15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class _ProfileStatDivider extends StatelessWidget {
-  const _ProfileStatDivider();
-
-  @override
-  Widget build(BuildContext context) =>
-      Container(width: 1, height: 38, color: ProfilePalette.border(context));
-}
-
-class _ProfileLearningCard extends StatelessWidget {
-  const _ProfileLearningCard({
-    required this.tier,
-    required this.gamification,
-    required this.totalXpLabel,
-    required this.currentStreakLabel,
-    required this.highestRankLabel,
-    required this.xpUntilNextRank,
-  });
-
-  final String tier;
-  final GamificationProfile? gamification;
-  final String totalXpLabel;
-  final String currentStreakLabel;
-  final String highestRankLabel;
-  final String Function(int xp, String tier) xpUntilNextRank;
-
-  @override
-  Widget build(BuildContext context) {
-    final locale = Localizations.localeOf(context).languageCode;
-    final totalXp = gamification?.totalXp ?? 0;
-    final streak = gamification?.currentStreak ?? 0;
-    final nextTier = gamification?.nextTier;
-    final progress = gamification?.nextTierProgress ?? 0;
     final progressLabel = nextTier == null
         ? highestRankLabel
-        : xpUntilNextRank(
-            gamification?.xpToNext ?? 0,
+        : isFinalStep
+        ? l10n.xpUntilFinalRank(
+            game?.xpToNext ?? 0,
+            readableProfileName(nextTier),
+          )
+        : l10n.xpUntilNextRank(
+            game?.xpToNext ?? 0,
             readableProfileName(nextTier),
           );
+
+    final band = game != null && game.tierBandXp > 0
+        ? l10n.tierBandProgress(
+            decimal.format(game.xpIntoTier),
+            decimal.format(game.tierBandXp),
+          )
+        : null;
+
     return Semantics(
-      label: '$tier, $totalXp $totalXpLabel, $streak $currentStreakLabel',
+      label: ladderIndex < 0
+          ? tier
+          : '$tier, ${l10n.tierPosition(ladderIndex + 1, profileTierLadder.length)}',
       child: Container(
         key: const ValueKey('profile-learning-card'),
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
         decoration: BoxDecoration(
           color: ProfilePalette.pinkSoft(context),
           borderRadius: AppRadii.extraLargeBorder,
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Absent when the server reports a tier this build does not know,
+            // rather than drawing a rail with nothing marked on it.
+            if (ladderIndex >= 0) ...[
+              ProfileTierRail(
+                key: const ValueKey('profile-tier-rail'),
+                tiers: profileTierLadder,
+                currentIndex: ladderIndex,
+                // The end label is dropped when the learner is standing on
+                // it: the heading below already names that tier.
+                startLabel: ladderIndex == 0
+                    ? ''
+                    : readableProfileName(profileTierLadder.first),
+                endLabel: ladderIndex == profileTierLadder.length - 1
+                    ? ''
+                    : readableProfileName(profileTierLadder.last),
+              ),
+              const SizedBox(height: 18),
+            ],
             Row(
               children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: const BoxDecoration(
-                    color: AppColors.editorialAubergine,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome_rounded,
-                    color: AppColors.editorialPink,
-                  ),
-                ),
-                const SizedBox(width: 13),
+                RiksaRankBadge(tier: currentTier, size: 48),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        tier,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: ProfilePalette.text(context),
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        key: const ValueKey('profile-total-xp'),
-                        '${NumberFormat.decimalPattern(locale).format(totalXp)} XP',
-                        style: const TextStyle(
-                          color: AppColors.editorialPink,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    tier,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: ProfilePalette.text(context),
+                      fontSize: 21,
+                      letterSpacing: -.2,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 11,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: ProfilePalette.editorialSurface(context),
-                    borderRadius: AppRadii.fullBorder,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        NumberFormat.decimalPattern(locale).format(streak),
-                        style: TextStyle(
-                          color: ProfilePalette.text(context),
-                          fontWeight: FontWeight.w900,
-                        ),
+                if (band != null) ...[
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      key: const ValueKey('profile-tier-band'),
+                      band,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        color: ProfilePalette.muted(context),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(width: 5),
-                      const Icon(
-                        Icons.local_fire_department_rounded,
-                        color: AppColors.achievementSaffron,
-                        size: 20,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
-            const SizedBox(height: 17),
-            ClipRRect(
-              borderRadius: AppRadii.fullBorder,
-              child: LinearProgressIndicator(
-                key: const ValueKey('profile-level-progress'),
-                value: progress,
-                minHeight: 10,
-                backgroundColor: AppColors.editorialAubergine.withValues(
-                  alpha: .14,
-                ),
-                valueColor: const AlwaysStoppedAnimation(
-                  AppColors.editorialPink,
+            // At the top of the ladder there is nothing left to fill, and a
+            // permanently full bar is decoration.
+            if (nextTier != null) ...[
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: AppRadii.fullBorder,
+                child: LinearProgressIndicator(
+                  key: const ValueKey('profile-level-progress'),
+                  value: game?.nextTierProgress ?? 0,
+                  minHeight: 8,
+                  backgroundColor: AppColors.editorialAubergine.withValues(
+                    alpha: .14,
+                  ),
+                  valueColor: const AlwaysStoppedAnimation(
+                    AppColors.editorialPink,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
+            ],
+            const SizedBox(height: 9),
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: Text(
@@ -734,7 +488,7 @@ class _ProfileLearningCard extends StatelessWidget {
                 style: TextStyle(
                   color: ProfilePalette.muted(context),
                   fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
@@ -745,76 +499,145 @@ class _ProfileLearningCard extends StatelessWidget {
   }
 }
 
-class _PostsTab extends ConsumerWidget {
+/// The author's own posts, with the whole lifecycle in one place: the
+/// composer at the top, then each post carrying its own edit and delete.
+class _PostsTab extends ConsumerStatefulWidget {
   const _PostsTab({required this.user});
 
   final AuthUser user;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final posts = ref.watch(userPostsProvider(user.id));
+  ConsumerState<_PostsTab> createState() => _PostsTabState();
+}
+
+class _PostsTabState extends ConsumerState<_PostsTab> {
+  @override
+  Widget build(BuildContext context) {
+    final posts = ref.watch(userPostsProvider(widget.user.id));
     final l10n = AppLocalizations.of(context)!;
-    return posts.when(
-      loading: () => const _ProfileLoading(key: ValueKey('posts-loading')),
-      error: (error, _) => _ErrorPanel(
-        message: _errorMessage(error, l10n),
-        onRetry: () => ref.invalidate(userPostsProvider(user.id)),
-      ),
-      data: (page) {
-        if (page.posts.isEmpty) {
-          return _EmptyPanel(
-            icon: Icons.forum_outlined,
-            message: l10n.noPostsYet,
-          );
-        }
-        return Column(
-          key: const ValueKey('profile-posts'),
-          children: [
-            for (final post in page.posts)
-              SocialPostCard(
-                post: post,
-                onTap: () => context.push('/community/posts/${post.id}'),
-                onAuthorTap: publicProfilePath(post.author.id) == null
-                    ? null
-                    : () => context.push(publicProfilePath(post.author.id)!),
-                onReact: () async {
-                  await ref
-                      .read(socialApiProvider)
-                      .react(postId: post.id, reaction: SocialReaction.upvote);
-                  ref.invalidate(userPostsProvider(user.id));
-                },
-                onShare: () async {
-                  await ref.read(socialApiProvider).share(post.id);
-                  ref.invalidate(userPostsProvider(user.id));
-                },
-                // This tab only ever lists the signed-in user's own posts.
-                onEdit: () async {
-                  final saved = await context.push<bool>(
-                    '/community/posts/${post.id}/edit',
-                    extra: post,
-                  );
-                  if (saved == true) ref.invalidate(userPostsProvider(user.id));
-                },
-                onDelete: () async {
-                  if (!await confirmSocialPostDeletion(context)) return;
-                  if (!context.mounted) return;
-                  final l10n = AppLocalizations.of(context)!;
-                  final messenger = ScaffoldMessenger.of(context);
-                  final failure = await ref
-                      .read(socialFeedProvider.notifier)
-                      .deletePost(post.id);
-                  ref.invalidate(userPostsProvider(user.id));
-                  messenger
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      SnackBar(content: Text(failure ?? l10n.postDeleted)),
-                    );
-                },
-              ),
-          ],
-        );
-      },
+    return Column(
+      key: const ValueKey('profile-posts-tab'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ProfileComposerPrompt(
+          user: widget.user,
+          avatarPath: ref.watch(profileAvatarProvider),
+          onTap: _create,
+        ),
+        const SizedBox(height: 14),
+        posts.when(
+          loading: () => const _ProfileLoading(key: ValueKey('posts-loading')),
+          error: (error, _) => _ErrorPanel(
+            message: _errorMessage(error, l10n),
+            onRetry: () => ref.invalidate(userPostsProvider(widget.user.id)),
+          ),
+          data: (page) => page.posts.isEmpty
+              ? ProfilePostsEmpty(onCreate: _create)
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ProfilePostsSummary(count: page.posts.length),
+                    const SizedBox(height: 10),
+                    Column(
+                      key: const ValueKey('profile-posts'),
+                      children: [
+                        for (final post in page.posts)
+                          GestureDetector(
+                            behavior: HitTestBehavior.deferToChild,
+                            onLongPress: () => _manage(post),
+                            child: SocialPostCard(
+                              post: post,
+                              onTap: () =>
+                                  context.push('/community/posts/${post.id}'),
+                              onAuthorTap:
+                                  publicProfilePath(post.author.id) == null
+                                  ? null
+                                  : () => context.push(
+                                      publicProfilePath(post.author.id)!,
+                                    ),
+                              onReact: () async {
+                                await ref
+                                    .read(socialApiProvider)
+                                    .react(
+                                      postId: post.id,
+                                      reaction: SocialReaction.upvote,
+                                    );
+                                _refresh();
+                              },
+                              onShare: () async {
+                                await ref
+                                    .read(socialApiProvider)
+                                    .share(post.id);
+                                _refresh();
+                              },
+                              // This tab only ever lists the signed-in user's
+                              // own posts, so every card is editable.
+                              onEdit: () => _edit(post),
+                              onDelete: () => _delete(post),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+        ),
+      ],
     );
+  }
+
+  void _refresh() => ref.invalidate(userPostsProvider(widget.user.id));
+
+  /// Writes a new post, question or article. An article never lands in this
+  /// tab — it waits for moderation — so the author is taken to the one list
+  /// that shows it.
+  Future<void> _create() async {
+    final action = await showSocialCreateMenu(context);
+    if (!mounted || action == null) return;
+    final created = await context.push<bool>(socialCreateRoute(action));
+    if (created != true || !mounted) return;
+    if (action == SocialCreateAction.article) {
+      await context.push<void>('/blog/my-posts');
+      return;
+    }
+    _refresh();
+  }
+
+  Future<void> _manage(SocialPost post) async {
+    final action = await showProfilePostActions(context, title: post.title);
+    if (!mounted || action == null) return;
+    switch (action) {
+      case ProfilePostAction.edit:
+        await _edit(post);
+      case ProfilePostAction.delete:
+        await _delete(post);
+    }
+  }
+
+  Future<void> _edit(SocialPost post) async {
+    final saved = await context.push<bool>(
+      '/community/posts/${post.id}/edit',
+      extra: post,
+    );
+    if (saved != true || !mounted) return;
+    _refresh();
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l10n.postUpdated)));
+  }
+
+  Future<void> _delete(SocialPost post) async {
+    if (!await confirmSocialPostDeletion(context)) return;
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final failure = await ref
+        .read(socialFeedProvider.notifier)
+        .deletePost(post.id);
+    _refresh();
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(failure ?? l10n.postDeleted)));
   }
 }
 
@@ -944,12 +767,19 @@ class _RankCard extends StatelessWidget {
             ),
           ),
           if (tier != null)
-            Text(
-              readableProfileName(tier!),
-              style: TextStyle(
-                color: ProfilePalette.green(context),
-                fontSize: 12,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RiksaRankBadge(tier: tier, size: 28),
+                const SizedBox(width: 4),
+                Text(
+                  readableProfileName(tier!),
+                  style: TextStyle(
+                    color: ProfilePalette.green(context),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
         ],
       ),

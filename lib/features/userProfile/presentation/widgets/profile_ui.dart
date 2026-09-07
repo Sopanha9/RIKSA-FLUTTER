@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
+import '../../../../core/widgets/riksa_rank_badge.dart';
 import '../../../auth/data/auth_models.dart';
+import '../../data/profile_models.dart';
 
 class ProfilePalette {
   ProfilePalette._();
@@ -235,6 +237,34 @@ class ProfilePanel extends StatelessWidget {
 
 enum ProfileTab { posts, achievements, rank }
 
+/// One icon + label pair in the metadata line under the bio.
+class ProfileMetaItem {
+  const ProfileMetaItem({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+}
+
+/// One bold-value + muted-label pair in the counts line.
+///
+/// This is where X puts following/followers. Riksa has no follow graph, so the
+/// slot carries the learning numbers instead, in the same typographic
+/// treatment rather than as a row of big-number tiles.
+class ProfileCountItem {
+  const ProfileCountItem({
+    required this.value,
+    required this.label,
+    this.itemKey,
+  });
+
+  final String value;
+  final String label;
+  final Key? itemKey;
+}
+
+/// Left-aligned identity block modelled on the X profile layout: banner,
+/// avatar overlapping its leading edge, actions on the trailing edge, then
+/// name, handle, bio, metadata and counts as one typographic stack.
 class ProfileIdentityHeader extends StatelessWidget {
   const ProfileIdentityHeader({
     super.key,
@@ -242,10 +272,13 @@ class ProfileIdentityHeader extends StatelessWidget {
     required this.avatar,
     required this.displayName,
     required this.username,
-    required this.tier,
-    required this.totalXpLabel,
     this.bio,
     this.isVerified = false,
+    this.verifiedKey = const ValueKey('public-verification-badge'),
+    this.actions = const [],
+    this.metadata = const [],
+    this.counts = const [],
+    this.countsKey,
     this.footer,
   });
 
@@ -255,117 +288,451 @@ class ProfileIdentityHeader extends StatelessWidget {
   final String username;
   final String? bio;
   final bool isVerified;
-  final String tier;
-  final String totalXpLabel;
+
+  /// Identifies the badge per screen; both profiles render the same mark.
+  final Key verifiedKey;
+
+  /// Trailing controls on the action line: edit, share, settings.
+  final List<Widget> actions;
+  final List<ProfileMetaItem> metadata;
+  final List<ProfileCountItem> counts;
+  final Key? countsKey;
+
+  /// Optional block below the counts line. Carries the tier and XP progress.
   final Widget? footer;
+
+  static const double coverHeight = 132;
+  static const double _avatarOverhang = 34;
+  static const double _actionRowHeight = 44;
 
   @override
   Widget build(BuildContext context) {
+    final trimmedBio = bio?.trim();
+    final handle = username.trim();
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Stack(
           clipBehavior: Clip.none,
           children: [
-            cover,
+            SizedBox(height: coverHeight, width: double.infinity, child: cover),
             PositionedDirectional(
-              start: 0,
-              end: 0,
-              bottom: -49,
-              child: Center(child: avatar),
+              start: 2,
+              bottom: -_avatarOverhang,
+              child: avatar,
             ),
           ],
         ),
-        const SizedBox(height: 61),
+        const SizedBox(height: 10),
+        SizedBox(
+          // With no actions the row still has to clear the avatar's overhang,
+          // so it shrinks to that rather than collapsing onto the name.
+          height: actions.isEmpty ? _avatarOverhang + 6 : _actionRowHeight,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              for (var index = 0; index < actions.length; index++) ...[
+                if (index > 0) const SizedBox(width: 8),
+                actions[index],
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Flexible(
               child: Text(
                 displayName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.w900,
+                style: RiksaTypography.titleStyleFor(
+                  displayName,
+                  TextStyle(
+                    color: ProfilePalette.text(context),
+                    fontSize: 22,
+                    letterSpacing: -.4,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ),
             if (isVerified) ...[
               const SizedBox(width: 6),
               Icon(
-                key: const ValueKey('public-verification-badge'),
+                key: verifiedKey,
                 Icons.verified_rounded,
                 color: ProfilePalette.green(context),
-                size: 20,
+                size: 19,
               ),
             ],
           ],
         ),
-        if (username.trim().isNotEmpty) ...[
-          const SizedBox(height: 3),
+        if (handle.isNotEmpty) ...[
+          const SizedBox(height: 2),
           Text(
-            '@${username.trim()}',
-            style: TextStyle(color: ProfilePalette.muted(context)),
-          ),
-        ],
-        if (bio?.trim().isNotEmpty == true) ...[
-          const SizedBox(height: 10),
-          Text(
-            bio!.trim(),
-            textAlign: TextAlign.center,
-            maxLines: 4,
+            '@$handle',
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: ProfilePalette.muted(context),
-              height: 1.45,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
-        const SizedBox(height: 18),
-        footer ??
-            ProfilePanel(
-              padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 14),
-              child: Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: ProfilePalette.greenSoft(context),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.workspace_premium_outlined,
-                      color: ProfilePalette.green(context),
-                      size: 19,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      readableProfileName(tier),
-                      style: TextStyle(
-                        color: ProfilePalette.green(context),
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    totalXpLabel,
-                    style: TextStyle(
-                      color: ProfilePalette.text(context),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
+        if (trimmedBio?.isNotEmpty == true) ...[
+          const SizedBox(height: 12),
+          Text(
+            trimmedBio!,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+            style: RiksaTypography.bodyStyleFor(
+              trimmedBio,
+              TextStyle(
+                color: ProfilePalette.text(context),
+                fontSize: 14.5,
+                height: 1.45,
               ),
             ),
+          ),
+        ],
+        if (metadata.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 16,
+            runSpacing: 6,
+            children: [
+              for (final item in metadata)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item.icon,
+                      size: 15,
+                      color: ProfilePalette.muted(context),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      item.label,
+                      style: TextStyle(
+                        color: ProfilePalette.muted(context),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ],
+        if (counts.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            key: countsKey,
+            spacing: 14,
+            runSpacing: 6,
+            children: [
+              for (final item in counts)
+                Row(
+                  key: item.itemKey,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      item.value,
+                      style: TextStyle(
+                        color: ProfilePalette.text(context),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      item.label,
+                      style: TextStyle(
+                        color: ProfilePalette.muted(context),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ],
+        if (footer != null) ...[const SizedBox(height: 18), footer!],
       ],
     );
   }
 }
 
+/// Keeps every sliver on the same measure as the pinned tab strip.
+Widget centeredProfileColumn(Widget child) => Center(
+  child: ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 680),
+    child: child,
+  ),
+);
+
+/// Square icon control on the header action line.
+class ProfileIconAction extends StatelessWidget {
+  const ProfileIconAction({
+    super.key,
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: tooltip,
+    onPressed: onPressed,
+    style: IconButton.styleFrom(
+      minimumSize: const Size.square(44),
+      backgroundColor: ProfilePalette.editorialSurface(context),
+      foregroundColor: ProfilePalette.text(context),
+      side: BorderSide(color: ProfilePalette.border(context)),
+    ),
+    icon: Icon(icon, size: 19),
+  );
+}
+
+/// The rank ladder uses collectible badges with a ring on the current tier
+/// and locks on tiers still ahead. Band progress is shown separately below.
+///
+/// It answers the three questions the roadmap answers: where I started, where
+/// I am, where this ends. A bare percentage answers none of them.
+class ProfileTierRail extends StatelessWidget {
+  const ProfileTierRail({
+    super.key,
+    required this.tiers,
+    required this.currentIndex,
+    required this.startLabel,
+    required this.endLabel,
+  });
+
+  final List<String> tiers;
+  final int currentIndex;
+  final String startLabel;
+  final String endLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final reached = ProfilePalette.aubergine(context);
+    final ahead = ProfilePalette.muted(context).withValues(alpha: .3);
+
+    final segments = <Widget>[];
+    for (var i = 0; i < tiers.length; i++) {
+      if (i > 0) {
+        // Segments are climbed or not climbed. How far through the current
+        // one the learner is belongs to the bar below, said once.
+        segments.add(
+          Expanded(
+            child: _RailSegment(
+              climbed: i <= currentIndex,
+              climbedColor: reached,
+              aheadColor: ahead,
+            ),
+          ),
+        );
+      }
+      segments.add(
+        _RailNode(
+          tier: tiers[i],
+          state: i < currentIndex
+              ? _NodeState.reached
+              : i == currentIndex
+              ? _NodeState.current
+              : i == tiers.length - 1
+              ? _NodeState.destination
+              : _NodeState.ahead,
+          reachedColor: reached,
+          markerColor: reached,
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        SizedBox(height: 44, child: Row(children: segments)),
+        const SizedBox(height: 7),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _RailEndLabel(
+              label: startLabel,
+              color: ProfilePalette.muted(context),
+            ),
+            _RailEndLabel(label: endLabel, color: ProfilePalette.text(context)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _RailEndLabel extends StatelessWidget {
+  const _RailEndLabel({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    label,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    style: TextStyle(
+      color: color,
+      fontSize: 10.5,
+      fontWeight: FontWeight.w600,
+      letterSpacing: .3,
+    ),
+  );
+}
+
+enum _NodeState { reached, current, destination, ahead }
+
+class _RailNode extends StatelessWidget {
+  const _RailNode({
+    required this.tier,
+    required this.state,
+    required this.reachedColor,
+    required this.markerColor,
+  });
+
+  final String tier;
+  final _NodeState state;
+  final Color reachedColor;
+  final Color markerColor;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: readableProfileName(tier),
+    selected: state == _NodeState.current,
+    child: Container(
+      width: 36,
+      height: 44,
+      decoration: BoxDecoration(
+        borderRadius: AppRadii.smallBorder,
+        border: state == _NodeState.current
+            ? Border.all(color: markerColor, width: 2)
+            : null,
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          RiksaRankBadge(tier: tier, size: 32),
+          if (state == _NodeState.ahead || state == _NodeState.destination)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Icon(Icons.lock_rounded, size: 12, color: reachedColor),
+            ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _RailSegment extends StatelessWidget {
+  const _RailSegment({
+    required this.climbed,
+    required this.climbedColor,
+    required this.aheadColor,
+  });
+
+  final bool climbed;
+  final Color climbedColor;
+  final Color aheadColor;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 5),
+    child: Container(
+      height: 3,
+      decoration: BoxDecoration(
+        color: climbed ? climbedColor : aheadColor,
+        borderRadius: AppRadii.fullBorder,
+      ),
+    ),
+  );
+}
+
+/// The tier block on someone else's profile.
+///
+/// It shows position on the ladder but no band progress: a reader does not
+/// need another learner's exact XP-to-next, only where they stand.
+class ProfileTierPanel extends StatelessWidget {
+  const ProfileTierPanel({
+    super.key,
+    required this.tier,
+    required this.totalXpLabel,
+  });
+
+  final String tier;
+  final String totalXpLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final ladderIndex = profileTierLadder.indexOf(tier.toUpperCase());
+    return ProfilePanel(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Skipped for a tier this build does not know, such as the server's
+          // "STARTER" placeholder, rather than drawing an unmarked rail.
+          if (ladderIndex >= 0) ...[
+            ProfileTierRail(
+              key: const ValueKey('public-tier-rail'),
+              tiers: profileTierLadder,
+              currentIndex: ladderIndex,
+              startLabel: ladderIndex == 0
+                  ? ''
+                  : readableProfileName(profileTierLadder.first),
+              endLabel: ladderIndex == profileTierLadder.length - 1
+                  ? ''
+                  : readableProfileName(profileTierLadder.last),
+            ),
+            const SizedBox(height: 14),
+          ],
+          Row(
+            children: [
+              RiksaRankBadge(tier: tier, size: 44),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  readableProfileName(tier),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: ProfilePalette.text(context),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                totalXpLabel,
+                style: TextStyle(
+                  color: ProfilePalette.muted(context),
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Underline tab strip, sized to sit in a pinned sliver header.
 class ProfileTabs extends StatelessWidget {
   const ProfileTabs({
     super.key,
@@ -382,18 +749,21 @@ class ProfileTabs extends StatelessWidget {
   final String achievementsLabel;
   final String rankLabel;
 
+  /// Fixed height, so the strip can be pinned with a sliver delegate.
+  static const double height = 58;
+
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: ProfilePalette.editorialSurface(context),
-      borderRadius: AppRadii.fullBorder,
-      border: Border.all(
-        color: ProfilePalette.border(context).withValues(alpha: .55),
+  Widget build(BuildContext context) => SizedBox(
+    height: height,
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: ProfilePalette.canvas(context),
+        border: Border(
+          bottom: BorderSide(color: ProfilePalette.border(context)),
+        ),
       ),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(5),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _ProfileTabButton(
             key: const ValueKey('profile-posts-tab'),
@@ -401,14 +771,12 @@ class ProfileTabs extends StatelessWidget {
             selected: selected == ProfileTab.posts,
             onTap: () => onSelected(ProfileTab.posts),
           ),
-          const SizedBox(width: 4),
           _ProfileTabButton(
             key: const ValueKey('profile-achievements-tab'),
             label: achievementsLabel,
             selected: selected == ProfileTab.achievements,
             onTap: () => onSelected(ProfileTab.achievements),
           ),
-          const SizedBox(width: 4),
           _ProfileTabButton(
             key: const ValueKey('profile-rank-tab'),
             label: rankLabel,
@@ -419,6 +787,48 @@ class ProfileTabs extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Pins [ProfileTabs] under the identity header while content scrolls beneath.
+class ProfileTabsHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const ProfileTabsHeaderDelegate({required this.tabs, required this.color});
+
+  final ProfileTabs tabs;
+
+  /// Painted behind the strip so scrolled content never shows through.
+  final Color color;
+
+  @override
+  double get minExtent => ProfileTabs.height;
+
+  @override
+  double get maxExtent => ProfileTabs.height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) => ColoredBox(
+    color: color,
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 680),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          child: tabs,
+        ),
+      ),
+    ),
+  );
+
+  @override
+  bool shouldRebuild(ProfileTabsHeaderDelegate oldDelegate) =>
+      oldDelegate.tabs.selected != tabs.selected ||
+      oldDelegate.tabs.postsLabel != tabs.postsLabel ||
+      oldDelegate.tabs.achievementsLabel != tabs.achievementsLabel ||
+      oldDelegate.tabs.rankLabel != tabs.rankLabel ||
+      oldDelegate.color != color;
 }
 
 class _ProfileTabButton extends StatelessWidget {
@@ -436,30 +846,40 @@ class _ProfileTabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Expanded(
     child: InkWell(
-      borderRadius: AppRadii.smallBorder,
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-        decoration: BoxDecoration(
-          color: selected
-              ? ProfilePalette.aubergine(context)
-              : Colors.transparent,
-          borderRadius: AppRadii.fullBorder,
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: selected
-                ? ProfilePalette.onAubergine(context)
-                : ProfilePalette.muted(context),
-            fontSize: 11.5,
-            fontWeight: FontWeight.w800,
+      child: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: selected
+                        ? ProfilePalette.text(context)
+                        : ProfilePalette.muted(context),
+                    fontSize: 12.5,
+                    height: 1.2,
+                    fontWeight: selected ? FontWeight.w900 : FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
+          AnimatedContainer(
+            duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+            height: 3,
+            width: selected ? 58 : 0,
+            decoration: BoxDecoration(
+              color: ProfilePalette.aubergine(context),
+              borderRadius: AppRadii.fullBorder,
+            ),
+          ),
+        ],
       ),
     ),
   );

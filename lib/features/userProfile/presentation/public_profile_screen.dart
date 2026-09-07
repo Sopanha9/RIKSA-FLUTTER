@@ -103,6 +103,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   Widget _buildReady(BuildContext context, PublicProfileState state) {
     final profile = state.profile!;
     final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     final controller = ref.read(publicProfileProvider(widget.userId).notifier);
     SocialAuthor? postAuthor;
     for (final post in state.posts) {
@@ -125,6 +126,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     final avatarUrl = profile.avatarUrl?.trim().isNotEmpty == true
         ? profile.avatarUrl
         : postAuthor?.avatarUrl;
+    final decimal = NumberFormat.decimalPattern(locale);
 
     return RefreshIndicator(
       color: ProfilePalette.green(context),
@@ -141,61 +143,82 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 680),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
-                    child: Column(
-                      children: [
-                        ProfileIdentityHeader(
-                          cover: _PublicCover(url: profile.coverUrl),
-                          avatar: _PublicAvatar(
-                            value: avatarUrl,
-                            label: displayName,
-                          ),
-                          displayName: displayName,
-                          username: username,
-                          bio: profile.bio,
-                          isVerified: profile.isVerified,
-                          tier: profile.currentTier,
-                          totalXpLabel:
-                              '${NumberFormat.compact(locale: Localizations.localeOf(context).languageCode).format(profile.totalXp)} XP',
-                        ),
-                        const SizedBox(height: 22),
-                        ProfileTabs(
-                          selected: _tab,
-                          postsLabel: l10n.posts,
-                          achievementsLabel: l10n.achievements,
-                          rankLabel: l10n.leaderboardRank,
-                          onSelected: (tab) => setState(() => _tab = tab),
-                        ),
-                        const SizedBox(height: 18),
-                        AnimatedSwitcher(
-                          duration: RiksaMotion.resolve(
-                            context,
-                            RiksaMotion.standard,
-                          ),
-                          child: switch (_tab) {
-                            ProfileTab.posts => _PublicPosts(
-                              state: state,
-                              onRetry: controller.refresh,
-                              onLoadMore: controller.loadMorePosts,
-                              onReact: controller.react,
-                              onShare: (postId) => _share(postId, controller),
-                              currentUserId: ref.watch(currentUserIdProvider),
-                              onEditPost: (post) => _editPost(post, controller),
-                              onDeletePost: (post) =>
-                                  _deletePost(post, controller),
-                            ),
-                            ProfileTab.achievements => _PublicAchievements(
-                              achievements: profile.achievements,
-                            ),
-                            ProfileTab.rank => _PublicRank(rank: profile.rank),
-                          },
-                        ),
-                      ],
+              child: centeredProfileColumn(
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 12, 18, 20),
+                  child: ProfileIdentityHeader(
+                    cover: _PublicCover(url: profile.coverUrl),
+                    avatar: _PublicAvatar(value: avatarUrl, label: displayName),
+                    displayName: displayName,
+                    username: username,
+                    bio: profile.bio,
+                    isVerified: profile.isVerified,
+                    actions: [
+                      ProfileIconAction(
+                        key: const ValueKey('public-profile-share'),
+                        tooltip: l10n.shareProfile,
+                        icon: Icons.ios_share_rounded,
+                        onPressed: _shareProfile,
+                      ),
+                    ],
+                    countsKey: const ValueKey('public-profile-stats'),
+                    counts: [
+                      ProfileCountItem(
+                        value: decimal.format(profile.totalXp),
+                        label: l10n.totalXp,
+                      ),
+                      ProfileCountItem(
+                        value: decimal.format(profile.achievements.length),
+                        label: l10n.achievements,
+                      ),
+                    ],
+                    footer: ProfileTierPanel(
+                      tier: profile.currentTier,
+                      totalXpLabel:
+                          '${NumberFormat.compact(locale: locale).format(profile.totalXp)} XP',
                     ),
+                  ),
+                ),
+              ),
+            ),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: ProfileTabsHeaderDelegate(
+                color: ProfilePalette.canvas(context),
+                tabs: ProfileTabs(
+                  selected: _tab,
+                  postsLabel: l10n.posts,
+                  achievementsLabel: l10n.achievements,
+                  rankLabel: l10n.leaderboardRank,
+                  onSelected: (tab) => setState(() => _tab = tab),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: centeredProfileColumn(
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+                  child: AnimatedSwitcher(
+                    duration: RiksaMotion.resolve(
+                      context,
+                      RiksaMotion.standard,
+                    ),
+                    child: switch (_tab) {
+                      ProfileTab.posts => _PublicPosts(
+                        state: state,
+                        onRetry: controller.refresh,
+                        onLoadMore: controller.loadMorePosts,
+                        onReact: controller.react,
+                        onShare: (postId) => _share(postId, controller),
+                        currentUserId: ref.watch(currentUserIdProvider),
+                        onEditPost: (post) => _editPost(post, controller),
+                        onDeletePost: (post) => _deletePost(post, controller),
+                      ),
+                      ProfileTab.achievements => _PublicAchievements(
+                        achievements: profile.achievements,
+                      ),
+                      ProfileTab.rank => _PublicRank(rank: profile.rank),
+                    },
                   ),
                 ),
               ),
@@ -205,6 +228,18 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _shareProfile() async {
+    await Clipboard.setData(ClipboardData(text: '/profile/${widget.userId}'));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.profileLinkCopied),
+        ),
+      );
   }
 
   Future<void> _editPost(
@@ -272,7 +307,7 @@ class _PublicCover extends StatelessWidget {
     return ClipRRect(
       borderRadius: AppRadii.largeBorder,
       child: SizedBox(
-        height: 170,
+        height: ProfileIdentityHeader.coverHeight,
         width: double.infinity,
         child: url?.trim().isNotEmpty == true
             ? Image.network(
@@ -295,18 +330,18 @@ class _PublicAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     key: const ValueKey('public-profile-avatar-ring'),
-    width: 98,
-    height: 98,
+    width: 88,
+    height: 88,
     padding: const EdgeInsets.all(3),
     decoration: BoxDecoration(
       shape: BoxShape.circle,
-      color: ProfilePalette.greenSoft(context),
-      border: Border.all(color: ProfilePalette.green(context), width: 2),
+      color: ProfilePalette.canvas(context),
+      border: Border.all(color: ProfilePalette.canvas(context), width: 2),
     ),
     child: RiksaAvatarImage(
       value: value,
       label: label,
-      size: 92,
+      size: 82,
       backgroundColor: ProfilePalette.panelSoft(context),
       foregroundColor: ProfilePalette.text(context),
     ),

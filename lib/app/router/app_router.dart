@@ -231,11 +231,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'chat/:id',
-                    builder: (context, state) => AiChatScreen(
-                      sessionId: state.pathParameters['id'] == 'new'
-                          ? null
-                          : state.pathParameters['id'],
-                    ),
+                    builder: (context, state) {
+                      final id = state.pathParameters['id'];
+                      final query = state.uri.queryParameters;
+                      return AiChatScreen(
+                        sessionId: id == 'new' ? null : id,
+                        lessonTitle: query['lesson'],
+                        learningContext: query['context'],
+                        initialPrompt: query['prompt'],
+                      );
+                    },
                   ),
                 ],
               ),

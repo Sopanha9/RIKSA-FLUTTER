@@ -14,6 +14,7 @@ import '../../userProfile/presentation/public_profile_navigation.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
 import 'social_post_detail_screen.dart';
+import 'widgets/social_create_menu.dart';
 import 'widgets/social_owner_menu.dart';
 import 'widgets/social_palette.dart';
 import 'widgets/social_post_card.dart';
@@ -376,21 +377,12 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
   }
 
   Future<void> _showCreateMenu() async {
-    final action = await showModalBottomSheet<_CreateAction>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => const _CreateMenuSheet(),
-    );
+    final action = await showSocialCreateMenu(context);
     if (!mounted || action == null) return;
-    final created = await context.push<bool>(switch (action) {
-      _CreateAction.article => '/blog/create',
-      _CreateAction.question => '/community/create?type=question',
-      _CreateAction.post => '/community/create',
-    });
+    final created = await context.push<bool>(socialCreateRoute(action));
     if (created != true || !mounted) return;
     // An article lands in the blog tab, where it waits for moderation.
-    if (action == _CreateAction.article) {
+    if (action == SocialCreateAction.article) {
       _selectSection(_SocialSection.blog);
       ref.invalidate(pendingBlogPostCountProvider);
       await ref.read(blogFeedProvider.notifier).load();
@@ -781,158 +773,6 @@ class _StreakPill extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-enum _CreateAction { post, question, article }
-
-class _CreateMenuSheet extends StatelessWidget {
-  const _CreateMenuSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(
-        top: Radius.circular(AppRadii.large),
-      ),
-      child: Container(
-        padding: EdgeInsets.fromLTRB(
-          18,
-          12,
-          18,
-          24 + MediaQuery.paddingOf(context).bottom,
-        ),
-        decoration: BoxDecoration(
-          color: SocialPalette.panel(context),
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppRadii.large),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 42,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: SocialPalette.border(context),
-                  borderRadius: AppRadii.fullBorder,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              l10n.createCommunityContent,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: SocialPalette.text(context),
-              ),
-            ),
-            const SizedBox(height: 14),
-            _CreateOption(
-              icon: Icons.edit_note_rounded,
-              title: l10n.createPost,
-              subtitle: l10n.createPostSubtitle,
-              color: SocialPalette.pink(context),
-              onTap: () => Navigator.pop(context, _CreateAction.post),
-            ),
-            const SizedBox(height: 10),
-            _CreateOption(
-              icon: Icons.help_outline_rounded,
-              title: l10n.askCommunity,
-              subtitle: l10n.askCommunitySubtitle,
-              color: SocialPalette.aubergine(context),
-              onTap: () => Navigator.pop(context, _CreateAction.question),
-            ),
-            const SizedBox(height: 10),
-            _CreateOption(
-              key: const ValueKey('create-article-option'),
-              icon: Icons.auto_stories_rounded,
-              title: l10n.writeArticle,
-              subtitle: l10n.writeArticleSubtitle,
-              color: theme.colorScheme.primary,
-              onTap: () => Navigator.pop(context, _CreateAction.article),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CreateOption extends StatelessWidget {
-  const _CreateOption({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      color: SocialPalette.editorialSurface(context),
-      borderRadius: AppRadii.mediumBorder,
-      child: InkWell(
-        borderRadius: AppRadii.mediumBorder,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(15),
-          child: Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: .14),
-                  borderRadius: AppRadii.smallBorder,
-                ),
-                child: Icon(icon, color: color),
-              ),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: SocialPalette.text(context),
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: SocialPalette.muted(context),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: SocialPalette.muted(context),
-              ),
             ],
           ),
         ),

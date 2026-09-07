@@ -1,5 +1,20 @@
 library;
 
+/// The rank ladder in order, lowest first.
+///
+/// Only the *order* is mirrored from the server's `TierType` enum, which is a
+/// fixed enum in the API. The XP thresholds are not mirrored: they live in the
+/// editable `rank_tiers` table and arrive per request as
+/// [GamificationProfile.currentTierMinXp] / [GamificationProfile.nextTierMinXp].
+const profileTierLadder = <String>[
+  'BRONZE',
+  'SILVER',
+  'GOLD',
+  'PLATINUM',
+  'DIAMOND',
+  'LEGEND',
+];
+
 class GamificationProfile {
   const GamificationProfile({
     required this.totalXp,
@@ -9,6 +24,8 @@ class GamificationProfile {
     this.currentTier,
     this.currentTierIcon,
     this.nextTier,
+    this.currentTierMinXp = 0,
+    this.nextTierMinXp = 0,
   });
 
   final int totalXp;
@@ -19,11 +36,41 @@ class GamificationProfile {
   final String? nextTier;
   final int xpToNext;
 
+  /// XP at which the current tier begins.
+  final int currentTierMinXp;
+
+  /// XP at which the next tier begins, or 0 at the top of the ladder.
+  final int nextTierMinXp;
+
+  /// Whether the server published the tier floors. Servers older than the
+  /// field report a next tier with no floor to measure it from.
+  bool get _hasBand => nextTierMinXp > currentTierMinXp;
+
+  /// Total XP the current tier spans, from its floor to the next tier's.
+  int get tierBandXp => _hasBand ? nextTierMinXp - currentTierMinXp : 0;
+
+  /// XP earned since entering the current tier.
+  int get xpIntoTier =>
+      _hasBand ? (totalXp - currentTierMinXp).clamp(0, tierBandXp) : 0;
+
+  /// This tier is the last one on the ladder.
+  bool get isTopTier => nextTier == null;
+
+  /// Progress through the *current* tier, not from zero XP.
+  ///
+  /// Measuring from zero inflates the bar at every tier, badly so on a
+  /// back-loaded ladder: someone who just reached the second-to-last tier
+  /// would see it already half full.
   double get nextTierProgress {
     if (nextTier == null || xpToNext <= 0) return 1;
-    final threshold = totalXp + xpToNext;
-    if (threshold <= 0) return 0;
-    return (totalXp / threshold).clamp(0, 1);
+    if (!_hasBand) {
+      // Server predates the tier floors. Fall back to measuring from zero,
+      // which is wrong but no worse than before, rather than showing nothing.
+      final threshold = totalXp + xpToNext;
+      if (threshold <= 0) return 0;
+      return (totalXp / threshold).clamp(0.0, 1.0);
+    }
+    return (xpIntoTier / tierBandXp).clamp(0.0, 1.0);
   }
 
   factory GamificationProfile.fromJson(Map<String, dynamic> json) =>
@@ -34,6 +81,8 @@ class GamificationProfile {
         currentTier: json['currentTier'] as String?,
         currentTierIcon: json['currentTierIcon'] as String?,
         nextTier: json['nextTier'] as String?,
+        currentTierMinXp: (json['currentTierMinXp'] as num?)?.toInt() ?? 0,
+        nextTierMinXp: (json['nextTierMinXp'] as num?)?.toInt() ?? 0,
         xpToNext: (json['xpToNext'] as num?)?.toInt() ?? 0,
       );
 }
@@ -75,8 +124,10 @@ class ProfileAchievement {
         unlockedAt: DateTime.tryParse(json['unlockedAt']?.toString() ?? ''),
         progress: (json['progress'] as num?)?.toInt() ?? 0,
         progressMax: (json['progressMax'] as num?)?.toInt() ?? 0,
+        // Double bounds, not int: num.clamp hands back the limit itself, so
+        // int bounds turn an out-of-range double into an int.
         progressPercent: ((json['progressPercent'] as num?)?.toDouble() ?? 0)
-            .clamp(0, 1),
+            .clamp(0.0, 1.0),
         rarity: json['rarity'] as String? ?? 'COMMON',
         xpReward: (json['xpReward'] as num?)?.toInt() ?? 0,
       );

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,10 +34,24 @@ class _TelegramOtpScreenState extends ConsumerState<TelegramOtpScreen> {
   final _displayNameController = TextEditingController();
   _OtpStep _step = _OtpStep.account;
   bool _sending = false;
+  Timer? _resendTimer;
+  int _resendSeconds = 0;
+
+  void _startResendCooldown() {
+    _resendTimer?.cancel();
+    _resendSeconds = 60;
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      setState(() => _resendSeconds = (60 - timer.tick).clamp(0, 60));
+      if (_resendSeconds == 0) timer.cancel();
+    });
+  }
+
   String? _sendError;
 
   @override
   void dispose() {
+    _resendTimer?.cancel();
     _identifierController.dispose();
     _codeController.dispose();
     _usernameController.dispose();
@@ -44,6 +60,11 @@ class _TelegramOtpScreenState extends ConsumerState<TelegramOtpScreen> {
   }
 
   Future<void> _sendCode({bool validateForm = true}) async {
+    if (_sending ||
+        ref.read(authProvider) is AuthLoading ||
+        _resendSeconds > 0) {
+      return;
+    }
     FocusManager.instance.primaryFocus?.unfocus();
     if (validateForm && !_formKey.currentState!.validate()) return;
     setState(() {
@@ -58,7 +79,11 @@ class _TelegramOtpScreenState extends ConsumerState<TelegramOtpScreen> {
             OtpSendRequest(identifier: _identifierController.text.trim()),
           );
       if (!mounted) return;
-      setState(() => _step = _OtpStep.code);
+      setState(() {
+        _step = _OtpStep.code;
+        _codeController.clear();
+        _startResendCooldown();
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.otpSendSuccess)),
       );
@@ -76,8 +101,10 @@ class _TelegramOtpScreenState extends ConsumerState<TelegramOtpScreen> {
   }
 
   Future<void> _verifyCode() async {
+    if (_sending || ref.read(authProvider) is AuthLoading) return;
     FocusManager.instance.primaryFocus?.unfocus();
     if (!_formKey.currentState!.validate()) return;
+    setState(() => _sendError = null);
     await ref
         .read(authProvider.notifier)
         .telegramSignIn(
@@ -98,12 +125,17 @@ class _TelegramOtpScreenState extends ConsumerState<TelegramOtpScreen> {
     if (_step == _OtpStep.code) {
       ref.read(authProvider.notifier).clearError();
       setState(() {
+        _sendError = null;
         _step = _OtpStep.account;
         _codeController.clear();
       });
       return;
     }
-    context.pop();
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/auth/login');
+    }
   }
 
   @override
@@ -226,7 +258,9 @@ class _TelegramOtpScreenState extends ConsumerState<TelegramOtpScreen> {
                     const SizedBox(height: 20),
                     FilledButton.icon(
                       key: const Key('telegram_send_code'),
-                      onPressed: _sending ? null : _sendCode,
+                      onPressed: _sending || _resendSeconds > 0
+                          ? null
+                          : _sendCode,
                       icon: _sending
                           ? const SizedBox.square(
                               dimension: 20,
@@ -236,13 +270,32 @@ class _TelegramOtpScreenState extends ConsumerState<TelegramOtpScreen> {
                               ),
                             )
                           : const Icon(Icons.send_rounded),
-                      label: Text(strings.sendCode),
+                      label: Text(
+                        _resendSeconds > 0
+                            ? strings.otpResendCountdown(_resendSeconds)
+                            : strings.sendCode,
+                      ),
                     ),
                   ] else ...[
+                    Text(
+                      strings.otpSentTo(_identifierController.text.trim()),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(strings.otpDeliveryHelp, textAlign: TextAlign.center),
+                    const SizedBox(height: 24),
                     TextFormField(
                       key: const Key('telegram_otp_code'),
                       controller: _codeController,
-                      enabled: !loading,
+                      enabled: !loading && !_sending,
+                      autofillHints: const [AutofillHints.oneTimeCode],
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.headlineSmall?.copyWith(letterSpacing: 8),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
@@ -268,7 +321,7 @@ class _TelegramOtpScreenState extends ConsumerState<TelegramOtpScreen> {
                     const SizedBox(height: 20),
                     FilledButton(
                       key: const Key('telegram_verify_code'),
-                      onPressed: loading ? null : _verifyCode,
+                      onPressed: loading || _sending ? null : _verifyCode,
                       child: loading
                           ? const SizedBox.square(
                               dimension: 20,
@@ -281,10 +334,20 @@ class _TelegramOtpScreenState extends ConsumerState<TelegramOtpScreen> {
                     ),
                     const SizedBox(height: 8),
                     TextButton(
-                      onPressed: loading || _sending
+                      key: const Key('telegram_resend_code'),
+                      onPressed: loading || _sending || _resendSeconds > 0
                           ? null
                           : () => _sendCode(validateForm: false),
-                      child: Text(strings.resendCode),
+                      child: Text(
+                        _resendSeconds > 0
+                            ? strings.otpResendCountdown(_resendSeconds)
+                            : strings.resendCode,
+                      ),
+                    ),
+                    TextButton(
+                      key: const Key('telegram_change_account'),
+                      onPressed: loading || _sending ? null : _back,
+                      child: Text(strings.otpChangeAccount),
                     ),
                   ],
                 ],

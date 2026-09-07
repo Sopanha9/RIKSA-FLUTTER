@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
+import '../../../../core/widgets/riksa_rank_badge.dart';
 import '../../../userProfile/data/profile_models.dart';
 import '../../../userProfile/presentation/public_profile_navigation.dart';
 import '../../../userProfile/presentation/widgets/profile_ui.dart';
@@ -190,6 +191,12 @@ class _PodiumPlace extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (row.rankingTier != null)
+                      Positioned(
+                        bottom: -4,
+                        left: -12,
+                        child: RiksaRankBadge(tier: row.rankingTier, size: 28),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 7),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
+import '../../../../core/widgets/riksa_rank_badge.dart';
 
 class CurrentUserRankCard extends StatelessWidget {
   const CurrentUserRankCard({
@@ -82,6 +83,7 @@ class CurrentUserRankCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 14),
+                    RiksaRankBadge(tier: tier, size: 36),
                     Expanded(
                       child: Center(
                         child: Text(

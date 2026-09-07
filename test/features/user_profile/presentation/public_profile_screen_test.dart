@@ -105,8 +105,13 @@ void main() {
       find.byKey(const ValueKey('public-profile-avatar-ring')),
     );
     final avatarDecoration = avatarRing.decoration! as BoxDecoration;
-    expect(avatarDecoration.color, AppColors.editorialPinkSoft);
-    expect(avatarDecoration.border!.top.color, AppColors.editorialPink);
+    // The ring is painted in the page ground so the avatar reads clear of the
+    // banner, whatever the banner shows.
+    expect(avatarDecoration.color, AppColors.editorialNeutralCanvas);
+    expect(
+      avatarDecoration.border!.top.color,
+      AppColors.editorialNeutralCanvas,
+    );
     final verification = tester.widget<Icon>(
       find.byKey(const ValueKey('public-verification-badge')),
     );
@@ -175,6 +180,21 @@ void main() {
     expect(find.text('@'), findsNothing);
     expect(find.text('RIKSA Learner'), findsOneWidget);
     expect(find.text('R'), findsOneWidget);
+    // A tier on the known ladder draws the rail.
+    expect(find.byKey(const ValueKey('public-tier-rail')), findsOneWidget);
+  });
+
+  testWidgets('skips the tier rail for a tier off the known ladder', (
+    tester,
+  ) async {
+    // The main fixture reports 'SCHOLAR', which the ladder does not carry.
+    // The panel degrades to the name and XP rather than drawing a rail with
+    // nothing marked on it.
+    await _pump(tester, profiles: _Profiles(result: Future.value(_profile)));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('public-tier-rail')), findsNothing);
+    expect(find.text('Scholar'), findsOneWidget);
   });
 
   testWidgets('uses the matching post author when profile identity is blank', (
@@ -264,7 +284,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('សមិទ្ធផល'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('profile-achievements-tab')),
+        matching: find.text('សមិទ្ធផល'),
+      ),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 

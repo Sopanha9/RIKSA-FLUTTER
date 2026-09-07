@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/core/widgets/riksa_rank_badge.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/leaderBoard/presentation/leaderboard_screen.dart';
@@ -103,6 +104,12 @@ void main() {
     final podium = find.byKey(const ValueKey('leaderboard-podium'));
     final rankings = find.byKey(const ValueKey('leaderboard-rankings-section'));
     expect(card, findsOneWidget);
+    expect(
+      tester.widget<RiksaRankBadge>(
+        find.descendant(of: card, matching: find.byType(RiksaRankBadge)),
+      ).tier,
+      'Silver',
+    );
     expect(find.text('Your rank'), findsOneWidget);
     expect(find.text('Province'), findsOneWidget);
     expect(find.text('phnom-penh'), findsNothing);
@@ -191,6 +198,12 @@ void main() {
     await tester.pumpAndSettle();
 
     final card = find.byKey(const ValueKey('current-user-rank-card'));
+    expect(
+      tester.widget<RiksaRankBadge>(
+        find.descendant(of: card, matching: find.byType(RiksaRankBadge)),
+      ).tier,
+      'Gold',
+    );
     expect(
       find.descendant(of: card, matching: find.text('#4')),
       findsOneWidget,

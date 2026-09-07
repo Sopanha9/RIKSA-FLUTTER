@@ -270,6 +270,9 @@
   "startingTier": "កម្រិតចាប់ផ្តើម",
   "highestRankReached": "អ្នកបានឈានដល់ចំណាត់ថ្នាក់ខ្ពស់បំផុត។",
   "xpUntilNextRank": "ត្រូវការ {xp} XP ទៀតដើម្បីឡើងទៅ {tier}",
+  "tierBandProgress": "{earned} / {total} XP",
+  "xpUntilFinalRank": "នៅ {xp} XP ទៀតដល់ {tier} ដែលជាឋានៈចុងក្រោយ",
+  "tierPosition": "ឋានៈទី {position} ក្នុងចំណោម {total}",
   "earned": "ទទួលបាន",
   "recentActivity": "សកម្មភាពថ្មីៗ",
   "noAchievements": "សមិទ្ធផល និងវឌ្ឍនភាពរបស់អ្នកនឹងបង្ហាញនៅទីនេះ។",
@@ -284,6 +287,10 @@
   "myPosts": "ការបង្ហោះរបស់ខ្ញុំ",
   "leaderboardRank": "ចំណាត់ថ្នាក់តារាងពិន្ទុ",
   "noPostsYet": "ការបង្ហោះក្នុងសហគមន៍របស់អ្នកនឹងបង្ហាញនៅទីនេះ។",
+  "profileComposerPrompt": "ចែករំលែកអ្វីដែលអ្នកកំពុងរៀន",
+  "profilePostCount": "{count, plural, =0 {មិនទាន់មានការបង្ហោះ} =1 {ការបង្ហោះ ១} other {ការបង្ហោះ {count}}}",
+  "writeFirstPost": "សរសេរការបង្ហោះដំបូងរបស់អ្នក",
+  "managePost": "គ្រប់គ្រងការបង្ហោះ",
   "countryRank": "ចំណាត់ថ្នាក់កម្ពុជា",
   "provinceRank": "ចំណាត់ថ្នាក់ខេត្ត",
   "unranked": "មិនទាន់មានចំណាត់ថ្នាក់",
@@ -331,5 +338,60 @@
   "publicPostsLoadFailed": "យើងមិនអាចផ្ទុកការបង្ហោះរបស់អ្នកនេះបានទេ។",
   "noPublicPosts": "អ្នកនេះមិនទាន់បានចែករំលែកការបង្ហោះក្នុងសហគមន៍ទេ។",
   "noPublicAchievements": "មិនទាន់មានសមិទ្ធផលដែលទទួលបានសម្រាប់បង្ហាញទេ។",
-  "noPublicRank": "មិនទាន់មានចំណាត់ថ្នាក់សាធារណៈសម្រាប់បង្ហាញទេ។"
+  "noPublicRank": "មិនទាន់មានចំណាត់ថ្នាក់សាធារណៈសម្រាប់បង្ហាញទេ។",
+  "aiTutorSubtitle": "សួរអ្វីក៏បាន ពីមេរៀនរបស់អ្នក",
+  "aiAskNewQuestion": "សួរសំណួរថ្មី",
+  "aiChatsToday": "ថ្ងៃនេះ",
+  "aiChatsThisWeek": "សប្ដាហ៍នេះ",
+  "aiChatsEarlier": "មុននេះ",
+  "aiChatOptions": "ជម្រើសនៃការសន្ទនា",
+  "aiDeleteChat": "លុបការសន្ទនា",
+  "aiChatDeleted": "បានលុបការសន្ទនា",
+  "aiUndo": "មិនធ្វើវិញ",
+  "aiChatDeleteFailed": "មិនអាចលុបការសន្ទនានេះបានទេ។",
+  "aiChatsEmptyTitle": "សួរអំពីអ្វីដែលអ្នកកំពុងរៀន",
+  "aiChatsEmptyBody": "ចាប់ផ្ដើមការសន្ទនាឯកជនជាភាសាខ្មែរ ឬអង់គ្លេស អំពីមេរៀនណាមួយ។",
+  "aiStartChat": "ចាប់ផ្ដើមសន្ទនា",
+  "aiTutorUnavailableTitle": "មិនអាចភ្ជាប់គ្រូ AI បានទេ",
+  "aiTutorUnavailableBody": "សូមពិនិត្យការតភ្ជាប់ រួចព្យាយាមម្ដងទៀត។",
+  "aiSearchChats": "ស្វែងរកការសន្ទនា",
+  "aiNoChatMatches": "គ្មានការសន្ទនាត្រូវនឹងពាក្យនេះទេ។",
+  "aiChatFallbackTitle": "ការសន្ទនាសិក្សា",
+  "aiComposerHint": "សួរគ្រូ AI របស់អ្នក",
+  "aiSendMessage": "ផ្ញើសារ",
+  "aiThinking": "RIKSA កំពុងគិត",
+  "aiMessageNotSent": "មិនបានផ្ញើ",
+  "aiRetryMessage": "ផ្ញើម្ដងទៀត",
+  "aiChatOpener": "ថ្ងៃនេះ អ្នកចង់យល់អំពីអ្វី?",
+  "aiAskAboutLesson": "សួរអំពីមេរៀននេះ",
+  "aiLessonContext": "អំពី {lesson}",
+  "aiStarterExplainAgain": "សូមពន្យល់ម្ដងទៀត ឲ្យយឺតជាងមុន",
+  "aiStarterStillUnsure": "ខ្ញុំនៅមិនទាន់ច្បាស់ចំណុចមួយ",
+  "aiStarterWorkedExample": "សូមឧទាហរណ៍ដោះស្រាយជាជំហានៗ",
+  "aiChatLoadFailed": "មិនអាចផ្ទុកការសន្ទនានេះបានទេ។",
+  "aiReplyFailed": "គ្រូ AI មិនអាចឆ្លើយបានទេ។ សូមព្យាយាមម្ដងទៀត។",
+  "aiContinueChat": "បន្ត",
+  "aiTimeNow": "ឥឡូវ",
+  "aiTimeMinutes": "{count} នាទី",
+  "aiTimeHours": "{count} ម៉ោង",
+  "aiTimeDays": "{count} ថ្ងៃ"
+,
+  "otpSentTo": "បានផ្ញើទៅការជជែក Telegram {chatId}",
+  "otpResendCountdown": "ផ្ញើម្ដងទៀតក្នុង {seconds} វិនាទី",
+  "otpChangeAccount": "ប្ដូរគណនី Telegram",
+  "otpDeliveryHelp": "បើកការសន្ទនាជាមួយបូត Riksa ដើម្បីរកលេខកូដចុងក្រោយ។ ប្រសិនបើលេខកូដផុតកំណត់ សូមស្នើសុំលេខកូដថ្មី។",
+  "@otpSentTo": {
+    "placeholders": {
+      "chatId": {
+        "type": "String"
+      }
+    }
+  },
+  "@otpResendCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  }
 }

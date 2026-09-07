@@ -1628,6 +1628,24 @@ abstract class AppLocalizations {
   /// **'{xp} XP until {tier}'**
   String xpUntilNextRank(int xp, String tier);
 
+  /// No description provided for @tierBandProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{earned} / {total} XP'**
+  String tierBandProgress(String earned, String total);
+
+  /// No description provided for @xpUntilFinalRank.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP to {tier}, the final rank'**
+  String xpUntilFinalRank(int xp, String tier);
+
+  /// No description provided for @tierPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank {position} of {total}'**
+  String tierPosition(int position, int total);
+
   /// No description provided for @earned.
   ///
   /// In en, this message translates to:
@@ -1711,6 +1729,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your community posts will appear here.'**
   String get noPostsYet;
+
+  /// No description provided for @profileComposerPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Share what you are learning'**
+  String get profileComposerPrompt;
+
+  /// No description provided for @profilePostCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {No posts yet} =1 {1 post} other {{count} posts}}'**
+  String profilePostCount(int count);
+
+  /// No description provided for @writeFirstPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your first post'**
+  String get writeFirstPost;
+
+  /// No description provided for @managePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage post'**
+  String get managePost;
 
   /// No description provided for @countryRank.
   ///
@@ -1993,6 +2035,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No public ranking is available yet.'**
   String get noPublicRank;
+
+  /// No description provided for @aiTutorSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask anything from your lessons'**
+  String get aiTutorSubtitle;
+
+  /// No description provided for @aiAskNewQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a new question'**
+  String get aiAskNewQuestion;
+
+  /// No description provided for @aiChatsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get aiChatsToday;
+
+  /// No description provided for @aiChatsThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get aiChatsThisWeek;
+
+  /// No description provided for @aiChatsEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get aiChatsEarlier;
+
+  /// No description provided for @aiChatOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat options'**
+  String get aiChatOptions;
+
+  /// No description provided for @aiDeleteChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete chat'**
+  String get aiDeleteChat;
+
+  /// No description provided for @aiChatDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat deleted'**
+  String get aiChatDeleted;
+
+  /// No description provided for @aiUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get aiUndo;
+
+  /// No description provided for @aiChatDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That chat could not be deleted.'**
+  String get aiChatDeleteFailed;
+
+  /// No description provided for @aiChatsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask anything you are learning'**
+  String get aiChatsEmptyTitle;
+
+  /// No description provided for @aiChatsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a private conversation in Khmer or English about any lesson.'**
+  String get aiChatsEmptyBody;
+
+  /// No description provided for @aiStartChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a chat'**
+  String get aiStartChat;
+
+  /// No description provided for @aiTutorUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tutor unavailable'**
+  String get aiTutorUnavailableTitle;
+
+  /// No description provided for @aiTutorUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get aiTutorUnavailableBody;
+
+  /// No description provided for @aiSearchChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Search your chats'**
+  String get aiSearchChats;
+
+  /// No description provided for @aiNoChatMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No chat matches that.'**
+  String get aiNoChatMatches;
+
+  /// No description provided for @aiChatFallbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning chat'**
+  String get aiChatFallbackTitle;
+
+  /// No description provided for @aiComposerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask your tutor'**
+  String get aiComposerHint;
+
+  /// No description provided for @aiSendMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Send message'**
+  String get aiSendMessage;
+
+  /// No description provided for @aiThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Riksa is thinking'**
+  String get aiThinking;
+
+  /// No description provided for @aiMessageNotSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent'**
+  String get aiMessageNotSent;
+
+  /// No description provided for @aiRetryMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Send again'**
+  String get aiRetryMessage;
+
+  /// No description provided for @aiChatOpener.
+  ///
+  /// In en, this message translates to:
+  /// **'What would you like to understand today?'**
+  String get aiChatOpener;
+
+  /// No description provided for @aiAskAboutLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask about this lesson'**
+  String get aiAskAboutLesson;
+
+  /// No description provided for @aiLessonContext.
+  ///
+  /// In en, this message translates to:
+  /// **'About {lesson}'**
+  String aiLessonContext(String lesson);
+
+  /// No description provided for @aiStarterExplainAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain this again, more slowly'**
+  String get aiStarterExplainAgain;
+
+  /// No description provided for @aiStarterStillUnsure.
+  ///
+  /// In en, this message translates to:
+  /// **'I am still unsure about one part'**
+  String get aiStarterStillUnsure;
+
+  /// No description provided for @aiStarterWorkedExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Give me a worked example'**
+  String get aiStarterWorkedExample;
+
+  /// No description provided for @aiChatLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this chat.'**
+  String get aiChatLoadFailed;
+
+  /// No description provided for @aiReplyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The tutor could not answer. Please try again.'**
+  String get aiReplyFailed;
+
+  /// No description provided for @aiContinueChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get aiContinueChat;
+
+  /// No description provided for @aiTimeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get aiTimeNow;
+
+  /// No description provided for @aiTimeMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m'**
+  String aiTimeMinutes(int count);
+
+  /// No description provided for @aiTimeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h'**
+  String aiTimeHours(int count);
+
+  /// No description provided for @aiTimeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d'**
+  String aiTimeDays(int count);
+
+  /// No description provided for @otpSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to Telegram chat {chatId}'**
+  String otpSentTo(String chatId);
+
+  /// No description provided for @otpResendCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend in {seconds}s'**
+  String otpResendCountdown(int seconds);
+
+  /// No description provided for @otpChangeAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Telegram account'**
+  String get otpChangeAccount;
+
+  /// No description provided for @otpDeliveryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open your Riksa bot conversation to find the latest code. If it has expired, request a new one.'**
+  String get otpDeliveryHelp;
 }
 
 class _AppLocalizationsDelegate
