@@ -696,6 +696,7 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
               exercise: exercise,
               controller: controller,
               enabled: !correct && !submitting,
+              result: result,
             ),
           const SizedBox(height: 12),
           if (!correct)
@@ -770,34 +771,141 @@ class _ChoiceAnswers extends StatefulWidget {
     required this.exercise,
     required this.controller,
     required this.enabled,
+    this.result,
   });
   final LessonExercise exercise;
   final TextEditingController controller;
   final bool enabled;
+  final LessonAnswerResult? result;
   @override
   State<_ChoiceAnswers> createState() => _ChoiceAnswersState();
 }
 
 class _ChoiceAnswersState extends State<_ChoiceAnswers> {
+  static const _labels = ['A', 'B', 'C', 'D', 'E', 'F'];
+
   @override
   Widget build(BuildContext context) {
-    final options = widget.exercise.type == LessonExerciseType.trueFalse
+    final isTrueFalse = widget.exercise.type == LessonExerciseType.trueFalse;
+    final options = isTrueFalse
         ? const ['True', 'False']
         : widget.exercise.options;
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: options
-          .map(
-            (option) => ChoiceChip(
-              label: Text(option),
-              selected: widget.controller.text == option,
-              onSelected: widget.enabled
-                  ? (_) => setState(() => widget.controller.text = option)
-                  : null,
+
+    final selectedAnswer = widget.controller.text;
+    final isAttempted = widget.result != null;
+    final isCorrect = widget.result?.correct == true;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < options.length; i++) ...[
+          if (i > 0) const SizedBox(height: 8),
+          _buildOptionCard(
+            context: context,
+            index: i,
+            option: options[i],
+            isTrueFalse: isTrueFalse,
+            isSelected: selectedAnswer == options[i],
+            isAttempted: isAttempted,
+            isCorrect: isCorrect,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildOptionCard({
+    required BuildContext context,
+    required int index,
+    required String option,
+    required bool isTrueFalse,
+    required bool isSelected,
+    required bool isAttempted,
+    required bool isCorrect,
+  }) {
+    final theme = Theme.of(context);
+    final riksa = context.riksa;
+    final badgeLabel = isTrueFalse
+        ? (index == 0 ? 'T' : 'F')
+        : (index < _labels.length ? _labels[index] : '${index + 1}');
+
+    Color borderColor = riksa.outline;
+    Color bgColor = riksa.surfaceRaised;
+    Color badgeBg = riksa.surface;
+    Color badgeTextColor = riksa.inkMuted;
+    Widget? trailingIcon;
+
+    if (isSelected) {
+      if (isAttempted) {
+        if (isCorrect) {
+          borderColor = riksa.jade;
+          bgColor = riksa.jade.withValues(alpha: 0.1);
+          badgeBg = riksa.jade;
+          badgeTextColor = Colors.white;
+          trailingIcon = Icon(Icons.check_circle_rounded, color: riksa.jade, size: 20);
+        } else {
+          borderColor = theme.colorScheme.error;
+          bgColor = theme.colorScheme.error.withValues(alpha: 0.1);
+          badgeBg = theme.colorScheme.error;
+          badgeTextColor = Colors.white;
+          trailingIcon = Icon(Icons.cancel_rounded, color: theme.colorScheme.error, size: 20);
+        }
+      } else {
+        borderColor = riksa.math;
+        bgColor = riksa.math.withValues(alpha: 0.08);
+        badgeBg = riksa.math;
+        badgeTextColor = Colors.white;
+      }
+    }
+
+    return InkWell(
+      onTap: widget.enabled
+          ? () => setState(() => widget.controller.text = option)
+          : null,
+      borderRadius: BorderRadius.circular(14),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: borderColor,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: badgeBg,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                badgeLabel,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: badgeTextColor,
+                ),
+              ),
             ),
-          )
-          .toList(),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                option,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ),
+            ?trailingIcon,
+          ],
+        ),
+      ),
     );
   }
 }
