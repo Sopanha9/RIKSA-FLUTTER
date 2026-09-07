@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -133,19 +134,34 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       });
       ref.invalidate(aiChatSessionsProvider);
       _scrollToEnd();
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       // Keep the message on screen and marked, instead of losing what they
       // typed to a failed request.
       setState(() {
-        final last = _entries.last;
-        _entries = [
-          ..._entries.take(_entries.length - 1),
-          _ChatEntry(last.message, failed: true),
-        ];
+        if (_entries.isNotEmpty) {
+          final last = _entries.last;
+          _entries = [
+            ..._entries.take(_entries.length - 1),
+            _ChatEntry(last.message, failed: true),
+          ];
+        }
       });
+      final isAuth = e is DioException && e.response?.statusCode == 401;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.aiReplyFailed)),
+        SnackBar(
+          content: Text(
+            isAuth
+                ? 'Please log in to chat with the AI Tutor.'
+                : AppLocalizations.of(context)!.aiReplyFailed,
+          ),
+          action: isAuth
+              ? SnackBarAction(
+                  label: 'Log in',
+                  onPressed: () => context.push('/auth/login'),
+                )
+              : null,
+        ),
       );
     } finally {
       if (mounted) setState(() => _loading = false);

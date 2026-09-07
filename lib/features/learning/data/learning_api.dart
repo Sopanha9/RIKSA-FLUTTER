@@ -19,11 +19,13 @@ class LearningApi {
       queryParameters: {
         'page': page,
         'size': size,
-        'categoryId': ?categoryId,
+        // ignore: use_null_aware_elements
+        if (categoryId != null) 'categoryId': categoryId,
         if (difficulty != null) 'difficulty': difficulty.wire,
         // Forward-compatible: Spring currently ignores this parameter. Once
         // the API accepts grade, no Flutter contract change is required.
-        'grade': ?grade,
+        // ignore: use_null_aware_elements
+        if (grade != null) 'grade': grade,
       },
     );
     return LessonPage.fromJson(response.data as Map<String, dynamic>);

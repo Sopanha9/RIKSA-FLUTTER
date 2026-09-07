@@ -69,6 +69,10 @@ class _FakeLearningApi implements LearningApi {
     required String exerciseId,
     required String answer,
   }) => throw UnimplementedError();
+
+  @override
+  Future<ContinueLearningResponse> continueLearning() =>
+      throw UnimplementedError();
 }
 
 Iterable<TextSpan> _textSpans(InlineSpan span) sync* {

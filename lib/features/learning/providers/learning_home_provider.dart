@@ -151,7 +151,7 @@ final learningHomeProvider = FutureProvider.autoDispose<LearningHomeData>((
   final subjects = await Future.wait(
     categories.map((category) async {
       try {
-        final roadmap = await ref.watch(
+        final roadmap = await ref.read(
           learningRoadmapProvider(category.id).future,
         );
         return SubjectProgress.fromRoadmap(category, roadmap);
@@ -196,3 +196,4 @@ SubjectProgress? _pickResumeSubject(List<SubjectProgress> subjects) {
     return a.fraction >= b.fraction ? a : b;
   });
 }
+

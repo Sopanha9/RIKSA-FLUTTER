@@ -36,7 +36,11 @@ class BlogApi {
   }) async {
     final res = await _client.dio.get(
       '/blog',
-      queryParameters: {'page': page, 'size': size, 'categoryId': ?categoryId},
+      queryParameters: {
+        'page': page,
+        'size': size,
+        'categoryId': ?categoryId,
+      },
     );
     return BlogPage.fromJson(res.data as Map<String, dynamic>);
   }

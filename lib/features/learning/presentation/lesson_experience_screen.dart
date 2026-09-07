@@ -53,6 +53,22 @@ class _LessonExperienceScreenState
           onPressed: context.pop,
           icon: const Icon(Icons.arrow_back_rounded),
         ),
+        actions: [
+          if (detail.value != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: FilledButton.tonalIcon(
+                onPressed: () {
+                  final d = detail.value!;
+                  final contextText =
+                      'Lesson: ${d.title}\nSubject: ${d.categoryName}\nContent: ${d.description}';
+                  context.push('/ai/chat/new', extra: contextText);
+                },
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                label: const Text('Ask AI'),
+              ),
+            ),
+        ],
       ),
       body: detail.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -215,6 +231,7 @@ class _LessonExperienceScreenState
         _ExerciseCard(
           number: number,
           exercise: next,
+          lessonTitle: detail.title,
           controller: _answers.putIfAbsent(next.id, TextEditingController.new),
           result: _results[next.id],
           submitting: _submitting.contains(next.id),
@@ -546,6 +563,7 @@ class _ExerciseCard extends StatelessWidget {
   const _ExerciseCard({
     required this.number,
     required this.exercise,
+    this.lessonTitle,
     required this.controller,
     required this.result,
     required this.submitting,
@@ -553,10 +571,41 @@ class _ExerciseCard extends StatelessWidget {
   });
   final int number;
   final LessonExercise exercise;
+  final String? lessonTitle;
   final TextEditingController controller;
   final LessonAnswerResult? result;
   final bool submitting;
   final VoidCallback onSubmit;
+
+  void _askAiHint(BuildContext context) {
+    final optionsText = exercise.options.isNotEmpty
+        ? '\nOptions: ${exercise.options.join(", ")}'
+        : '';
+    final hintContext = '''
+Exercise Hint Request:
+Lesson: ${lessonTitle ?? "STEM Lesson"}
+Question: ${exercise.question}
+Type: ${exercise.type.name}$optionsText
+
+Learner Goal: Provide a progressive Socratic hint in Khmer/English to help the student think through this question without giving away the direct answer.
+''';
+    context.push('/ai/chat/new', extra: hintContext);
+  }
+
+  void _explainErrorWithAi(BuildContext context) {
+    final userAnswer = controller.text.trim();
+    final explainContext = '''
+Exercise Error Analysis:
+Lesson: ${lessonTitle ?? "STEM Lesson"}
+Question: ${exercise.question}
+Learner Selected Answer: ${userAnswer.isEmpty ? "None selected" : userAnswer}
+${exercise.hint != null ? "Static Hint: ${exercise.hint}" : ""}
+
+Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAnswer}' is incorrect, breakdown the core concept step-by-step in Khmer/English, and guide the student to the correct solution.
+''';
+    context.push('/ai/chat/new', extra: explainContext);
+  }
+
   @override
   Widget build(BuildContext context) {
     final correct = result?.correct == true;
@@ -620,17 +669,28 @@ class _ExerciseCard extends StatelessWidget {
             ),
           const SizedBox(height: 12),
           if (!correct)
-            FilledButton(
-              onPressed: submitting ? null : onSubmit,
-              child: submitting
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Check answer'),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton(
+                  onPressed: submitting ? null : onSubmit,
+                  child: submitting
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Check answer'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => _askAiHint(context),
+                  icon: const Icon(Icons.lightbulb_outline_rounded, size: 18),
+                  label: const Text('AI Hint'),
+                ),
+              ],
             ),
           if (result != null) ...[
             const SizedBox(height: 12),
@@ -648,6 +708,14 @@ class _ExerciseCard extends StatelessWidget {
                 'This counts toward +${exercise.points} lesson XP when you complete the lesson.',
                 style: TextStyle(color: context.riksa.inkMuted, fontSize: 12),
               ),
+            if (incorrect) ...[
+              const SizedBox(height: 8),
+              FilledButton.tonalIcon(
+                onPressed: () => _explainErrorWithAi(context),
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                label: const Text('Explain Error with AI'),
+              ),
+            ],
             if (incorrect &&
                 (result!.hint ?? exercise.hint)?.trim().isNotEmpty == true)
               _Feedback(label: 'Hint', text: result!.hint ?? exercise.hint!),

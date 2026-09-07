@@ -409,7 +409,7 @@ class _StoneNode extends StatelessWidget {
   }
 }
 
-class _StoneCard extends StatelessWidget {
+class _StoneCard extends StatefulWidget {
   const _StoneCard({
     required this.stone,
     required this.tone,
@@ -421,90 +421,133 @@ class _StoneCard extends StatelessWidget {
   final bool elevated;
 
   @override
+  State<_StoneCard> createState() => _StoneCardState();
+}
+
+class _StoneCardState extends State<_StoneCard> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.elevated;
+  }
+
+  @override
+  void didUpdateWidget(covariant _StoneCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.elevated != widget.elevated) {
+      _expanded = widget.elevated;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final locked = stone.status == LearningStatus.locked;
-    final resume = stone.resumableLesson?.lesson;
+    final locked = widget.stone.status == LearningStatus.locked;
+    final resume = widget.stone.resumableLesson?.lesson;
+    final isOpenable = widget.stone.isOpenable;
 
     return Material(
-      color: tone.surface,
+      color: widget.tone.surface,
       borderRadius: AppRadii.panelBorder,
       clipBehavior: Clip.antiAlias,
-      child: Semantics(
-        container: true,
-        enabled: stone.isOpenable,
-        hint: locked ? l10n.lessonLocked : null,
-        child: Padding(
-          key: ValueKey('roadmap-unit-${stone.id}'),
-          padding: EdgeInsets.fromLTRB(16, elevated ? 16 : 14, 16, elevated ? 16 : 15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                stone.title,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: RiksaTypography.titleStyleFor(
-                  stone.title,
-                  Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: tone.ink,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -.25,
-                    height: 1.25,
-                  ),
-                  khmerHeight: 1.35,
+      child: InkWell(
+        onTap: isOpenable ? () => setState(() => _expanded = !_expanded) : null,
+        child: Semantics(
+          container: true,
+          enabled: isOpenable,
+          hint: locked ? l10n.lessonLocked : null,
+          child: Padding(
+            key: ValueKey('roadmap-unit-${widget.stone.id}'),
+            padding: EdgeInsets.fromLTRB(16, _expanded ? 16 : 14, 16, _expanded ? 16 : 15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.stone.title,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: RiksaTypography.titleStyleFor(
+                              widget.stone.title,
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                color: widget.tone.ink,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -.25,
+                                height: 1.25,
+                              ),
+                              khmerHeight: 1.35,
+                            ),
+                          ),
+                          const SizedBox(height: RiksaSpacing.xxs),
+                          Text(
+                            _subtitle(l10n),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: widget.tone.accent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (isOpenable && widget.stone.lessons.isNotEmpty)
+                      Icon(
+                        _expanded
+                            ? Icons.keyboard_arrow_up_rounded
+                            : Icons.keyboard_arrow_down_rounded,
+                        color: widget.tone.accent,
+                        size: 22,
+                      ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: RiksaSpacing.xxs),
-              Text(
-                _subtitle(l10n),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: tone.accent,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              // Only the unit being worked on opens. Finished and locked units
-              // stay one line, so the path is scannable rather than a wall.
-              if (elevated) ...[
-                const SizedBox(height: RiksaSpacing.sm + 1),
-                for (final lesson in stone.lessons) ...[
-                  _LessonRow(stone: lesson),
-                  const SizedBox(height: RiksaSpacing.xs - 1),
-                ],
-                if (resume != null) ...[
-                  const SizedBox(height: RiksaSpacing.xxs),
-                  LearningPrimaryButton(
-                    key: ValueKey('roadmap-continue-${stone.id}'),
-                    label: l10n.continueReading,
-                    icon: Icons.arrow_forward_rounded,
-                    background: learningAnchor(context),
-                    foreground: onLearningAnchor(context),
-                    onPressed: () =>
-                        context.push('/learn/${resume.id}', extra: resume),
-                  ),
+                if (_expanded) ...[
+                  const SizedBox(height: RiksaSpacing.sm + 1),
+                  for (final lesson in widget.stone.lessons) ...[
+                    _LessonRow(stone: lesson),
+                    const SizedBox(height: RiksaSpacing.xs - 1),
+                  ],
+                  if (resume != null) ...[
+                    const SizedBox(height: RiksaSpacing.xxs),
+                    LearningPrimaryButton(
+                      key: ValueKey('roadmap-continue-${widget.stone.id}'),
+                      label: l10n.continueReading,
+                      icon: Icons.arrow_forward_rounded,
+                      background: learningAnchor(context),
+                      foreground: onLearningAnchor(context),
+                      onPressed: () =>
+                          context.push('/learn/${resume.id}', extra: resume),
+                    ),
+                  ],
                 ],
               ],
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  String _subtitle(AppLocalizations l10n) => switch (stone.status) {
+  String _subtitle(AppLocalizations l10n) => switch (widget.stone.status) {
     LearningStatus.done => l10n.completedLabel,
     LearningStatus.current => l10n.unitProgressShort(
-      stone.completedLessons,
-      stone.totalLessons,
+      widget.stone.completedLessons,
+      widget.stone.totalLessons,
     ),
-    LearningStatus.locked => stone.index > 1
-        ? l10n.opensAfterUnit(stone.index - 1)
+    LearningStatus.locked => widget.stone.index > 1
+        ? l10n.opensAfterUnit(widget.stone.index - 1)
         : l10n.lessonLockedShort,
     LearningStatus.goal => l10n.readyForExam,
-    LearningStatus.todo => l10n.lessonCountLabel(stone.totalLessons),
+    LearningStatus.todo => l10n.lessonCountLabel(widget.stone.totalLessons),
   };
 }
 

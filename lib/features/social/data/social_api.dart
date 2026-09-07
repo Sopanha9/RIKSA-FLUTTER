@@ -126,7 +126,11 @@ class SocialApi {
       }
       ''',
       variables: {
-        'input': {'postId': postId, 'content': content, 'parentId': ?parentId},
+        'input': {
+          'postId': postId,
+          'content': content,
+          'parentId': ?parentId,
+        },
       },
     );
     return SocialComment.fromJson(

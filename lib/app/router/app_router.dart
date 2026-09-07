@@ -237,7 +237,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                       return AiChatScreen(
                         sessionId: id == 'new' ? null : id,
                         lessonTitle: query['lesson'],
-                        learningContext: query['context'],
+                        learningContext:
+                            query['context'] ??
+                            (state.extra is String
+                                ? state.extra as String
+                                : null),
                         initialPrompt: query['prompt'],
                       );
                     },

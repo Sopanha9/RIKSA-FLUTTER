@@ -29,9 +29,11 @@ class AiChatApi {
     final response = await _client.dio.post(
       '/ai/chats/messages',
       data: {
-        'sessionId': ?sessionId,
+        // ignore: use_null_aware_elements
+        if (sessionId != null) 'sessionId': sessionId,
         'message': message,
-        'learningContext': ?learningContext?.trim(),
+        if (learningContext != null && learningContext.trim().isNotEmpty)
+          'learningContext': learningContext.trim(),
       },
     );
     return AiChatTurn.fromJson((response.data as Map).cast<String, dynamic>());
