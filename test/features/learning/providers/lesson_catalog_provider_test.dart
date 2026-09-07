@@ -6,6 +6,10 @@ import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.da
 
 class _FakeLearningApi implements LearningApi {
   @override
+  Future<ContinueLearningResponse> continueLearning() =>
+      throw UnimplementedError();
+
+  @override
   Future<LessonCompletionResult> completeLesson({
     required String lessonId,
     required String reflectionText,

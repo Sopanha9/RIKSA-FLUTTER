@@ -1,0 +1,126 @@
+[
+  {
+    "name": "First Lesson",
+    "iconUrl": "/icons/ach-first-lesson.png"
+  },
+  {
+    "name": "Quick Learner",
+    "iconUrl": "/icons/ach-quick-learner.png"
+  },
+  {
+    "name": "Dedicated Student",
+    "iconUrl": "/icons/ach-dedicated.png"
+  },
+  {
+    "name": "XP Hunter",
+    "iconUrl": "/icons/ach-xp-hunter.png"
+  },
+  {
+    "name": "XP Master",
+    "iconUrl": "/icons/ach-xp-master.png"
+  },
+  {
+    "name": "Hard Mode",
+    "iconUrl": "/icons/ach-hard-mode.png"
+  },
+  {
+    "name": "First Steps",
+    "iconUrl": "/icons/ach-streak-3.png"
+  },
+  {
+    "name": "Week Warrior",
+    "iconUrl": "/icons/ach-streak-7.png"
+  },
+  {
+    "name": "Fortnight Fighter",
+    "iconUrl": "/icons/ach-streak-14.png"
+  },
+  {
+    "name": "Monthly Master",
+    "iconUrl": "/icons/ach-streak-30.png"
+  },
+  {
+    "name": "Quarterly Quest",
+    "iconUrl": "/icons/ach-streak-90.png"
+  },
+  {
+    "name": "Yearly Legend",
+    "iconUrl": "/icons/ach-streak-365.png"
+  },
+  {
+    "name": "Silver Tier",
+    "iconUrl": "/icons/ach-rank-silver.png"
+  },
+  {
+    "name": "Gold Tier",
+    "iconUrl": "/icons/ach-rank-gold.png"
+  },
+  {
+    "name": "Platinum Tier",
+    "iconUrl": "/icons/ach-rank-platinum.png"
+  },
+  {
+    "name": "Diamond Tier",
+    "iconUrl": "/icons/ach-rank-diamond.png"
+  },
+  {
+    "name": "Legend Tier",
+    "iconUrl": "/icons/ach-rank-legend.png"
+  },
+  {
+    "name": "Century Scholar",
+    "iconUrl": "/icons/ach-century.png"
+  },
+  {
+    "name": "Difficult Mastery",
+    "iconUrl": "/icons/ach-difficult.png"
+  },
+  {
+    "name": "Category Explorer",
+    "iconUrl": "/icons/ach-explorer.png"
+  },
+  {
+    "name": "Completionist",
+    "iconUrl": "/icons/ach-completionist.png"
+  },
+  {
+    "name": "First Post",
+    "iconUrl": "/icons/ach-first-post.png"
+  },
+  {
+    "name": "Active Contributor",
+    "iconUrl": "/icons/ach-contributor.png"
+  },
+  {
+    "name": "Community Pillar",
+    "iconUrl": "/icons/ach-pillar.png"
+  },
+  {
+    "name": "Getting Noticed",
+    "iconUrl": "/icons/ach-noticed.png"
+  },
+  {
+    "name": "Popular Voice",
+    "iconUrl": "/icons/ach-popular.png"
+  },
+  {
+    "name": "First Blog",
+    "iconUrl": "/icons/ach-first-blog.png"
+  },
+  {
+    "name": "Blogger",
+    "iconUrl": "/icons/ach-blogger.png"
+  },
+  {
+    "name": "Prolific Writer",
+    "iconUrl": "/icons/ach-prolific.png"
+  },
+  {
+    "name": "Rising Author",
+    "iconUrl": "/icons/ach-rising-author.png"
+  },
+  {
+    "name": "Beloved Author",
+    "iconUrl": "/icons/ach-beloved.png"
+  }
+]

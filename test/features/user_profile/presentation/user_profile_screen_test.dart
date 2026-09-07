@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/core/widgets/riksa_achievement_image.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
@@ -44,6 +45,7 @@ const _dashboard = ProfileDashboardData(
     ProfileAchievement(
       id: 'ach-1',
       name: 'Week Warrior',
+      iconUrl: '/icons/ach-streak-7.png',
       description: 'Maintain a seven-day streak',
       earned: true,
       progress: 7,
@@ -154,7 +156,9 @@ void main() {
     final avatarRect = tester.getRect(
       find.byKey(const ValueKey('profile-hero-avatar')),
     );
-    final coverRect = tester.getRect(find.byKey(const ValueKey('profile-cover')));
+    final coverRect = tester.getRect(
+      find.byKey(const ValueKey('profile-cover')),
+    );
     expect(avatarRect.left, closeTo(coverRect.left, 4));
     expect(avatarRect.bottom, greaterThan(coverRect.bottom));
     expect(find.byKey(const ValueKey('profile-share')), findsOneWidget);
@@ -183,6 +187,12 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('profile-achievements-tab')));
     await tester.pumpAndSettle();
     expect(find.text('Week Warrior'), findsOneWidget);
+    expect(
+      tester
+          .widget<RiksaAchievementImage>(find.byType(RiksaAchievementImage))
+          .iconUrl,
+      '/icons/ach-streak-7.png',
+    );
 
     await tester.tap(find.byKey(const ValueKey('profile-rank-tab')));
     await tester.pumpAndSettle();
@@ -301,10 +311,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byKey(const ValueKey('profile-tier-rail')), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('profile-level-progress')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('profile-level-progress')), findsNothing);
   });
 }
 

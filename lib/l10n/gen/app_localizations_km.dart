@@ -358,6 +358,30 @@ class AppLocalizationsKm extends AppLocalizations {
   String get detailsLabel => 'បន្ថែមព័ត៌មានលម្អិត';
 
   @override
+  String get addPhoto => 'បន្ថែមរូបភាព';
+
+  @override
+  String get changePhoto => 'ប្ដូររូបភាព';
+
+  @override
+  String get removePhoto => 'លុបរូបភាព';
+
+  @override
+  String get photoUploading => 'កំពុងផ្ទុករូបភាព…';
+
+  @override
+  String get photoFailed => 'មិនអាចផ្ទុករូបភាពនេះបានទេ។ សូមជ្រើសរើសរូបផ្សេង។';
+
+  @override
+  String get photoTooLarge => 'រូបភាពនេះធំពេក។ សូមជ្រើសរើសរូបតូចជាង 2MB។';
+
+  @override
+  String get photoFromGallery => 'ជ្រើសរើសពីវិចិត្រសាល';
+
+  @override
+  String get photoFromCamera => 'ថតរូប';
+
+  @override
   String get publish => 'បោះពុម្ពផ្សាយ';
 
   @override
@@ -958,6 +982,13 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get notificationPreferencesHint => 'រំលឹកអំពីការសិក្សា និងសហគមន៍';
+
+  @override
+  String get learningSounds => 'សំឡេងសម្រាប់ការរៀន';
+
+  @override
+  String get learningSoundsHint =>
+      'បន្លឺសំឡេងពេលឆ្លើយត្រូវ ខុស និងពេលបញ្ចប់មេរៀន។';
 
   @override
   String get darkMode => 'មុខងារងងឹត';

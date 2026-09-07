@@ -39,6 +39,10 @@ const _detail = LessonDetail(
 
 class _FakeLearningApi implements LearningApi {
   @override
+  Future<ContinueLearningResponse> continueLearning() =>
+      throw UnimplementedError();
+
+  @override
   Future<LessonDetail> lesson(String lessonId) async => _detail;
 
   @override

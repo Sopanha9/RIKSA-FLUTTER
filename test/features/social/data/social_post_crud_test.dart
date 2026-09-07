@@ -49,6 +49,55 @@ void main() {
     expect(updated.title, 'Edited title');
   });
 
+  test('createPost carries the attached image into the mutation', () async {
+    final adapter = _GraphqlAdapter({
+      'createPost': _postJson(title: 'With a photo'),
+    });
+
+    await apiWith(adapter).createPost(
+      title: 'With a photo',
+      content: 'See the diagram below',
+      categoryId: 'category-1',
+      mediaUrl: 'https://riksa.test/api/v1/media/abc.png',
+    );
+
+    expect(adapter.variables?['input'], {
+      'title': 'With a photo',
+      'content': 'See the diagram below',
+      'categoryId': 'category-1',
+      'mediaUrl': 'https://riksa.test/api/v1/media/abc.png',
+    });
+  });
+
+  test('createPost omits mediaUrl entirely when no image is attached', () async {
+    final adapter = _GraphqlAdapter({'createPost': _postJson(title: 'Plain')});
+
+    await apiWith(adapter).createPost(
+      title: 'Plain',
+      content: 'No picture on this one',
+      categoryId: 'category-1',
+    );
+
+    // Sending an explicit null would read as "clear it" on the server.
+    expect(
+      (adapter.variables?['input'] as Map).containsKey('mediaUrl'),
+      isFalse,
+    );
+  });
+
+  test('updatePost clears the image with a blank mediaUrl', () async {
+    final adapter = _GraphqlAdapter({'updatePost': _postJson(title: 'Edited')});
+
+    await apiWith(adapter).updatePost(
+      id: 'post-1',
+      title: 'Edited',
+      content: 'Body',
+      mediaUrl: '',
+    );
+
+    expect((adapter.variables?['input'] as Map)['mediaUrl'], '');
+  });
+
   test('deletePost sends the id and accepts a true result', () async {
     final adapter = _GraphqlAdapter({'deletePost': true});
 

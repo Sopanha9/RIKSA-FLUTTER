@@ -144,6 +144,79 @@ void main() {
     await tester.pumpAndSettle();
     expect(deletes, 1);
   });
+
+  testWidgets('an official post drops its tint when the highlight is off', (
+    tester,
+  ) async {
+    await initializeDateFormatting('en');
+
+    Future<void> pump({required bool highlight}) => tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('km')],
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: SocialPostCard(
+              post: _officialPost,
+              onTap: () {},
+              onReact: () {},
+              onShare: () {},
+              highlightOfficial: highlight,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Color surfaceOf(WidgetTester tester) => tester
+        .widget<Material>(find.byKey(const ValueKey('post-post-10')))
+        .color!;
+
+    await pump(highlight: true);
+    final tinted = surfaceOf(tester);
+
+    await pump(highlight: false);
+    final plain = surfaceOf(tester);
+
+    // The author's own list must look like the cards readers see elsewhere.
+    expect(plain, isNot(tinted));
+
+    // A non-official post is already plain, so turning the flag off is a no-op.
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('km')],
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: SocialPostCard(
+              post: _ownedPost,
+              onTap: () {},
+              onReact: () {},
+              onShare: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester
+          .widget<Material>(find.byKey(const ValueKey('post-post-9')))
+          .color,
+      plain,
+    );
+  });
 }
 
 final _ownedPost = SocialPost(
@@ -157,6 +230,30 @@ final _ownedPost = SocialPost(
     id: 'me',
     username: 'sopanha',
     displayName: 'Sopanha',
+    avatarUrl: '',
+  ),
+  category: const SocialCategory(
+    id: 'category-1',
+    name: 'Science',
+    slug: 'science',
+    memberCount: 40,
+    joined: true,
+  ),
+  createdAt: DateTime.utc(2026, 8, 22),
+  updatedAt: DateTime.utc(2026, 8, 22),
+);
+
+final _officialPost = SocialPost(
+  id: 'post-10',
+  title: 'Welcome to Riksa',
+  content: 'Official announcements land here.',
+  reactionCount: 0,
+  commentCount: 0,
+  shareCount: 0,
+  author: const SocialAuthor(
+    id: 'riksa',
+    username: 'riksa',
+    displayName: 'Riksa Platform',
     avatarUrl: '',
   ),
   category: const SocialCategory(

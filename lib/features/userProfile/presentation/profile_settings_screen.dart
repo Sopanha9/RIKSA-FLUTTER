@@ -1,3 +1,5 @@
+import '../../../core/sound/learning_sound.dart';
+import '../../../core/sound/sound_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,6 +28,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     final auth = ref.watch(authProvider);
     final user = auth is Authenticated ? auth.user : null;
     final themeMode = ref.watch(themeModeProvider);
+    final soundEnabled = ref.watch(soundEnabledProvider);
     final locale = ref.watch(localeProvider).locale;
     final localAvatar = ref.watch(profileAvatarProvider);
 
@@ -85,6 +88,22 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                         value: _notificationsEnabled,
                         onChanged: (value) =>
                             setState(() => _notificationsEnabled = value),
+                      ),
+                      const _SettingsDivider(),
+                      _SettingsSwitchRow(
+                        key: const ValueKey('settings-learning-sounds'),
+                        icon: Icons.volume_up_outlined,
+                        title: l10n.learningSounds,
+                        subtitle: l10n.learningSoundsHint,
+                        value: soundEnabled,
+                        onChanged: (value) {
+                          ref
+                              .read(soundEnabledProvider.notifier)
+                              .set(enabled: value);
+                          // Turning it on plays the cue it turns on, so the
+                          // switch demonstrates itself.
+                          if (value) ref.playSound(LearningSound.correct);
+                        },
                       ),
                       const _SettingsDivider(),
                       _SettingsSwitchRow(

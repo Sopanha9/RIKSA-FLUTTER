@@ -746,6 +746,54 @@ abstract class AppLocalizations {
   /// **'Add details'**
   String get detailsLabel;
 
+  /// No description provided for @addPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo'**
+  String get addPhoto;
+
+  /// No description provided for @changePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get changePhoto;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get removePhoto;
+
+  /// No description provided for @photoUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading photo…'**
+  String get photoUploading;
+
+  /// No description provided for @photoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That photo couldn’t be uploaded. Try another one.'**
+  String get photoFailed;
+
+  /// No description provided for @photoTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'That photo is too large. Pick one under 2MB.'**
+  String get photoTooLarge;
+
+  /// No description provided for @photoFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get photoFromGallery;
+
+  /// No description provided for @photoFromCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get photoFromCamera;
+
   /// No description provided for @publish.
   ///
   /// In en, this message translates to:
@@ -1795,6 +1843,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Learning and community reminders'**
   String get notificationPreferencesHint;
+
+  /// No description provided for @learningSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning sounds'**
+  String get learningSounds;
+
+  /// No description provided for @learningSoundsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a sound for correct answers, mistakes and finished lessons.'**
+  String get learningSoundsHint;
 
   /// No description provided for @darkMode.
   ///

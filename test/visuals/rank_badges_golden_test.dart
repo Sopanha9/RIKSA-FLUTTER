@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/core/widgets/riksa_rank_badge.dart';
@@ -6,6 +9,22 @@ import 'package:riksa_app/features/userProfile/data/profile_models.dart';
 import 'package:riksa_app/features/userProfile/presentation/widgets/profile_ui.dart';
 
 void main() {
+  setUpAll(() async {
+    final flutterRoot =
+        Platform.environment['FLUTTER_ROOT'] ??
+        File(
+          Platform.resolvedExecutable,
+        ).parent.parent.parent.parent.parent.path;
+    final icons = FontLoader('MaterialIcons')
+      ..addFont(
+        File(
+          '$flutterRoot/bin/cache/artifacts/material_fonts/'
+          'MaterialIcons-Regular.otf',
+        ).readAsBytes().then(ByteData.sublistView),
+      );
+    await icons.load();
+  });
+
   testWidgets('rank artwork loads at small sizes on light and dark surfaces', (
     tester,
   ) async {

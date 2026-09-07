@@ -152,6 +152,18 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    final context = tester.element(find.byType(LeaderboardScreen));
+    await tester.runAsync(() async {
+      for (final tier in profileTierLadder) {
+        await precacheImage(
+          AssetImage('assets/images/ranks/${tier.toLowerCase()}.png'),
+          context,
+          onError: (error, stack) => fail('Badge failed to load: $error'),
+        );
+      }
+    });
+    await tester.pumpAndSettle();
+
     expect(tester.takeException(), isNull);
     expect(
       tester

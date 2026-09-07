@@ -440,16 +440,8 @@ class _PublicAchievements extends StatelessWidget {
         message: l10n.noPublicAchievements,
       );
     }
-    return GridView.builder(
+    return ProfileAchievementGrid(
       key: const ValueKey('public-profile-achievements'),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.08,
-      ),
       itemCount: achievements.length,
       itemBuilder: (context, index) {
         final achievement = achievements[index];

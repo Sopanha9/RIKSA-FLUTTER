@@ -1,5 +1,8 @@
+import 'package:dio/dio.dart';
+
 import '../../../core/network/api_config.dart';
 import '../../../core/network/dio_client.dart';
+import '../../auth/data/auth_api.dart';
 import 'social_models.dart';
 
 class SocialApiException implements Exception {
@@ -157,6 +160,7 @@ class SocialApi {
     required String title,
     required String content,
     required String categoryId,
+    String? mediaUrl,
   }) async {
     final data = await _query(
       '''
@@ -165,7 +169,12 @@ class SocialApi {
       }
       ''',
       variables: {
-        'input': {'title': title, 'content': content, 'categoryId': categoryId},
+        'input': {
+          'title': title,
+          'content': content,
+          'categoryId': categoryId,
+          'mediaUrl': ?mediaUrl,
+        },
       },
     );
     return SocialPost.fromJson(
@@ -182,6 +191,7 @@ class SocialApi {
     required String id,
     required String title,
     required String content,
+    String? mediaUrl,
   }) async {
     final data = await _query(
       '''
@@ -190,12 +200,43 @@ class SocialApi {
       }
       ''',
       variables: {
-        'input': {'id': id, 'title': title, 'content': content},
+        'input': {
+          'id': id,
+          'title': title,
+          'content': content,
+          // Omitted leaves the image alone; an empty string clears it.
+          'mediaUrl': ?mediaUrl,
+        },
       },
     );
     return SocialPost.fromJson(
       (data['updatePost'] as Map).cast<String, dynamic>(),
     );
+  }
+
+  /// Uploads an image and returns the URL to store on a post.
+  ///
+  /// The API keeps the bytes and hands back a link; nothing else in the app
+  /// needs to know where they live. Throws [SocialApiException] with the
+  /// server's reason when the file is rejected.
+  Future<String> uploadMedia(String filePath, {String? filename}) async {
+    try {
+      final form = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath, filename: filename),
+      });
+      final response = await _client.dio.post(
+        '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/media',
+        data: form,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+      final url = (response.data as Map)['url'];
+      if (url is! String || url.isEmpty) {
+        throw const SocialApiException('The image upload returned no link.');
+      }
+      return url;
+    } on DioException catch (error) {
+      throw SocialApiException(dioErrorMessage(error));
+    }
   }
 
   /// Removes a post the signed-in user owns (`deletePost`, owner only).

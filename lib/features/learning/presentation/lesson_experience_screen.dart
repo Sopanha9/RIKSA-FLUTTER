@@ -3,6 +3,8 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/sound/learning_sound.dart';
+import '../../../core/sound/sound_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -235,7 +237,7 @@ class _LessonExperienceScreenState
           controller: _answers.putIfAbsent(next.id, TextEditingController.new),
           result: _results[next.id],
           submitting: _submitting.contains(next.id),
-          onSubmit: () => _submitAnswer(next),
+          onSubmit: () => _submitAnswer(next, section),
         ),
       ],
     );
@@ -345,7 +347,10 @@ class _LessonExperienceScreenState
     ),
   );
 
-  Future<void> _submitAnswer(LessonExercise exercise) async {
+  Future<void> _submitAnswer(
+    LessonExercise exercise,
+    _LessonSection section,
+  ) async {
     final answer = _answers[exercise.id]?.text.trim() ?? '';
     if (answer.isEmpty) return;
     setState(() => _submitting.add(exercise.id));
@@ -357,7 +362,10 @@ class _LessonExperienceScreenState
             exerciseId: exercise.id,
             answer: answer,
           );
-      if (mounted) setState(() => _results[exercise.id] = result);
+      if (mounted) {
+        setState(() => _results[exercise.id] = result);
+        _soundForAnswer(result, section);
+      }
     } catch (error) {
       if (mounted) _showError(error);
     } finally {
@@ -374,6 +382,9 @@ class _LessonExperienceScreenState
             lessonId: widget.lessonId,
             reflectionText: _reflection.text.trim(),
           );
+      // Sounded before the awaits below: the fanfare should land with the tap,
+      // not after the catalog and roadmaps have finished refetching.
+      ref.playSound(LearningSound.lessonComplete);
       await ref.read(lessonCatalogProvider.notifier).load();
       // The roadmap owns this lesson's completed state, and the home screen
       // derives its counts and its resume target from every roadmap. Both are
@@ -448,6 +459,25 @@ class _LessonExperienceScreenState
           .map((section) => section.index)
           .firstOrNull ??
       sections.first.index;
+  /// Sounds the answer, promoting to the section cue when that answer was the
+  /// one that finished the section.
+  ///
+  /// Only one cue plays: stacking "correct" under "section complete" muddles
+  /// both, and the section cue already reads as a correct answer.
+  void _soundForAnswer(LessonAnswerResult result, _LessonSection section) {
+    if (!result.correct) {
+      ref.playSound(LearningSound.wrong);
+      return;
+    }
+    // Reads the freshly stored results, so the answer just marked correct
+    // counts towards finishing the section.
+    ref.playSound(
+      section.exercises.every(_isCorrect)
+          ? LearningSound.sectionComplete
+          : LearningSound.correct,
+    );
+  }
+
   bool _isCorrect(LessonExercise exercise) =>
       _results[exercise.id]?.correct == true;
   void _showError(Object error) => ScaffoldMessenger.of(
