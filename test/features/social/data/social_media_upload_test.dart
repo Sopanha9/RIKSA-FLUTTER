@@ -23,7 +23,11 @@ void main() {
       ..writeAsBytesSync(<int>[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
   });
 
-  tearDown(() => temp.deleteSync(recursive: true));
+  tearDown(() {
+    try {
+      temp.deleteSync(recursive: true);
+    } catch (_) {}
+  });
 
   SocialApi apiWith(_UploadAdapter adapter) {
     FlutterSecureStorage.setMockInitialValues({});

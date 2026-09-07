@@ -35,6 +35,13 @@ class _LessonExperienceScreenState
   int? _activeSectionIndex;
   bool _showPractice = false;
   bool _completing = false;
+  static const _quickReflections = [
+    '🌟 Confident & Clear',
+    '👍 Understood basics',
+    '💡 Good challenge',
+    '🤔 Need to review',
+  ];
+  String _selectedQuickReflection = '🌟 Confident & Clear';
 
   @override
   void dispose() {
@@ -271,69 +278,203 @@ class _LessonExperienceScreenState
     ],
   );
 
-  Widget _reflectionView(LessonDetail detail) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Icon(Icons.check_circle_rounded, color: context.riksa.jade, size: 44),
-      const SizedBox(height: 10),
-      Text(
-        'Final Review complete!',
-        style: Theme.of(
-          context,
-        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-      ),
-      const SizedBox(height: 18),
-      Text(
-        'Reflection',
-        style: Theme.of(
-          context,
-        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-      ),
-      const SizedBox(height: 8),
-      Text(
-        detail.reflectionPrompt.trim().isEmpty
-            ? 'What did you learn, and where could you use it?'
-            : detail.reflectionPrompt,
-        style: TextStyle(color: context.riksa.inkMuted),
-      ),
-      const SizedBox(height: 12),
-      TextField(
-        key: const ValueKey('lesson-reflection'),
-        controller: _reflection,
-        minLines: 4,
-        maxLines: 7,
-        onChanged: (_) => setState(() {}),
-        decoration: const InputDecoration(
-          hintText: 'Write at least 10 thoughtful words...',
-          alignLabelWithHint: true,
-        ),
-      ),
-      const SizedBox(height: 18),
-      FilledButton.icon(
-        key: const ValueKey('complete-lesson'),
-        onPressed:
-            !_completing &&
-                _wordCount(_reflection.text) >= 10 &&
-                detail.state != LessonProgressState.completed
-            ? () => _complete(detail)
-            : null,
-        icon: _completing
-            ? const SizedBox.square(
-                dimension: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
+  Widget _reflectionView(LessonDetail detail) {
+    final isCompleted = detail.state == LessonProgressState.completed;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: context.riksa.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: context.riksa.outline),
+            boxShadow: [
+              BoxShadow(
+                color: context.riksa.jade.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: context.riksa.jade.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
                 ),
-              )
-            : const Icon(Icons.emoji_events_rounded),
-        label: Text(
-          detail.state == LessonProgressState.completed
-              ? 'Lesson completed'
-              : 'Complete lesson & earn XP',
+                child: Icon(
+                  Icons.emoji_events_rounded,
+                  color: context.riksa.jade,
+                  size: 34,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Lesson Mastered!',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'You proved every concept and finished the final review.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: context.riksa.inkMuted, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 10,
+                runSpacing: 8,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.bolt_rounded,
+                          color: Color(0xFFF59E0B),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '+${detail.baseXp} XP',
+                          style: const TextStyle(
+                            color: Color(0xFFD97706),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.riksa.jade.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.check_circle_rounded,
+                          color: context.riksa.jade,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${detail.exercises.length} Exercises Passed',
+                          style: TextStyle(
+                            color: context.riksa.jade,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
-    ],
-  );
+        const SizedBox(height: 24),
+        Text(
+          'How was this lesson for you?',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          detail.reflectionPrompt.trim().isEmpty
+              ? 'Tap your quick reflection:'
+              : detail.reflectionPrompt,
+          style: TextStyle(color: context.riksa.inkMuted, fontSize: 13),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _quickReflections.map((label) {
+            final isSelected = _selectedQuickReflection == label;
+            return ChoiceChip(
+              label: Text(label),
+              selected: isSelected,
+              onSelected: (_) =>
+                  setState(() => _selectedQuickReflection = label),
+              selectedColor: Theme.of(context).colorScheme.primaryContainer,
+              labelStyle: TextStyle(
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.onPrimaryContainer
+                    : context.riksa.ink,
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 18),
+        TextField(
+          key: const ValueKey('lesson-reflection'),
+          controller: _reflection,
+          minLines: 2,
+          maxLines: 4,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            hintText: 'Any personal notes or key takeaways? (optional)',
+            hintStyle: TextStyle(color: context.riksa.inkMuted, fontSize: 13),
+            alignLabelWithHint: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        FilledButton.icon(
+          key: const ValueKey('complete-lesson'),
+          onPressed:
+              !_completing && !isCompleted ? () => _complete(detail) : null,
+          icon: _completing
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.emoji_events_rounded),
+          label: Text(
+            isCompleted
+                ? 'Lesson completed'
+                : 'Claim +${detail.baseXp} XP & Continue',
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _emptyLesson(LessonDetail detail) => SafeArea(
     top: false,
@@ -376,11 +517,15 @@ class _LessonExperienceScreenState
   Future<void> _complete(LessonDetail detail) async {
     setState(() => _completing = true);
     try {
+      final userNotes = _reflection.text.trim();
+      final reflectionPayload = userNotes.isNotEmpty
+          ? '[$_selectedQuickReflection] $userNotes'
+          : _selectedQuickReflection;
       final result = await ref
           .read(learningApiProvider)
           .completeLesson(
             lessonId: widget.lessonId,
-            reflectionText: _reflection.text.trim(),
+            reflectionText: reflectionPayload,
           );
       // Sounded before the awaits below: the fanfare should land with the tap,
       // not after the catalog and roadmaps have finished refetching.
@@ -975,8 +1120,6 @@ class _LessonLoadFailure extends StatelessWidget {
   );
 }
 
-int _wordCount(String text) =>
-    text.trim().isEmpty ? 0 : text.trim().split(RegExp(r'\s+')).length;
 String _friendlyLessonError(Object error) {
   final text = error.toString();
   if (text.contains('already completed')) {
