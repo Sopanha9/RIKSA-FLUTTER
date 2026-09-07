@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1121,7 +1122,13 @@ class _LessonLoadFailure extends StatelessWidget {
 }
 
 String _friendlyLessonError(Object error) {
-  final text = error.toString();
+  String text = error.toString();
+  if (error is DioException) {
+    final data = error.response?.data;
+    if (data is Map && data['message'] is String) {
+      text = data['message'] as String;
+    }
+  }
   if (text.contains('already completed')) {
     return 'This lesson is already complete.';
   }
@@ -1131,7 +1138,10 @@ String _friendlyLessonError(Object error) {
   if (text.contains('Cannot complete lesson')) {
     return 'Answer every exercise correctly before completing the lesson.';
   }
-  return 'We could not save that yet. Please try again.';
+  if (text.contains('locked') || text.contains('previous lesson')) {
+    return 'This lesson is locked until the previous lesson is completed.';
+  }
+  return text.isNotEmpty ? text : 'We could not save that yet. Please try again.';
 }
 
 extension<T> on Iterable<T> {
