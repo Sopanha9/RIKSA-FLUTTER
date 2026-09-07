@@ -27,8 +27,8 @@ void main() {
 
   test('every cue maps to a file that ships with the app', () {
     for (final sound in LearningSound.values) {
-      expect(sound.asset, endsWith('.wav'), reason: '${sound.name}');
-      expect(sound.asset, isNot(contains('/')), reason: '${sound.name}');
+      expect(sound.asset, endsWith('.wav'), reason: sound.name);
+      expect(sound.asset, isNot(contains('/')), reason: sound.name);
     }
     // Distinct files, or two moments would be indistinguishable.
     expect(
