@@ -1844,6 +1844,18 @@ abstract class AppLocalizations {
   /// **'Learning and community reminders'**
   String get notificationPreferencesHint;
 
+  /// No description provided for @learningSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning sounds'**
+  String get learningSounds;
+
+  /// No description provided for @learningSoundsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a sound for correct answers, mistakes and finished lessons.'**
+  String get learningSoundsHint;
+
   /// No description provided for @darkMode.
   ///
   /// In en, this message translates to:

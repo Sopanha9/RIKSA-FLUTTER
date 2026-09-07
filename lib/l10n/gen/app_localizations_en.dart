@@ -1028,6 +1028,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationPreferencesHint => 'Learning and community reminders';
 
   @override
+  String get learningSounds => 'Learning sounds';
+
+  @override
+  String get learningSoundsHint =>
+      'Play a sound for correct answers, mistakes and finished lessons.';
+
+  @override
   String get darkMode => 'Dark mode';
 
   @override

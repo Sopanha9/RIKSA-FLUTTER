@@ -984,6 +984,13 @@ class AppLocalizationsKm extends AppLocalizations {
   String get notificationPreferencesHint => 'រំលឹកអំពីការសិក្សា និងសហគមន៍';
 
   @override
+  String get learningSounds => 'សំឡេងសម្រាប់ការរៀន';
+
+  @override
+  String get learningSoundsHint =>
+      'បន្លឺសំឡេងពេលឆ្លើយត្រូវ ខុស និងពេលបញ្ចប់មេរៀន។';
+
+  @override
   String get darkMode => 'មុខងារងងឹត';
 
   @override

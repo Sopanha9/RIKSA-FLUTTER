@@ -306,6 +306,8 @@
   "editProfile": "កែប្រែប្រវត្តិរូប",
   "notificationPreferences": "ការជូនដំណឹង",
   "notificationPreferencesHint": "រំលឹកអំពីការសិក្សា និងសហគមន៍",
+  "learningSounds": "សំឡេងសម្រាប់ការរៀន",
+  "learningSoundsHint": "បន្លឺសំឡេងពេលឆ្លើយត្រូវ ខុស និងពេលបញ្ចប់មេរៀន។",
   "darkMode": "មុខងារងងឹត",
   "darkModeHint": "ប្រើរូបរាងងងឹតរបស់ RIKSA",
   "language": "ភាសា",
