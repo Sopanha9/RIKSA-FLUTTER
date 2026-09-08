@@ -7,6 +7,7 @@ import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../data/ai_chat_models.dart';
 import '../providers/ai_chat_provider.dart';
+import 'widgets/ai_study_coach_hub.dart';
 import 'widgets/ai_tutor_ui.dart';
 
 /// Chats become searchable once the list is longer than a screenful.
@@ -33,11 +34,19 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
 
   void _openChat(String id) => context.push('/ai/chat/$id');
 
-  void _startChat({String? prompt}) {
-    final query = prompt == null || prompt.isEmpty
-        ? ''
-        : '?prompt=${Uri.encodeQueryComponent(prompt)}';
-    context.push('/ai/chat/new$query');
+  void _startChat({String? prompt, String? context}) {
+    final params = <String, String>{};
+    if (prompt != null && prompt.isNotEmpty) {
+      params['prompt'] = prompt;
+    }
+    if (context != null && context.isNotEmpty) {
+      params['context'] = context;
+    }
+    final uri = Uri(
+      path: '/ai/chat/new',
+      queryParameters: params.isEmpty ? null : params,
+    );
+    this.context.push(uri.toString());
   }
 
   Future<void> _refresh() async {
@@ -121,6 +130,20 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
                     onPressed: _startChat,
                     icon: const Icon(Icons.auto_awesome, size: 19),
                     label: Text(l10n.aiAskNewQuestion),
+                  ),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  top: RiksaSpacing.md,
+                  bottom: RiksaSpacing.sm,
+                ),
+                child: AiStudyCoachHub(
+                  onTopicSelected: (topic) => _startChat(
+                    prompt: topic.prompt,
+                    context: topic.context,
                   ),
                 ),
               ),

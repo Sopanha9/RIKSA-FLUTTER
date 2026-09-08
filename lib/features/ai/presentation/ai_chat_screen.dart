@@ -212,6 +212,22 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   alignment: AlignmentDirectional.centerStart,
                   child: AiContextChip(label: l10n.aiLessonContext(lesson)),
                 ),
+              )
+            else if (widget.learningContext != null &&
+                widget.learningContext!.trim().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  RiksaSpacing.md,
+                  0,
+                  RiksaSpacing.md,
+                  RiksaSpacing.xs,
+                ),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: AiContextChip(
+                    label: widget.learningContext!.split('\n').first.split('.').first.trim(),
+                  ),
+                ),
               ),
             Expanded(
               child: _entries.isEmpty && !_loading
