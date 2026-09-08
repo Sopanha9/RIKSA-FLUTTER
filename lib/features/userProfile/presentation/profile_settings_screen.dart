@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/notifications/streak_reminder_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_mode_provider.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -20,8 +21,6 @@ class ProfileSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
-  bool _notificationsEnabled = true;
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -31,6 +30,8 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     final soundEnabled = ref.watch(soundEnabledProvider);
     final locale = ref.watch(localeProvider).locale;
     final localAvatar = ref.watch(profileAvatarProvider);
+    final streakReminderAsync = ref.watch(streakReminderStateProvider);
+    final streakReminderEnabled = streakReminderAsync.value ?? true;
 
     return Scaffold(
       backgroundColor: ProfilePalette.canvas(context),
@@ -82,12 +83,27 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                   child: Column(
                     children: [
                       _SettingsSwitchRow(
+                        key: const ValueKey('settings-streak-reminders'),
                         icon: Icons.notifications_none_rounded,
                         title: l10n.notificationPreferences,
                         subtitle: l10n.notificationPreferencesHint,
-                        value: _notificationsEnabled,
-                        onChanged: (value) =>
-                            setState(() => _notificationsEnabled = value),
+                        value: streakReminderEnabled,
+                        onChanged: (value) {
+                          final isKm =
+                              Localizations.localeOf(context).languageCode ==
+                                  'km';
+                          ref
+                              .read(streakReminderStateProvider.notifier)
+                              .toggle(
+                                enabled: value,
+                                title: isKm
+                                    ? '🔥 រក្សាខ្សែពិន្ទុបន្ត (Streak) របស់អ្នក!'
+                                    : '🔥 Keep your learning streak alive!',
+                                body: isKm
+                                    ? 'ចំណាយពេល ៥ នាទីយប់នេះដើម្បីរៀន និងការពារ Streak របស់អ្នក។'
+                                    : 'Take 5 minutes tonight to practice and protect your streak.',
+                              );
+                        },
                       ),
                       const _SettingsDivider(),
                       _SettingsSwitchRow(
