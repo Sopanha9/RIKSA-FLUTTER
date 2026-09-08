@@ -132,7 +132,19 @@ Nothing is square and nothing is hard-edged. Buttons are always full pills at
 - Base grid 4dp. Screen gutter 18–20dp. Section rhythm varies deliberately:
   24dp inside a group, 32–40dp between groups.
 - Must hold at 360dp width and at 200% text scale.
-- Bottom navigation floats; every scroll view reserves ~112dp of bottom padding.
+- Bottom navigation floats on the screen a tab lands on, and every scroll view
+  there reserves ~112dp of bottom padding for it.
+- A screen pushed on top of a tab does not get the tab bar. It already draws a
+  back control — an explicit one, or the leading arrow an `AppBar` implies — so
+  the tabs would be a second way out, and on a lesson, a chat, a composer or a
+  settings form they stack on top of that screen's own bottom bar and shrink the
+  content area one step further at every level.
+- The rule lives in `showsBottomNavigation` in
+  [app_shell.dart](lib/app/router/app_shell.dart) and reads the route stack, not
+  a list of paths, so a new screen is covered by how it is navigated to rather
+  than by remembering to register it. Reach a screen with `push` and it is a
+  step; reach it with `go` and it is a destination. A pushed screen must not
+  reserve the 112dp, or it will leave a dead strip.
 
 ## Motion
 

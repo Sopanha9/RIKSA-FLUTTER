@@ -252,8 +252,17 @@ class LearningActionBar extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
+        // A minimum on top of the inset: a device that reports no gesture bar
+        // leaves SafeArea contributing nothing, and the pills end up sitting on
+        // the bezel curve.
+        minimum: const EdgeInsets.only(bottom: RiksaSpacing.xs),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+          padding: const EdgeInsets.fromLTRB(
+            20,
+            RiksaSpacing.md,
+            20,
+            RiksaSpacing.md,
+          ),
           child: Row(
             children: [
               if (onBack != null && backLabel != null) ...[

@@ -17,7 +17,6 @@ import '../../userProfile/presentation/widgets/profile_ui.dart';
 import '../../userProfile/providers/profile_cover_provider.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
-import 'social_post_detail_screen.dart';
 import 'widgets/social_create_menu.dart';
 import 'widgets/social_owner_menu.dart';
 import 'widgets/social_palette.dart';
@@ -152,15 +151,11 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
                     index: index,
                     child: SocialPostCard(
                       post: post,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (context) =>
-                              SocialPostDetailScreen(postId: post.id),
-                          settings: RouteSettings(
-                            name: '/community/posts/${post.id}',
-                          ),
-                        ),
-                      ),
+                      // Through the router, not Navigator: a raw push leaves
+                      // go_router still believing the feed is on screen, and
+                      // the shell reads it to decide whether the tab bar
+                      // belongs over this screen.
+                      onTap: () => context.push('/community/posts/${post.id}'),
                       onAuthorTap: publicProfilePath(post.author.id) == null
                           ? null
                           : () => _openProfile(post.author.id),

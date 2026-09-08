@@ -163,6 +163,89 @@ void main() {
       reason: 'The AI action must not render behind the persistent navigation.',
     );
   });
+
+  testWidgets('the tab bar steps aside for a screen with its own bottom bar', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final router = GoRouter(
+      initialLocation: '/learn',
+      routes: [
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) =>
+              AppShell(navigationShell: navigationShell),
+          branches: [
+            _branch('/home', 'Home'),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/learn',
+                  builder: (context, state) => Scaffold(
+                    body: Center(
+                      child: TextButton(
+                        key: const ValueKey('open-lesson'),
+                        onPressed: () => context.push('/learn/lesson-1'),
+                        child: const Text('open'),
+                      ),
+                    ),
+                  ),
+                  routes: [
+                    GoRoute(
+                      path: ':id',
+                      builder: (context, state) => const Scaffold(
+                        body: Text('lesson body'),
+                        bottomNavigationBar: SizedBox(
+                          height: 70,
+                          child: Text('lesson action bar'),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            _branch('/ai', 'AI'),
+            _branch('/leaderboard', 'Leaderboard'),
+            _branch('/profile', 'Profile'),
+          ],
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp.router(
+        theme: AppTheme.light,
+        routerConfig: router,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('km')],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final tabs = find.byKey(const ValueKey('persistent-bottom-navigation'));
+    expect(tabs, findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('open-lesson')));
+    await tester.pumpAndSettle();
+
+    // One bottom bar, not two stacked on top of each other.
+    expect(find.text('lesson action bar'), findsOneWidget);
+    expect(tabs, findsNothing);
+
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(tabs, findsOneWidget);
+  });
 }
 
 StatefulShellBranch _branch(String path, String label) {
