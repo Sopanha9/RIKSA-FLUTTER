@@ -15,6 +15,7 @@ import 'package:riksa_app/features/userProfile/data/public_profile_api.dart';
 import 'package:riksa_app/features/userProfile/presentation/public_profile_screen.dart';
 import 'package:riksa_app/features/userProfile/providers/public_profile_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
+import '../../../visuals/achievement_preview.dart';
 
 final _post = SocialPost(
   id: 'post-public',
@@ -64,6 +65,41 @@ const _profile = PublicProfile(
 
 void main() {
   setUpAll(_loadFonts);
+  for (final dark in [false, true]) {
+    for (final scale in [1.0, 2.0]) {
+      testWidgets('public achievement tab at 360px dark=$dark scale=$scale', (
+        tester,
+      ) async {
+        await _pump(
+          tester,
+          profiles: _Profiles(result: Future.value(_profile)),
+          theme: dark ? AppTheme.dark : AppTheme.light,
+          width: 360,
+          textScale: scale,
+        );
+        await tester.pumpAndSettle();
+        final tab = find.byKey(const ValueKey('profile-achievements-tab'));
+        await tester.ensureVisible(tab);
+        await tester.tap(tab);
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.byType(RiksaAchievementImage));
+        await tester.runAsync(
+          () => precacheImage(
+            const AssetImage('assets/images/achievements/ach-first-lesson.png'),
+            tester.element(find.byType(RiksaAchievementImage)),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Study Starter'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await exportAchievementPreview(
+          tester,
+          find.byKey(const ValueKey('public-achievement-preview')),
+          'public_${dark ? 'dark' : 'light'}_${scale.toInt()}x',
+        );
+      });
+    }
+  }
 
   testWidgets('renders populated public-safe profile tabs', (tester) async {
     await _pump(
@@ -357,8 +393,10 @@ Future<void> _pump(
   _Social? social,
   ThemeData? theme,
   Locale locale = const Locale('en'),
+  double width = 430,
+  double textScale = 1,
 }) async {
-  tester.view.physicalSize = const Size(430, 932);
+  tester.view.physicalSize = Size(width, width == 430 ? 932 : 1200);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -376,6 +414,12 @@ Future<void> _pump(
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: theme ?? AppTheme.light,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
         locale: locale,
         localizationsDelegates: const [
           AppLocalizations.delegate,
@@ -384,7 +428,10 @@ Future<void> _pump(
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: const [Locale('en'), Locale('km')],
-        home: const PublicProfileScreen(userId: 'user-2'),
+        home: const RepaintBoundary(
+          key: ValueKey('public-achievement-preview'),
+          child: PublicProfileScreen(userId: 'user-2'),
+        ),
       ),
     ),
   );

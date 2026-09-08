@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../network/api_config.dart';
 import '../theme/app_theme.dart';
 import 'riksa_rank_badge.dart';
 
@@ -14,6 +15,8 @@ class RiksaAchievementImage extends StatelessWidget {
 
   final String? iconUrl;
   final double size;
+
+  /// Omit when adjacent text already announces the achievement's name.
   final String? semanticLabel;
 
   static const bundledAssets = <String, String>{
@@ -104,10 +107,7 @@ class RiksaAchievementImage extends StatelessWidget {
         : null;
     final asset = bundledAssets[identifier];
     final tier = rankTiers[identifier];
-    final isCustomUrl =
-        uri != null &&
-        (uri.scheme == 'https' || uri.scheme == 'http') &&
-        uri.host.isNotEmpty;
+    final remoteUrl = _remoteUrl(value, uri);
     final fallback = Icon(
       Icons.image_outlined,
       size: size * .65,
@@ -135,9 +135,9 @@ class RiksaAchievementImage extends StatelessWidget {
           ),
         ),
       );
-    } else if (isCustomUrl) {
+    } else if (remoteUrl != null) {
       artwork = Image.network(
-        value,
+        remoteUrl,
         fit: BoxFit.contain,
         excludeFromSemantics: true,
         loadingBuilder: (_, child, progress) =>
@@ -154,5 +154,30 @@ class RiksaAchievementImage extends StatelessWidget {
       excludeSemantics: true,
       child: SizedBox.square(dimension: size, child: artwork),
     );
+  }
+
+  static String? _remoteUrl(String value, Uri? uri) {
+    if (value.isEmpty || uri == null || RegExp(r'\s').hasMatch(value)) {
+      return null;
+    }
+    if (!uri.hasScheme && !uri.hasAuthority) {
+      // Unknown catalog identifiers stay neutral, rather than requesting an
+      // icon the server does not host. Other relative media paths use the API
+      // origin, like avatars, without adding the REST /api/v1 prefix.
+      if (uri.path.startsWith('/icons/ach-') ||
+          uri.path.startsWith('icons/ach-') ||
+          uri.path.isEmpty ||
+          (!uri.path.contains('/') && !uri.path.contains('.'))) {
+        return null;
+      }
+    }
+    final resolved = uri.hasScheme
+        ? uri
+        : Uri.parse('${ApiConfig.baseUrl}/').resolveUri(uri);
+    if ((resolved.scheme != 'https' && resolved.scheme != 'http') ||
+        resolved.host.isEmpty) {
+      return null;
+    }
+    return resolved.toString();
   }
 }

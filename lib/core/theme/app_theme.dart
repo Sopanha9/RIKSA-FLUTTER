@@ -16,6 +16,7 @@ class AppColors {
 
   static const brandJade = Color(0xFF237A5B);
   static const brandJadeStrong = Color(0xFF15543E);
+
   /// Jade-tinted near-white for text on a filled jade surface.
   static const jadeContrast = Color(0xFFF6FBF8);
   static const brandJadeSoft = Color(0xFFDDEFE5);
@@ -51,12 +52,17 @@ class AppColors {
   static const subjectHumanities = Color(0xFFB87824);
   static const subjectGeneral = Color(0xFF68715A);
 
-  static const darkCanvas = Color(0xFF181713);
-  static const darkSurface = Color(0xFF211F1A);
-  static const darkSurfaceRaised = Color(0xFF2C2922);
-  static const darkInk = Color(0xFFF8F0E3);
-  static const darkInkMuted = Color(0xFFC7BDAE);
-  static const darkOutline = Color(0xFF494238);
+  // Dark mode runs on X's "Lights out" palette. The ground is true black, the
+  // one deliberate exception to this system's no-pure-black rule: on the OLED
+  // phones the product targets it costs no backlight, and the panel edge stops
+  // being visible at all. The rule still holds everywhere else, and no text is
+  // ever pure white.
+  static const darkCanvas = Color(0xFF000000);
+  static const darkSurface = Color(0xFF16181C);
+  static const darkSurfaceRaised = Color(0xFF1D2024);
+  static const darkInk = Color(0xFFE7E9EA);
+  static const darkInkMuted = Color(0xFF71767B);
+  static const darkOutline = Color(0xFF2F3336);
   static const error = Color(0xFFB93E3E);
 
   // Compatibility aliases while older screens migrate to semantic tokens.
@@ -171,16 +177,20 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     surfaceRaised: AppColors.darkSurfaceRaised,
     ink: AppColors.darkInk,
     inkMuted: AppColors.darkInkMuted,
-    inkFaint: Color(0xFF958C7E),
+    inkFaint: Color(0xFF4B4E51),
     outline: AppColors.darkOutline,
     jade: Color(0xFF69B893),
     jadeStrong: Color(0xFF9AD4B7),
-    jadeSoft: Color(0xFF243F33),
-    onJade: AppColors.darkCanvas,
+    // Each soft fill is its own hue composited back onto the raised surface, so
+    // a state tint lifts off the black ground rather than floating on it.
+    jadeSoft: Color(0xFF283B36),
+    // Not the canvas: that is pure black now, and the black exception is for
+    // the ground only. Text keeps a near-black.
+    onJade: AppColors.darkSurface,
     saffron: Color(0xFFF4B84D),
-    saffronSoft: Color(0xFF49391D),
-    blushSoft: Color(0xFF442F38),
-    creamSoft: Color(0xFF443723),
+    saffronSoft: Color(0xFF504229),
+    blushSoft: Color(0xFF463244),
+    creamSoft: Color(0xFF4C3F2E),
     math: Color(0xFFB49ACA),
     science: Color(0xFF69C4BC),
     language: Color(0xFFF09A82),
@@ -327,6 +337,12 @@ class RiksaMotion {
   static const standard = Duration(milliseconds: 200);
   static const emphasis = Duration(milliseconds: 550);
   static const emphasisLong = Duration(milliseconds: 650);
+
+  /// Delay added per row when a list assembles itself.
+  ///
+  /// Small on purpose: the point is that the screen builds rather than blinks
+  /// into place, not that the learner watches it build.
+  static const stagger = Duration(milliseconds: 30);
   static const standardCurve = Curves.easeOutCubic;
   static const emphasisCurve = Curves.easeOutBack;
 

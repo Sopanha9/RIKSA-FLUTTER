@@ -35,8 +35,7 @@ class LearningRoadmapScreen extends ConsumerWidget {
             title: l10n.roadmapLoadFailed,
             body: l10n.noLessonsForFilters,
             actionLabel: l10n.tryAgain,
-            onAction: () =>
-                ref.invalidate(learningRoadmapProvider(categoryId)),
+            onAction: () => ref.invalidate(learningRoadmapProvider(categoryId)),
           ),
         ),
         data: (data) => RefreshIndicator(
@@ -90,9 +89,12 @@ class _RoadmapBody extends StatelessWidget {
             sliver: SliverList.builder(
               // One extra row for the goal stone that closes the path.
               itemCount: stones.length + 1,
-              itemBuilder: (context, index) => index == stones.length
-                  ? _GoalStone(units: stones.length, lessons: summary.total)
-                  : _Stone(stone: stones[index]),
+              itemBuilder: (context, index) => RiksaEntrance(
+                index: index,
+                child: index == stones.length
+                    ? _GoalStone(units: stones.length, lessons: summary.total)
+                    : _Stone(stone: stones[index]),
+              ),
             ),
           ),
       ],
@@ -135,11 +137,9 @@ class _RoadmapHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _CircleButton(
+                LearningCircleButton(
                   icon: Icons.arrow_back_rounded,
-                  tooltip: MaterialLocalizations.of(
-                    context,
-                  ).backButtonTooltip,
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                   onTap: context.pop,
                 ),
                 const SizedBox(height: RiksaSpacing.md + 2),
@@ -233,17 +233,31 @@ class _ProgressRing extends StatelessWidget {
           children: [
             SizedBox.square(
               dimension: 78,
-              child: CircularProgressIndicator(
-                key: const ValueKey('roadmap-progress-ring'),
-                value: fraction.clamp(0, 1).toDouble(),
-                strokeWidth: 8,
-                strokeCap: StrokeCap.round,
-                color: color,
-                backgroundColor: background,
+              // The ring sweeps to the learner's position instead of being
+              // painted there, so the year's progress reads as ground covered.
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(
+                  begin: 0,
+                  end: fraction.clamp(0, 1).toDouble(),
+                ),
+                duration: RiksaMotion.resolve(
+                  context,
+                  RiksaMotion.emphasisLong,
+                ),
+                curve: RiksaMotion.standardCurve,
+                builder: (context, animated, _) => CircularProgressIndicator(
+                  key: const ValueKey('roadmap-progress-ring'),
+                  value: animated,
+                  strokeWidth: 8,
+                  strokeCap: StrokeCap.round,
+                  color: color,
+                  backgroundColor: background,
+                ),
               ),
             ),
-            Text(
-              '$percent%',
+            RiksaCountUp(
+              value: percent,
+              format: (value) => '$value%',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w800,
                 letterSpacing: -.4,
@@ -254,36 +268,6 @@ class _ProgressRing extends StatelessWidget {
       ),
     );
   }
-}
-
-class _CircleButton extends StatelessWidget {
-  const _CircleButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-    message: tooltip,
-    child: Material(
-      color: context.riksa.surface,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Icon(icon, size: 20, color: context.riksa.ink),
-        ),
-      ),
-    ),
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -382,7 +366,8 @@ class _StoneNode extends StatelessWidget {
       decoration: BoxDecoration(
         color: background,
         shape: BoxShape.circle,
-        border: stone.status == LearningStatus.todo ||
+        border:
+            stone.status == LearningStatus.todo ||
                 stone.status == LearningStatus.locked
             ? Border.all(color: palette.outline, width: 2)
             : null,
@@ -460,7 +445,12 @@ class _StoneCardState extends State<_StoneCard> {
           hint: locked ? l10n.lessonLocked : null,
           child: Padding(
             key: ValueKey('roadmap-unit-${widget.stone.id}'),
-            padding: EdgeInsets.fromLTRB(16, _expanded ? 16 : 14, 16, _expanded ? 16 : 15),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              _expanded ? 16 : 14,
+              16,
+              _expanded ? 16 : 15,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -492,10 +482,11 @@ class _StoneCardState extends State<_StoneCard> {
                             _subtitle(l10n),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: widget.tone.accent,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: widget.tone.accent,
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                         ],
                       ),
@@ -543,9 +534,10 @@ class _StoneCardState extends State<_StoneCard> {
       widget.stone.completedLessons,
       widget.stone.totalLessons,
     ),
-    LearningStatus.locked => widget.stone.index > 1
-        ? l10n.opensAfterUnit(widget.stone.index - 1)
-        : l10n.lessonLockedShort,
+    LearningStatus.locked =>
+      widget.stone.index > 1
+          ? l10n.opensAfterUnit(widget.stone.index - 1)
+          : l10n.lessonLockedShort,
     LearningStatus.goal => l10n.readyForExam,
     LearningStatus.todo => l10n.lessonCountLabel(widget.stone.totalLessons),
   };
@@ -604,7 +596,10 @@ class _LessonRow extends StatelessWidget {
                 Container(
                   width: 20,
                   height: 20,
-                  decoration: BoxDecoration(color: marker, shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                    color: marker,
+                    shape: BoxShape.circle,
+                  ),
                   child: markerIcon == null
                       ? null
                       : Icon(

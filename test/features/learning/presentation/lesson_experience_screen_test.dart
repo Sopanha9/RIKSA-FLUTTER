@@ -73,7 +73,6 @@ class _FakeLearningApi implements LearningApi {
     required String exerciseId,
     required String answer,
   }) => throw UnimplementedError();
-
 }
 
 Iterable<TextSpan> _textSpans(InlineSpan span) sync* {
@@ -87,6 +86,25 @@ Iterable<TextSpan> _textSpans(InlineSpan span) sync* {
 
 bool _hasKhmer(String? text) =>
     text != null && RegExp(r'[\u1780-\u17FF\u19E0-\u19FF]').hasMatch(text);
+
+Widget _lessonApp({TextScaler textScaler = TextScaler.noScaling}) => ProviderScope(
+  overrides: [learningApiProvider.overrideWithValue(_FakeLearningApi())],
+  child: MaterialApp(
+    theme: AppTheme.light,
+    localizationsDelegates: const [
+      AppLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: const [Locale('en'), Locale('km')],
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+      child: child!,
+    ),
+    home: const LessonExperienceScreen(lessonId: 'biology-1'),
+  ),
+);
 
 void main() {
   setUpAll(() async {
@@ -180,4 +198,47 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+  testWidgets('the header keeps progress pinned while the title scrolls away', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(_lessonApp());
+    await tester.pumpAndSettle();
+
+    final track = find.byKey(const ValueKey('lesson-progress-track'));
+    final title = find.text(_detail.title);
+    final trackTop = tester.getTopLeft(track).dy;
+    final titleTop = tester.getTopLeft(title).dy;
+
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -260));
+    await tester.pumpAndSettle();
+
+    // Navigation and progress hold their place; the identity block gives its
+    // room to the reading.
+    expect(track, findsOneWidget);
+    expect(tester.getTopLeft(track).dy, trackTop);
+    expect(tester.getTopLeft(title).dy, lessThan(titleTop));
+  });
+
+  testWidgets('the header holds at 200% text scale', (tester) async {
+    // The narrowest supported width at the largest supported type: the case
+    // where a header that guessed its own extent overflows.
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      _lessonApp(textScaler: const TextScaler.linear(2)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('lesson-progress-track')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
 }

@@ -163,7 +163,12 @@ void main() {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('360 px · default text'),
+                                Text(
+                                  '360 px · default text',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
                                 const SizedBox(height: 12),
                                 ProfileAchievementGrid(
                                   itemCount: 2,
@@ -183,7 +188,12 @@ void main() {
                                   ),
                                 ),
                                 const SizedBox(height: 24),
-                                const Text('360 px · 200% text'),
+                                Text(
+                                  '360 px · 200% text',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
                                 const SizedBox(height: 12),
                                 MediaQuery(
                                   data: MediaQuery.of(context).copyWith(
@@ -248,15 +258,15 @@ Future<void> _verify(WidgetTester tester, String key, String name) async {
   final finder = find.byKey(ValueKey(key));
   // Export for human inspection BEFORE accepting a new or changed golden.
   if (Platform.environment['EXPORT_ACHIEVEMENT_PREVIEWS'] == '1') {
-    final boundary = tester.renderObject<RenderRepaintBoundary>(finder);
-    final image = await boundary.toImage();
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    await tester.runAsync(
-      () => File(
+    await tester.runAsync(() async {
+      final boundary = tester.renderObject<RenderRepaintBoundary>(finder);
+      final image = await boundary.toImage();
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      await File(
         'docs/achievement-artwork/$name.png',
-      ).writeAsBytes(bytes!.buffer.asUint8List()),
-    );
-    image.dispose();
+      ).writeAsBytes(bytes!.buffer.asUint8List());
+      image.dispose();
+    });
   } else {
     await expectLater(finder, matchesGoldenFile('goldens/$name.png'));
   }

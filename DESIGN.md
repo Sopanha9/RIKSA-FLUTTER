@@ -38,15 +38,18 @@ information and the screen reads as one pink mass.
 
 ### Roles
 
+Dark mode runs on X's "Lights out" palette: a true-black ground with near-black
+raised surfaces. Light mode is unchanged.
+
 | Role | Light | Dark | Use |
 |---|---|---|---|
-| `canvas` | `#F9F9FB` | `#181713` | Page ground |
-| `surface` | `#FFFFFF` | `#211F1A` | Raised content |
-| `surfaceRaised` | `#EFEFF2` | `#2C2922` | Quiet fields, inactive states |
-| `ink` | `#191619` | `#F8F0E3` | Primary text |
-| `inkMuted` | `#706C73` | `#C7BDAE` | Metadata, supporting copy |
-| `inkFaint` | `#A6A2AA` | `#958C7E` | Locked / not-yet states |
-| `outline` | `#E6E6EA` | `#494238` | Hairlines, dividers |
+| `canvas` | `#F9F9FB` | `#000000` | Page ground |
+| `surface` | `#FFFFFF` | `#16181C` | Raised content |
+| `surfaceRaised` | `#EFEFF2` | `#1D2024` | Quiet fields, inactive states |
+| `ink` | `#191619` | `#E7E9EA` | Primary text |
+| `inkMuted` | `#706C73` | `#71767B` | Metadata, supporting copy |
+| `inkFaint` | `#A6A2AA` | `#4B4E51` | Locked / not-yet states |
+| `outline` | `#E6E6EA` | `#2F3336` | Hairlines, dividers |
 | `jade` | `#237A5B` | `#69B893` | Completion, understood |
 | `saffron` | `#E69A18` | `#F4B84D` | Streak, XP, current position |
 
@@ -69,7 +72,12 @@ One per STEM subject, used at full strength on marks and numerals, and as a
 
 ### Rules
 
-- Never `#000` or `#fff` as text or ground. Use `ink` / `surface`.
+- Never `#000` or `#fff` as **text**. Use `ink` / `surface`.
+- The dark ground is the one exception: `canvas` is true black in dark mode,
+  matching X's "Lights out". On the OLED phones the product targets it draws no
+  backlight and the panel edge disappears entirely. Everything drawn on it,
+  including `onJade`, still uses a near-black or near-white, never `#000`
+  or `#fff`.
 - Locked and completed states differ by weight and hue, never by opacity alone.
 - Full-bleed pastel card backgrounds are reserved for at most one element per
   screen: the current, resumable thing.
@@ -128,10 +136,27 @@ Nothing is square and nothing is hard-edged. Buttons are always full pills at
 
 ## Motion
 
-`RiksaMotion`: 100ms fast, 200ms standard, 550/650ms emphasis. Standard curve
-`easeOutCubic`. Reserve `easeOutBack` for a single earned moment (lesson
-completion), never for routine state changes. Always respect
+`RiksaMotion`: 100ms fast, 200ms standard, 550/650ms emphasis, 30ms stagger.
+Standard curve `easeOutCubic`. Reserve `easeOutBack` for a single earned moment
+(lesson completion), never for routine state changes. Always respect
 `MediaQuery.disableAnimations` via `RiksaMotion.resolve`.
+
+**Values arrive, they do not appear.** Anything the learner earned (progress
+tracks and rings, their own rank and XP) animates from zero on first paint. A
+bar painted straight at its value reads as a fact about the database; a bar that
+fills reads as ground the learner covered. Use `RiksaCountUp` for numerals and
+seed every progress tween with an explicit `begin: 0`, because
+`TweenAnimationBuilder` without a `begin` starts at the end value and only moves
+on later changes.
+
+**Lists assemble.** Rows enter through `RiksaEntrance`, offset by index, capped
+at 8 rows so a long list still finishes promptly. It drops its own `Opacity` and
+`Transform` once the row lands, so a long feed does not carry a `saveLayer` per
+row for the rest of the session.
+
+Restraint still applies. Animate the learner's own numbers, not everyone's: six
+XP counters ticking at once is the gamified noise the product sets itself
+against.
 
 ## Component conventions
 
@@ -146,7 +171,9 @@ completion), never for routine state changes. Always respect
 - Side-stripe borders as accents.
 - Gradient text and gradient card fills. Pastels are flat.
 - Decorative glassmorphism.
-- Pure black `#000000` anywhere. The anchor is aubergine `#2A061D`.
+- Pure black `#000000` as text, or as any light-mode surface. The action
+  anchor is aubergine `#2A061D` in light and pink `#EE8FD0` in dark; the
+  dark-mode page ground is the single sanctioned use of true black.
 - Square corners and small radii on anything interactive.
 - Long scrolling runs of same-size cards where colour carries no state.
 - Rows of big-number metric tiles. One big number, on the earned screen, is the

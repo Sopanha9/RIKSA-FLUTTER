@@ -100,6 +100,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                 SliverPersistentHeader(
                   pinned: true,
                   delegate: ProfileTabsHeaderDelegate(
+                    extent: ProfileTabs.heightFor(context),
                     color: ProfilePalette.canvas(context),
                     tabs: ProfileTabs(
                       selected: _tab,
@@ -467,15 +468,28 @@ class _ProfileLearningCard extends StatelessWidget {
               const SizedBox(height: 10),
               ClipRRect(
                 borderRadius: AppRadii.fullBorder,
-                child: LinearProgressIndicator(
-                  key: const ValueKey('profile-level-progress'),
-                  value: game?.nextTierProgress ?? 0,
-                  minHeight: 8,
-                  backgroundColor: AppColors.editorialAubergine.withValues(
-                    alpha: .14,
+                child: TweenAnimationBuilder<double>(
+                  // Fills towards the next tier on arrival, so the gap left to
+                  // close is what the learner sees rather than a static bar.
+                  tween: Tween<double>(
+                    begin: 0,
+                    end: (game?.nextTierProgress ?? 0).clamp(0, 1).toDouble(),
                   ),
-                  valueColor: const AlwaysStoppedAnimation(
-                    AppColors.editorialPink,
+                  duration: RiksaMotion.resolve(
+                    context,
+                    RiksaMotion.emphasisLong,
+                  ),
+                  curve: RiksaMotion.standardCurve,
+                  builder: (context, animated, _) => LinearProgressIndicator(
+                    key: const ValueKey('profile-level-progress'),
+                    value: animated,
+                    minHeight: 8,
+                    backgroundColor: AppColors.editorialAubergine.withValues(
+                      alpha: .14,
+                    ),
+                    valueColor: const AlwaysStoppedAnimation(
+                      AppColors.editorialPink,
+                    ),
                   ),
                 ),
               ),

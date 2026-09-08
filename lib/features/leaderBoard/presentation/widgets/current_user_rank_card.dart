@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/riksa_components.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../core/widgets/riksa_rank_badge.dart';
 
@@ -86,8 +87,13 @@ class CurrentUserRankCard extends StatelessWidget {
                     RiksaRankBadge(tier: tier, size: 36),
                     Expanded(
                       child: Center(
-                        child: Text(
-                          '#$rank',
+                        // The learner's own two numbers are the one place on
+                        // this screen worth animating. Every other row's XP is
+                        // reference data, and six counters ticking at once is
+                        // the gamified noise the product sets itself against.
+                        child: RiksaCountUp(
+                          value: rank,
+                          format: (value) => '#$value',
                           key: const ValueKey('current-user-rank-number'),
                           style: TextStyle(
                             color: isDark ? Colors.white : Colors.white,
@@ -104,8 +110,9 @@ class CurrentUserRankCard extends StatelessWidget {
                       color: AppColors.editorialPink.withValues(alpha: .65),
                     ),
                     const SizedBox(width: 14),
-                    Text(
-                      '$xp XP',
+                    RiksaCountUp(
+                      value: xp,
+                      format: (value) => '$value XP',
                       style: const TextStyle(
                         color: AppColors.editorialPink,
                         fontSize: 16,

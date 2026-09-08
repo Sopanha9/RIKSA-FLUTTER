@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
+import 'package:riksa_app/app/router/app_shell.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/features/auth/data/auth_models.dart';
+import 'package:riksa_app/features/auth/providers/auth_provider.dart';
+import 'package:riksa_app/features/userProfile/data/profile_models.dart';
+import 'package:riksa_app/features/userProfile/presentation/widgets/riksa_profile_drawer.dart';
+import 'package:riksa_app/features/userProfile/providers/profile_provider.dart';
 import 'package:riksa_app/features/blog/data/blog_models.dart';
 import 'package:riksa_app/features/blog/providers/blog_provider.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
@@ -74,6 +81,31 @@ class _FeedNotifier extends SocialFeedNotifier {
   }
 }
 
+class _SignedInAuth extends AuthNotifier {
+  @override
+  AuthState build() => const Authenticated(
+    AuthUser(
+      id: 'user-1',
+      username: 'sokha',
+      displayName: 'Sokha Chan',
+      emailVerified: true,
+      phoneVerified: true,
+      role: 'STUDENT',
+    ),
+  );
+}
+
+final _dashboard = ProfileDashboardData(
+  gamification: const GamificationProfile(
+    totalXp: 5630,
+    currentStreak: 7,
+    highestStreak: 12,
+    xpToNext: 370,
+  ),
+  achievements: const [],
+  activities: const [],
+);
+
 class _BlogNotifier extends BlogFeedNotifier {
   @override
   BlogFeedState build() =>
@@ -119,6 +151,9 @@ void main() {
     );
     expect(find.text('Community'), findsOneWidget);
     expect(find.byKey(const ValueKey('bottom-nav-morph')), findsNothing);
+    // No hamburger, and no drawer of this screen's own: the account menu hangs
+    // off the shell's Scaffold so it covers the floating bottom bar, and it is
+    // opened by the avatar in the header.
     expect(find.byKey(const ValueKey('community-drawer-button')), findsNothing);
     expect(find.byType(Drawer), findsNothing);
     expect(find.byKey(const ValueKey('community-search')), findsOneWidget);
@@ -393,4 +428,54 @@ void main() {
       findsNothing,
     );
   });
+  testWidgets('the header avatar opens the account menu, not a hamburger', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_SignedInAuth.new),
+          socialFeedProvider.overrideWith(_FeedNotifier.new),
+          blogFeedProvider.overrideWith(_BlogNotifier.new),
+          communityStreakProvider.overrideWith(
+            (ref) async => const CommunityStreak(current: 7, highest: 12),
+          ),
+          profileDashboardProvider.overrideWith((ref) async => _dashboard),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          // Mirrors the real shell: the drawer belongs to the outer Scaffold,
+          // and the screen reaches it through the scope rather than owning one.
+          home: Builder(
+            builder: (context) => Scaffold(
+              drawer: const RiksaProfileDrawer(),
+              body: Builder(
+                builder: (inner) => AppShellScope(
+                  openDrawer: Scaffold.of(inner).openDrawer,
+                  child: const SocialFeedScreen(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.menu), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('account-avatar-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('profile-drawer')), findsOneWidget);
+    expect(find.text('Sokha Chan'), findsOneWidget);
+  });
+
 }

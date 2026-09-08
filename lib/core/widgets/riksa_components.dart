@@ -926,7 +926,9 @@ class AnimatedRiksaProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => TweenAnimationBuilder<double>(
-    tween: Tween(end: value.clamp(0, 1)),
+    // Begins at empty so the bar fills on first paint instead of appearing
+    // already full. Later value changes still animate from wherever it is.
+    tween: Tween(begin: 0, end: value.clamp(0, 1).toDouble()),
     duration: RiksaMotion.resolve(context, RiksaMotion.standard),
     curve: RiksaMotion.standardCurve,
     builder: (context, animated, _) => Semantics(
@@ -1339,4 +1341,151 @@ class _SubjectArtworkPainter extends CustomPainter {
       oldDelegate.kind != kind ||
       oldDelegate.color != color ||
       oldDelegate.background != background;
+}
+
+/// A number that counts up to its value the first time it is shown.
+///
+/// Progress the learner earned should arrive, not appear. A rank that is simply
+/// painted at #3 reads as a fact about the database; a rank that climbs to #3
+/// reads as something they did.
+///
+/// Assistive technology is given the final value only: announcing every
+/// interpolated frame would be noise.
+class RiksaCountUp extends StatelessWidget {
+  const RiksaCountUp({
+    super.key,
+    required this.value,
+    required this.format,
+    this.style,
+    this.textAlign,
+    this.maxLines,
+    this.overflow,
+    this.duration,
+  });
+
+  final int value;
+
+  /// Renders one frame of the count. Called with interpolated values, so keep
+  /// it cheap and free of side effects.
+  final String Function(int) format;
+
+  final TextStyle? style;
+  final TextAlign? textAlign;
+  final int? maxLines;
+  final TextOverflow? overflow;
+  final Duration? duration;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = format(value);
+    Widget text(String data) => Text(
+      data,
+      style: style,
+      textAlign: textAlign,
+      maxLines: maxLines,
+      overflow: overflow,
+    );
+
+    final resolved = RiksaMotion.resolve(
+      context,
+      duration ?? RiksaMotion.emphasisLong,
+    );
+    if (resolved == Duration.zero) return text(label);
+
+    return Semantics(
+      label: label,
+      excludeSemantics: true,
+      child: TweenAnimationBuilder<double>(
+        // A begin is what makes this animate on first paint. Without it the
+        // builder starts at the end value and only moves on later changes,
+        // which is exactly the inert case this widget exists to fix.
+        tween: Tween<double>(begin: 0, end: value.toDouble()),
+        duration: resolved,
+        curve: RiksaMotion.standardCurve,
+        builder: (context, animated, _) => text(format(animated.round())),
+      ),
+    );
+  }
+}
+
+/// Fades and lifts one row into place, offset by its position in the list.
+///
+/// [index] is the row's position, and the delay is capped so a long list still
+/// finishes assembling promptly instead of trickling in for a second.
+class RiksaEntrance extends StatefulWidget {
+  const RiksaEntrance({
+    super.key,
+    required this.index,
+    required this.child,
+    this.rise = 12,
+  });
+
+  final int index;
+  final Widget child;
+
+  /// How far the row travels up into position, in logical pixels.
+  final double rise;
+
+  /// Rows past this position all start together.
+  static const maxStaggered = 8;
+
+  @override
+  State<RiksaEntrance> createState() => _RiksaEntranceState();
+}
+
+class _RiksaEntranceState extends State<RiksaEntrance>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _progress;
+
+  @override
+  void initState() {
+    super.initState();
+    final delay =
+        RiksaMotion.stagger * widget.index.clamp(0, RiksaEntrance.maxStaggered);
+    final total = delay + RiksaMotion.standard;
+    _controller = AnimationController(vsync: this, duration: total);
+    _progress = CurvedAnimation(
+      parent: _controller,
+      curve: Interval(
+        delay.inMicroseconds / total.inMicroseconds,
+        1,
+        curve: RiksaMotion.standardCurve,
+      ),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Honoured here rather than by skipping the widget, so a learner who turns
+    // reduced motion on mid-session still lands on the finished layout.
+    if (MediaQuery.disableAnimationsOf(context)) _controller.value = 1;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _progress,
+    builder: (context, child) {
+      // Once the row has landed it is handed back unwrapped. Opacity composites
+      // through a saveLayer even at 1.0, and a feed of fifty posts should not
+      // carry fifty of those for the rest of the session on a cheap phone.
+      if (_progress.isCompleted) return child!;
+      return Opacity(
+        opacity: _progress.value,
+        child: Transform.translate(
+          offset: Offset(0, (1 - _progress.value) * widget.rise),
+          child: child,
+        ),
+      );
+    },
+    child: widget.child,
+  );
 }

@@ -339,14 +339,28 @@
   "@blog": {},
   "setUpProfile": "Set up profile",
   "@setUpProfile": {},
-  "onboardingTitle": "Build a Better Future with a Community of Learners",
-  "@onboardingTitle": {},
   "onboardingLearningBody": "Discover quality education, modern learning experiences, and knowledge that grows with you.",
   "@onboardingLearningBody": {},
   "onboardingAchievementBody": "Keep your streak alive, celebrate progress, and turn every small win into momentum.",
   "@onboardingAchievementBody": {},
   "onboardingCommunityBody": "Learn with a supportive community that shares ideas, answers questions, and grows together.",
   "@onboardingCommunityBody": {},
+  "onboardingLearningTitle": "Learn Without Limits",
+  "@onboardingLearningTitle": {
+    "description": "Onboarding page 1 headline. Two short lines when wrapped."
+  },
+  "onboardingAchievementTitle": "Progress You Can See",
+  "@onboardingAchievementTitle": {
+    "description": "Onboarding page 2 headline."
+  },
+  "onboardingCommunityTitle": "Never Study Alone",
+  "@onboardingCommunityTitle": {
+    "description": "Onboarding page 3 headline."
+  },
+  "onboardingGetStarted": "Get started",
+  "@onboardingGetStarted": {
+    "description": "Primary action on the last onboarding page."
+  },
   "selectProvinceTitle": "Select your province",
   "@selectProvinceTitle": {},
   "selectProvinceSubtitle": "Your province personalizes local communities and provincial rankings. It will be saved securely to your profile after you sign in.",
@@ -595,6 +609,18 @@
   "unranked": "Not ranked yet",
   "@unranked": {},
   "settings": "Settings",
+  "openProfileMenu": "Open profile menu",
+  "@openProfileMenu": {
+    "description": "Tooltip and semantics label on the avatar that opens the app drawer."
+  },
+  "communitiesMenu": "Communities",
+  "@communitiesMenu": {
+    "description": "Drawer item leading to the list of communities."
+  },
+  "progressHistory": "Progress",
+  "@progressHistory": {
+    "description": "Drawer item leading to the XP activity history."
+  },
   "@settings": {},
   "editProfile": "Edit Profile",
   "@editProfile": {},

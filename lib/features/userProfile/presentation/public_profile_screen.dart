@@ -49,7 +49,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
               tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               style: IconButton.styleFrom(
                 backgroundColor: ProfilePalette.panel(context),
-                foregroundColor: ProfilePalette.aubergine(context),
+                foregroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? ProfilePalette.text(context)
+                    : ProfilePalette.aubergine(context),
                 side: BorderSide(color: ProfilePalette.border(context)),
               ),
               icon: const Icon(Icons.arrow_back_rounded),
@@ -62,7 +64,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             title: Text(
               l10n.publicProfile,
               style: TextStyle(
-                color: ProfilePalette.aubergine(context),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? ProfilePalette.text(context)
+                    : ProfilePalette.aubergine(context),
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -184,6 +188,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             SliverPersistentHeader(
               pinned: true,
               delegate: ProfileTabsHeaderDelegate(
+                extent: ProfileTabs.heightFor(context),
                 color: ProfilePalette.canvas(context),
                 tabs: ProfileTabs(
                   selected: _tab,

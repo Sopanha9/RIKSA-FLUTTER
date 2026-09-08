@@ -4,13 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/router/app_shell.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_components.dart';
 import '../../../core/widgets/riksa_search_bar.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../blog/data/blog_models.dart';
 import '../../blog/providers/blog_provider.dart';
 import '../../userProfile/presentation/public_profile_navigation.dart';
+import '../../userProfile/presentation/widgets/profile_ui.dart';
+import '../../userProfile/providers/profile_cover_provider.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
 import 'social_post_detail_screen.dart';
@@ -144,28 +148,31 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
                 itemCount: filteredPosts.length,
                 itemBuilder: (context, index) {
                   final post = filteredPosts[index];
-                  return SocialPostCard(
-                    post: post,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (context) =>
-                            SocialPostDetailScreen(postId: post.id),
-                        settings: RouteSettings(
-                          name: '/community/posts/${post.id}',
+                  return RiksaEntrance(
+                    index: index,
+                    child: SocialPostCard(
+                      post: post,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (context) =>
+                              SocialPostDetailScreen(postId: post.id),
+                          settings: RouteSettings(
+                            name: '/community/posts/${post.id}',
+                          ),
                         ),
                       ),
+                      onAuthorTap: publicProfilePath(post.author.id) == null
+                          ? null
+                          : () => _openProfile(post.author.id),
+                      onReact: () => _react(post.id),
+                      onShare: () => _share(post.id),
+                      onEdit: post.author.id == currentUserId
+                          ? () => _editPost(post)
+                          : null,
+                      onDelete: post.author.id == currentUserId
+                          ? () => _deletePost(post)
+                          : null,
                     ),
-                    onAuthorTap: publicProfilePath(post.author.id) == null
-                        ? null
-                        : () => _openProfile(post.author.id),
-                    onReact: () => _react(post.id),
-                    onShare: () => _share(post.id),
-                    onEdit: post.author.id == currentUserId
-                        ? () => _editPost(post)
-                        : null,
-                    onDelete: post.author.id == currentUserId
-                        ? () => _deletePost(post)
-                        : null,
                   );
                 },
               ),
@@ -218,11 +225,14 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
                 sliver: SliverList.builder(
                   itemCount: filteredPosts.length,
-                  itemBuilder: (context, index) => _GlassBlogCard(
-                    post: filteredPosts[index],
-                    onLike: () => ref
-                        .read(blogFeedProvider.notifier)
-                        .toggleLike(filteredPosts[index].id),
+                  itemBuilder: (context, index) => RiksaEntrance(
+                    index: index,
+                    child: _GlassBlogCard(
+                      post: filteredPosts[index],
+                      onLike: () => ref
+                          .read(blogFeedProvider.notifier)
+                          .toggleLike(filteredPosts[index].id),
+                    ),
                   ),
                 ),
               ),
@@ -423,16 +433,19 @@ class _CommunityAppBar extends ConsumerWidget {
             children: [
               Row(
                 children: [
+                  const _AccountAvatarButton(),
+                  const SizedBox(width: RiksaSpacing.sm),
                   Expanded(
                     child: Text(
                       l10n.community,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        color: SocialPalette.text(context),
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -.6,
-                      ),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            color: SocialPalette.text(context),
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -.6,
+                          ),
                     ),
                   ),
                   _StreakPill(
@@ -449,6 +462,44 @@ class _CommunityAppBar extends ConsumerWidget {
                 onFilter: onFilter,
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The way into the account menu. An avatar, never a hamburger: the learner's
+/// own face is a clearer promise of "this is your stuff" than three lines, and
+/// it doubles as the signed-in indicator the header otherwise lacked.
+class _AccountAvatarButton extends ConsumerWidget {
+  const _AccountAvatarButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Checked before auth is read: outside the shell there is no drawer to
+    // open, so the header should not pull the session in just to hide a button.
+    final open = AppShellScope.maybeOf(context)?.openDrawer;
+    if (open == null) return const SizedBox.shrink();
+
+    final l10n = AppLocalizations.of(context)!;
+    final auth = ref.watch(authProvider);
+    if (auth is! Authenticated) return const SizedBox.shrink();
+    final user = auth.user;
+
+    return Semantics(
+      button: true,
+      label: l10n.openProfileMenu,
+      child: Tooltip(
+        message: l10n.openProfileMenu,
+        child: InkWell(
+          key: const ValueKey('account-avatar-button'),
+          onTap: open,
+          customBorder: const CircleBorder(),
+          child: RiksaProfileAvatar(
+            user: user,
+            radius: 19,
+            avatarPath: ref.watch(profileAvatarProvider),
           ),
         ),
       ),

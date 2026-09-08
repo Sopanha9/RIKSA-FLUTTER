@@ -414,11 +414,13 @@ class ProfileIdentityHeader extends StatelessWidget {
                       color: ProfilePalette.muted(context),
                     ),
                     const SizedBox(width: 5),
-                    Text(
-                      item.label,
-                      style: TextStyle(
-                        color: ProfilePalette.muted(context),
-                        fontSize: 13,
+                    Flexible(
+                      child: Text(
+                        item.label,
+                        style: TextStyle(
+                          color: ProfilePalette.muted(context),
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],
@@ -447,11 +449,13 @@ class ProfileIdentityHeader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      item.label,
-                      style: TextStyle(
-                        color: ProfilePalette.muted(context),
-                        fontSize: 13,
+                    Flexible(
+                      child: Text(
+                        item.label,
+                        style: TextStyle(
+                          color: ProfilePalette.muted(context),
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],
@@ -750,12 +754,18 @@ class ProfileTabs extends StatelessWidget {
   final String achievementsLabel;
   final String rankLabel;
 
-  /// Fixed height, so the strip can be pinned with a sliver delegate.
+  /// Base height. The pinned header and strip grow together for larger text.
   static const double height = 58;
+
+  static double heightFor(BuildContext context) =>
+      (MediaQuery.textScalerOf(context).scale(12.5) * 1.2 + 24).clamp(
+        height,
+        double.infinity,
+      );
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: height,
+    height: heightFor(context),
     child: DecoratedBox(
       decoration: BoxDecoration(
         color: ProfilePalette.canvas(context),
@@ -763,47 +773,57 @@ class ProfileTabs extends StatelessWidget {
           bottom: BorderSide(color: ProfilePalette.border(context)),
         ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _ProfileTabButton(
-            key: const ValueKey('profile-posts-tab'),
-            label: postsLabel,
-            selected: selected == ProfileTab.posts,
-            onTap: () => onSelected(ProfileTab.posts),
-          ),
-          _ProfileTabButton(
-            key: const ValueKey('profile-achievements-tab'),
-            label: achievementsLabel,
-            selected: selected == ProfileTab.achievements,
-            onTap: () => onSelected(ProfileTab.achievements),
-          ),
-          _ProfileTabButton(
-            key: const ValueKey('profile-rank-tab'),
-            label: rankLabel,
-            selected: selected == ProfileTab.rank,
-            onTap: () => onSelected(ProfileTab.rank),
-          ),
-        ],
-      ),
+      child: _strip(context),
     ),
   );
+  Widget _strip(BuildContext context) {
+    final scroll = MediaQuery.textScalerOf(context).scale(12.5) > 16.25;
+    final row = Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (tab, label, key) in [
+          (ProfileTab.posts, postsLabel, 'profile-posts-tab'),
+          (
+            ProfileTab.achievements,
+            achievementsLabel,
+            'profile-achievements-tab',
+          ),
+          (ProfileTab.rank, rankLabel, 'profile-rank-tab'),
+        ])
+          _ProfileTabButton(
+            key: ValueKey(key),
+            label: label,
+            selected: selected == tab,
+            onTap: () => onSelected(tab),
+            expand: !scroll,
+          ),
+      ],
+    );
+    return scroll
+        ? SingleChildScrollView(scrollDirection: Axis.horizontal, child: row)
+        : row;
+  }
 }
 
 /// Pins [ProfileTabs] under the identity header while content scrolls beneath.
 class ProfileTabsHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const ProfileTabsHeaderDelegate({required this.tabs, required this.color});
+  const ProfileTabsHeaderDelegate({
+    required this.tabs,
+    required this.color,
+    this.extent = ProfileTabs.height,
+  });
 
   final ProfileTabs tabs;
+  final double extent;
 
   /// Painted behind the strip so scrolled content never shows through.
   final Color color;
 
   @override
-  double get minExtent => ProfileTabs.height;
+  double get minExtent => extent;
 
   @override
-  double get maxExtent => ProfileTabs.height;
+  double get maxExtent => extent;
 
   @override
   Widget build(
@@ -829,7 +849,8 @@ class ProfileTabsHeaderDelegate extends SliverPersistentHeaderDelegate {
       oldDelegate.tabs.postsLabel != tabs.postsLabel ||
       oldDelegate.tabs.achievementsLabel != tabs.achievementsLabel ||
       oldDelegate.tabs.rankLabel != tabs.rankLabel ||
-      oldDelegate.color != color;
+      oldDelegate.color != color ||
+      oldDelegate.extent != extent;
 }
 
 class _ProfileTabButton extends StatelessWidget {
@@ -838,26 +859,28 @@ class _ProfileTabButton extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.expand = true,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final bool expand;
 
   @override
-  Widget build(BuildContext context) => Expanded(
-    child: InkWell(
+  Widget build(BuildContext context) {
+    final button = InkWell(
       onTap: onTap,
       child: Column(
         children: [
           Expanded(
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
+                padding: EdgeInsets.symmetric(horizontal: expand ? 6 : 14),
                 child: Text(
                   label,
                   textAlign: TextAlign.center,
-                  maxLines: 2,
+                  maxLines: expand ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: selected
@@ -876,14 +899,17 @@ class _ProfileTabButton extends StatelessWidget {
             height: 3,
             width: selected ? 58 : 0,
             decoration: BoxDecoration(
-              color: ProfilePalette.aubergine(context),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? ProfilePalette.pink(context)
+                  : ProfilePalette.aubergine(context),
               borderRadius: AppRadii.fullBorder,
             ),
           ),
         ],
       ),
-    ),
-  );
+    );
+    return expand ? Expanded(child: button) : IntrinsicWidth(child: button);
+  }
 }
 
 /// Content-sized cards switch to one column when width or text size needs it.
@@ -940,11 +966,11 @@ class ProfileAchievementTile extends StatelessWidget {
           children: [
             RiksaAchievementImage(iconUrl: iconUrl),
             const SizedBox(width: 8),
-            const Spacer(),
             if (trailingLabel?.isNotEmpty == true)
-              Flexible(
+              Expanded(
                 child: Text(
                   trailingLabel!,
+                  textAlign: TextAlign.end,
                   style: TextStyle(
                     color: ProfilePalette.xp(context),
                     fontSize: 11,

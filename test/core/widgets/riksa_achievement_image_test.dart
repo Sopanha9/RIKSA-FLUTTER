@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -5,6 +6,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:riksa_app/core/network/api_config.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/core/widgets/riksa_achievement_image.dart';
 import 'package:riksa_app/core/widgets/riksa_rank_badge.dart';
@@ -146,6 +149,98 @@ void main() {
     },
   );
 
+  testWidgets('relative custom images resolve through API configuration', (
+    tester,
+  ) async {
+    for (final path in [
+      '/media/achievement.png?version=2',
+      'media/achievement.png',
+      'achievement.png',
+    ]) {
+      await tester.pumpWidget(_app(RiksaAchievementImage(iconUrl: path)));
+      final image = tester.widget<Image>(find.byType(Image));
+      expect(
+        image.image,
+        NetworkImage(
+          Uri.parse('${ApiConfig.baseUrl}/').resolve(path).toString(),
+        ),
+      );
+      await tester.runAsync(
+        () async => Future<void>.delayed(const Duration(milliseconds: 30)),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('valid custom PNG bytes decode successfully', (tester) async {
+    const url = 'https://art.example.test/valid-achievement.png';
+    final client = _ImageClient();
+    final request = _ImageRequest();
+    final bytes = File(
+      'assets/images/achievements/ach-first-lesson.png',
+    ).readAsBytesSync();
+    when(() => client.getUrl(Uri.parse(url))).thenAnswer((_) async => request);
+    when(() => request.close()).thenAnswer((_) async => _ImageResponse(bytes));
+    debugNetworkImageHttpClientProvider = () => client;
+    addTearDown(() => debugNetworkImageHttpClientProvider = null);
+    await tester.pumpWidget(_app(const RiksaAchievementImage(iconUrl: url)));
+    final context = tester.element(find.byType(RiksaAchievementImage));
+    await tester.runAsync(
+      () => precacheImage(
+        const NetworkImage(url),
+        context,
+        onError: (e, _) => fail('$e'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.widget<RawImage>(find.byType(RawImage)).image, isNotNull);
+    expect(find.byIcon(Icons.image_outlined), findsNothing);
+    expect(tester.takeException(), isNull);
+    verify(() => client.getUrl(Uri.parse(url))).called(1);
+    debugNetworkImageHttpClientProvider = null;
+  });
+
+  testWidgets(
+    'card artwork is decorative while standalone labels remain accessible',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      try {
+        await tester.pumpWidget(
+          _app(
+            const ProfileAchievementTile(
+              name: 'First Lesson',
+              description: 'Complete your first lesson',
+              iconUrl: '/icons/ach-first-lesson.png',
+              trailingLabel: '+20 XP',
+            ),
+          ),
+        );
+        expect(find.bySemanticsLabel('First Lesson'), findsOneWidget);
+        expect(
+          tester
+              .widget<RiksaAchievementImage>(find.byType(RiksaAchievementImage))
+              .semanticLabel,
+          isNull,
+        );
+        await tester.pumpWidget(
+          _app(
+            const RiksaAchievementImage(
+              iconUrl: null,
+              semanticLabel: 'Achievement artwork unavailable',
+            ),
+          ),
+        );
+        expect(
+          find.bySemanticsLabel('Achievement artwork unavailable'),
+          findsOneWidget,
+        );
+      } finally {
+        semantics.dispose();
+      }
+    },
+  );
+
   for (final width in [320.0, 360.0]) {
     for (final scale in [1.0, 2.0]) {
       testWidgets('cards fit ${width}px at ${scale}x text', (tester) async {
@@ -196,3 +291,33 @@ Widget _app(Widget child) => MaterialApp(
   theme: AppTheme.light,
   home: Scaffold(body: child),
 );
+
+class _ImageClient extends Mock implements HttpClient {}
+
+class _ImageRequest extends Mock implements HttpClientRequest {}
+
+class _ImageResponse extends Stream<List<int>> implements HttpClientResponse {
+  _ImageResponse(this.bytes);
+  final List<int> bytes;
+  @override
+  int get statusCode => HttpStatus.ok;
+  @override
+  int get contentLength => bytes.length;
+  @override
+  HttpClientResponseCompressionState get compressionState =>
+      HttpClientResponseCompressionState.notCompressed;
+  @override
+  StreamSubscription<List<int>> listen(
+    void Function(List<int>)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) => Stream<List<int>>.value(bytes).listen(
+    onData,
+    onError: onError,
+    onDone: onDone,
+    cancelOnError: cancelOnError,
+  );
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}

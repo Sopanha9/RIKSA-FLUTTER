@@ -533,9 +533,6 @@ class AppLocalizationsKm extends AppLocalizations {
   String get setUpProfile => 'រៀបចំប្រវត្តិរូប';
 
   @override
-  String get onboardingTitle => 'កសាងអនាគតដ៏ប្រសើរជាមួយសហគមន៍អ្នកសិក្សា';
-
-  @override
   String get onboardingLearningBody =>
       'ស្វែងយល់ពីការអប់រំប្រកបដោយគុណភាព បទពិសោធន៍សិក្សាទំនើប និងចំណេះដឹងដែលរីកចម្រើនជាមួយអ្នក។';
 
@@ -546,6 +543,18 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get onboardingCommunityBody =>
       'រៀនជាមួយសហគមន៍ដែលគាំទ្រ ចែករំលែកគំនិត ឆ្លើយសំណួរ និងរីកចម្រើនជាមួយគ្នា។';
+
+  @override
+  String get onboardingLearningTitle => 'រៀនដោយគ្មានព្រំដែន';
+
+  @override
+  String get onboardingAchievementTitle => 'វឌ្ឍនភាពដែលអ្នកមើលឃើញ';
+
+  @override
+  String get onboardingCommunityTitle => 'កុំរៀនតែម្នាក់ឯង';
+
+  @override
+  String get onboardingGetStarted => 'ចាប់ផ្តើម';
 
   @override
   String get selectProvinceTitle => 'ជ្រើសរើសខេត្តរបស់អ្នក';
@@ -973,6 +982,15 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get settings => 'ការកំណត់';
+
+  @override
+  String get openProfileMenu => 'បើកម៉ឺនុយប្រវត្តិរូប';
+
+  @override
+  String get communitiesMenu => 'សហគមន៍';
+
+  @override
+  String get progressHistory => 'វឌ្ឍនភាព';
 
   @override
   String get editProfile => 'កែប្រែប្រវត្តិរូប';

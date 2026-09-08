@@ -550,10 +550,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setUpProfile => 'Set up profile';
 
   @override
-  String get onboardingTitle =>
-      'Build a Better Future with a Community of Learners';
-
-  @override
   String get onboardingLearningBody =>
       'Discover quality education, modern learning experiences, and knowledge that grows with you.';
 
@@ -564,6 +560,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingCommunityBody =>
       'Learn with a supportive community that shares ideas, answers questions, and grows together.';
+
+  @override
+  String get onboardingLearningTitle => 'Learn Without Limits';
+
+  @override
+  String get onboardingAchievementTitle => 'Progress You Can See';
+
+  @override
+  String get onboardingCommunityTitle => 'Never Study Alone';
+
+  @override
+  String get onboardingGetStarted => 'Get started';
 
   @override
   String get selectProvinceTitle => 'Select your province';
@@ -1017,6 +1025,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings => 'Settings';
+
+  @override
+  String get openProfileMenu => 'Open profile menu';
+
+  @override
+  String get communitiesMenu => 'Communities';
+
+  @override
+  String get progressHistory => 'Progress';
 
   @override
   String get editProfile => 'Edit Profile';

@@ -183,7 +183,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('កសាងអនាគតដ៏ប្រសើរជាមួយសហគមន៍អ្នកសិក្សា'), findsOneWidget);
+    expect(find.text('រៀនដោយគ្មានព្រំដែន'), findsOneWidget);
+    expect(
+      find.textContaining('ស្វែងយល់ពីការអប់រំប្រកបដោយគុណភាព'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('province is queued locally before authentication', (

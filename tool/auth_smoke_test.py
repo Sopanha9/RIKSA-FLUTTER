@@ -11,7 +11,6 @@ import secrets
 import urllib.error
 import urllib.request
 
-
 def request(base, path, body=None, token=None):
     headers = {'Content-Type': 'application/json'}
     if token:
@@ -26,7 +25,6 @@ def request(base, path, body=None, token=None):
     except urllib.error.HTTPError as error:
         # Do not emit error bodies: some services echo submitted credentials.
         return error.code, {}
-
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

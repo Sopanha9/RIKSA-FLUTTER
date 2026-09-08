@@ -43,7 +43,19 @@ Future<void> _loadFonts() async {
         'MaterialIcons-Regular.otf',
       ).readAsBytes().then(ByteData.sublistView),
     );
-  await Future.wait([poppins.load(), materialIcons.load()]);
+  final khmerBody = FontLoader('Kantumruy Pro')
+    ..addFont(rootBundle.load('assets/fonts/KantumruyPro-Variable.ttf'));
+  final khmerDisplay = FontLoader('Koulen')
+    ..addFont(rootBundle.load('assets/fonts/Koulen-Regular.ttf'));
+  final khmerFallback = FontLoader(RiksaTypography.khmerFamily)
+    ..addFont(rootBundle.load('assets/fonts/NotoSansKhmer-Variable.ttf'));
+  await Future.wait([
+    poppins.load(),
+    materialIcons.load(),
+    khmerBody.load(),
+    khmerDisplay.load(),
+    khmerFallback.load(),
+  ]);
 }
 
 const _category = SocialCategory(

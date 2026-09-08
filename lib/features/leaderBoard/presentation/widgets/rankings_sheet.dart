@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/riksa_components.dart';
 import '../../../auth/data/auth_models.dart';
 import '../../../userProfile/data/profile_models.dart';
 import '../../../userProfile/presentation/public_profile_navigation.dart';
@@ -78,25 +79,30 @@ class RankingsSheet extends StatelessWidget {
               : Column(
                   children: [
                     for (var index = 0; index < listRows.length; index++) ...[
-                      RankingListRow(
-                        rank: listRows[index].rank,
-                        tier: listRows[index].rankingTier,
-                        name: listRows[index].fallbackName,
-                        subtitle: listRows[index].rankingTier == null
-                            ? 'Scholar'
-                            : readableProfileName(listRows[index].rankingTier!),
-                        xp: listRows[index].score,
-                        avatarUrl: listRows[index].avatarUrl,
-                        avatarLabel: listRows[index].fallbackName,
-                        isCurrentUser:
-                            currentUser != null &&
-                            listRows[index].userId == currentUser!.id,
-                        onTap: () {
-                          final path = publicProfilePath(
-                            listRows[index].userId,
-                          );
-                          if (path != null) context.push(path);
-                        },
+                      RiksaEntrance(
+                        index: index,
+                        child: RankingListRow(
+                          rank: listRows[index].rank,
+                          tier: listRows[index].rankingTier,
+                          name: listRows[index].fallbackName,
+                          subtitle: listRows[index].rankingTier == null
+                              ? 'Scholar'
+                              : readableProfileName(
+                                  listRows[index].rankingTier!,
+                                ),
+                          xp: listRows[index].score,
+                          avatarUrl: listRows[index].avatarUrl,
+                          avatarLabel: listRows[index].fallbackName,
+                          isCurrentUser:
+                              currentUser != null &&
+                              listRows[index].userId == currentUser!.id,
+                          onTap: () {
+                            final path = publicProfilePath(
+                              listRows[index].userId,
+                            );
+                            if (path != null) context.push(path);
+                          },
+                        ),
                       ),
                       if (index != listRows.length - 1)
                         Divider(

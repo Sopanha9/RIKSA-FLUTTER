@@ -1070,12 +1070,6 @@ abstract class AppLocalizations {
   /// **'Set up profile'**
   String get setUpProfile;
 
-  /// No description provided for @onboardingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Build a Better Future with a Community of Learners'**
-  String get onboardingTitle;
-
   /// No description provided for @onboardingLearningBody.
   ///
   /// In en, this message translates to:
@@ -1093,6 +1087,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Learn with a supportive community that shares ideas, answers questions, and grows together.'**
   String get onboardingCommunityBody;
+
+  /// Onboarding page 1 headline. Two short lines when wrapped.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn Without Limits'**
+  String get onboardingLearningTitle;
+
+  /// Onboarding page 2 headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress You Can See'**
+  String get onboardingAchievementTitle;
+
+  /// Onboarding page 3 headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Never Study Alone'**
+  String get onboardingCommunityTitle;
+
+  /// Primary action on the last onboarding page.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get onboardingGetStarted;
 
   /// No description provided for @selectProvinceTitle.
   ///
@@ -1825,6 +1843,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get settings;
+
+  /// Tooltip and semantics label on the avatar that opens the app drawer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open profile menu'**
+  String get openProfileMenu;
+
+  /// Drawer item leading to the list of communities.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities'**
+  String get communitiesMenu;
+
+  /// Drawer item leading to the XP activity history.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get progressHistory;
 
   /// No description provided for @editProfile.
   ///

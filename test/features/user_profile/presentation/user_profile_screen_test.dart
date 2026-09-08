@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/core/widgets/riksa_achievement_image.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
@@ -12,6 +13,7 @@ import 'package:riksa_app/features/userProfile/data/profile_models.dart';
 import 'package:riksa_app/features/userProfile/presentation/user_profile_screen.dart';
 import 'package:riksa_app/features/userProfile/providers/profile_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
+import '../../../visuals/achievement_preview.dart';
 
 class _AuthNotifier extends AuthNotifier {
   @override
@@ -54,6 +56,18 @@ const _dashboard = ProfileDashboardData(
       rarity: 'RARE',
       xpReward: 50,
     ),
+    ProfileAchievement(
+      id: 'locked',
+      name: 'Not earned yet',
+      description: 'Still in progress',
+      iconUrl: '/icons/ach-century.png',
+      earned: false,
+      progress: 1,
+      progressMax: 100,
+      progressPercent: .01,
+      rarity: 'EPIC',
+      xpReward: 1000,
+    ),
   ],
   activities: [
     XpActivity(
@@ -91,6 +105,50 @@ final _post = SocialPost(
 );
 
 void main() {
+  setUpAll(loadAchievementPreviewFonts);
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+  for (final dark in [false, true]) {
+    for (final scale in [1.0, 2.0]) {
+      testWidgets(
+        'signed-in achievement tab at 360px dark=$dark scale=$scale',
+        (tester) async {
+          tester.view.physicalSize = const Size(360, 1200);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+          await tester.pumpWidget(
+            _app(
+              posts: const [],
+              theme: dark ? AppTheme.dark : AppTheme.light,
+              textScale: scale,
+            ),
+          );
+          await tester.pumpAndSettle();
+          final tab = find.byKey(const ValueKey('profile-achievements-tab'));
+          await tester.ensureVisible(tab);
+          await tester.tap(tab);
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(find.byType(RiksaAchievementImage));
+          await tester.runAsync(
+            () => precacheImage(
+              const AssetImage('assets/images/achievements/ach-streak-7.png'),
+              tester.element(find.byType(RiksaAchievementImage)),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(find.text('Week Warrior'), findsOneWidget);
+          expect(find.text('Not earned yet'), findsNothing);
+          expect(tester.takeException(), isNull);
+          await exportAchievementPreview(
+            tester,
+            find.byKey(const ValueKey('personal-achievement-preview')),
+            'signed_in_${dark ? 'dark' : 'light'}_${scale.toInt()}x',
+          );
+        },
+      );
+    }
+  }
+
   testWidgets('renders real profile and gamification data without overflow', (
     tester,
   ) async {
@@ -187,6 +245,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('profile-achievements-tab')));
     await tester.pumpAndSettle();
     expect(find.text('Week Warrior'), findsOneWidget);
+    expect(find.text('Not earned yet'), findsNothing);
     expect(
       tester
           .widget<RiksaAchievementImage>(find.byType(RiksaAchievementImage))
@@ -352,7 +411,11 @@ Widget _appWithGamification(GamificationProfile game) => ProviderScope(
   ),
 );
 
-Widget _app({required List<SocialPost> posts}) => ProviderScope(
+Widget _app({
+  required List<SocialPost> posts,
+  ThemeData? theme,
+  double textScale = 1,
+}) => ProviderScope(
   overrides: [
     authProvider.overrideWith(_AuthNotifier.new),
     profileDashboardProvider.overrideWith((ref) async => _dashboard),
@@ -368,7 +431,13 @@ Widget _app({required List<SocialPost> posts}) => ProviderScope(
     ),
   ],
   child: MaterialApp(
-    theme: AppTheme.light,
+    theme: theme ?? AppTheme.light,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(textScale)),
+      child: child!,
+    ),
     localizationsDelegates: const [
       AppLocalizations.delegate,
       GlobalMaterialLocalizations.delegate,
@@ -376,6 +445,9 @@ Widget _app({required List<SocialPost> posts}) => ProviderScope(
       GlobalCupertinoLocalizations.delegate,
     ],
     supportedLocales: const [Locale('en'), Locale('km')],
-    home: const UserProfileScreen(),
+    home: const RepaintBoundary(
+      key: ValueKey('personal-achievement-preview'),
+      child: UserProfileScreen(),
+    ),
   ),
 );
