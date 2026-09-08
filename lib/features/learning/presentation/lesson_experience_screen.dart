@@ -651,7 +651,14 @@ class _LessonExperienceScreenState
         final suffix = roadmapCategoryId == null
             ? ''
             : '?roadmapCategoryId=$roadmapCategoryId';
-        context.go('/learn/completion$suffix', extra: result.xpEarned);
+        context.go(
+          '/learn/completion$suffix',
+          extra: {
+            'xpEarned': result.xpEarned,
+            'lessonTitle': detail.title,
+            'categoryName': detail.categoryName,
+          },
+        );
       }
     } catch (error) {
       if (mounted) _showError(error);
