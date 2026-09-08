@@ -16,6 +16,13 @@ class AiChatMessage {
     content: json['content'] as String? ?? '',
     createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? ''),
   );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'role': role,
+    'content': content,
+    if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+  };
 }
 
 /// Titles the server hands back before a conversation has been named. They are
@@ -63,6 +70,15 @@ class AiChatSession {
       messageCount: (json['messageCount'] as num?)?.toInt(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'messages': messages.map((m) => m.toJson()).toList(),
+    if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+    if (lastMessage != null) 'lastMessage': lastMessage,
+    if (messageCount != null) 'messageCount': messageCount,
+  };
 
   static String? _readPreview(Map<String, dynamic> json) {
     for (final key in const ['preview', 'lastMessage', 'lastMessagePreview']) {

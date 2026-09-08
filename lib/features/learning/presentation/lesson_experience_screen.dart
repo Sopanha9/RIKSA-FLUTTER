@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -637,6 +638,7 @@ class _LessonExperienceScreenState
           );
       // Sounded before the awaits below: the fanfare should land with the tap,
       // not after the catalog and roadmaps have finished refetching.
+      HapticFeedback.mediumImpact();
       ref.playSound(LearningSound.lessonComplete);
       await ref.read(lessonCatalogProvider.notifier).load();
       // The roadmap owns this lesson's completed state, and the home screen
@@ -728,16 +730,20 @@ class _LessonExperienceScreenState
   /// both, and the section cue already reads as a correct answer.
   void _soundForAnswer(LessonAnswerResult result, _LessonSection section) {
     if (!result.correct) {
+      HapticFeedback.heavyImpact();
       ref.playSound(LearningSound.wrong);
       return;
     }
     // Reads the freshly stored results, so the answer just marked correct
     // counts towards finishing the section.
-    ref.playSound(
-      section.exercises.every(_isCorrect)
-          ? LearningSound.sectionComplete
-          : LearningSound.correct,
-    );
+    final finishedSection = section.exercises.every(_isCorrect);
+    if (finishedSection) {
+      HapticFeedback.mediumImpact();
+      ref.playSound(LearningSound.sectionComplete);
+    } else {
+      HapticFeedback.lightImpact();
+      ref.playSound(LearningSound.correct);
+    }
   }
 
   bool _isCorrect(LessonExercise exercise) =>
