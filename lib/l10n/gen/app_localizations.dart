@@ -1016,6 +1016,18 @@ abstract class AppLocalizations {
   /// **'Send comment'**
   String get sendComment;
 
+  /// No description provided for @reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get reply;
+
+  /// No description provided for @replyingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Replying to'**
+  String get replyingTo;
+
   /// No description provided for @commentFailed.
   ///
   /// In en, this message translates to:

@@ -153,10 +153,110 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('profile-user-3'), findsOneWidget);
   });
+
+  testWidgets('supports replying to comments and renders nested replies', (
+    tester,
+  ) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    final client = DioClient(
+      SessionStore(const FlutterSecureStorage()),
+      baseUrl: 'http://riksa.test/api/v1',
+    );
+    addTearDown(client.dispose);
+    final api = _FakeSocialApi(client);
+    final router = GoRouter(
+      initialLocation: '/community/posts/post-1',
+      routes: [
+        GoRoute(
+          path: '/community/posts/:id',
+          builder: (_, state) =>
+              SocialPostDetailScreen(postId: state.pathParameters['id']!),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [socialApiProvider.overrideWithValue(api)],
+        child: MaterialApp.router(
+          theme: AppTheme.light,
+          routerConfig: router,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The reply button is visible on the root comment
+    final replyButtonFinder = find.byKey(
+      const ValueKey('comment-reply-button-comment-1'),
+    );
+    expect(replyButtonFinder, findsOneWidget);
+    await tester.ensureVisible(replyButtonFinder);
+    await tester.pumpAndSettle();
+
+    // Tapping reply shows the reply indicator banner
+    await tester.tap(replyButtonFinder);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('reply-indicator-bar')), findsOneWidget);
+    expect(find.textContaining('Replying to @Bopha'), findsOneWidget);
+
+    // Tapping cancel dismisses the banner
+    await tester.tap(find.byKey(const ValueKey('cancel-reply-button')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('reply-indicator-bar')), findsNothing);
+
+    // Tap reply again and send a reply comment
+    await tester.ensureVisible(replyButtonFinder);
+    await tester.pumpAndSettle();
+    await tester.tap(replyButtonFinder);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const ValueKey('comment-composer')),
+      'Happy to help with math questions!',
+    );
+    await tester.tap(find.byKey(const ValueKey('send-comment-button')));
+    await tester.pumpAndSettle();
+
+    // Verify parentId was passed correctly
+    expect(api.lastCreatedParentId, 'comment-1');
+
+    // The nested reply card is rendered
+    expect(
+      find.byKey(const ValueKey('comment-card-comment-2')),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Happy to help with math questions!'),
+      findsOneWidget,
+    );
+  });
 }
 
 class _FakeSocialApi extends SocialApi {
   _FakeSocialApi(super.client);
+
+  String? lastCreatedParentId;
+
+  @override
+  Future<List<SocialCategory>> categories() async => [_post.category];
+
+  @override
+  Future<SocialFeedPage> feed({
+    String? categoryId,
+    String? authorId,
+    String? cursor,
+    int limit = 20,
+  }) async => SocialFeedPage(posts: [_post], hasNextPage: false);
 
   @override
   Future<SocialPost> post(String id) async => _post;
@@ -167,4 +267,22 @@ class _FakeSocialApi extends SocialApi {
     String? cursor,
     int limit = 20,
   }) async => SocialCommentPage(comments: [_comment], hasNextPage: false);
+
+  @override
+  Future<SocialComment> createComment({
+    required String postId,
+    required String content,
+    String? parentId,
+  }) async {
+    lastCreatedParentId = parentId;
+    return SocialComment(
+      id: 'comment-2',
+      content: content,
+      author: _author,
+      postId: postId,
+      parentId: parentId,
+      createdAt: DateTime.utc(2026, 8, 3),
+      updatedAt: DateTime.utc(2026, 8, 3),
+    );
+  }
 }

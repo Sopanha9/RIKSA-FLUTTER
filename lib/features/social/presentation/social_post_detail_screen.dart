@@ -36,6 +36,7 @@ class _SocialPostDetailScreenState
   final _commentFocus = FocusNode();
   SocialPost? _post;
   List<SocialComment> _comments = const [];
+  SocialComment? _replyingTo;
   String? _endCursor;
   String? _error;
   bool _loading = true;
@@ -143,14 +144,27 @@ class _SocialPostDetailScreenState
     }
   }
 
+  void _startReply(SocialComment comment) {
+    HapticFeedback.selectionClick();
+    setState(() => _replyingTo = comment);
+    _commentFocus.requestFocus();
+  }
+
+  void _cancelReply() {
+    setState(() => _replyingTo = null);
+  }
+
   Future<void> _submitComment() async {
     final content = _commentController.text.trim();
     if (content.isEmpty || _submitting) return;
     setState(() => _submitting = true);
+    final targetParent = _replyingTo;
     try {
-      final created = await ref
-          .read(socialApiProvider)
-          .createComment(postId: widget.postId, content: content);
+      final created = await ref.read(socialApiProvider).createComment(
+            postId: widget.postId,
+            content: content,
+            parentId: targetParent?.id,
+          );
       if (!mounted) return;
       final updatedPost = _post?.copyWith(
         commentCount: (_post?.commentCount ?? 0) + 1,
@@ -158,6 +172,7 @@ class _SocialPostDetailScreenState
       setState(() {
         _comments = [..._comments, created];
         _post = updatedPost;
+        _replyingTo = null;
         _submitting = false;
       });
       if (updatedPost != null) {
@@ -280,11 +295,26 @@ class _SocialPostDetailScreenState
                   if (_comments.isEmpty)
                     _EmptyComments(message: l10n.noComments)
                   else
-                    for (final comment in _comments) ...[
+                    for (final thread in _buildCommentThreads(_comments)) ...[
                       _CommentCard(
-                        comment: comment,
-                        onAuthorTap: _authorTap(comment.author),
+                        comment: thread.root,
+                        onAuthorTap: _authorTap(thread.root.author),
+                        onReply: () => _startReply(thread.root),
                       ),
+                      if (thread.replies.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        for (final reply in thread.replies) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(left: 24, bottom: 6),
+                            child: _CommentCard(
+                              comment: reply,
+                              isReply: true,
+                              onAuthorTap: _authorTap(reply.author),
+                              onReply: () => _startReply(reply),
+                            ),
+                          ),
+                        ],
+                      ],
                       const SizedBox(height: 10),
                     ],
                   if (_hasMore)
@@ -317,7 +347,11 @@ class _SocialPostDetailScreenState
               controller: _commentController,
               focusNode: _commentFocus,
               submitting: _submitting,
-              hint: l10n.addComment,
+              replyingTo: _replyingTo,
+              onCancelReply: _cancelReply,
+              hint: _replyingTo != null
+                  ? '${l10n.reply}...'
+                  : l10n.addComment,
               sendLabel: l10n.sendComment,
               onSend: _submitComment,
             ),
@@ -514,11 +548,60 @@ class _AuthorLine extends StatelessWidget {
   }
 }
 
+class _CommentThread {
+  const _CommentThread({
+    required this.root,
+    required this.replies,
+  });
+
+  final SocialComment root;
+  final List<SocialComment> replies;
+}
+
+List<_CommentThread> _buildCommentThreads(List<SocialComment> comments) {
+  final byId = {for (final c in comments) c.id: c};
+  final repliesByParent = <String, List<SocialComment>>{};
+  final roots = <SocialComment>[];
+
+  for (final comment in comments) {
+    final pid = comment.parentId;
+    if (pid == null || pid.isEmpty || !byId.containsKey(pid)) {
+      roots.add(comment);
+    } else {
+      repliesByParent.putIfAbsent(pid, () => []).add(comment);
+    }
+  }
+
+  List<SocialComment> collectReplies(String parentId) {
+    final direct = repliesByParent[parentId] ?? const [];
+    final all = <SocialComment>[];
+    for (final reply in direct) {
+      all.add(reply);
+      all.addAll(collectReplies(reply.id));
+    }
+    return all;
+  }
+
+  return roots.map((root) {
+    return _CommentThread(
+      root: root,
+      replies: collectReplies(root.id),
+    );
+  }).toList();
+}
+
 class _CommentCard extends StatelessWidget {
-  const _CommentCard({required this.comment, this.onAuthorTap});
+  const _CommentCard({
+    required this.comment,
+    this.onAuthorTap,
+    this.onReply,
+    this.isReply = false,
+  });
 
   final SocialComment comment;
   final VoidCallback? onAuthorTap;
+  final VoidCallback? onReply;
+  final bool isReply;
 
   @override
   Widget build(BuildContext context) {
@@ -528,17 +611,23 @@ class _CommentCard extends StatelessWidget {
         : comment.author.displayName;
     return Container(
       key: ValueKey('comment-card-${comment.id}'),
-      padding: const EdgeInsets.all(15),
+      padding: EdgeInsets.all(isReply ? 12 : 15),
       decoration: BoxDecoration(
-        color: SocialPalette.surface(context),
+        color: isReply
+            ? SocialPalette.surfaceRaised(context)
+            : SocialPalette.surface(context),
         border: Border.all(color: SocialPalette.outline(context)),
         borderRadius: AppRadii.mediumBorder,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Avatar(author: comment.author, radius: 18, onTap: onAuthorTap),
-          const SizedBox(width: 11),
+          _Avatar(
+            author: comment.author,
+            radius: isReply ? 14 : 18,
+            onTap: onAuthorTap,
+          ),
+          SizedBox(width: isReply ? 8 : 11),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -556,7 +645,10 @@ class _CommentCard extends StatelessWidget {
                           name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelLarge?.copyWith(
+                          style: (isReply
+                                  ? theme.textTheme.labelMedium
+                                  : theme.textTheme.labelLarge)
+                              ?.copyWith(
                             color: SocialPalette.ink(context),
                             fontWeight: FontWeight.w800,
                           ),
@@ -569,6 +661,7 @@ class _CommentCard extends StatelessWidget {
                       ).format(comment.createdAt.toLocal()),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: SocialPalette.muted(context),
+                        fontSize: isReply ? 11 : null,
                       ),
                     ),
                   ],
@@ -581,9 +674,42 @@ class _CommentCard extends StatelessWidget {
                     theme.textTheme.bodyMedium?.copyWith(
                       color: SocialPalette.ink(context),
                       height: 1.55,
+                      fontSize: isReply ? 13 : null,
                     ),
                   ),
                 ),
+                if (onReply != null) ...[
+                  const SizedBox(height: 8),
+                  InkWell(
+                    key: ValueKey('comment-reply-button-${comment.id}'),
+                    onTap: onReply,
+                    borderRadius: AppRadii.smallBorder,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 2,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.reply_rounded,
+                            size: 14,
+                            color: SocialPalette.aubergine(context),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            AppLocalizations.of(context)!.reply,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: SocialPalette.aubergine(context),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -834,6 +960,8 @@ class _CommentComposer extends StatelessWidget {
     required this.hint,
     required this.sendLabel,
     required this.onSend,
+    this.replyingTo,
+    this.onCancelReply,
   });
 
   final TextEditingController controller;
@@ -842,86 +970,152 @@ class _CommentComposer extends StatelessWidget {
   final String hint;
   final String sendLabel;
   final VoidCallback onSend;
+  final SocialComment? replyingTo;
+  final VoidCallback? onCancelReply;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final replyingName = replyingTo != null
+        ? (replyingTo!.author.displayName.isEmpty
+            ? replyingTo!.author.username
+            : replyingTo!.author.displayName)
+        : null;
+
     return Material(
       color: SocialPalette.surface(context),
       elevation: 0,
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: TextField(
-                  key: const ValueKey('comment-composer'),
-                  controller: controller,
-                  focusNode: focusNode,
-                  minLines: 1,
-                  maxLines: 4,
-                  maxLength: 1000,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(
-                    hintText: hint,
-                    hintStyle: TextStyle(color: SocialPalette.muted(context)),
-                    counterText: '',
-                    filled: true,
-                    fillColor: SocialPalette.surfaceRaised(context),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: AppRadii.fullBorder,
-                      borderSide: BorderSide(
-                        color: SocialPalette.outline(context),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: AppRadii.fullBorder,
-                      borderSide: BorderSide(
-                        color: SocialPalette.outline(context),
-                      ),
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderRadius: AppRadii.fullBorder,
-                      borderSide: BorderSide(
-                        color: AppColors.editorialPink,
-                        width: 1.5,
-                      ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (replyingTo != null)
+              Container(
+                key: const ValueKey('reply-indicator-bar'),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: SocialPalette.pinkSoft(context),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: SocialPalette.outline(context),
                     ),
                   ),
-                  onSubmitted: (_) => onSend(),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.reply_rounded,
+                      size: 16,
+                      color: SocialPalette.aubergine(context),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${AppLocalizations.of(context)!.replyingTo} @$replyingName',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: SocialPalette.aubergine(context),
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    InkWell(
+                      key: const ValueKey('cancel-reply-button'),
+                      onTap: onCancelReply,
+                      borderRadius: AppRadii.smallBorder,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: SocialPalette.aubergine(context),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Semantics(
-                button: true,
-                label: sendLabel,
-                child: IconButton(
-                  onPressed: submitting ? null : onSend,
-                  style: IconButton.styleFrom(
-                    backgroundColor: SocialPalette.aubergine(context),
-                    foregroundColor: SocialPalette.onAubergine(context),
-                    disabledBackgroundColor: SocialPalette.outline(context),
-                    shape: const CircleBorder(),
-                  ),
-                  icon: submitting
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      key: const ValueKey('comment-composer'),
+                      controller: controller,
+                      focusNode: focusNode,
+                      minLines: 1,
+                      maxLines: 4,
+                      maxLength: 1000,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: InputDecoration(
+                        hintText: hint,
+                        hintStyle:
+                            TextStyle(color: SocialPalette.muted(context)),
+                        counterText: '',
+                        filled: true,
+                        fillColor: SocialPalette.surfaceRaised(context),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: AppRadii.fullBorder,
+                          borderSide: BorderSide(
+                            color: SocialPalette.outline(context),
                           ),
-                        )
-                      : const Icon(Icons.send_rounded),
-                ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: AppRadii.fullBorder,
+                          borderSide: BorderSide(
+                            color: SocialPalette.outline(context),
+                          ),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderRadius: AppRadii.fullBorder,
+                          borderSide: BorderSide(
+                            color: AppColors.editorialPink,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                      onSubmitted: (_) => onSend(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Semantics(
+                    button: true,
+                    label: sendLabel,
+                    child: IconButton(
+                      key: const ValueKey('send-comment-button'),
+                      onPressed: submitting ? null : onSend,
+                      style: IconButton.styleFrom(
+                        backgroundColor: SocialPalette.aubergine(context),
+                        foregroundColor: SocialPalette.onAubergine(context),
+                        disabledBackgroundColor: SocialPalette.outline(context),
+                        shape: const CircleBorder(),
+                      ),
+                      icon: submitting
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.send_rounded),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

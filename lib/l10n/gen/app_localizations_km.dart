@@ -504,6 +504,12 @@ class AppLocalizationsKm extends AppLocalizations {
   String get sendComment => 'ផ្ញើមតិយោបល់';
 
   @override
+  String get reply => 'ឆ្លើយតប';
+
+  @override
+  String get replyingTo => 'កំពុងឆ្លើយតបទៅកាន់';
+
+  @override
   String get commentFailed =>
       'យើងមិនអាចបន្ថែមមតិយោបល់របស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។';
 

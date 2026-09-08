@@ -522,6 +522,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendComment => 'Send comment';
 
   @override
+  String get reply => 'Reply';
+
+  @override
+  String get replyingTo => 'Replying to';
+
+  @override
   String get commentFailed => 'We couldn’t add your comment. Please try again.';
 
   @override
