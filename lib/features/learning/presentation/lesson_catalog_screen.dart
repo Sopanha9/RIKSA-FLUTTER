@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_shell.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../core/widgets/riksa_components.dart';
@@ -156,15 +157,28 @@ class _GreetingRow extends ConsumerWidget {
         ? user!.displayName.trim()
         : user?.username ?? '';
     final tone = subjectTone(context, StemSubject.mathematics);
+    final openDrawer = AppShellScope.maybeOf(context)?.openDrawer;
 
     return Row(
       children: [
-        RiksaAvatarImage(
-          value: user?.avatarUrl,
-          label: name.isEmpty ? '?' : name,
-          size: 44,
-          backgroundColor: tone.surface,
-          foregroundColor: tone.accent,
+        Semantics(
+          button: true,
+          label: l10n.openProfileMenu,
+          child: Tooltip(
+            message: l10n.openProfileMenu,
+            child: InkWell(
+              key: const ValueKey('home-avatar-button'),
+              onTap: openDrawer,
+              customBorder: const CircleBorder(),
+              child: RiksaAvatarImage(
+                value: user?.avatarUrl,
+                label: name.isEmpty ? '?' : name,
+                size: 44,
+                backgroundColor: tone.surface,
+                foregroundColor: tone.accent,
+              ),
+            ),
+          ),
         ),
         const SizedBox(width: RiksaSpacing.sm),
         Expanded(

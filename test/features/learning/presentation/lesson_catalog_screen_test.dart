@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:riksa_app/app/router/app_shell.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
@@ -353,5 +354,42 @@ void main() {
       greaterThanOrEqualTo(59),
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('tapping home avatar opens profile drawer', (tester) async {
+    var opened = false;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_SignedInNotifier.new),
+          learningHomeProvider.overrideWith((ref) async => _home()),
+          communityStreakProvider.overrideWith(
+            (ref) async => const CommunityStreak(current: 3, highest: 9),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: AppShellScope(
+            openDrawer: () => opened = true,
+            child: const LessonCatalogScreen(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final avatarButton = find.byKey(const ValueKey('home-avatar-button'));
+    expect(avatarButton, findsOneWidget);
+    await tester.tap(avatarButton);
+    await tester.pump();
+
+    expect(opened, isTrue);
   });
 }
