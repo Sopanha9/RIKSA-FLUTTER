@@ -263,6 +263,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       },
                     ),
             ),
+            if (_entries.isNotEmpty && !_loading)
+              _QuickPromptsBar(onSelected: _useStarter),
             _Composer(
               controller: _controller,
               focusNode: _focus,
@@ -379,3 +381,58 @@ class _Composer extends StatelessWidget {
     );
   }
 }
+
+class _QuickPromptsBar extends StatelessWidget {
+  const _QuickPromptsBar({required this.onSelected});
+
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
+    final prompts = isKhmer
+        ? const [
+            'ពន្យល់សង្ខេបចំណុចសំខាន់ៗ',
+            'សុំលំហាត់សាកល្បងមួយ',
+            'ពន្យល់ឲ្យកាន់តែងាយយល់',
+            'រូបមន្តសំខាន់ៗ',
+          ]
+        : const [
+            'Summarize key points',
+            'Give a practice question',
+            'Explain in simpler terms',
+            'Key formulas',
+          ];
+
+    return Container(
+      key: const ValueKey('ai-quick-followup-chips'),
+      height: 38,
+      margin: const EdgeInsets.only(bottom: 2),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.md),
+        itemCount: prompts.length,
+        separatorBuilder: (_, _) => const SizedBox(width: RiksaSpacing.xs),
+        itemBuilder: (context, index) {
+          final prompt = prompts[index];
+          return ActionChip(
+            key: ValueKey('ai-quick-chip-$prompt'),
+            avatar: Icon(
+              Icons.auto_awesome,
+              size: 13,
+              color: context.riksa.jade,
+            ),
+            label: Text(
+              prompt,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            visualDensity: VisualDensity.compact,
+            onPressed: () => onSelected(prompt),
+          );
+        },
+      ),
+    );
+  }
+}
+

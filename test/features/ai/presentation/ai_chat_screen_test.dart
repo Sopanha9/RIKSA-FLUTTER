@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -142,7 +143,123 @@ void main() {
     );
     expect(field.controller?.text, 'Give me a worked example');
   });
+
+  testWidgets(
+    'displays quick follow-up prompt chips after messages exist and tapping populates composer',
+    (tester) async {
+      final api = _MockAiChatApi();
+      when(
+        () => api.send(
+          sessionId: any(named: 'sessionId'),
+          message: any(named: 'message'),
+          learningContext: any(named: 'learningContext'),
+        ),
+      ).thenAnswer(
+        (_) async => const AiChatTurn(
+          sessionId: 'session-1',
+          message: AiChatMessage(
+            id: 'tutor-1',
+            role: 'assistant',
+            content: 'Here is how you solve it: step 1 is factoring.',
+          ),
+        ),
+      );
+
+      await _pump(tester, api: api);
+
+      // Send initial question
+      await tester.enterText(
+        find.byKey(const ValueKey('ai-message-input')),
+        'How do I factor quadratics?',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('send-ai-message')));
+      await tester.pumpAndSettle();
+
+      // Quick follow-up chips bar should now be visible
+      final chipsBar = find.byKey(const ValueKey('ai-quick-followup-chips'));
+      expect(chipsBar, findsOneWidget);
+      expect(find.text('Summarize key points'), findsOneWidget);
+
+      // Tapping a quick follow-up chip populates the composer
+      await tester.tap(find.text('Summarize key points'));
+      await tester.pumpAndSettle();
+
+      final input = tester.widget<TextField>(
+        find.byKey(const ValueKey('ai-message-input')),
+      );
+      expect(input.controller?.text, 'Summarize key points');
+    },
+  );
+
+  testWidgets('allows copying tutor answer to clipboard from copy button', (
+    tester,
+  ) async {
+    final api = _MockAiChatApi();
+    when(
+      () => api.send(
+        sessionId: any(named: 'sessionId'),
+        message: any(named: 'message'),
+        learningContext: any(named: 'learningContext'),
+      ),
+    ).thenAnswer(
+      (_) async => const AiChatTurn(
+        sessionId: 'session-1',
+        message: AiChatMessage(
+          id: 'tutor-1',
+          role: 'assistant',
+          content: 'The quadratic formula is x = (-b +- sqrt(b^2 - 4ac)) / 2a.',
+        ),
+      ),
+    );
+
+    final log = <MethodCall>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (methodCall) async {
+        log.add(methodCall);
+        return null;
+      },
+    );
+    addTearDown(() {
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      );
+    });
+
+    await _pump(tester, api: api);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('ai-message-input')),
+      'What is the formula?',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('send-ai-message')));
+    await tester.pumpAndSettle();
+
+    final copyButton = find.byKey(const ValueKey('copy-ai-response'));
+    expect(copyButton, findsOneWidget);
+
+    await tester.tap(copyButton);
+    await tester.pump();
+
+    // Verify snackbar is shown
+    expect(find.text('Copied to clipboard'), findsOneWidget);
+
+    // Verify clipboard call
+    expect(
+      log.any(
+        (call) =>
+            call.method == 'Clipboard.setData' &&
+            (call.arguments as Map)['text'] ==
+                'The quadratic formula is x = (-b +- sqrt(b^2 - 4ac)) / 2a.',
+      ),
+      isTrue,
+    );
+  });
 }
+
 
 Future<void> _pump(
   WidgetTester tester, {

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -124,26 +125,93 @@ class AiTutorBubble extends StatelessWidget {
               horizontal: RiksaSpacing.md,
               vertical: RiksaSpacing.sm,
             ),
-            child: MarkdownBody(
-              data: content,
-              styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
-                p: theme.textTheme.bodyMedium?.copyWith(
-                  fontSize: 16,
-                  height: 1.6,
-                  color: palette.ink,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                MarkdownBody(
+                  data: content,
+                  styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+                    p: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 16,
+                      height: 1.6,
+                      color: palette.ink,
+                    ),
+                    code: theme.textTheme.bodySmall?.copyWith(
+                      backgroundColor: palette.surfaceRaised,
+                    ),
+                    codeblockDecoration: BoxDecoration(
+                      color: palette.surfaceRaised,
+                      borderRadius: AppRadii.mediumBorder,
+                    ),
+                    blockquoteDecoration: BoxDecoration(
+                      color: palette.creamSoft,
+                      borderRadius: AppRadii.mediumBorder,
+                    ),
+                  ),
                 ),
-                code: theme.textTheme.bodySmall?.copyWith(
-                  backgroundColor: palette.surfaceRaised,
+                const SizedBox(height: RiksaSpacing.xs),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Builder(
+                    builder: (context) {
+                      final isKhmer =
+                          Localizations.localeOf(context).languageCode == 'km';
+                      return Semantics(
+                        button: true,
+                        label: isKhmer ? 'ចម្លងចម្លើយ' : 'Copy answer',
+                        child: InkWell(
+                          key: const ValueKey('copy-ai-response'),
+                          borderRadius: AppRadii.fullBorder,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            Clipboard.setData(ClipboardData(text: content));
+                            ScaffoldMessenger.of(context)
+                              ..hideCurrentSnackBar()
+                              ..showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    isKhmer
+                                        ? 'បានចម្លងទៅក្តារតម្កល់'
+                                        : 'Copied to clipboard',
+                                  ),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 4,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.copy_rounded,
+                                  size: 14,
+                                  color: palette.inkMuted,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  isKhmer ? 'ចម្លង' : 'Copy',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall
+                                      ?.copyWith(
+                                        color: palette.inkMuted,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-                codeblockDecoration: BoxDecoration(
-                  color: palette.surfaceRaised,
-                  borderRadius: AppRadii.mediumBorder,
-                ),
-                blockquoteDecoration: BoxDecoration(
-                  color: palette.creamSoft,
-                  borderRadius: AppRadii.mediumBorder,
-                ),
-              ),
+              ],
             ),
           ),
         ),
