@@ -218,4 +218,90 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'renders gold crown for winner and distinction when user is on podium',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final rows = [
+        const LeaderboardRow(
+          rank: 1,
+          userId: 'winner-1',
+          score: 3000,
+          rankingTier: 'MASTER',
+          displayName: 'Champion Learner',
+        ),
+        const LeaderboardRow(
+          rank: 2,
+          userId: 'current-user',
+          score: 2800,
+          rankingTier: 'GOLD',
+          displayName: 'Sok Sophea',
+        ),
+        const LeaderboardRow(
+          rank: 3,
+          userId: 'third-place',
+          score: 2600,
+          rankingTier: 'SILVER',
+          displayName: 'Third Place',
+        ),
+      ];
+
+      final router = GoRouter(
+        initialLocation: '/leaderboard',
+        routes: [
+          GoRoute(
+            path: '/leaderboard',
+            builder: (context, state) => const LeaderboardScreen(),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith(_AuthNotifier.new),
+            profileRankProvider.overrideWith(
+              (ref) async => const LeaderboardRank(
+                countryRank: 2,
+                countryScore: 2800,
+                countryTier: 'GOLD',
+                provinceRank: 1,
+                provinceScore: 2800,
+                provinceTier: 'GOLD',
+              ),
+            ),
+            leaderboardProvider.overrideWith((ref, scope) async => rows),
+          ],
+          child: MaterialApp.router(
+            theme: AppTheme.light,
+            routerConfig: router,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('km')],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Winner should have crown icon
+      expect(find.byKey(const ValueKey('podium-crown-icon')), findsOneWidget);
+
+      // Current user at rank 2 should have "You" badge
+      expect(
+        find.byKey(const ValueKey('podium-current-user-badge')),
+        findsOneWidget,
+      );
+      expect(find.text('You'), findsOneWidget);
+    },
+  );
 }

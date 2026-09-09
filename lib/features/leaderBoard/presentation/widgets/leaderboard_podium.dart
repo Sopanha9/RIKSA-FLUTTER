@@ -132,14 +132,19 @@ class _PodiumPlace extends StatelessWidget {
         color: isWinner
             ? (isDark
                   ? AppColors.editorialAubergineRaised
-                  : AppColors.editorialPinkSoft.withValues(alpha: .28))
-            : Colors.transparent,
+                  : AppColors.achievementSaffronSoft.withValues(alpha: .3))
+            : (isCurrentUser
+                ? (isDark
+                    ? palette.surfaceRaised
+                    : context.riksa.jade.withValues(alpha: 0.08))
+                : Colors.transparent),
         borderRadius: AppRadii.largeBorder,
         child: InkWell(
+          key: ValueKey('podium-place-${row.rank}'),
           onTap: onTap,
           borderRadius: AppRadii.largeBorder,
           child: Container(
-            padding: EdgeInsets.fromLTRB(6, isWinner ? 10 : 6, 6, 8),
+            padding: EdgeInsets.fromLTRB(6, isWinner ? 12 : 6, 6, 8),
             decoration: const BoxDecoration(borderRadius: AppRadii.largeBorder),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -147,6 +152,20 @@ class _PodiumPlace extends StatelessWidget {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
+                    if (isWinner)
+                      Positioned(
+                        top: -16,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Icon(
+                            Icons.workspace_premium_rounded,
+                            key: const ValueKey('podium-crown-icon'),
+                            size: 20,
+                            color: AppColors.achievementSaffron,
+                          ),
+                        ),
+                      ),
                     Container(
                       width: avatarSize,
                       height: avatarSize,
@@ -173,6 +192,13 @@ class _PodiumPlace extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: ringColor,
                           shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: ringColor.withValues(alpha: 0.35),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                           border: Border.all(
                             color: isDark
                                 ? palette.surface
@@ -246,6 +272,34 @@ class _PodiumPlace extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (isCurrentUser) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    key: const ValueKey('podium-current-user-badge'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.riksa.jade.withValues(alpha: 0.15),
+                      borderRadius: AppRadii.fullBorder,
+                      border: Border.all(
+                        color: context.riksa.jade.withValues(alpha: 0.4),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Text(
+                      Localizations.localeOf(context).languageCode == 'km'
+                          ? 'អ្នក'
+                          : 'You',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: context.riksa.jade,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
