@@ -3,12 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:riksa_app/core/sound/sound_provider.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/learning/data/learning_api.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_experience_screen.dart';
 import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const _khmerDescription = '''
 # កោសិកា និងសរីរាង្គកោសិកា (Cell Biology & Organelles)
@@ -331,6 +333,58 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('leave-lesson-confirm-button')));
       await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets(
+    'toggles audio sound enabled/muted from header button',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final container = ProviderContainer(
+        overrides: [
+          learningApiProvider.overrideWithValue(_FakeLearningApi()),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: AppTheme.light,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('km')],
+            home: const Scaffold(
+              body: LessonExperienceScreen(lessonId: 'biology-1'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final toggle = find.byKey(const ValueKey('lesson-sound-toggle'));
+      expect(toggle, findsOneWidget);
+      expect(find.byIcon(Icons.volume_up_rounded), findsOneWidget);
+      expect(container.read(soundEnabledProvider), isTrue);
+
+      // Tap toggle to mute
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.volume_off_rounded), findsOneWidget);
+      expect(container.read(soundEnabledProvider), isFalse);
+
+      // Tap toggle again to unmute
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.volume_up_rounded), findsOneWidget);
+      expect(container.read(soundEnabledProvider), isTrue);
     },
   );
 }

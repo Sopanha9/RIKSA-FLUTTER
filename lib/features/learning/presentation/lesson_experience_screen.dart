@@ -962,26 +962,51 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
           children: [
             SizedBox(
               height: _rowHeight,
-              child: Row(
-                children: [
-                  LearningCircleButton(
-                    icon: Icons.arrow_back_rounded,
-                    tooltip: backTooltip,
-                    onTap: onBack,
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: _StepCounter(flow: flow, accent: tone.accent),
+              child: NavigationToolbar(
+                leading: LearningCircleButton(
+                  icon: Icons.arrow_back_rounded,
+                  tooltip: backTooltip,
+                  onTap: onBack,
+                ),
+                middle: _StepCounter(flow: flow, accent: tone.accent),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final soundEnabled = ref.watch(soundEnabledProvider);
+                        final isKhmer =
+                            Localizations.localeOf(context).languageCode == 'km';
+                        final soundTooltip = soundEnabled
+                            ? (isKhmer ? 'បិទសំឡេង' : 'Mute sound')
+                            : (isKhmer ? 'បើកសំឡេង' : 'Unmute sound');
+                        return LearningCircleButton(
+                          key: const ValueKey('lesson-sound-toggle'),
+                          icon: soundEnabled
+                              ? Icons.volume_up_rounded
+                              : Icons.volume_off_rounded,
+                          tooltip: soundTooltip,
+                          foreground: soundEnabled
+                              ? tone.accent
+                              : palette.ink.withValues(alpha: 0.45),
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            ref.read(soundEnabledProvider.notifier).toggle();
+                          },
+                        );
+                      },
                     ),
-                  ),
-                  LearningCircleButton(
-                    key: const ValueKey('lesson-ask-ai'),
-                    icon: Icons.auto_awesome_rounded,
-                    tooltip: askAiTooltip,
-                    onTap: onAskAi,
-                    foreground: tone.accent,
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    LearningCircleButton(
+                      key: const ValueKey('lesson-ask-ai'),
+                      icon: Icons.auto_awesome_rounded,
+                      tooltip: askAiTooltip,
+                      onTap: onAskAi,
+                      foreground: tone.accent,
+                    ),
+                  ],
+                ),
+                centerMiddle: true,
               ),
             ),
             const SizedBox(height: _rowGap),
