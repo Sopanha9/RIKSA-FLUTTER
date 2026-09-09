@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/core/widgets/language_toggle.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/userProfile/data/profile_models.dart';
@@ -167,5 +168,28 @@ void main() {
     expect(find.byKey(const ValueKey('drawer-counts')), findsNothing);
     // Navigation is still offered: signing in is reachable from those screens.
     expect(find.byKey(const ValueKey('drawer-profile')), findsOneWidget);
+  });
+
+  testWidgets('renders academic grade STEM label in identity', (tester) async {
+    await tester.pumpWidget(_app(signedIn: true));
+    await tester.pumpAndSettle();
+    await _openDrawer(tester);
+
+    expect(find.text('Grade 12 · STEM'), findsOneWidget);
+  });
+
+  testWidgets('provides quick theme and language controls in drawer footer', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(signedIn: true));
+    await tester.pumpAndSettle();
+    await _openDrawer(tester);
+
+    final themeToggle = find.byKey(const ValueKey('drawer-theme-toggle'));
+    expect(themeToggle, findsOneWidget);
+    await tester.tap(themeToggle);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LanguageToggle), findsOneWidget);
   });
 }

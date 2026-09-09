@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
+import '../../../../core/widgets/language_toggle.dart';
 
 import '../../../../core/providers/theme_mode_provider.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -179,6 +182,17 @@ class _DrawerIdentity extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(color: palette.inkMuted, fontSize: 13),
           ),
+          const SizedBox(height: 2),
+          Text(
+            l10n.gradeStemLabel,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: palette.inkMuted,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           const SizedBox(height: RiksaSpacing.sm),
           // Where X counts other people, Riksa counts the learner's own work.
           Wrap(
@@ -301,8 +315,8 @@ class _DrawerItem extends StatelessWidget {
   );
 }
 
-/// The one row that is not navigation: appearance on the left, leaving on the
-/// right, the way X keeps its lamp and gear out of the destination list.
+/// The quick controls bar: appearance and language switching on the left and
+/// right, with sign out below.
 class _DrawerFooter extends ConsumerWidget {
   const _DrawerFooter();
 
@@ -313,34 +327,83 @@ class _DrawerFooter extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          IconButton(
-            key: const ValueKey('drawer-theme-toggle'),
-            tooltip: l10n.darkMode,
-            onPressed: () =>
-                ref.read(themeModeProvider.notifier).setDarkMode(!isDark),
-            icon: Icon(
-              isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-              color: palette.ink,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Semantics(
+                button: true,
+                label: l10n.darkMode,
+                child: Tooltip(
+                  message: l10n.darkMode,
+                  child: InkWell(
+                    key: const ValueKey('drawer-theme-toggle'),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      ref.read(themeModeProvider.notifier).setDarkMode(!isDark);
+                    },
+                    customBorder: const CircleBorder(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                      ),
+                      child: Center(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 260),
+                          transitionBuilder: (child, animation) =>
+                              RotationTransition(turns: animation, child: child),
+                          child: Icon(
+                            isDark
+                                ? Icons.light_mode_rounded
+                                : Icons.dark_mode_rounded,
+                            key: ValueKey(isDark),
+                            size: 20,
+                            color: isDark
+                                ? const Color(0xFFFFD54F)
+                                : palette.ink,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const LanguageToggle(),
+            ],
           ),
-          const Spacer(),
-          if (ref.watch(authProvider) is Authenticated)
-            TextButton.icon(
-              key: const ValueKey('drawer-logout'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                ref.read(authProvider.notifier).logout();
-              },
-              icon: const Icon(Icons.logout_rounded, size: 18),
-              label: Text(l10n.logout),
-              style: TextButton.styleFrom(
-                foregroundColor: palette.inkMuted,
-                shape: const StadiumBorder(),
+          if (ref.watch(authProvider) is Authenticated) ...[
+            const SizedBox(height: RiksaSpacing.sm),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                key: const ValueKey('drawer-logout'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  ref.read(authProvider.notifier).logout();
+                },
+                icon: const Icon(Icons.logout_rounded, size: 18),
+                label: Text(l10n.logout),
+                style: TextButton.styleFrom(
+                  foregroundColor: palette.inkMuted,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  shape: const StadiumBorder(),
+                ),
               ),
             ),
+          ],
         ],
       ),
     );
