@@ -106,22 +106,29 @@ class _LessonExperienceScreenState
     final detail = ref.watch(lessonDetailProvider(widget.lessonId));
     final data = detail.value;
     final flow = data == null ? null : _flowFor(data);
-    return Scaffold(
-      backgroundColor: context.riksa.canvas,
-      body: detail.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => SafeArea(
-          child: _LessonLoadFailure(
-            onRetry: () =>
-                ref.invalidate(lessonDetailProvider(widget.lessonId)),
+    return PopScope(
+      canPop: !_hasActiveSessionProgress(flow),
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await _handleExit(flow);
+      },
+      child: Scaffold(
+        backgroundColor: context.riksa.canvas,
+        body: detail.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => SafeArea(
+            child: _LessonLoadFailure(
+              onRetry: () =>
+                  ref.invalidate(lessonDetailProvider(widget.lessonId)),
+            ),
           ),
+          data: (value) =>
+              flow == null ? _emptyLesson(value) : _buildLesson(value, flow),
         ),
-        data: (value) =>
-            flow == null ? _emptyLesson(value) : _buildLesson(value, flow),
+        bottomNavigationBar: data == null || flow == null
+            ? null
+            : _actionBar(data, flow),
       ),
-      bottomNavigationBar: data == null || flow == null
-          ? null
-          : _actionBar(data, flow),
     );
   }
 
@@ -236,7 +243,7 @@ class _LessonExperienceScreenState
             palette: context.riksa,
             backTooltip: MaterialLocalizations.of(context).backButtonTooltip,
             askAiTooltip: AppLocalizations.of(context)!.aiAskAboutLesson,
-            onBack: context.pop,
+            onBack: () => _handleExit(flow),
             onAskAi: onAskAi,
           ),
         ),
@@ -590,7 +597,117 @@ class _LessonExperienceScreenState
     }
     // Asked of the Navigator rather than the router: this runs during build,
     // and a bare widget test has no GoRouter above it.
-    return Navigator.of(context).canPop() ? context.pop : null;
+    return Navigator.of(context).canPop() ? () => _handleExit(flow) : null;
+  }
+
+  bool _hasActiveSessionProgress(_LessonFlow? flow) {
+    if (_completing) return false;
+    if (_results.isNotEmpty) return true;
+    if (_answers.values.any((c) => c.text.trim().isNotEmpty)) return true;
+    if (_reflection.text.trim().isNotEmpty) return true;
+    if (_showPractice) return true;
+    if (flow != null && (flow.section.index > 0 || flow.progress > 0)) {
+      return true;
+    }
+    return false;
+  }
+
+  void _safePop() {
+    final nav = Navigator.maybeOf(context);
+    if (nav != null && nav.canPop()) {
+      nav.pop();
+    } else {
+      try {
+        context.pop();
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _handleExit(_LessonFlow? flow) async {
+    if (!_hasActiveSessionProgress(flow)) {
+      if (mounted) _safePop();
+      return;
+    }
+    final shouldLeave = await _showExitConfirmationDialog();
+    if (shouldLeave && mounted) {
+      _safePop();
+    }
+  }
+
+  Future<bool> _showExitConfirmationDialog() async {
+    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
+    final palette = context.riksa;
+    final theme = Theme.of(context);
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(AppRadii.feature)),
+        ),
+        backgroundColor: palette.surface,
+        title: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.errorContainer.withValues(alpha: 0.7),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.warning_amber_rounded,
+                color: theme.colorScheme.error,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: RiksaSpacing.sm),
+            Expanded(
+              child: Text(
+                isKhmer ? 'ចាកចេញពីមេរៀន?' : 'Leave this lesson?',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          isKhmer
+              ? 'វឌ្ឍនភាពនៃការអនុវត្តរបស់អ្នកនៅក្នុងវគ្គនេះនឹងមិនត្រូវបានរក្សាទុកទេ។ តើអ្នកពិតជាចង់ចាកចេញមែនទេ?'
+              : 'Your progress in this practice session will not be saved. Are you sure you want to leave?',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: palette.inkMuted,
+          ),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actions: [
+          TextButton(
+            key: const ValueKey('leave-lesson-cancel-button'),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(
+              isKhmer ? 'បន្តរៀន' : 'Keep Learning',
+              style: TextStyle(
+                color: palette.ink,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          FilledButton(
+            key: const ValueKey('leave-lesson-confirm-button'),
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+              foregroundColor: theme.colorScheme.onError,
+              shape: const StadiumBorder(),
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(isKhmer ? 'ចាកចេញ' : 'Leave Lesson'),
+          ),
+        ],
+      ),
+    );
+
+    return result ?? false;
   }
 
   // ---------------------------------------------------------------------------

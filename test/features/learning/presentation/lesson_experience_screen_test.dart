@@ -75,6 +75,33 @@ class _FakeLearningApi implements LearningApi {
   }) => throw UnimplementedError();
 }
 
+class _FakeLearningApiWithExercises extends _FakeLearningApi {
+  @override
+  Future<LessonDetail> lesson(String lessonId) async => const LessonDetail(
+    id: 'biology-1',
+    title: 'Cell Biology',
+    description: '# Section 1\n\nIntro to cell',
+    difficulty: LessonDifficulty.easy,
+    baseXp: 30,
+    categoryId: 'biology',
+    categoryName: 'Biology',
+    reflectionPrompt: '',
+    exercises: [
+      LessonExercise(
+        id: 'ex-1',
+        type: LessonExerciseType.multipleChoice,
+        question: 'What is a cell?',
+        options: ['Unit of life', 'Car'],
+        difficulty: LessonDifficulty.easy,
+        points: 10,
+        completed: false,
+        hint: 'Basic unit',
+        sectionIndex: 0,
+      ),
+    ],
+  );
+}
+
 Iterable<TextSpan> _textSpans(InlineSpan span) sync* {
   if (span case final TextSpan textSpan) {
     yield textSpan;
@@ -241,4 +268,69 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+    'shows exit confirmation dialog when attempting to leave with active practice',
+    (tester) async {
+      tester.view.physicalSize = const Size(393, 852);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final fakeApi = _FakeLearningApiWithExercises();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [learningApiProvider.overrideWithValue(fakeApi)],
+          child: MaterialApp(
+            theme: AppTheme.light,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('km')],
+            home: const Scaffold(
+              body: LessonExperienceScreen(lessonId: 'biology-1'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap practice button in action bar to enter practice phase
+      final practiceButton = find.text('Practice this section');
+      expect(practiceButton, findsOneWidget);
+      await tester.tap(practiceButton);
+      await tester.pumpAndSettle();
+
+      // Tap the back button
+      final backButton = find.byTooltip('Back');
+      expect(backButton, findsOneWidget);
+      await tester.tap(backButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Leave this lesson?'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('leave-lesson-cancel-button')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('leave-lesson-confirm-button')),
+        findsOneWidget,
+      );
+
+      // Tap keep learning to dismiss
+      await tester.tap(find.byKey(const ValueKey('leave-lesson-cancel-button')));
+      await tester.pumpAndSettle();
+      expect(find.text('Leave this lesson?'), findsNothing);
+
+      // Tap back again and confirm leave
+      await tester.tap(backButton);
+      await tester.pumpAndSettle();
+      expect(find.text('Leave this lesson?'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('leave-lesson-confirm-button')));
+      await tester.pumpAndSettle();
+    },
+  );
 }
