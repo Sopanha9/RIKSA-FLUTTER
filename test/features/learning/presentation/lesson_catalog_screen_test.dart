@@ -392,4 +392,37 @@ void main() {
 
     expect(opened, isTrue);
   });
+
+  testWidgets('renders saved lessons button in greeting row', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_SignedInNotifier.new),
+          learningHomeProvider.overrideWith((ref) async => _home()),
+          communityStreakProvider.overrideWith(
+            (ref) async => const CommunityStreak(current: 3, highest: 9),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: const LessonCatalogScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final savedButton = find.byKey(
+      const ValueKey('learning-saved-lessons-button'),
+    );
+    expect(savedButton, findsOneWidget);
+    expect(find.byIcon(Icons.bookmark_border_rounded), findsOneWidget);
+  });
 }
+

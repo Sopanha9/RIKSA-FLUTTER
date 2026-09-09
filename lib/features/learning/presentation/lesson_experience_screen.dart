@@ -16,6 +16,7 @@ import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
 import '../providers/learning_roadmap_provider.dart';
 import '../providers/lesson_catalog_provider.dart';
+import '../providers/saved_lessons_provider.dart';
 import 'learning_design.dart';
 import 'widgets/learning_atoms.dart';
 
@@ -224,6 +225,7 @@ class _LessonExperienceScreenState
         SliverPersistentHeader(
           pinned: true,
           delegate: _LessonBarDelegate(
+            lessonId: widget.lessonId,
             flow: flow,
             subject: subject,
             topInset: MediaQuery.paddingOf(context).top,
@@ -902,6 +904,7 @@ class _LessonSection {
 /// reclaimed reading space with none of that measurement.
 class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
   const _LessonBarDelegate({
+    required this.lessonId,
     required this.flow,
     required this.subject,
     required this.topInset,
@@ -915,6 +918,7 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
     required this.onAskAi,
   });
 
+  final String lessonId;
   final _LessonFlow flow;
   final String subject;
   final double topInset;
@@ -975,6 +979,32 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
                   children: [
                     Consumer(
                       builder: (context, ref, _) {
+                        final isSaved =
+                            ref.watch(savedLessonsProvider).contains(lessonId);
+                        final isKhmer =
+                            Localizations.localeOf(context).languageCode == 'km';
+                        final tooltip = isSaved
+                            ? (isKhmer ? 'ដកចេញពីមេរៀនរក្សាទុក' : 'Remove from saved')
+                            : (isKhmer ? 'រក្សាទុកមេរៀន' : 'Save lesson');
+                        return LearningCircleButton(
+                          key: const ValueKey('lesson-bookmark-toggle'),
+                          icon: isSaved
+                              ? Icons.bookmark_rounded
+                              : Icons.bookmark_border_rounded,
+                          tooltip: tooltip,
+                          foreground: isSaved
+                              ? tone.accent
+                              : palette.ink.withValues(alpha: 0.45),
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            ref.read(savedLessonsProvider.notifier).toggle(lessonId);
+                          },
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 6),
+                    Consumer(
+                      builder: (context, ref, _) {
                         final soundEnabled = ref.watch(soundEnabledProvider);
                         final isKhmer =
                             Localizations.localeOf(context).languageCode == 'km';
@@ -997,7 +1027,7 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
                         );
                       },
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     LearningCircleButton(
                       key: const ValueKey('lesson-ask-ai'),
                       icon: Icons.auto_awesome_rounded,

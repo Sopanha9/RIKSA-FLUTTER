@@ -158,6 +158,40 @@ void main() {
     expect(find.byType(RiksaProfileDrawer), findsNothing);
   });
 
+  testWidgets('navigates to saved lessons from drawer item', (tester) async {
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: [
+        GoRoute(
+          path: '/home',
+          builder: (_, _) => const Scaffold(
+            drawer: RiksaProfileDrawer(),
+            body: SizedBox.shrink(),
+          ),
+        ),
+        GoRoute(
+          path: '/learn/saved',
+          builder: (_, _) => const Scaffold(body: Text('saved lessons screen')),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_app(signedIn: true, router: router));
+    await tester.pumpAndSettle();
+    await _openDrawer(tester);
+
+    final savedItem = find.byKey(const ValueKey('drawer-saved-lessons'));
+    expect(savedItem, findsOneWidget);
+    await tester.ensureVisible(savedItem);
+    await tester.pumpAndSettle();
+    await tester.tap(savedItem);
+    await tester.pumpAndSettle();
+
+    expect(find.text('saved lessons screen'), findsOneWidget);
+    expect(find.byType(RiksaProfileDrawer), findsNothing);
+  });
+
   testWidgets('offers no account actions when signed out', (tester) async {
     await tester.pumpWidget(_app(signedIn: false));
     await tester.pumpAndSettle();

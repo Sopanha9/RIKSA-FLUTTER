@@ -96,6 +96,14 @@ class RiksaProfileDrawer extends ConsumerWidget {
                           label: AppLocalizations.of(context)!.myPosts,
                           onTap: () => _go(context, '/blog/my-posts'),
                         ),
+                        _DrawerItem(
+                          itemKey: const ValueKey('drawer-saved-lessons'),
+                          icon: Icons.bookmark_border_rounded,
+                          label: Localizations.localeOf(context).languageCode == 'km'
+                              ? 'មេរៀនបានរក្សាទុក'
+                              : 'Saved Lessons',
+                          onTap: () => _go(context, '/learn/saved'),
+                        ),
                         const Spacer(),
                         Padding(
                           padding: const EdgeInsets.symmetric(

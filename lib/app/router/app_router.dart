@@ -22,6 +22,7 @@ import '../../features/learning/presentation/lesson_catalog_screen.dart';
 import '../../features/learning/presentation/lesson_experience_screen.dart';
 import '../../features/learning/presentation/subject_roadmap_screen.dart';
 import '../../features/learning/presentation/learning_result_screens.dart';
+import '../../features/learning/presentation/saved_lessons_screen.dart';
 import '../../features/learning/data/learning_models.dart';
 import '../../features/social/presentation/social_feed_screen.dart';
 import '../../features/social/presentation/communities_screen.dart';
@@ -195,6 +196,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'resume',
                     builder: (context, state) => const ResumeLearningScreen(),
+                  ),
+                  GoRoute(
+                    path: 'saved',
+                    builder: (context, state) => const SavedLessonsScreen(),
                   ),
                   GoRoute(
                     path: 'completion',

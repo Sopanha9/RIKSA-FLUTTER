@@ -11,6 +11,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../../social/providers/social_feed_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
+import '../providers/saved_lessons_provider.dart';
 import 'learning_design.dart';
 import 'widgets/learning_atoms.dart';
 import 'widgets/lesson_search_delegate.dart';
@@ -212,6 +213,8 @@ class _GreetingRow extends ConsumerWidget {
         const SizedBox(width: RiksaSpacing.xs),
         const _StreakChip(),
         const SizedBox(width: RiksaSpacing.xs),
+        const _SavedLessonsButton(),
+        const SizedBox(width: RiksaSpacing.xs),
         const _SearchButton(),
       ],
     );
@@ -316,6 +319,57 @@ class _SearchButton extends ConsumerWidget {
     if (selected != null && context.mounted) _openLesson(context, selected);
   }
 }
+
+class _SavedLessonsButton extends ConsumerWidget {
+  const _SavedLessonsButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
+    final savedCount = ref.watch(savedLessonsProvider).length;
+    return Semantics(
+      button: true,
+      label: isKhmer ? 'មេរៀនបានរក្សាទុក' : 'Saved Lessons',
+      child: Material(
+        color: context.riksa.surface,
+        shape: const CircleBorder(),
+        child: InkWell(
+          key: const ValueKey('learning-saved-lessons-button'),
+          customBorder: const CircleBorder(),
+          onTap: () => context.push('/learn/saved'),
+          child: SizedBox(
+            width: 42,
+            height: 42,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  Icons.bookmark_border_rounded,
+                  size: 20,
+                  color: context.riksa.ink,
+                ),
+                if (savedCount > 0)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: context.riksa.jade,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 // ---------------------------------------------------------------------------
 // Continue

@@ -9,6 +9,7 @@ import 'package:riksa_app/features/learning/data/learning_api.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_experience_screen.dart';
 import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.dart';
+import 'package:riksa_app/features/learning/providers/saved_lessons_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -387,4 +388,68 @@ void main() {
       expect(container.read(soundEnabledProvider), isTrue);
     },
   );
+
+  testWidgets(
+    'toggles lesson bookmark from header button and updates saved state',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final container = ProviderContainer(
+        overrides: [
+          learningApiProvider.overrideWithValue(_FakeLearningApi()),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: AppTheme.light,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('km')],
+            home: const Scaffold(
+              body: LessonExperienceScreen(lessonId: 'biology-1'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final bookmarkToggle = find.byKey(
+        const ValueKey('lesson-bookmark-toggle'),
+      );
+      expect(bookmarkToggle, findsOneWidget);
+      expect(find.byIcon(Icons.bookmark_border_rounded), findsOneWidget);
+      expect(
+        container.read(savedLessonsProvider).contains('biology-1'),
+        isFalse,
+      );
+
+      // Tap toggle to bookmark
+      await tester.tap(bookmarkToggle);
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.bookmark_rounded), findsOneWidget);
+      expect(
+        container.read(savedLessonsProvider).contains('biology-1'),
+        isTrue,
+      );
+
+      // Tap toggle again to remove bookmark
+      await tester.tap(bookmarkToggle);
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.bookmark_border_rounded), findsOneWidget);
+      expect(
+        container.read(savedLessonsProvider).contains('biology-1'),
+        isFalse,
+      );
+    },
+  );
 }
+
