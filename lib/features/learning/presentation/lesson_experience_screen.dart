@@ -776,6 +776,7 @@ class _LessonExperienceScreenState
             'xpEarned': result.xpEarned,
             'lessonTitle': detail.title,
             'categoryName': detail.categoryName,
+            'totalExercises': detail.exercises.length,
           },
         );
       }

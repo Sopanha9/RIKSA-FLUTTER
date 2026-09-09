@@ -203,18 +203,23 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                       final int xp;
                       final String? lessonTitle;
                       final String? categoryName;
+                      final int? totalExercises;
                       if (extra is int) {
                         xp = extra;
                         lessonTitle = null;
                         categoryName = null;
+                        totalExercises = null;
                       } else if (extra is Map) {
                         xp = (extra['xpEarned'] as num?)?.toInt() ?? 0;
                         lessonTitle = extra['lessonTitle'] as String?;
                         categoryName = extra['categoryName'] as String?;
+                        totalExercises =
+                            (extra['totalExercises'] as num?)?.toInt();
                       } else {
                         xp = 0;
                         lessonTitle = null;
                         categoryName = null;
+                        totalExercises = null;
                       }
                       return LessonCompletionScreen(
                         xpEarned: xp,
@@ -222,6 +227,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                             state.uri.queryParameters['roadmapCategoryId'],
                         lessonTitle: lessonTitle,
                         categoryName: categoryName,
+                        totalExercises: totalExercises,
                       );
                     },
                   ),

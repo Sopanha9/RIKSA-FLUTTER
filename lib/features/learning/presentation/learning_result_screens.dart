@@ -14,17 +14,20 @@ class LessonCompletionScreen extends StatelessWidget {
     this.roadmapCategoryId,
     this.lessonTitle,
     this.categoryName,
+    this.totalExercises,
   });
 
   final int xpEarned;
   final String? roadmapCategoryId;
   final String? lessonTitle;
   final String? categoryName;
+  final int? totalExercises;
 
   @override
   Widget build(BuildContext context) {
     final riksa = context.riksa;
     final insight = resolveInsightForCategory(categoryName);
+    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
 
     return Scaffold(
       body: SafeArea(
@@ -66,7 +69,8 @@ class LessonCompletionScreen extends StatelessWidget {
                   const SizedBox(height: RiksaSpacing.md),
 
                   Text(
-                    'Lesson Mastered!',
+                    isKhmer ? 'បានបញ្ចប់មេរៀនជោគជ័យ!' : 'Lesson Mastered!',
+                    textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -82,33 +86,77 @@ class LessonCompletionScreen extends StatelessWidget {
                           ),
                     ),
 
-                  const SizedBox(height: RiksaSpacing.sm),
+                  const SizedBox(height: RiksaSpacing.md),
 
-                  // XP Reward Pill
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: RiksaSpacing.md,
-                      vertical: RiksaSpacing.xs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: riksa.saffron.withValues(alpha: 0.15),
-                      borderRadius: AppRadii.fullBorder,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.bolt_rounded, size: 20, color: riksa.saffron),
-                        const SizedBox(width: 4),
-                        Text(
-                          '+$xpEarned XP Earned',
-                          style: TextStyle(
-                            color: riksa.saffron,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                  // Achievement Badges Row
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: RiksaSpacing.sm,
+                    runSpacing: RiksaSpacing.xs,
+                    children: [
+                      // XP Reward Pill
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: RiksaSpacing.md,
+                          vertical: RiksaSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: riksa.saffron.withValues(alpha: 0.15),
+                          borderRadius: AppRadii.fullBorder,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.bolt_rounded, size: 20, color: riksa.saffron),
+                            const SizedBox(width: 4),
+                            Text(
+                              isKhmer
+                                  ? '+$xpEarned ពិន្ទុ XP ទទួលបាន'
+                                  : '+$xpEarned XP Earned',
+                              style: TextStyle(
+                                color: riksa.saffron,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Exercises Completed Pill
+                      if (totalExercises != null && totalExercises! > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: RiksaSpacing.md,
+                            vertical: RiksaSpacing.xs,
+                          ),
+                          decoration: BoxDecoration(
+                            color: riksa.jade.withValues(alpha: 0.15),
+                            borderRadius: AppRadii.fullBorder,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle_rounded,
+                                size: 18,
+                                color: riksa.jade,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                isKhmer
+                                    ? '$totalExercises លំហាត់បានអនុវត្ត'
+                                    : '$totalExercises ${totalExercises == 1 ? "Exercise" : "Exercises"} Completed',
+                                style: TextStyle(
+                                  color: riksa.jade,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                    ],
                   ),
 
                   const SizedBox(height: RiksaSpacing.lg),
@@ -196,11 +244,16 @@ class LessonCompletionScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
+                      key: const ValueKey('lesson-completion-share'),
                       onPressed: () {
                         context.push('/community/create');
                       },
                       icon: const Icon(Icons.share_rounded, size: 18),
-                      label: const Text('Share Achievement to Community'),
+                      label: Text(
+                        isKhmer
+                            ? 'ចែករំលែកទៅកាន់សហគមន៍'
+                            : 'Share Achievement to Community',
+                      ),
                     ),
                   ),
 
@@ -210,6 +263,7 @@ class LessonCompletionScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
+                      key: const ValueKey('lesson-completion-continue'),
                       onPressed: () => context.go(
                         roadmapCategoryId == null
                             ? '/learn'
@@ -218,8 +272,8 @@ class LessonCompletionScreen extends StatelessWidget {
                       icon: const Icon(Icons.school_rounded, size: 19),
                       label: Text(
                         roadmapCategoryId == null
-                            ? 'Continue learning'
-                            : 'Back to roadmap',
+                            ? (isKhmer ? 'បន្តការរៀន' : 'Continue learning')
+                            : (isKhmer ? 'ត្រឡប់ទៅផែនទីសិក្សា' : 'Back to roadmap'),
                       ),
                     ),
                   ),
@@ -227,8 +281,9 @@ class LessonCompletionScreen extends StatelessWidget {
                   const SizedBox(height: RiksaSpacing.xs),
 
                   TextButton(
+                    key: const ValueKey('lesson-completion-home'),
                     onPressed: () => context.go('/home'),
-                    child: const Text('Back home'),
+                    child: Text(isKhmer ? 'ត្រឡប់ទៅទំព័រដើម' : 'Back home'),
                   ),
                 ],
               ),
@@ -244,19 +299,24 @@ class ResumeLearningScreen extends ConsumerWidget {
   const ResumeLearningScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
     final state = ref.watch(lessonCatalogProvider);
     final active = state.lessons
         .where((lesson) => !lesson.completed && (lesson.progress ?? 0) > 0)
         .toList();
     return Scaffold(
-      appBar: AppBar(title: const Text('Resume learning')),
+      appBar: AppBar(
+        title: Text(isKhmer ? 'បន្តការរៀន' : 'Resume learning'),
+      ),
       body: state.isLoading
           ? const Center(child: CircularProgressIndicator())
           : active.isEmpty
           ? IllustratedEmptyState(
-              title: 'No lesson in progress',
-              body: 'Choose a lesson to begin your next learning streak.',
-              actionLabel: 'Browse lessons',
+              title: isKhmer ? 'មិនមានមេរៀនកំពុងរៀនទេ' : 'No lesson in progress',
+              body: isKhmer
+                  ? 'ជ្រើសរើសមេរៀនដើម្បីចាប់ផ្តើមការសិក្សាជាបន្ត។'
+                  : 'Choose a lesson to begin your next learning streak.',
+              actionLabel: isKhmer ? 'រុករកមេរៀន' : 'Browse lessons',
               onAction: () => context.go('/learn'),
             )
           : ListView.separated(
