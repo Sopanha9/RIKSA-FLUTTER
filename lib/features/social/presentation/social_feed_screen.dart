@@ -511,7 +511,7 @@ class _CommunityComposerPrompt extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
       child: Semantics(
         button: true,
         label: l10n.communityComposerPrompt,
@@ -661,59 +661,60 @@ class _YourArticlesLink extends ConsumerWidget {
   }
 }
 
-class _FeedSectionTabs extends StatefulWidget {
+class _FeedSectionTabs extends StatelessWidget {
   const _FeedSectionTabs({required this.selected, required this.onSelected});
 
   final _SocialSection selected;
   final ValueChanged<_SocialSection> onSelected;
 
   @override
-  State<_FeedSectionTabs> createState() => _FeedSectionTabsState();
-}
-
-class _FeedSectionTabsState extends State<_FeedSectionTabs> {
-  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-      child: Container(
-        height: 44,
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? context.riksa.surfaceRaised
-              : AppColors.editorialField,
-          borderRadius: AppRadii.fullBorder,
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: palette.outline.withValues(alpha: isDark ? 0.35 : 0.6),
+            width: 1,
+          ),
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: _CapsuleTabItem(
-                key: const ValueKey('my-feed-tab'),
-                label: l10n.forYou,
-                selected: widget.selected == _SocialSection.feed,
-                onTap: () => widget.onSelected(_SocialSection.feed),
-              ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _ModernSectionTabItem(
+              key: const ValueKey('my-feed-tab'),
+              label: l10n.forYou,
+              selected: selected == _SocialSection.feed,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                onSelected(_SocialSection.feed);
+              },
             ),
-            Expanded(
-              child: _CapsuleTabItem(
-                key: const ValueKey('blog-tab'),
-                label: l10n.blog,
-                selected: widget.selected == _SocialSection.blog,
-                onTap: () => widget.onSelected(_SocialSection.blog),
-              ),
+          ),
+          Expanded(
+            child: _ModernSectionTabItem(
+              key: const ValueKey('blog-tab'),
+              label: l10n.blog,
+              selected: selected == _SocialSection.blog,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                onSelected(_SocialSection.blog);
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _CapsuleTabItem extends StatelessWidget {
-  const _CapsuleTabItem({
+class _ModernSectionTabItem extends StatelessWidget {
+  const _ModernSectionTabItem({
     super.key,
     required this.label,
     required this.selected,
@@ -727,44 +728,46 @@ class _CapsuleTabItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark
+        ? AppColors.editorialPink
+        : SocialPalette.aubergine(context);
+    final inactiveColor = SocialPalette.muted(context);
+
     return Semantics(
       button: true,
       selected: selected,
-      child: AnimatedContainer(
-        duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-        curve: Curves.easeOutCubic,
-        decoration: BoxDecoration(
-          color: selected
-              ? (isDark
-                    ? AppColors.editorialPink
-                    : AppColors.editorialAubergine)
-              : Colors.transparent,
-          borderRadius: AppRadii.fullBorder,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: AppRadii.fullBorder,
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            borderRadius: AppRadii.fullBorder,
-            onTap: onTap,
-            splashColor: AppColors.editorialPink.withValues(alpha: .16),
-            highlightColor: AppColors.editorialPink.withValues(alpha: .1),
-            child: Center(
-              child: Text(
+      child: InkWell(
+        onTap: onTap,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: selected
-                      ? (isDark ? AppColors.editorialAubergine : Colors.white)
-                      : SocialPalette.ink(context),
-                  fontSize: 14,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  letterSpacing: -0.1,
+                  color: selected ? activeColor : inactiveColor,
+                  fontSize: 15,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  letterSpacing: -0.2,
                 ),
               ),
-            ),
+              const SizedBox(height: 8),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                height: 3,
+                width: selected ? 48 : 0,
+                decoration: BoxDecoration(
+                  color: selected ? activeColor : Colors.transparent,
+                  borderRadius: AppRadii.fullBorder,
+                ),
+              ),
+            ],
           ),
         ),
       ),

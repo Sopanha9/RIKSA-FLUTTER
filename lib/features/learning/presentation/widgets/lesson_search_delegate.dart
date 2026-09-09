@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../data/learning_models.dart';
@@ -59,11 +60,38 @@ class LessonSearchDelegate extends SearchDelegate<LessonSummary?> {
 
     if (results.isEmpty) {
       return Center(
-        child: Text(
-          emptyLabel,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: context.riksa.inkMuted),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.search_off_rounded,
+                size: 44,
+                color: context.riksa.inkMuted,
+              ),
+              const SizedBox(height: RiksaSpacing.sm),
+              Text(
+                emptyLabel,
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: context.riksa.inkMuted),
+              ),
+              if (normalized.isNotEmpty) ...[
+                const SizedBox(height: RiksaSpacing.md),
+                FilledButton.tonalIcon(
+                  key: const ValueKey('ask-ai-coach-search-button'),
+                  onPressed: () {
+                    close(context, null);
+                    context.push('/ai', extra: query.trim());
+                  },
+                  icon: const Icon(Icons.auto_awesome, size: 18),
+                  label: Text('Ask AI Study Coach: "${query.trim()}"'),
+                ),
+              ],
+            ],
+          ),
         ),
       );
     }
