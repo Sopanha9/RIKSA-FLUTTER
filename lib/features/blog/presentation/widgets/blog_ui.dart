@@ -676,8 +676,9 @@ class RiksaSkeletonCircle extends StatelessWidget {
 /// Reading typography for the article body.
 MarkdownStyleSheet blogMarkdownStyleSheet(
   BuildContext context,
-  String content,
-) {
+  String content, {
+  double textScale = 1.0,
+}) {
   final theme = Theme.of(context);
   final palette = context.riksa;
   final hasKhmer = RiksaTypography.containsKhmer(content);
@@ -688,7 +689,7 @@ MarkdownStyleSheet blogMarkdownStyleSheet(
   final paragraph = blogStyle(
     theme.textTheme.bodyLarge?.copyWith(
       color: palette.ink,
-      fontSize: 17,
+      fontSize: 17 * textScale,
       height: 1.75,
     ),
   );
@@ -704,9 +705,9 @@ MarkdownStyleSheet blogMarkdownStyleSheet(
   return MarkdownStyleSheet.fromTheme(theme).copyWith(
     p: paragraph,
     pPadding: const EdgeInsets.only(bottom: 6),
-    h1: heading.copyWith(fontSize: 24),
-    h2: heading.copyWith(fontSize: 21),
-    h3: heading.copyWith(fontSize: 19),
+    h1: heading.copyWith(fontSize: 24 * textScale),
+    h2: heading.copyWith(fontSize: 21 * textScale),
+    h3: heading.copyWith(fontSize: 19 * textScale),
     h1Padding: const EdgeInsets.only(top: 14, bottom: 6),
     h2Padding: const EdgeInsets.only(top: 12, bottom: 5),
     h3Padding: const EdgeInsets.only(top: 10, bottom: 4),
@@ -715,6 +716,7 @@ MarkdownStyleSheet blogMarkdownStyleSheet(
     code: blogStyle(
       theme.textTheme.bodyMedium?.copyWith(
         color: palette.ink,
+        fontSize: 14 * textScale,
         backgroundColor: palette.surfaceRaised,
       ),
     ),

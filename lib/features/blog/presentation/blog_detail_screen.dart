@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,6 +37,8 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
   bool _loading = true;
   bool _liking = false;
   bool _collapsed = false;
+  double _readingProgress = 0.0;
+  double _textScale = 1.0;
   String? _error;
 
   @override
@@ -57,6 +60,47 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
         : 8.0;
     final collapsed = _scrollController.offset > threshold;
     if (collapsed != _collapsed) setState(() => _collapsed = collapsed);
+
+    if (_scrollController.hasClients &&
+        _scrollController.position.maxScrollExtent > 0) {
+      final progress = (_scrollController.offset /
+              _scrollController.position.maxScrollExtent)
+          .clamp(0.0, 1.0);
+      if ((progress - _readingProgress).abs() > 0.005) {
+        setState(() => _readingProgress = progress);
+      }
+    }
+  }
+
+  void _cycleFontSize() {
+    HapticFeedback.selectionClick();
+    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
+    setState(() {
+      if (_textScale <= 1.0) {
+        _textScale = 1.18;
+      } else if (_textScale <= 1.2) {
+        _textScale = 1.35;
+      } else {
+        _textScale = 1.0;
+      }
+    });
+    final label = _textScale > 1.2
+        ? (isKhmer
+            ? 'ទំហំអក្សរ៖ ធំខ្លាំង (1.35x)'
+            : 'Text size: Extra Large (1.35x)')
+        : (_textScale > 1.0
+            ? (isKhmer ? 'ទំហំអក្សរ៖ ធំ (1.18x)' : 'Text size: Large (1.18x)')
+            : (isKhmer
+                ? 'ទំហំអក្សរ៖ ធម្មតា (1.0x)'
+                : 'Text size: Default (1.0x)'));
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(label),
+          duration: const Duration(seconds: 1),
+        ),
+      );
   }
 
   Future<void> _load() async {
@@ -210,14 +254,40 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
               ),
             ),
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(BlogMetrics.hairline),
-              child: AnimatedOpacity(
-                duration: RiksaMotion.resolve(context, RiksaMotion.fast),
-                opacity: _collapsed ? 1 : 0,
-                child: const BlogDivider(),
+              preferredSize: const Size.fromHeight(2.5),
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  AnimatedOpacity(
+                    duration: RiksaMotion.resolve(context, RiksaMotion.fast),
+                    opacity: _collapsed ? 1 : 0,
+                    child: const BlogDivider(),
+                  ),
+                  LinearProgressIndicator(
+                    key: const ValueKey('blog-reading-progress'),
+                    value: _readingProgress,
+                    minHeight: 2.5,
+                    backgroundColor: Colors.transparent,
+                    valueColor: AlwaysStoppedAnimation<Color>(palette.jade),
+                  ),
+                ],
               ),
             ),
             actions: [
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: RiksaSpacing.xs),
+                  child: _ChromeButton(
+                    key: const ValueKey('blog-font-size-toggle'),
+                    icon: Icons.format_size_rounded,
+                    tooltip: Localizations.localeOf(context).languageCode == 'km'
+                        ? 'ប្តូរទំហំអក្សរ'
+                        : 'Adjust text size',
+                    onPressed: _cycleFontSize,
+                    onImage: post.hasCover && !_collapsed,
+                  ),
+                ),
+              ),
               if (isOwner)
                 Padding(
                   padding: const EdgeInsets.only(right: RiksaSpacing.xs),
@@ -257,7 +327,7 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
                         style: RiksaTypography.titleStyleFor(
                           post.title,
                           theme.textTheme.displaySmall?.copyWith(
-                            fontSize: 30,
+                            fontSize: 30 * _textScale,
                             fontWeight: FontWeight.w800,
                             height: 1.18,
                             letterSpacing: -.6,
@@ -283,6 +353,7 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
                         styleSheet: blogMarkdownStyleSheet(
                           context,
                           post.markdownContent,
+                          textScale: _textScale,
                         ),
                       ),
                     ],
@@ -331,6 +402,7 @@ class _ChromeScaffold extends StatelessWidget {
 /// top of a cover photo.
 class _ChromeButton extends StatelessWidget {
   const _ChromeButton({
+    super.key,
     required this.icon,
     required this.tooltip,
     required this.onPressed,
