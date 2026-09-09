@@ -393,6 +393,13 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
       await ref.read(blogFeedProvider.notifier).load();
     } else {
       _selectSection(_SocialSection.feed);
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     }
   }
 

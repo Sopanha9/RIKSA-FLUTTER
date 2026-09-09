@@ -139,8 +139,10 @@ class SocialPostCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                       _LightAction(
+                        key: ValueKey('comment-${post.id}'),
                         icon: Icons.mode_comment_outlined,
                         count: post.commentCount,
+                        onPressed: onTap,
                       ),
                       const Spacer(),
                       _LightAction(

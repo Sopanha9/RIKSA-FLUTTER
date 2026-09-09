@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -32,6 +33,7 @@ class _SocialPostDetailScreenState
     extends ConsumerState<SocialPostDetailScreen> {
   static const _pageSize = 20;
 
+  final _scrollController = ScrollController();
   final _commentController = TextEditingController();
   final _commentFocus = FocusNode();
   SocialPost? _post;
@@ -53,6 +55,7 @@ class _SocialPostDetailScreenState
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _commentController.dispose();
     _commentFocus.dispose();
     super.dispose();
@@ -180,6 +183,15 @@ class _SocialPostDetailScreenState
       }
       _commentController.clear();
       _commentFocus.unfocus();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
     } catch (_) {
       if (!mounted) return;
       setState(() => _submitting = false);
@@ -188,6 +200,69 @@ class _SocialPostDetailScreenState
         ..showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.commentFailed)),
         );
+    }
+  }
+
+  Future<void> _deleteComment(SocialComment comment) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final isKhmer =
+            Localizations.localeOf(dialogContext).languageCode == 'km';
+        return AlertDialog(
+          title: Text(isKhmer ? 'លុបមតិ?' : 'Delete comment?'),
+          content: Text(
+            isKhmer
+                ? 'តើអ្នកប្រាកដថាចង់លុបមតិនេះទេ?'
+                : 'Are you sure you want to delete this comment?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(isKhmer ? 'បោះបង់' : 'Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(dialogContext).colorScheme.error,
+              ),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(isKhmer ? 'លុប' : 'Delete'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await ref.read(socialApiProvider).deleteComment(comment.id);
+      if (!mounted) return;
+      final updatedComments = _comments
+          .where((c) => c.id != comment.id && c.parentId != comment.id)
+          .toList();
+      final updatedPost = _post?.copyWith(
+        commentCount: math.max(0, (_post?.commentCount ?? 1) - 1),
+      );
+      setState(() {
+        _comments = updatedComments;
+        _post = updatedPost;
+      });
+      if (updatedPost != null) {
+        ref.read(socialFeedProvider.notifier).syncPost(updatedPost);
+      }
+      final isKhmer = Localizations.localeOf(context).languageCode == 'km';
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              isKhmer ? 'បានលុបមតិដោយជោគជ័យ' : 'Comment deleted',
+            ),
+          ),
+        );
+    } catch (_) {
+      if (!mounted) return;
+      _showFailure();
     }
   }
 
@@ -268,6 +343,7 @@ class _SocialPostDetailScreenState
               color: AppColors.editorialPink,
               onRefresh: _load,
               child: ListView(
+                controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                 children: [
@@ -276,6 +352,7 @@ class _SocialPostDetailScreenState
                     onAuthorTap: _authorTap(_post!.author),
                     onReact: _react,
                     onShare: _share,
+                    onCommentTap: () => _commentFocus.requestFocus(),
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -296,23 +373,41 @@ class _SocialPostDetailScreenState
                     _EmptyComments(message: l10n.noComments)
                   else
                     for (final thread in _buildCommentThreads(_comments)) ...[
-                      _CommentCard(
-                        comment: thread.root,
-                        onAuthorTap: _authorTap(thread.root.author),
-                        onReply: () => _startReply(thread.root),
-                      ),
+                      () {
+                        final currentUserId = ref.watch(currentUserIdProvider);
+                        final canDeleteRoot =
+                            thread.root.author.id == currentUserId;
+                        return _CommentCard(
+                          comment: thread.root,
+                          onAuthorTap: _authorTap(thread.root.author),
+                          onReply: () => _startReply(thread.root),
+                          onDelete: canDeleteRoot
+                              ? () => _deleteComment(thread.root)
+                              : null,
+                        );
+                      }(),
                       if (thread.replies.isNotEmpty) ...[
                         const SizedBox(height: 6),
                         for (final reply in thread.replies) ...[
-                          Padding(
-                            padding: const EdgeInsets.only(left: 24, bottom: 6),
-                            child: _CommentCard(
-                              comment: reply,
-                              isReply: true,
-                              onAuthorTap: _authorTap(reply.author),
-                              onReply: () => _startReply(reply),
-                            ),
-                          ),
+                          () {
+                            final currentUserId =
+                                ref.watch(currentUserIdProvider);
+                            final canDeleteReply =
+                                reply.author.id == currentUserId;
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 24, bottom: 6),
+                              child: _CommentCard(
+                                comment: reply,
+                                isReply: true,
+                                onAuthorTap: _authorTap(reply.author),
+                                onReply: () => _startReply(reply),
+                                onDelete: canDeleteReply
+                                    ? () => _deleteComment(reply)
+                                    : null,
+                              ),
+                            );
+                          }(),
                         ],
                       ],
                       const SizedBox(height: 10),
@@ -370,12 +465,14 @@ class _PostBody extends StatelessWidget {
     this.onAuthorTap,
     required this.onReact,
     required this.onShare,
+    this.onCommentTap,
   });
 
   final SocialPost post;
   final VoidCallback? onAuthorTap;
   final VoidCallback onReact;
   final VoidCallback onShare;
+  final VoidCallback? onCommentTap;
 
   @override
   Widget build(BuildContext context) {
@@ -479,8 +576,10 @@ class _PostBody extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               _DetailAction(
+                key: const ValueKey('post-detail-comment-button'),
                 icon: Icons.mode_comment_outlined,
                 count: post.commentCount,
+                onTap: onCommentTap,
               ),
               const Spacer(),
               _DetailAction(
@@ -595,17 +694,20 @@ class _CommentCard extends StatelessWidget {
     required this.comment,
     this.onAuthorTap,
     this.onReply,
+    this.onDelete,
     this.isReply = false,
   });
 
   final SocialComment comment;
   final VoidCallback? onAuthorTap;
   final VoidCallback? onReply;
+  final VoidCallback? onDelete;
   final bool isReply;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
     final name = comment.author.displayName.isEmpty
         ? comment.author.username
         : comment.author.displayName;
@@ -678,36 +780,73 @@ class _CommentCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (onReply != null) ...[
+                if (onReply != null || onDelete != null) ...[
                   const SizedBox(height: 8),
-                  InkWell(
-                    key: ValueKey('comment-reply-button-${comment.id}'),
-                    onTap: onReply,
-                    borderRadius: AppRadii.smallBorder,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.reply_rounded,
-                            size: 14,
-                            color: SocialPalette.aubergine(context),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            AppLocalizations.of(context)!.reply,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: SocialPalette.aubergine(context),
-                              fontWeight: FontWeight.w700,
+                  Row(
+                    children: [
+                      if (onReply != null)
+                        InkWell(
+                          key: ValueKey('comment-reply-button-${comment.id}'),
+                          onTap: onReply,
+                          borderRadius: AppRadii.smallBorder,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.reply_rounded,
+                                  size: 14,
+                                  color: SocialPalette.aubergine(context),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  AppLocalizations.of(context)!.reply,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: SocialPalette.aubergine(context),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      if (onDelete != null) ...[
+                        const SizedBox(width: 12),
+                        InkWell(
+                          key: ValueKey('comment-delete-button-${comment.id}'),
+                          onTap: onDelete,
+                          borderRadius: AppRadii.smallBorder,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 14,
+                                  color: theme.colorScheme.error,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  isKhmer ? 'លុប' : 'Delete',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.error,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ],
@@ -805,6 +944,7 @@ class _Avatar extends StatelessWidget {
 
 class _DetailAction extends StatelessWidget {
   const _DetailAction({
+    super.key,
     required this.icon,
     required this.count,
     this.selected = false,

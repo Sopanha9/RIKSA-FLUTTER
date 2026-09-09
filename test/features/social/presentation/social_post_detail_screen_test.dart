@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/network/dio_client.dart';
 import 'package:riksa_app/core/storage/session_store.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/social/data/social_api.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 import 'package:riksa_app/features/social/presentation/social_post_detail_screen.dart';
@@ -240,12 +241,113 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'tapping comment button in post body focuses the comment composer',
+    (tester) async {
+      FlutterSecureStorage.setMockInitialValues({});
+      final client = DioClient(
+        SessionStore(const FlutterSecureStorage()),
+        baseUrl: 'http://riksa.test/api/v1',
+      );
+      addTearDown(client.dispose);
+      final api = _FakeSocialApi(client);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [socialApiProvider.overrideWithValue(api)],
+          child: MaterialApp(
+            theme: AppTheme.light,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('km')],
+            home: const SocialPostDetailScreen(postId: 'post-1'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final commentButton = find.byKey(const ValueKey('post-detail-comment-button'));
+      expect(commentButton, findsOneWidget);
+
+      await tester.tap(commentButton);
+      await tester.pumpAndSettle();
+
+      final textField = tester.widget<TextField>(
+        find.byKey(const ValueKey('comment-composer')),
+      );
+      expect(textField.focusNode?.hasFocus, isTrue);
+    },
+  );
+
+  testWidgets(
+    'allows comment author to delete their own comment after confirmation',
+    (tester) async {
+      FlutterSecureStorage.setMockInitialValues({});
+      final client = DioClient(
+        SessionStore(const FlutterSecureStorage()),
+        baseUrl: 'http://riksa.test/api/v1',
+      );
+      addTearDown(client.dispose);
+      final api = _FakeSocialApi(client);
+
+      // Current user is user-3 (the comment author)
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            socialApiProvider.overrideWithValue(api),
+            currentUserIdProvider.overrideWithValue('user-3'),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('km')],
+            home: const SocialPostDetailScreen(postId: 'post-1'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final deleteButton = find.byKey(
+        const ValueKey('comment-delete-button-comment-1'),
+      );
+      expect(deleteButton, findsOneWidget);
+      await tester.ensureVisible(deleteButton);
+      await tester.pumpAndSettle();
+
+      // Tap delete
+      await tester.tap(deleteButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Delete comment?'), findsOneWidget);
+
+      // Confirm deletion
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+      await tester.pumpAndSettle();
+
+      expect(api.lastDeletedCommentId, 'comment-1');
+      expect(
+        find.byKey(const ValueKey('comment-card-comment-1')),
+        findsNothing,
+      );
+    },
+  );
 }
 
 class _FakeSocialApi extends SocialApi {
   _FakeSocialApi(super.client);
 
   String? lastCreatedParentId;
+  String? lastDeletedCommentId;
 
   @override
   Future<List<SocialCategory>> categories() async => [_post.category];
@@ -285,4 +387,10 @@ class _FakeSocialApi extends SocialApi {
       updatedAt: DateTime.utc(2026, 8, 3),
     );
   }
+
+  @override
+  Future<void> deleteComment(String id) async {
+    lastDeletedCommentId = id;
+  }
 }
+

@@ -252,6 +252,19 @@ class SocialApi {
     }
   }
 
+  /// Removes a comment the signed-in user owns (`deleteComment`, owner only).
+  Future<void> deleteComment(String id) async {
+    final data = await _query(
+      r'''
+      mutation DeleteComment($id: UUID!) { deleteComment(id: $id) }
+      ''',
+      variables: {'id': id},
+    );
+    if (data['deleteComment'] == false) {
+      throw const SocialApiException('This comment could not be deleted.');
+    }
+  }
+
   Future<SocialPost> share(String postId) async {
     final data = await _query(
       '''

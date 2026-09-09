@@ -83,7 +83,13 @@ void main() {
 
     expect(opened, isTrue);
     expect(find.byKey(const ValueKey('react-post-1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('comment-post-1')), findsOneWidget);
     expect(find.byKey(const ValueKey('share-post-1')), findsOneWidget);
+
+    opened = false;
+    await tester.tap(find.byKey(const ValueKey('comment-post-1')));
+    expect(opened, isTrue);
+
     final outerCard = tester.widget<Material>(
       find.byKey(const ValueKey('post-post-1')),
     );
