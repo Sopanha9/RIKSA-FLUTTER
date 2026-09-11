@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../l10n/gen/app_localizations.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
@@ -17,13 +18,14 @@ class SavedLessonsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isKhmer = Localizations.localeOf(context).languageCode == 'km';
+    final l10n = AppLocalizations.of(context)!;
     final savedIds = ref.watch(savedLessonsProvider);
     final catalogState = ref.watch(lessonCatalogProvider);
     final homeState = ref.watch(learningHomeProvider);
     final palette = context.riksa;
 
-    final homeLessons = homeState.asData?.value.subjects
-            .expand((s) => s.lessons) ??
+    final homeLessons =
+        homeState.asData?.value.subjects.expand((s) => s.lessons) ??
         const <LessonSummary>[];
     final allLessonsMap = <String, LessonSummary>{
       for (final l in catalogState.lessons) l.id: l,
@@ -44,12 +46,8 @@ class SavedLessonsScreen extends ConsumerWidget {
           ? const Center(child: CircularProgressIndicator())
           : savedIds.isEmpty || savedLessons.isEmpty
           ? IllustratedEmptyState(
-              title: isKhmer
-                  ? 'មិនទាន់មានមេរៀនរក្សាទុកទេ'
-                  : 'No saved lessons yet',
-              body: isKhmer
-                  ? 'ចុចរូបសញ្ញាកំណត់ចំណាំក្នុងមេរៀន ដើម្បីរក្សាទុកសម្រាប់មើលឡើងវិញមុនពេលប្រឡង។'
-                  : 'Bookmark key formulas and topics while studying to easily review them before exams.',
+              title: l10n.savedLessonsEmptyTitle,
+              body: l10n.savedLessonsEmptyBody,
               actionLabel: isKhmer ? 'រុករកមេរៀន' : 'Browse lessons',
               onAction: () => context.go('/learn'),
             )
@@ -90,9 +88,7 @@ class SavedLessonsScreen extends ConsumerWidget {
                             if (lesson.categoryName.isNotEmpty) ...[
                               Text(
                                 lesson.categoryName,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
+                                style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(
                                       color: tone.accent,
                                       fontWeight: FontWeight.w700,
@@ -102,9 +98,7 @@ class SavedLessonsScreen extends ConsumerWidget {
                             ],
                             Text(
                               lesson.title,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
+                              style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(
                                     color: palette.ink,
                                     fontWeight: FontWeight.w700,

@@ -22,11 +22,15 @@ import 'widgets/learning_atoms.dart';
 
 /// Where the learner is inside one lesson.
 ///
-/// The screen is a four-step loop rather than one long scroll: read the idea,
-/// prove it, bank the section, reflect. Naming the step explicitly is what lets
-/// the pinned action bar and the drenched header agree on what "next" means
-/// without either of them re-deriving it.
-enum _LessonPhase { reading, practising, sectionPassed, reflecting }
+/// Reading, writing and feedback share one explicit state so the pinned action
+/// always matches the visible content. Feedback stays until the learner continues.
+enum _LessonPhase {
+  reading,
+  practising,
+  answerChecked,
+  sectionPassed,
+  reflecting,
+}
 
 /// Everything the header, the sheet and the action bar need, derived once.
 ///
@@ -41,7 +45,6 @@ class _LessonFlow {
     required this.exercise,
     required this.exerciseNumber,
     required this.following,
-    required this.previous,
     required this.progress,
   });
 
@@ -55,12 +58,9 @@ class _LessonFlow {
   /// Its position across the whole lesson, not just this section.
   final int exerciseNumber;
   final _LessonSection? following;
-  final _LessonSection? previous;
 
   /// Share of the lesson's exercises already answered correctly.
   final double progress;
-
-  bool get isFinalReview => section.index == 4;
 }
 
 class LessonExperienceScreen extends ConsumerStatefulWidget {
@@ -85,19 +85,30 @@ class _LessonExperienceScreenState
   int? _activeSectionIndex;
   bool _showPractice = false;
   bool _completing = false;
-  static const _quickReflections = [
-    '🌟 Confident & Clear',
-    '👍 Understood basics',
-    '💡 Good challenge',
-    '🤔 Need to review',
-  ];
-  String _selectedQuickReflection = '🌟 Confident & Clear';
+  final _working = <String, TextEditingController>{};
+  final _comparedAnswers = <String>{};
+  final _scroll = ScrollController();
+  final _feedbackAnchor = GlobalKey();
+  String? _feedbackExerciseId;
+  bool? _needsReview;
+
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
+
+  void _changeStep(VoidCallback update) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(update);
+    if (_scroll.hasClients) _scroll.jumpTo(0);
+  }
 
   @override
   void dispose() {
     for (final controller in _answers.values) {
       controller.dispose();
     }
+    for (final controller in _working.values) {
+      controller.dispose();
+    }
+    _scroll.dispose();
     _reflection.dispose();
     super.dispose();
   }
@@ -152,19 +163,27 @@ class _LessonExperienceScreenState
     final pending = section.exercises
         .where((exercise) => !_isCorrect(exercise))
         .firstOrNull;
-    final following = sections
-        .where((item) => item.index > section.index)
-        .firstOrNull;
-    final previous = sections
-        .where((item) => item.index < section.index)
-        .lastOrNull;
+    final following =
+        sections.where((item) => item.index > section.index).firstOrNull ??
+        sections
+            .where(
+              (item) =>
+                  item.index != section.index &&
+                  item.exercises.any((exercise) => !_isCorrect(exercise)),
+            )
+            .firstOrNull;
 
-    final phase = switch ((_showPractice, pending, following)) {
-      (false, _, _) => _LessonPhase.reading,
-      (true, final LessonExercise _, _) => _LessonPhase.practising,
-      (true, null, final _LessonSection _) => _LessonPhase.sectionPassed,
-      (true, null, null) => _LessonPhase.reflecting,
-    };
+    final feedback = section.exercises
+        .where((exercise) => exercise.id == _feedbackExerciseId)
+        .firstOrNull;
+    final phase = feedback != null
+        ? _LessonPhase.answerChecked
+        : switch ((_showPractice, pending, following)) {
+            (false, _, _) => _LessonPhase.reading,
+            (true, final LessonExercise _, _) => _LessonPhase.practising,
+            (true, null, final _LessonSection _) => _LessonPhase.sectionPassed,
+            (true, null, null) => _LessonPhase.reflecting,
+          };
 
     final total = detail.exercises.length;
     final done = detail.exercises.where(_isCorrect).length;
@@ -172,16 +191,17 @@ class _LessonExperienceScreenState
       sections: sections,
       section: section,
       phase: phase,
-      exercise: phase == _LessonPhase.practising ? pending : null,
-      exerciseNumber: pending == null
+      exercise: feedback ?? (phase == _LessonPhase.practising ? pending : null),
+      exerciseNumber: (feedback ?? pending) == null
           ? 0
-          : detail.exercises.indexWhere((item) => item.id == pending.id) + 1,
+          : detail.exercises.indexOf((feedback ?? pending)!) + 1,
       following: following,
-      previous: previous,
       // With no exercises to count, position in the section list is the only
       // honest measure of progress left.
       progress: total == 0
-          ? sections.indexOf(section) / sections.length
+          ? (phase == _LessonPhase.reflecting
+                ? 1
+                : sections.indexOf(section) / sections.length)
           : done / total,
     );
   }
@@ -218,6 +238,7 @@ class _LessonExperienceScreenState
           'Content: ${detail.description}',
     );
     return CustomScrollView(
+      controller: _scroll,
       slivers: [
         // Navigation and progress stay; the identity block does not. Reading is
         // the one place the product's chrome is supposed to retreat, and a
@@ -227,7 +248,6 @@ class _LessonExperienceScreenState
           delegate: _LessonBarDelegate(
             lessonId: widget.lessonId,
             flow: flow,
-            subject: subject,
             topInset: MediaQuery.paddingOf(context).top,
             // Measured rather than derived from a multiplier: a sliver header
             // must know its extent before it lays out, and a guess at the line
@@ -235,48 +255,42 @@ class _LessonExperienceScreenState
             controlsHeight: _textHeight(
               _StepCounter.styleFor(context),
               // The widest step label this lesson can show.
-              'Section ${flow.sections.length} of ${flow.sections.length}',
+              '${flow.sections.length} / ${flow.sections.length}',
             ),
-            trackLabelHeight: _textHeight(
-              Theme.of(context).textTheme.labelSmall,
-              '100%',
-            ),
-            brightness: Theme.of(context).brightness,
             palette: context.riksa,
             backTooltip: MaterialLocalizations.of(context).backButtonTooltip,
             askAiTooltip: AppLocalizations.of(context)!.aiAskAboutLesson,
             onBack: () => _handleExit(flow),
             onAskAi: onAskAi,
+            onSections: () => _showSections(flow),
           ),
         ),
         SliverToBoxAdapter(
-          child: _LessonIdentity(
-            id: detail.id,
-            title: detail.title,
-            subject: subject,
-          ),
+          child: _LessonIdentity(title: detail.title, subject: subject),
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           sliver: SliverList.list(
             children: [
-              _StepChips(
-                flow: flow,
-                results: _results,
-                onSelect: (index) => setState(() {
-                  _activeSectionIndex = index;
-                  _showPractice = false;
-                }),
-              ),
+              _JourneyStages(phase: flow.phase),
               const SizedBox(height: RiksaSpacing.lg),
-              switch (flow.phase) {
-                _LessonPhase.reading => _contentView(flow),
-                _LessonPhase.practising => _practiceView(detail, flow),
-                _LessonPhase.sectionPassed => _sectionPassedView(
-                  flow.following!,
+              RiksaContentReveal(
+                identity: (
+                  flow.section.index,
+                  flow.phase,
+                  flow.exercise?.id,
+                  _comparedAnswers.contains(flow.exercise?.id),
                 ),
-                _LessonPhase.reflecting => _reflectionView(detail),
-              },
+                child: switch (flow.phase) {
+                  _LessonPhase.reading => _contentView(flow),
+                  _LessonPhase.practising ||
+                  _LessonPhase.answerChecked => _practiceView(detail, flow),
+                  _LessonPhase.sectionPassed => _sectionPassedView(
+                    flow.following!,
+                  ),
+                  _LessonPhase.reflecting => _reflectionView(detail),
+                },
+              ),
               if (flow.phase == _LessonPhase.reading) ...[
                 const SizedBox(height: RiksaSpacing.lg),
                 _AskTutorButton(
@@ -299,49 +313,68 @@ class _LessonExperienceScreenState
     maxLines: 1,
   )..layout()).height;
 
+  void _showSections(_LessonFlow flow) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.lessonSections,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 16),
+              for (final section in flow.sections)
+                ListTile(
+                  key: ValueKey('lesson-step-${section.index}'),
+                  title: Text(section.title),
+                  leading: Text('${flow.sections.indexOf(section) + 1}'),
+                  selected: section.index == flow.section.index,
+                  trailing:
+                      section.exercises.isNotEmpty &&
+                          section.exercises.every(_isCorrect)
+                      ? Icon(Icons.check_rounded, color: context.riksa.jade)
+                      : null,
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _changeStep(() {
+                      _activeSectionIndex = section.index;
+                      _showPractice = false;
+                      _feedbackExerciseId = null;
+                    });
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _contentView(_LessonFlow flow) {
     final section = flow.section;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          flow.isFinalReview
-              ? 'Final Review'
-              : 'Section ${section.index}: ${section.title}',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 620),
+      child: MarkdownBody(
+        key: ValueKey(
+          section.index == 1
+              ? 'lesson-description-markdown'
+              : 'lesson-section-markdown-${section.index}',
         ),
-        const SizedBox(height: RiksaSpacing.xs),
-        Text(
-          flow.isFinalReview
-              ? 'Lesson challenge: apply every idea you have learned.'
-              : 'Read the idea, then prove it in practice.',
-          style: TextStyle(color: context.riksa.inkMuted),
+        data: section.content.trim().isEmpty ? section.title : section.content,
+        selectable: true,
+        softLineBreak: true,
+        styleSheet: _lessonMarkdownStyleSheet(
+          context,
+          hasKhmer: RiksaTypography.containsKhmer(section.content),
         ),
-        if (section.content.trim().isNotEmpty) ...[
-          const SizedBox(height: RiksaSpacing.md),
-          // Reading copy is capped near 68 characters so a wide phone or a
-          // tablet does not stretch the measure past comfortable.
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: MarkdownBody(
-              key: ValueKey(
-                section.index == 1
-                    ? 'lesson-description-markdown'
-                    : 'lesson-section-markdown-${section.index}',
-              ),
-              data: section.content,
-              selectable: true,
-              softLineBreak: true,
-              styleSheet: _lessonMarkdownStyleSheet(
-                context,
-                hasKhmer: RiksaTypography.containsKhmer(section.content),
-              ),
-            ),
-          ),
-        ],
-      ],
+      ),
     );
   }
 
@@ -352,16 +385,17 @@ class _LessonExperienceScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          flow.isFinalReview
-              ? 'Final Review'
-              : 'Section ${section.index} practice',
+          section.title,
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: RiksaSpacing.xxs + 2),
         Text(
-          '${section.exercises.where(_isCorrect).length} of ${section.exercises.length} correct',
+          l10n.lessonResponseProgress(
+            section.exercises.where(_isCorrect).length,
+            section.exercises.length,
+          ),
           style: TextStyle(color: context.riksa.inkMuted),
         ),
         const SizedBox(height: RiksaSpacing.md),
@@ -373,12 +407,21 @@ class _LessonExperienceScreenState
             exercise.id,
             TextEditingController.new,
           ),
+          working: _working.putIfAbsent(exercise.id, TextEditingController.new),
+          showChoices: _comparedAnswers.contains(exercise.id),
+          onEditWorking: () =>
+              _changeStep(() => _comparedAnswers.remove(exercise.id)),
+          feedbackKey: _feedbackAnchor,
           result: _results[exercise.id],
           submitting: _submitting.contains(exercise.id),
           // The answer lives in a controller the action bar reads, so every
           // keystroke and every tapped choice has to reach this state or the
           // bar's "Check answer" would stay dead.
-          onAnswerChanged: () => setState(() {}),
+          onAnswerChanged: () => setState(() {
+            if (_results[exercise.id]?.correct == false) {
+              _results.remove(exercise.id);
+            }
+          }),
         ),
       ],
     );
@@ -387,122 +430,62 @@ class _LessonExperienceScreenState
   Widget _sectionPassedView(_LessonSection next) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      LearningBadge(
-        icon: Icons.check_rounded,
-        foreground: context.riksa.onJade,
-        background: context.riksa.jade,
-        size: 48,
-      ),
+      RiksaSuccessMark(label: l10n.lessonSectionComplete),
       const SizedBox(height: RiksaSpacing.sm),
       Text(
-        'Section complete',
+        l10n.lessonSectionComplete,
         style: Theme.of(
           context,
         ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
       ),
       const SizedBox(height: RiksaSpacing.xxs + 2),
       Text(
-        'Nice work. You are ready for '
-        '${next.index == 4 ? 'the Final Review' : 'Section ${next.index}: ${next.title}'}.',
+        '${l10n.lessonUpNext}: ${next.title}',
         style: TextStyle(color: context.riksa.inkMuted),
       ),
     ],
   );
 
   Widget _reflectionView(LessonDetail detail) {
+    if (detail.state == LessonProgressState.completed) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.lessonCompletionReward,
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 12),
+          Text(l10n.lessonCompletedBody),
+        ],
+      );
+    }
     final palette = context.riksa;
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // The one loud moment of the flow: a single drenched card, no confetti
-        // and no second big number competing with it.
-        Container(
-          padding: const EdgeInsets.all(RiksaSpacing.lg),
-          decoration: BoxDecoration(
-            color: palette.jadeSoft,
-            borderRadius: AppRadii.featureBorder,
-          ),
-          child: Column(
-            children: [
-              LearningBadge(
-                icon: Icons.emoji_events_rounded,
-                foreground: palette.onJade,
-                background: palette.jade,
-                size: 56,
-              ),
-              const SizedBox(height: RiksaSpacing.sm),
-              Text(
-                'Lesson mastered',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: RiksaSpacing.xxs + 2),
-              Text(
-                'You proved every concept and finished the final review.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: palette.inkMuted, fontSize: 14),
-              ),
-              const SizedBox(height: RiksaSpacing.md),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: RiksaSpacing.xs,
-                runSpacing: RiksaSpacing.xs,
-                children: [
-                  LearningPill(
-                    icon: Icons.bolt_rounded,
-                    label: '+${detail.baseXp} XP',
-                    accent: palette.saffron,
-                  ),
-                  LearningPill(
-                    icon: Icons.check_rounded,
-                    label: '${detail.exercises.length} exercises passed',
-                    accent: palette.jade,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: RiksaSpacing.lg),
-        Text(
-          'How was this lesson for you?',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: RiksaSpacing.xxs),
+        Text(l10n.lessonReflectionTitle, style: theme.textTheme.headlineSmall),
+        const SizedBox(height: RiksaSpacing.sm),
         Text(
           detail.reflectionPrompt.trim().isEmpty
-              ? 'Tap your quick reflection:'
+              ? l10n.lessonReflectionBody
               : detail.reflectionPrompt,
-          style: TextStyle(color: palette.inkMuted, fontSize: 13),
+          style: theme.textTheme.bodyLarge?.copyWith(color: palette.inkMuted),
         ),
-        const SizedBox(height: RiksaSpacing.sm),
-        Wrap(
-          spacing: RiksaSpacing.xs,
-          runSpacing: RiksaSpacing.xs,
-          children: _quickReflections
-              .map(
-                (label) => RiksaChoicePill(
-                  label: label,
-                  selected: _selectedQuickReflection == label,
-                  onSelected: (_) =>
-                      setState(() => _selectedQuickReflection = label),
-                ),
-              )
-              .toList(),
-        ),
-        const SizedBox(height: RiksaSpacing.md),
+        const SizedBox(height: RiksaSpacing.lg),
         TextField(
           key: const ValueKey('lesson-reflection'),
           controller: _reflection,
-          minLines: 2,
-          maxLines: 4,
+          style: RiksaTypography.bodyStyleFor(
+            l10n.lessonReflectionHint,
+            theme.textTheme.bodyLarge,
+          ),
+          minLines: 4,
+          maxLines: 8,
+          onChanged: (_) => setState(() {}),
           decoration: InputDecoration(
-            hintText: 'Any personal notes or key takeaways? (optional)',
+            hintText: l10n.lessonReflectionHint,
             hintStyle: TextStyle(color: palette.inkMuted, fontSize: 13),
             alignLabelWithHint: true,
             filled: true,
@@ -517,6 +500,34 @@ class _LessonExperienceScreenState
             ),
           ),
         ),
+        const SizedBox(height: RiksaSpacing.lg),
+        Text(l10n.lessonConfidencePrompt, style: theme.textTheme.titleMedium),
+        const SizedBox(height: RiksaSpacing.sm),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            ChoiceChip(
+              key: const ValueKey('lesson-reflection-confident'),
+              label: Text(l10n.lessonConfident),
+              selected: _needsReview == false,
+              onSelected: (_) => setState(() => _needsReview = false),
+            ),
+            ChoiceChip(
+              key: const ValueKey('lesson-reflection-review'),
+              label: Text(l10n.lessonNeedsReview),
+              selected: _needsReview == true,
+              onSelected: (_) => setState(() => _needsReview = true),
+            ),
+          ],
+        ),
+        if (_reflection.text.trim().isEmpty) ...[
+          const SizedBox(height: 16),
+          Text(
+            l10n.lessonReflectionRequired,
+            style: theme.textTheme.bodySmall?.copyWith(color: palette.inkMuted),
+          ),
+        ],
       ],
     );
   }
@@ -542,32 +553,50 @@ class _LessonExperienceScreenState
         ? ''
         : _answers[flow.exercise!.id]?.text.trim() ?? '';
 
+    final exercise = flow.exercise;
+    final comparing =
+        exercise != null &&
+        exercise.type != LessonExerciseType.text &&
+        !_comparedAnswers.contains(exercise.id);
+    final working = exercise == null
+        ? ''
+        : _working[exercise.id]?.text.trim() ?? '';
     return switch (flow.phase) {
       _LessonPhase.reading => LearningActionBar(
         primaryKey: ValueKey('start-section-${flow.section.index}'),
-        primaryLabel: flow.isFinalReview
-            ? 'Start final review'
-            : 'Practice this section',
+        primaryLabel: flow.section.exercises.any((e) => !_isCorrect(e))
+            ? l10n.lessonTrySection
+            : flow.following == null
+            ? l10n.lessonReflectAction
+            : l10n.continueLabel,
         primaryIcon: Icons.arrow_forward_rounded,
-        onPrimary: () => setState(() => _showPractice = true),
-        backLabel: 'Back',
-        onBack: _stepBack(flow),
+        onPrimary: () => _changeStep(() => _showPractice = true),
       ),
       _LessonPhase.practising => LearningActionBar(
-        primaryKey: const ValueKey('check-answer'),
-        primaryLabel: 'Check answer',
-        busy: _submitting.contains(flow.exercise!.id),
-        onPrimary: answer.isEmpty
+        primaryKey: ValueKey(comparing ? 'compare-answers' : 'check-answer'),
+        primaryLabel: comparing
+            ? l10n.lessonCompareAnswers
+            : l10n.lessonCheckAnswer,
+        busy: _submitting.contains(exercise!.id),
+        onPrimary: comparing
+            ? working.isEmpty
+                  ? null
+                  : () => _changeStep(() => _comparedAnswers.add(exercise.id))
+            : answer.isEmpty
             ? null
-            : () => _submitAnswer(flow.exercise!, flow.section),
-        backLabel: 'Back',
-        onBack: _stepBack(flow),
+            : () => _submitAnswer(exercise, flow.section),
+      ),
+      _LessonPhase.answerChecked => LearningActionBar(
+        primaryKey: const ValueKey('continue-after-answer'),
+        primaryLabel: l10n.continueLabel,
+        primaryIcon: Icons.arrow_forward_rounded,
+        onPrimary: () => _changeStep(() => _feedbackExerciseId = null),
       ),
       _LessonPhase.sectionPassed => LearningActionBar(
         primaryKey: ValueKey('continue-to-section-${flow.following!.index}'),
-        primaryLabel: 'Continue',
+        primaryLabel: l10n.continueReading,
         primaryIcon: Icons.arrow_forward_rounded,
-        onPrimary: () => setState(() {
+        onPrimary: () => _changeStep(() {
           _activeSectionIndex = flow.following!.index;
           _showPractice = false;
         }),
@@ -575,42 +604,30 @@ class _LessonExperienceScreenState
       _LessonPhase.reflecting => LearningActionBar(
         primaryKey: const ValueKey('complete-lesson'),
         primaryLabel: isCompleted
-            ? 'Lesson completed'
-            : 'Claim +${detail.baseXp} XP',
-        primaryIcon: isCompleted ? null : Icons.emoji_events_rounded,
+            ? l10n.lessonRoadmapAction
+            : l10n.lessonSaveReflection,
+        primaryIcon: isCompleted ? null : Icons.check_rounded,
         busy: _completing,
-        onPrimary: isCompleted ? null : () => _complete(detail),
+        onPrimary: isCompleted
+            ? () => context.go(
+                detail.categoryId == null
+                    ? '/learn'
+                    : '/learn/roadmap/${Uri.encodeComponent(detail.categoryId!)}',
+              )
+            : _reflection.text.trim().isEmpty
+            ? null
+            : () => _complete(detail),
       ),
     };
   }
 
-  /// One step back through the flow, falling out of the lesson only when there
-  /// is nothing left to step back to.
-  VoidCallback? _stepBack(_LessonFlow flow) {
-    if (flow.phase == _LessonPhase.practising) {
-      return () => setState(() => _showPractice = false);
-    }
-    final previous = flow.previous;
-    if (previous != null) {
-      return () => setState(() {
-        _activeSectionIndex = previous.index;
-        _showPractice = false;
-      });
-    }
-    // Asked of the Navigator rather than the router: this runs during build,
-    // and a bare widget test has no GoRouter above it.
-    return Navigator.of(context).canPop() ? () => _handleExit(flow) : null;
-  }
-
   bool _hasActiveSessionProgress(_LessonFlow? flow) {
     if (_completing) return false;
-    if (_results.isNotEmpty) return true;
+    if (_working.values.any((c) => c.text.trim().isNotEmpty)) return true;
     if (_answers.values.any((c) => c.text.trim().isNotEmpty)) return true;
     if (_reflection.text.trim().isNotEmpty) return true;
     if (_showPractice) return true;
-    if (flow != null && (flow.section.index > 0 || flow.progress > 0)) {
-      return true;
-    }
+
     return false;
   }
 
@@ -675,12 +692,8 @@ class _LessonExperienceScreenState
           ],
         ),
         content: Text(
-          isKhmer
-              ? 'វឌ្ឍនភាពនៃការអនុវត្តរបស់អ្នកនៅក្នុងវគ្គនេះនឹងមិនត្រូវបានរក្សាទុកទេ។ តើអ្នកពិតជាចង់ចាកចេញមែនទេ?'
-              : 'Your progress in this practice session will not be saved. Are you sure you want to leave?',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: palette.inkMuted,
-          ),
+          l10n.lessonExitBody,
+          style: theme.textTheme.bodyMedium?.copyWith(color: palette.inkMuted),
         ),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
@@ -689,10 +702,7 @@ class _LessonExperienceScreenState
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(
               isKhmer ? 'បន្តរៀន' : 'Keep Learning',
-              style: TextStyle(
-                color: palette.ink,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(color: palette.ink, fontWeight: FontWeight.w600),
             ),
           ),
           FilledButton(
@@ -732,8 +742,22 @@ class _LessonExperienceScreenState
             answer: answer,
           );
       if (mounted) {
-        setState(() => _results[exercise.id] = result);
+        setState(() {
+          _activeSectionIndex = section.index;
+          _results[exercise.id] = result;
+          if (result.correct) _feedbackExerciseId = exercise.id;
+        });
         _soundForAnswer(result, section);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final feedbackContext = _feedbackAnchor.currentContext;
+          if (!mounted || feedbackContext == null) return;
+          Scrollable.ensureVisible(
+            feedbackContext,
+            alignment: 0.3,
+            duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+            curve: RiksaMotion.standardCurve,
+          );
+        });
       }
     } catch (error) {
       if (mounted) _showError(error);
@@ -743,12 +767,23 @@ class _LessonExperienceScreenState
   }
 
   Future<void> _complete(LessonDetail detail) async {
+    if (_completing || _reflection.text.trim().isEmpty) return;
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() => _completing = true);
     try {
       final userNotes = _reflection.text.trim();
-      final reflectionPayload = userNotes.isNotEmpty
-          ? '[$_selectedQuickReflection] $userNotes'
-          : _selectedQuickReflection;
+      final confidence = _needsReview == null
+          ? null
+          : _needsReview!
+          ? l10n.lessonNeedsReview
+          : l10n.lessonConfident;
+      final reflectionPayload = [
+        if (confidence != null) '[$confidence]',
+        userNotes,
+        for (final exercise in detail.exercises)
+          if (_working[exercise.id]?.text.trim().isNotEmpty == true)
+            '${exercise.question}\n${_working[exercise.id]!.text.trim()}',
+      ].join('\n\n');
       final result = await ref
           .read(learningApiProvider)
           .completeLesson(
@@ -771,7 +806,7 @@ class _LessonExperienceScreenState
         final roadmapCategoryId = detail.categoryId;
         final suffix = roadmapCategoryId == null
             ? ''
-            : '?roadmapCategoryId=$roadmapCategoryId';
+            : '?roadmapCategoryId=${Uri.encodeComponent(roadmapCategoryId)}';
         context.go(
           '/learn/completion$suffix',
           extra: {
@@ -779,6 +814,9 @@ class _LessonExperienceScreenState
             'lessonTitle': detail.title,
             'categoryName': detail.categoryName,
             'totalExercises': detail.exercises.length,
+            'reflection': userNotes,
+            'needsReview': _needsReview == true,
+            'lessonId': detail.id,
           },
         );
       }
@@ -817,7 +855,7 @@ class _LessonExperienceScreenState
       for (var index = 0; index < matches.length; index++)
         index + 1: markdown
             .substring(
-              matches[index].start,
+              index == 0 ? 0 : matches[index].start,
               index + 1 < matches.length
                   ? matches[index + 1].start
                   : markdown.length,
@@ -831,7 +869,7 @@ class _LessonExperienceScreenState
         r'^##\s+(.+)$',
         multiLine: true,
       ).firstMatch(markdown)?.group(1)?.trim() ??
-      (index == 4 ? 'Final Review' : 'Practice');
+      l10n.lessonRespond;
 
   int _firstIncompleteSection(List<_LessonSection> sections) =>
       sections
@@ -887,185 +925,142 @@ class _LessonSection {
   final List<LessonExercise> exercises;
 }
 
-// -----------------------------------------------------------------------------
-// The drenched header
-// -----------------------------------------------------------------------------
-
-/// The one pastel-filled surface on this screen.
-///
-/// It is fixed above the scrolling sheet so the progress track and the step
-/// counter stay readable no matter how long the lesson's reading runs, which is
-/// the whole reason a lesson does not simply scroll from title to reflection.
-/// The part of the header that never leaves: back, step, tutor, progress.
-///
-/// Height is fixed rather than shrinking, because a header that interpolates
-/// its own extent has to guess how many lines a Khmer title will take. Letting
-/// the identity block scroll away underneath a constant bar gives the same
-/// reclaimed reading space with none of that measurement.
 class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
   const _LessonBarDelegate({
     required this.lessonId,
     required this.flow,
-    required this.subject,
     required this.topInset,
     required this.controlsHeight,
-    required this.trackLabelHeight,
-    required this.brightness,
     required this.palette,
     required this.backTooltip,
     required this.askAiTooltip,
     required this.onBack,
     required this.onAskAi,
+    required this.onSections,
   });
-
-  final String lessonId;
+  final String lessonId, backTooltip, askAiTooltip;
   final _LessonFlow flow;
-  final String subject;
-  final double topInset;
-
-  /// Height of the step label, before the pill's own padding.
-  final double controlsHeight;
-
-  /// Height of the percentage beside the track.
-  final double trackLabelHeight;
-
-  final Brightness brightness;
+  final double topInset, controlsHeight;
   final RiksaPalette palette;
-  final String backTooltip;
-  final String askAiTooltip;
-  final VoidCallback onBack;
-  final VoidCallback onAskAi;
+  final VoidCallback onBack, onAskAi, onSections;
 
-  static const _rowGap = 12.0;
-  static const _trackHeight = 8.0;
-
-  /// The controls row never drops below a 44dp touch target, and grows past it
-  /// only when the step pill's own text needs the room.
-  double get _rowHeight => math.max(44, controlsHeight + _StepCounter.padding);
-
-  double get _trackRowHeight => math.max(_trackHeight, trackLabelHeight);
-
-  double get _extent =>
-      topInset + 4 + _rowHeight + _rowGap + _trackRowHeight + _rowGap;
-
+  double get _rowHeight => math.max(48, controlsHeight + 16);
   @override
-  double get maxExtent => _extent;
-
+  double get maxExtent => topInset + _rowHeight + 16;
   @override
-  double get minExtent => _extent;
+  double get minExtent => maxExtent;
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlaps) {
-    final tone = subjectTone(context, stemSubjectFor(subject));
-    final percent = (flow.progress.clamp(0, 1) * 100).round();
+    final l10n = AppLocalizations.of(context)!;
+    final position = flow.sections.indexOf(flow.section) + 1;
     return ColoredBox(
-      color: tone.surface,
+      color: palette.canvas,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(20, topInset + 4, 20, _rowGap),
+        padding: EdgeInsets.fromLTRB(20, topInset, 20, 8),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
               height: _rowHeight,
-              child: NavigationToolbar(
-                leading: LearningCircleButton(
-                  icon: Icons.arrow_back_rounded,
-                  tooltip: backTooltip,
-                  onTap: onBack,
-                ),
-                middle: _StepCounter(flow: flow, accent: tone.accent),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final isSaved =
-                            ref.watch(savedLessonsProvider).contains(lessonId);
-                        final isKhmer =
-                            Localizations.localeOf(context).languageCode == 'km';
-                        final tooltip = isSaved
-                            ? (isKhmer ? 'ដកចេញពីមេរៀនរក្សាទុក' : 'Remove from saved')
-                            : (isKhmer ? 'រក្សាទុកមេរៀន' : 'Save lesson');
-                        return LearningCircleButton(
-                          key: const ValueKey('lesson-bookmark-toggle'),
-                          icon: isSaved
-                              ? Icons.bookmark_rounded
-                              : Icons.bookmark_border_rounded,
-                          tooltip: tooltip,
-                          foreground: isSaved
-                              ? tone.accent
-                              : palette.ink.withValues(alpha: 0.45),
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            ref.read(savedLessonsProvider.notifier).toggle(lessonId);
-                          },
-                        );
-                      },
+              child: Row(
+                children: [
+                  LearningCircleButton(
+                    icon: Icons.arrow_back_rounded,
+                    tooltip: backTooltip,
+                    onTap: onBack,
+                  ),
+                  Expanded(
+                    child: TextButton(
+                      key: const ValueKey('lesson-sections'),
+                      onPressed: onSections,
+                      child: Semantics(
+                        label: l10n.lessonSectionCounter(
+                          position,
+                          flow.sections.length,
+                        ),
+                        excludeSemantics: true,
+                        child: Text(
+                          '$position / ${flow.sections.length}',
+                          style: _StepCounter.styleFor(context),
+                        ),
+                      ),
                     ),
-                    const SizedBox(width: 6),
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final soundEnabled = ref.watch(soundEnabledProvider);
-                        final isKhmer =
-                            Localizations.localeOf(context).languageCode == 'km';
-                        final soundTooltip = soundEnabled
-                            ? (isKhmer ? 'បិទសំឡេង' : 'Mute sound')
-                            : (isKhmer ? 'បើកសំឡេង' : 'Unmute sound');
-                        return LearningCircleButton(
-                          key: const ValueKey('lesson-sound-toggle'),
-                          icon: soundEnabled
-                              ? Icons.volume_up_rounded
-                              : Icons.volume_off_rounded,
-                          tooltip: soundTooltip,
-                          foreground: soundEnabled
-                              ? tone.accent
-                              : palette.ink.withValues(alpha: 0.45),
-                          onTap: () {
-                            HapticFeedback.selectionClick();
+                  ),
+                  LearningCircleButton(
+                    key: const ValueKey('lesson-ask-ai'),
+                    icon: Icons.auto_awesome_rounded,
+                    tooltip: askAiTooltip,
+                    onTap: onAskAi,
+                  ),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final saved = ref
+                          .watch(savedLessonsProvider)
+                          .contains(lessonId);
+                      final sound = ref.watch(soundEnabledProvider);
+                      return PopupMenuButton<String>(
+                        key: const ValueKey('lesson-options'),
+                        tooltip: l10n.lessonOptions,
+                        icon: const Icon(Icons.more_horiz_rounded),
+                        onSelected: (value) {
+                          if (value == 'save') {
+                            ref
+                                .read(savedLessonsProvider.notifier)
+                                .toggle(lessonId);
+                          }
+                          if (value == 'sound') {
                             ref.read(soundEnabledProvider.notifier).toggle();
-                          },
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 6),
-                    LearningCircleButton(
-                      key: const ValueKey('lesson-ask-ai'),
-                      icon: Icons.auto_awesome_rounded,
-                      tooltip: askAiTooltip,
-                      onTap: onAskAi,
-                      foreground: tone.accent,
-                    ),
-                  ],
-                ),
-                centerMiddle: true,
+                          }
+                        },
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'save',
+                            key: const ValueKey('lesson-bookmark-toggle'),
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Icon(
+                                saved
+                                    ? Icons.bookmark_rounded
+                                    : Icons.bookmark_border_rounded,
+                              ),
+                              title: Text(
+                                saved ? l10n.lessonUnsave : l10n.lessonSave,
+                              ),
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'sound',
+                            key: const ValueKey('lesson-sound-toggle'),
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Icon(
+                                sound
+                                    ? Icons.volume_up_rounded
+                                    : Icons.volume_off_rounded,
+                              ),
+                              title: Text(
+                                sound ? l10n.lessonMute : l10n.lessonUnmute,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: _rowGap),
-            Row(
-              children: [
-                Expanded(
-                  child: Semantics(
-                    label: 'Lesson progress $percent%',
-                    excludeSemantics: true,
-                    child: LearningTrack(
-                      key: const ValueKey('lesson-progress-track'),
-                      value: flow.progress,
-                      color: palette.ink,
-                      background: tone.accent.withValues(alpha: .25),
-                      height: _trackHeight,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: RiksaSpacing.sm),
-                RiksaCountUp(
-                  value: percent,
-                  format: (value) => '$value%',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: palette.ink,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 4),
+            Semantics(
+              label: l10n.lessonSectionCounter(position, flow.sections.length),
+              value: '${(flow.progress * 100).round()}%',
+              child: LearningTrack(
+                key: const ValueKey('lesson-progress-track'),
+                value: flow.progress,
+                color: palette.jade,
+                background: palette.surfaceRaised,
+                height: 4,
+              ),
             ),
           ],
         ),
@@ -1074,229 +1069,84 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  bool shouldRebuild(covariant _LessonBarDelegate oldDelegate) =>
-      oldDelegate.flow.progress != flow.progress ||
-      oldDelegate.flow.section.index != flow.section.index ||
-      oldDelegate.flow.phase != flow.phase ||
-      oldDelegate.subject != subject ||
-      oldDelegate.topInset != topInset ||
-      oldDelegate.controlsHeight != controlsHeight ||
-      oldDelegate.trackLabelHeight != trackLabelHeight ||
-      oldDelegate.brightness != brightness ||
-      oldDelegate.palette != palette;
+  bool shouldRebuild(covariant _LessonBarDelegate oldDelegate) => true;
 }
 
-/// Subject mark, subject name and lesson title, on the same pastel as the bar.
-///
-/// This is what the learner trades away for reading room: it scrolls up behind
-/// the bar, so the pastel region shrinks to the bar and the rounded bottom edge
-/// travels with it.
 class _LessonIdentity extends StatelessWidget {
-  const _LessonIdentity({
-    required this.id,
-    required this.title,
-    required this.subject,
-  });
-
-  final String id;
-  final String title;
-  final String subject;
-
+  const _LessonIdentity({required this.title, required this.subject});
+  final String title, subject;
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tone = subjectTone(context, stemSubjectFor(subject));
-
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(
-        bottom: Radius.circular(AppRadii.feature + 2),
-      ),
-      child: ColoredBox(
-        color: tone.surface,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, RiksaSpacing.lg),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              RiksaSharedElement(
-                tag: 'lesson-art-$id',
-                child: SubjectArtwork(
-                  kind: subjectKindFor(subject),
-                  color: tone.accent,
-                  size: 44,
-                ),
-              ),
-              const SizedBox(width: RiksaSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      subject.toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: tone.accent,
-                        letterSpacing: .7,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: RiksaSpacing.xxs - 2),
-                    Text(
-                      title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: RiksaTypography.titleStyleFor(
-                        title,
-                        theme.textTheme.headlineMedium?.copyWith(
-                          fontSize: 24,
-                          height: 1.15,
-                          letterSpacing: -.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        khmerHeight: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          subject,
+          style: RiksaTypography.bodyStyleFor(
+            subject,
+            Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: context.riksa.inkMuted),
           ),
         ),
-      ),
-    );
-  }
+        const SizedBox(height: 4),
+        Text(
+          title,
+          style: RiksaTypography.titleStyleFor(
+            title,
+            Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
-/// Where the learner is, in the position the inspiration gives a stopwatch.
-///
-/// A clock would push speed on a screen whose whole point is reading and
-/// reflecting, so the same slot carries the step instead.
-class _StepCounter extends StatelessWidget {
-  const _StepCounter({required this.flow, required this.accent});
-
-  final _LessonFlow flow;
-  final Color accent;
-
-  /// Vertical padding the pill adds around its label. The header measures the
-  /// label itself and adds this to reserve the row.
-  static const padding = RiksaSpacing.xs * 2;
-
+class _StepCounter {
   static TextStyle styleFor(BuildContext context) => TextStyle(
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: FontWeight.w600,
     color: context.riksa.ink,
   );
-
-  @override
-  Widget build(BuildContext context) {
-    final position = flow.sections.indexOf(flow.section) + 1;
-    final label = flow.isFinalReview
-        ? 'Final review'
-        : 'Section $position of ${flow.sections.length}';
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: RiksaSpacing.md,
-        vertical: RiksaSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: context.riksa.surface,
-        borderRadius: AppRadii.fullBorder,
-      ),
-      child: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: styleFor(context),
-      ),
-    );
-  }
 }
 
-/// The sections as a row of tappable pills.
-///
-/// This replaces a row of anonymous progress segments: a learner can now see
-/// which section they are in, which ones are banked, and jump back to reread
-/// one without losing their place in the current one.
-class _StepChips extends StatelessWidget {
-  const _StepChips({
-    required this.flow,
-    required this.results,
-    required this.onSelect,
-  });
-
-  final _LessonFlow flow;
-  final Map<String, LessonAnswerResult> results;
-  final ValueChanged<int> onSelect;
-
+class _JourneyStages extends StatelessWidget {
+  const _JourneyStages({required this.phase});
+  final _LessonPhase phase;
   @override
   Widget build(BuildContext context) {
-    final palette = context.riksa;
-    final anchor = learningAnchor(context);
-    return SizedBox(
-      height: 38,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.zero,
-        itemCount: flow.sections.length,
-        separatorBuilder: (_, _) => const SizedBox(width: RiksaSpacing.xs),
-        itemBuilder: (context, position) {
-          final section = flow.sections[position];
-          final active = section.index == flow.section.index;
-          final done =
-              section.exercises.isNotEmpty &&
-              section.exercises.every(
-                (exercise) => results[exercise.id]?.correct == true,
-              );
-          final label = section.index == 4
-              ? 'Final review'
-              : 'Section ${position + 1}';
-
-          final background = active
-              ? anchor
-              : done
-              ? palette.jadeSoft
-              : palette.surface;
-          final foreground = active
-              ? onLearningAnchor(context)
-              : done
-              ? palette.jade
-              : palette.inkMuted;
-
-          return Material(
-            color: background,
-            shape: const StadiumBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              key: ValueKey('lesson-step-${section.index}'),
-              onTap: active ? null : () => onSelect(section.index),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: RiksaSpacing.md,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (done && !active) ...[
-                      Icon(Icons.check_rounded, size: 14, color: foreground),
-                      const SizedBox(width: RiksaSpacing.xxs + 2),
-                    ],
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: foreground,
-                      ),
-                    ),
-                  ],
+    final l10n = AppLocalizations.of(context)!;
+    final active = switch (phase) {
+      _LessonPhase.reading => 0,
+      _LessonPhase.reflecting => 2,
+      _ => 1,
+    };
+    final labels = [l10n.lessonRead, l10n.lessonRespond, l10n.lessonReflect];
+    return Wrap(
+      spacing: 16,
+      runSpacing: 8,
+      children: [
+        for (var i = 0; i < labels.length; i++)
+          Semantics(
+            selected: i == active,
+            child: Text(
+              '${i + 1}  ${labels[i]}',
+              style: RiksaTypography.bodyStyleFor(
+                labels[i],
+                TextStyle(
+                  fontSize: 12,
+                  fontWeight: i == active ? FontWeight.w700 : FontWeight.w400,
+                  color: i == active
+                      ? context.riksa.ink
+                      : context.riksa.inkMuted,
                 ),
               ),
             ),
-          );
-        },
-      ),
+          ),
+      ],
     );
   }
 }
@@ -1319,6 +1169,10 @@ class _ExerciseCard extends StatelessWidget {
     required this.result,
     required this.submitting,
     required this.onAnswerChanged,
+    required this.working,
+    required this.showChoices,
+    required this.onEditWorking,
+    required this.feedbackKey,
   });
   final int number;
   final LessonExercise exercise;
@@ -1327,6 +1181,10 @@ class _ExerciseCard extends StatelessWidget {
   final LessonAnswerResult? result;
   final bool submitting;
   final VoidCallback onAnswerChanged;
+  final TextEditingController working;
+  final bool showChoices;
+  final VoidCallback onEditWorking;
+  final Key feedbackKey;
 
   void _askAiHint(BuildContext context) {
     final optionsText = exercise.options.isNotEmpty
@@ -1362,6 +1220,7 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
   @override
   Widget build(BuildContext context) {
     final palette = context.riksa;
+    final l10n = AppLocalizations.of(context)!;
     final correct = result?.correct == true;
     final incorrect = result != null && !correct;
     return Container(
@@ -1377,19 +1236,10 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
           Row(
             children: [
               Text(
-                'Exercise $number',
+                l10n.lessonExerciseNumber(number),
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   color: palette.ink,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '+${exercise.points} XP',
-                style: TextStyle(
-                  color: palette.saffron,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -1402,14 +1252,39 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
             ).copyWith(p: Theme.of(context).textTheme.bodyLarge),
           ),
           const SizedBox(height: RiksaSpacing.md),
-          if (exercise.type == LessonExerciseType.text)
+          if (exercise.type != LessonExerciseType.text && !showChoices) ...[
+            Text(
+              l10n.lessonWorkFirst,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
             TextField(
+              key: ValueKey('lesson-working-${exercise.id}'),
+              controller: working,
+              style: RiksaTypography.bodyStyleFor(
+                l10n.lessonWorkHint,
+                Theme.of(context).textTheme.bodyLarge,
+              ),
+              minLines: 3,
+              maxLines: 6,
+              onChanged: (_) => onAnswerChanged(),
+              decoration: InputDecoration(
+                hintText: l10n.lessonWorkHint,
+                filled: true,
+                fillColor: palette.surfaceRaised,
+              ),
+            ),
+          ] else if (exercise.type == LessonExerciseType.text)
+            TextField(
+              key: ValueKey('lesson-answer-${exercise.id}'),
+              minLines: 2,
+              maxLines: 6,
               controller: controller,
               enabled: !correct && !submitting,
               textInputAction: TextInputAction.done,
               onChanged: (_) => onAnswerChanged(),
               decoration: InputDecoration(
-                hintText: 'Your answer',
+                hintText: l10n.lessonAnswerHint,
                 filled: true,
                 fillColor: palette.surfaceRaised,
                 border: OutlineInputBorder(
@@ -1422,7 +1297,32 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
                 ),
               ),
             )
-          else
+          else ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _Feedback(
+                    label: l10n.lessonYourWork,
+                    text: working.text,
+                  ),
+                ),
+                if (!correct)
+                  IconButton(
+                    key: ValueKey('lesson-edit-working-${exercise.id}'),
+                    tooltip: l10n.lessonEditWorking,
+                    onPressed: onEditWorking,
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (!correct)
+              Text(
+                l10n.lessonChooseAnswer,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            const SizedBox(height: 12),
             _ChoiceAnswers(
               exercise: exercise,
               controller: controller,
@@ -1430,6 +1330,7 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
               result: result,
               onChanged: onAnswerChanged,
             ),
+          ],
           if (!correct) ...[
             const SizedBox(height: RiksaSpacing.sm),
             Align(
@@ -1438,7 +1339,7 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
                 key: const ValueKey('lesson-ai-hint'),
                 onPressed: () => _askAiHint(context),
                 icon: const Icon(Icons.lightbulb_outline_rounded, size: 18),
-                label: const Text('AI hint'),
+                label: Text(l10n.lessonAiHint),
                 style: TextButton.styleFrom(
                   foregroundColor: palette.inkMuted,
                   padding: const EdgeInsets.symmetric(
@@ -1451,21 +1352,47 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
           ],
           if (result != null) ...[
             const SizedBox(height: RiksaSpacing.sm),
-            Text(
-              result!.message,
-              style: TextStyle(
-                color: correct
-                    ? palette.jade
-                    : Theme.of(context).colorScheme.error,
-                fontWeight: FontWeight.w700,
+            Semantics(
+              key: feedbackKey,
+              liveRegion: true,
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: correct ? palette.jadeSoft : palette.creamSoft,
+                  borderRadius: AppRadii.largeBorder,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      correct
+                          ? Icons.check_circle_rounded
+                          : Icons.lightbulb_outline_rounded,
+                      color: correct ? palette.jade : palette.saffron,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        correct
+                            ? l10n.lessonAnswerSuccess
+                            : l10n.lessonAnswerRetry,
+                        style: RiksaTypography.bodyStyleFor(
+                          correct
+                              ? l10n.lessonAnswerSuccess
+                              : l10n.lessonAnswerRetry,
+                          Theme.of(context).textTheme.titleSmall,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            if (correct)
-              Text(
-                'This counts toward +${exercise.points} lesson XP when you '
-                'complete the lesson.',
-                style: TextStyle(color: palette.inkMuted, fontSize: 12),
-              ),
+            if (result!.message.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(result!.message, style: TextStyle(color: palette.inkMuted)),
+            ],
             if (incorrect) ...[
               const SizedBox(height: RiksaSpacing.xs),
               Align(
@@ -1473,21 +1400,24 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
                 child: FilledButton.tonalIcon(
                   onPressed: () => _explainErrorWithAi(context),
                   icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                  label: const Text('Explain with AI'),
+                  label: Text(l10n.lessonExplainAnswer),
                   style: FilledButton.styleFrom(shape: const StadiumBorder()),
                 ),
               ),
             ],
             if (incorrect &&
                 (result!.hint ?? exercise.hint)?.trim().isNotEmpty == true)
-              _Feedback(label: 'Hint', text: result!.hint ?? exercise.hint!),
+              _Feedback(
+                label: l10n.lessonHint,
+                text: result!.hint ?? exercise.hint!,
+              ),
             if ((incorrect || correct) &&
                 (result!.explanation ?? exercise.explanation)
                         ?.trim()
                         .isNotEmpty ==
                     true)
               _Feedback(
-                label: 'Why',
+                label: l10n.lessonWhy,
                 text: result!.explanation ?? exercise.explanation!,
               ),
           ],
@@ -1595,24 +1525,26 @@ class _ChoiceAnswersState extends State<_ChoiceAnswers> {
       }
     }
 
-    return Material(
-      color: background,
-      borderRadius: AppRadii.largeBorder,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        key: ValueKey('lesson-option-$index'),
-        onTap: widget.enabled
-            ? () {
-                setState(() => widget.controller.text = option);
-                widget.onChanged();
-              }
-            : null,
-        child: AnimatedPadding(
-          duration: RiksaMotion.resolve(context, RiksaMotion.fast),
-          padding: const EdgeInsets.symmetric(
-            horizontal: RiksaSpacing.md - 2,
-            vertical: RiksaSpacing.sm + 2,
-          ),
+    return RiksaTapFeedback(
+      enabled: widget.enabled,
+      child: Material(
+        color: background,
+        borderRadius: AppRadii.largeBorder,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: ValueKey('lesson-option-$index'),
+          onTap: widget.enabled
+              ? () {
+                  setState(() => widget.controller.text = option);
+                  widget.onChanged();
+                }
+              : null,
+          child: AnimatedPadding(
+            duration: RiksaMotion.resolve(context, RiksaMotion.fast),
+            padding: const EdgeInsets.symmetric(
+              horizontal: RiksaSpacing.md - 2,
+              vertical: RiksaSpacing.sm + 2,
+            ),
           child: Row(
             children: [
               Container(
@@ -1652,8 +1584,9 @@ class _ChoiceAnswersState extends State<_ChoiceAnswers> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _Feedback extends StatelessWidget {
@@ -1724,7 +1657,6 @@ String _friendlyLessonError(Object error) {
 
 extension<T> on Iterable<T> {
   T? get firstOrNull => isEmpty ? null : first;
-  T? get lastOrNull => isEmpty ? null : last;
 }
 
 MarkdownStyleSheet _lessonMarkdownStyleSheet(

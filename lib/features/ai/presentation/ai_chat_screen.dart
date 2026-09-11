@@ -288,22 +288,63 @@ class _Opener extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
+
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(RiksaSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.auto_awesome, size: 28, color: context.riksa.jade),
-            const SizedBox(height: RiksaSpacing.sm),
+            // Sparkling Study Coach Mascot Badge
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: context.riksa.jadeSoft,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: context.riksa.jade.withValues(alpha: 0.35),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: context.riksa.jade.withValues(alpha: 0.18),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.auto_awesome_rounded,
+                size: 32,
+                color: context.riksa.jade,
+              ),
+            ),
+            const SizedBox(height: RiksaSpacing.md),
             Text(
               lesson == null || lesson!.isEmpty
                   ? l10n.aiChatOpener
                   : l10n.aiLessonContext(lesson!),
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -.3,
+              ),
             ),
-            const SizedBox(height: RiksaSpacing.md),
+            const SizedBox(height: 6),
+            Text(
+              isKhmer
+                  ? 'សួរអំពីទ្រឹស្តី លំហាត់ ឬការអនុវត្ត — Sora នឹងជួយពន្យល់មួយជំហានម្តងៗ ✨'
+                  : 'Ask about concepts, formulas, or tricky problems — Sora is here to guide you step by step ✨',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: context.riksa.inkMuted,
+                fontSize: 12.5,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: RiksaSpacing.lg),
             AiStarterPrompts(onSelected: onSelected),
           ],
         ),
@@ -368,13 +409,16 @@ class _Composer extends StatelessWidget {
             ),
           ),
           const SizedBox(width: RiksaSpacing.xs),
-          IconButton.filled(
-            key: const ValueKey('send-ai-message'),
-            tooltip: l10n.aiSendMessage,
-            onPressed: enabled ? onSend : null,
-            iconSize: 22,
-            style: IconButton.styleFrom(minimumSize: const Size.square(48)),
-            icon: const Icon(Icons.arrow_upward_rounded),
+          RiksaTapFeedback(
+            enabled: enabled,
+            child: IconButton.filled(
+              key: const ValueKey('send-ai-message'),
+              tooltip: l10n.aiSendMessage,
+              onPressed: enabled ? onSend : null,
+              iconSize: 22,
+              style: IconButton.styleFrom(minimumSize: const Size.square(48)),
+              icon: const Icon(Icons.arrow_upward_rounded),
+            ),
           ),
         ],
       ),
@@ -415,20 +459,22 @@ class _QuickPromptsBar extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: RiksaSpacing.xs),
         itemBuilder: (context, index) {
           final prompt = prompts[index];
-          return ActionChip(
-            key: ValueKey('ai-quick-chip-$prompt'),
-            avatar: Icon(
-              Icons.auto_awesome,
-              size: 13,
-              color: context.riksa.jade,
+          return RiksaTapFeedback(
+            child: ActionChip(
+              key: ValueKey('ai-quick-chip-$prompt'),
+              avatar: Icon(
+                Icons.auto_awesome,
+                size: 13,
+                color: context.riksa.jade,
+              ),
+              label: Text(
+                prompt,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              visualDensity: VisualDensity.compact,
+              onPressed: () => onSelected(prompt),
             ),
-            label: Text(
-              prompt,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            visualDensity: VisualDensity.compact,
-            onPressed: () => onSelected(prompt),
           );
         },
       ),

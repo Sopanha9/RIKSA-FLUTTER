@@ -327,10 +327,12 @@ class AiStarterPrompts extends StatelessWidget {
       alignment: WrapAlignment.center,
       children: [
         for (final prompt in items)
-          ActionChip(
-            key: ValueKey('ai-starter-$prompt'),
-            label: Text(prompt),
-            onPressed: () => onSelected(prompt),
+          RiksaTapFeedback(
+            child: ActionChip(
+              key: ValueKey('ai-starter-$prompt'),
+              label: Text(prompt),
+              onPressed: () => onSelected(prompt),
+            ),
           ),
       ],
     );

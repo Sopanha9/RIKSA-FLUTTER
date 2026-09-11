@@ -170,6 +170,39 @@ Restraint still applies. Animate the learner's own numbers, not everyone's: six
 XP counters ticking at once is the gamified noise the product sets itself
 against.
 
+## Interaction and personality
+
+**Respond on contact.** Primary learning buttons, icon controls and tappable
+cards use `RiksaTapFeedback`: a 100ms press to 97% scale, released on lift,
+cancel or scroll. The native button retains keyboard activation, ripple and
+semantics. Disabled and busy actions do not react or submit again.
+
+**Show the handoff.** Desktop navigation uses a 240ms fade and small lift; mobile keeps native
+iOS swipe-back and Android predictive back. Lesson steps use `RiksaContentReveal` for a 200ms
+arrival. Animate only a new step, never each keystroke; preserve field focus,
+selection and scroll state. Do not keep an outgoing interactive copy of a form.
+
+**Make the outcome clear.** An in-flight primary action keeps its accent color
+and shows a short localized status beside its spinner. Feedback includes an
+icon and words, not color alone. A confirmed completion draws one checkmark
+and counts the earned XP once. Never delay a result to make an animation last.
+Reduced motion removes movement and uses a static loading indicator.
+
+**Give empty states a useful personality.** The illustration is a small open
+book with a tucked-in pink bookmark and two ink sparkles. It arrives once;
+it does not bounce while someone reads. A warm title names the opportunity,
+body copy explains the next step, and one button helps the student take it.
+Failures describe what happened and offer recovery without blaming the learner.
+Keep Khmer and English equally natural.
+
+**Hierarchy comes before decoration.** Use a bold lesson or section title,
+medium-weight action labels and regular reading copy with generous leading.
+Aubergine in light mode and pink in dark mode mark the primary action; jade
+marks confirmed progress. Give these elements room instead of filling every
+gap with another card. Riksa's pastel blocks, book artwork and STEM content
+are the concrete visual references. When borrowing an external reference,
+record the specific typography, spacing or motion behavior being adopted.
+
 ## Component conventions
 
 - Shared widgets live in [riksa_components.dart](lib/core/widgets/riksa_components.dart).

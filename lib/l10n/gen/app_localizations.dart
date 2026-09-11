@@ -1442,6 +1442,42 @@ abstract class AppLocalizations {
   /// **'Your subjects'**
   String get yourSubjects;
 
+  /// No description provided for @mathematicsSubjectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Build confidence with numbers and problem solving'**
+  String get mathematicsSubjectDescription;
+
+  /// No description provided for @physicsSubjectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Understand motion, forces, and the universe'**
+  String get physicsSubjectDescription;
+
+  /// No description provided for @chemistrySubjectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover matter, reactions, and change'**
+  String get chemistrySubjectDescription;
+
+  /// No description provided for @biologySubjectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore living systems and life science'**
+  String get biologySubjectDescription;
+
+  /// No description provided for @technologySubjectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice computing and digital technology'**
+  String get technologySubjectDescription;
+
+  /// No description provided for @generalSubjectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore this subject and its lessons'**
+  String get generalSubjectDescription;
+
   /// No description provided for @continueReading.
   ///
   /// In en, this message translates to:
@@ -2383,6 +2419,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open your Riksa bot conversation to find the latest code. If it has expired, request a new one.'**
   String get otpDeliveryHelp;
+
+  /// No description provided for @lessonRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get lessonRead;
+
+  /// No description provided for @lessonRespond.
+  ///
+  /// In en, this message translates to:
+  /// **'Respond'**
+  String get lessonRespond;
+
+  /// No description provided for @lessonReflect.
+  ///
+  /// In en, this message translates to:
+  /// **'Reflect'**
+  String get lessonReflect;
+
+  /// No description provided for @lessonSectionCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Section {current} of {total}'**
+  String lessonSectionCounter(int current, int total);
+
+  /// No description provided for @lessonTrySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Try it yourself'**
+  String get lessonTrySection;
+
+  /// No description provided for @lessonReflectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Reflect on this lesson'**
+  String get lessonReflectAction;
+
+  /// No description provided for @lessonCheckAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Check answer'**
+  String get lessonCheckAnswer;
+
+  /// No description provided for @lessonCompareAnswers.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare answers'**
+  String get lessonCompareAnswers;
+
+  /// No description provided for @lessonWorkFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Work it out first'**
+  String get lessonWorkFirst;
+
+  /// No description provided for @lessonWorkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your answer and how you got there. Then compare it with the choices.'**
+  String get lessonWorkHint;
+
+  /// No description provided for @lessonAnswerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your answer'**
+  String get lessonAnswerHint;
+
+  /// No description provided for @lessonYourWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Your working'**
+  String get lessonYourWork;
+
+  /// No description provided for @lessonChooseAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare your working and choose an answer.'**
+  String get lessonChooseAnswer;
+
+  /// No description provided for @lessonExerciseNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise {number}'**
+  String lessonExerciseNumber(int number);
+
+  /// No description provided for @lessonResponseProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} responses checked'**
+  String lessonResponseProgress(int done, int total);
+
+  /// No description provided for @lessonSectionComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Section complete'**
+  String get lessonSectionComplete;
+
+  /// No description provided for @lessonUpNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Up next'**
+  String get lessonUpNext;
+
+  /// No description provided for @lessonReflectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What will you take away?'**
+  String get lessonReflectionTitle;
+
+  /// No description provided for @lessonReflectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Put one idea into your own words. Note anything you want to revisit.'**
+  String get lessonReflectionBody;
+
+  /// No description provided for @lessonReflectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'I understood… I still want to work on…'**
+  String get lessonReflectionHint;
+
+  /// No description provided for @lessonConfidencePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you feel about this lesson?'**
+  String get lessonConfidencePrompt;
+
+  /// No description provided for @lessonConfident.
+  ///
+  /// In en, this message translates to:
+  /// **'I can explain it'**
+  String get lessonConfident;
+
+  /// No description provided for @lessonNeedsReview.
+  ///
+  /// In en, this message translates to:
+  /// **'I want to revisit it'**
+  String get lessonNeedsReview;
+
+  /// No description provided for @lessonSaveReflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and finish'**
+  String get lessonSaveReflection;
+
+  /// No description provided for @lessonReflectionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a short reflection to finish this lesson.'**
+  String get lessonReflectionRequired;
+
+  /// No description provided for @lessonSavedReflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Your reflection'**
+  String get lessonSavedReflection;
+
+  /// No description provided for @lessonCompletedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'One more step through your syllabus. Take a break or continue when you are ready.'**
+  String get lessonCompletedBody;
+
+  /// No description provided for @lessonRevisitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Worth another look'**
+  String get lessonRevisitTitle;
+
+  /// No description provided for @lessonRevisitBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You marked this lesson for another look. You can reopen it from your roadmap.'**
+  String get lessonRevisitBody;
+
+  /// No description provided for @lessonNextAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start next lesson'**
+  String get lessonNextAction;
+
+  /// No description provided for @lessonRoadmapAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to roadmap'**
+  String get lessonRoadmapAction;
+
+  /// No description provided for @lessonFinishSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish for now'**
+  String get lessonFinishSession;
+
+  /// No description provided for @lessonResumeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume lesson'**
+  String get lessonResumeAction;
+
+  /// No description provided for @lessonStartAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start lesson'**
+  String get lessonStartAction;
+
+  /// No description provided for @lessonOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson options'**
+  String get lessonOptions;
+
+  /// No description provided for @lessonSections.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson sections'**
+  String get lessonSections;
+
+  /// No description provided for @lessonSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save lesson'**
+  String get lessonSave;
+
+  /// No description provided for @lessonUnsave.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from saved'**
+  String get lessonUnsave;
+
+  /// No description provided for @lessonMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute sound'**
+  String get lessonMute;
+
+  /// No description provided for @lessonUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute sound'**
+  String get lessonUnmute;
+
+  /// No description provided for @lessonExitBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked answers are saved. Your unfinished writing will be lost if you leave.'**
+  String get lessonExitBody;
+
+  /// No description provided for @lessonAiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a hint'**
+  String get lessonAiHint;
+
+  /// No description provided for @lessonExplainAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain with AI'**
+  String get lessonExplainAnswer;
+
+  /// No description provided for @lessonWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Explanation'**
+  String get lessonWhy;
+
+  /// No description provided for @lessonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hint'**
+  String get lessonHint;
+
+  /// No description provided for @lessonEditWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit working'**
+  String get lessonEditWorking;
+
+  /// No description provided for @lessonWorkingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'One moment…'**
+  String get lessonWorkingStatus;
+
+  /// No description provided for @lessonAnswerSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'That’s it. Keep going when you’re ready.'**
+  String get lessonAnswerSuccess;
+
+  /// No description provided for @lessonAnswerRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite yet. Try another approach.'**
+  String get lessonAnswerRetry;
+
+  /// No description provided for @learningLoadErrorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your lessons couldn’t load this time. Give it another try.'**
+  String get learningLoadErrorBody;
+
+  /// No description provided for @savedLessonsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep a good idea for later'**
+  String get savedLessonsEmptyTitle;
+
+  /// No description provided for @savedLessonsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Found a formula worth revisiting? Save the lesson from its menu. It will be waiting here.'**
+  String get savedLessonsEmptyBody;
 }
 
 class _AppLocalizationsDelegate

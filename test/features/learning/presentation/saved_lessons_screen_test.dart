@@ -82,7 +82,7 @@ void main() {
     await tester.pumpWidget(buildScreen(container));
     await tester.pumpAndSettle();
 
-    expect(find.text('No saved lessons yet'), findsOneWidget);
+    expect(find.text('Keep a good idea for later'), findsOneWidget);
     expect(find.text('Browse lessons'), findsOneWidget);
   });
 
@@ -119,7 +119,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Now it should be empty state
-    expect(find.text('No saved lessons yet'), findsOneWidget);
+    expect(find.text('Keep a good idea for later'), findsOneWidget);
     expect(
       container.read(savedLessonsProvider).contains('lesson-1'),
       isFalse,

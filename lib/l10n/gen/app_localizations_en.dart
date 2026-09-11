@@ -763,6 +763,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourSubjects => 'Your subjects';
 
   @override
+  String get mathematicsSubjectDescription =>
+      'Build confidence with numbers and problem solving';
+
+  @override
+  String get physicsSubjectDescription =>
+      'Understand motion, forces, and the universe';
+
+  @override
+  String get chemistrySubjectDescription =>
+      'Discover matter, reactions, and change';
+
+  @override
+  String get biologySubjectDescription =>
+      'Explore living systems and life science';
+
+  @override
+  String get technologySubjectDescription =>
+      'Practice computing and digital technology';
+
+  @override
+  String get generalSubjectDescription =>
+      'Explore this subject and its lessons';
+
+  @override
   String get continueReading => 'Continue reading';
 
   @override
@@ -1322,4 +1346,174 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get otpDeliveryHelp =>
       'Open your Riksa bot conversation to find the latest code. If it has expired, request a new one.';
+
+  @override
+  String get lessonRead => 'Read';
+
+  @override
+  String get lessonRespond => 'Respond';
+
+  @override
+  String get lessonReflect => 'Reflect';
+
+  @override
+  String lessonSectionCounter(int current, int total) {
+    return 'Section $current of $total';
+  }
+
+  @override
+  String get lessonTrySection => 'Try it yourself';
+
+  @override
+  String get lessonReflectAction => 'Reflect on this lesson';
+
+  @override
+  String get lessonCheckAnswer => 'Check answer';
+
+  @override
+  String get lessonCompareAnswers => 'Compare answers';
+
+  @override
+  String get lessonWorkFirst => 'Work it out first';
+
+  @override
+  String get lessonWorkHint =>
+      'Write your answer and how you got there. Then compare it with the choices.';
+
+  @override
+  String get lessonAnswerHint => 'Write your answer';
+
+  @override
+  String get lessonYourWork => 'Your working';
+
+  @override
+  String get lessonChooseAnswer => 'Compare your working and choose an answer.';
+
+  @override
+  String lessonExerciseNumber(int number) {
+    return 'Exercise $number';
+  }
+
+  @override
+  String lessonResponseProgress(int done, int total) {
+    return '$done of $total responses checked';
+  }
+
+  @override
+  String get lessonSectionComplete => 'Section complete';
+
+  @override
+  String get lessonUpNext => 'Up next';
+
+  @override
+  String get lessonReflectionTitle => 'What will you take away?';
+
+  @override
+  String get lessonReflectionBody =>
+      'Put one idea into your own words. Note anything you want to revisit.';
+
+  @override
+  String get lessonReflectionHint => 'I understood… I still want to work on…';
+
+  @override
+  String get lessonConfidencePrompt => 'How do you feel about this lesson?';
+
+  @override
+  String get lessonConfident => 'I can explain it';
+
+  @override
+  String get lessonNeedsReview => 'I want to revisit it';
+
+  @override
+  String get lessonSaveReflection => 'Save and finish';
+
+  @override
+  String get lessonReflectionRequired =>
+      'Write a short reflection to finish this lesson.';
+
+  @override
+  String get lessonSavedReflection => 'Your reflection';
+
+  @override
+  String get lessonCompletedBody =>
+      'One more step through your syllabus. Take a break or continue when you are ready.';
+
+  @override
+  String get lessonRevisitTitle => 'Worth another look';
+
+  @override
+  String get lessonRevisitBody =>
+      'You marked this lesson for another look. You can reopen it from your roadmap.';
+
+  @override
+  String get lessonNextAction => 'Start next lesson';
+
+  @override
+  String get lessonRoadmapAction => 'Back to roadmap';
+
+  @override
+  String get lessonFinishSession => 'Finish for now';
+
+  @override
+  String get lessonResumeAction => 'Resume lesson';
+
+  @override
+  String get lessonStartAction => 'Start lesson';
+
+  @override
+  String get lessonOptions => 'Lesson options';
+
+  @override
+  String get lessonSections => 'Lesson sections';
+
+  @override
+  String get lessonSave => 'Save lesson';
+
+  @override
+  String get lessonUnsave => 'Remove from saved';
+
+  @override
+  String get lessonMute => 'Mute sound';
+
+  @override
+  String get lessonUnmute => 'Unmute sound';
+
+  @override
+  String get lessonExitBody =>
+      'Checked answers are saved. Your unfinished writing will be lost if you leave.';
+
+  @override
+  String get lessonAiHint => 'Get a hint';
+
+  @override
+  String get lessonExplainAnswer => 'Explain with AI';
+
+  @override
+  String get lessonWhy => 'Explanation';
+
+  @override
+  String get lessonHint => 'Hint';
+
+  @override
+  String get lessonEditWorking => 'Edit working';
+
+  @override
+  String get lessonWorkingStatus => 'One moment…';
+
+  @override
+  String get lessonAnswerSuccess => 'That’s it. Keep going when you’re ready.';
+
+  @override
+  String get lessonAnswerRetry => 'Not quite yet. Try another approach.';
+
+  @override
+  String get learningLoadErrorBody =>
+      'Your lessons couldn’t load this time. Give it another try.';
+
+  @override
+  String get savedLessonsEmptyTitle => 'Keep a good idea for later';
+
+  @override
+  String get savedLessonsEmptyBody =>
+      'Found a formula worth revisiting? Save the lesson from its menu. It will be waiting here.';
 }

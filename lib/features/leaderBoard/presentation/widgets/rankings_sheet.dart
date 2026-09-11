@@ -55,32 +55,32 @@ class RankingsSheet extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: isDark
-                ? context.riksa.surface
-                : AppColors.editorialNeutralSurface,
-            borderRadius: AppRadii.extraLargeBorder,
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: listRows.isEmpty
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 24,
+        listRows.isEmpty
+            ? Container(
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? context.riksa.surface
+                      : AppColors.editorialNeutralSurface,
+                  borderRadius: AppRadii.extraLargeBorder,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 24,
+                ),
+                child: Center(
+                  child: Text(
+                    'No other rankings to show.',
+                    style: TextStyle(color: context.riksa.inkMuted),
                   ),
-                  child: Center(
-                    child: Text(
-                      'No other rankings to show.',
-                      style: TextStyle(color: context.riksa.inkMuted),
-                    ),
-                  ),
-                )
-              : Column(
-                  children: [
-                    for (var index = 0; index < listRows.length; index++) ...[
-                      RiksaEntrance(
-                        index: index,
+                ),
+              )
+            : Column(
+                children: [
+                  for (var index = 0; index < listRows.length; index++) ...[
+                    RiksaEntrance(
+                      index: index,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
                         child: RankingListRow(
                           rank: listRows[index].rank,
                           tier: listRows[index].rankingTier,
@@ -104,18 +104,10 @@ class RankingsSheet extends StatelessWidget {
                           },
                         ),
                       ),
-                      if (index != listRows.length - 1)
-                        Divider(
-                          height: 1,
-                          indent: 56,
-                          color: isDark
-                              ? context.riksa.outline
-                              : AppColors.editorialOutline,
-                        ),
-                    ],
+                    ),
                   ],
-                ),
-        ),
+                ],
+              ),
       ],
     );
   }

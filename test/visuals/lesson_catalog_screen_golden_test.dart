@@ -136,6 +136,25 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    final context = tester.element(find.byType(LessonCatalogScreen));
+    await tester.runAsync(() async {
+      for (final asset in [
+        'assets/images/lessonsCard/issacnewton.png',
+        'assets/images/lessonsCard/enstein.png',
+        'assets/images/lessonsCard/chemistry.png',
+        'assets/images/lessonsCard/bio.png',
+        'assets/images/lessonsCard/computer.png',
+      ]) {
+        await precacheImage(
+          AssetImage(asset),
+          context,
+          onError: (error, stack) =>
+              fail('Subject artwork failed to load: $error'),
+        );
+      }
+    });
+    await tester.pumpAndSettle();
+
     expect(tester.takeException(), isNull);
     await expectLater(
       find.byType(LessonCatalogScreen),

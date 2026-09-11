@@ -58,7 +58,12 @@ final _math = SubjectProgress(
   total: 3,
   currentLessonId: 'm2',
   lessons: [
-    _lesson(id: 'm1', title: 'Antiderivatives', category: 'Mathematics', completed: true),
+    _lesson(
+      id: 'm1',
+      title: 'Antiderivatives',
+      category: 'Mathematics',
+      completed: true,
+    ),
     _lesson(
       id: 'm2',
       title: 'Definite integrals and area',
@@ -74,9 +79,7 @@ final _biology = SubjectProgress(
   category: const LearningCategory(id: 'biology', name: 'Biology'),
   completed: 0,
   total: 1,
-  lessons: [
-    _lesson(id: 'b1', title: 'ស្វែងយល់ពីកោសិកា', category: 'Biology'),
-  ],
+  lessons: [_lesson(id: 'b1', title: 'ស្វែងយល់ពីកោសិកា', category: 'Biology')],
 );
 
 final _offline = SubjectProgress(
@@ -160,9 +163,7 @@ void main() {
     final router = _router();
     addTearDown(router.dispose);
 
-    await tester.pumpWidget(
-      _app(router: router, home: () async => _home()),
-    );
+    await tester.pumpWidget(_app(router: router, home: () async => _home()));
     await tester.pumpAndSettle();
 
     // Exactly one resumable lesson is offered, and it is the started one.
@@ -174,6 +175,36 @@ void main() {
     expect(find.byKey(const ValueKey('subject-tile-math')), findsOneWidget);
     expect(find.byKey(const ValueKey('subject-tile-biology')), findsOneWidget);
     expect(find.byKey(const ValueKey('subject-tile-physics')), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('subject-tile-math'))).height,
+      158,
+    );
+    expect(
+      find.byKey(const ValueKey('subject-artwork-mathematics')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('subject-artwork-biology')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('subject-artwork-physics')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('subject-tile-biology')),
+        matching: find.text('Explore living systems and life science'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('subject-tile-math')),
+        matching: find.byIcon(Icons.chevron_right_rounded),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('1 / 3'), findsOneWidget);
     expect(find.text('Could not load'), findsOneWidget);
 
@@ -195,9 +226,7 @@ void main() {
     final router = _router();
     addTearDown(router.dispose);
 
-    await tester.pumpWidget(
-      _app(router: router, home: () async => _home()),
-    );
+    await tester.pumpWidget(_app(router: router, home: () async => _home()));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('continue-lesson-m2')));
@@ -207,7 +236,10 @@ void main() {
     router.go('/learn');
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('subject-tile-biology')));
+    final biologyTile = find.byKey(const ValueKey('subject-tile-biology'));
+    await tester.ensureVisible(biologyTile);
+    await tester.pumpAndSettle();
+    await tester.tap(biologyTile);
     await tester.pumpAndSettle();
     expect(find.text('roadmap-biology'), findsOneWidget);
   });
@@ -290,10 +322,7 @@ void main() {
         home: () async => _home(
           subjects: [
             SubjectProgress(
-              category: const LearningCategory(
-                id: 'math',
-                name: 'Mathematics',
-              ),
+              category: const LearningCategory(id: 'math', name: 'Mathematics'),
               completed: 1,
               total: 1,
               lessons: [
@@ -425,4 +454,3 @@ void main() {
     expect(find.byIcon(Icons.bookmark_border_rounded), findsOneWidget);
   });
 }
-

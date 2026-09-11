@@ -237,6 +237,12 @@
   "greetingNamed": "សួស្តី {name}",
   "gradeStemLabel": "ថ្នាក់ទី១២ · STEM",
   "yourSubjects": "មុខវិជ្ជារបស់អ្នក",
+  "mathematicsSubjectDescription": "ពង្រឹងជំនាញលេខ និងការដោះស្រាយបញ្ហា",
+  "physicsSubjectDescription": "ស្វែងយល់ពីចលនា កម្លាំង និងសកលលោក",
+  "chemistrySubjectDescription": "ស្វែងយល់ពីសារធាតុ ប្រតិកម្ម និងការប្រែប្រួល",
+  "biologySubjectDescription": "ស្វែងយល់ពីប្រព័ន្ធរស់ និងវិទ្យាសាស្ត្រជីវិត",
+  "technologySubjectDescription": "អនុវត្តកុំព្យូទ័រ និងបច្ចេកវិទ្យាឌីជីថល",
+  "generalSubjectDescription": "ស្វែងយល់ពីមុខវិជ្ជា និងមេរៀននេះ",
   "continueReading": "បន្តអាន",
   "xpRewardAmount": "+{xp} XP",
   "lessonsDoneOfTotal": "មេរៀន {done} ក្នុងចំណោម {total}",
@@ -411,5 +417,84 @@
         "type": "int"
       }
     }
-  }
+  },
+  "lessonRead": "អាន",
+  "lessonRespond": "ឆ្លើយ",
+  "lessonReflect": "សរសេរការយល់ដឹង",
+  "lessonSectionCounter": "ផ្នែកទី {current} នៃ {total}",
+  "@lessonSectionCounter": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lessonTrySection": "សាកល្បងដោយខ្លួនឯង",
+  "lessonReflectAction": "សរសេរការយល់ដឹងពីមេរៀន",
+  "lessonCheckAnswer": "ពិនិត្យចម្លើយ",
+  "lessonCompareAnswers": "ប្រៀបធៀបចម្លើយ",
+  "lessonWorkFirst": "សាកល្បងដោះស្រាយជាមុន",
+  "lessonWorkHint": "សរសេរចម្លើយ និងរបៀបដែលអ្នករកបាន។ បន្ទាប់មកប្រៀបធៀបជាមួយជម្រើស។",
+  "lessonAnswerHint": "សរសេរចម្លើយរបស់អ្នក",
+  "lessonYourWork": "វិធីដោះស្រាយរបស់អ្នក",
+  "lessonChooseAnswer": "ប្រៀបធៀបវិធីដោះស្រាយរបស់អ្នក ហើយជ្រើសរើសចម្លើយ។",
+  "lessonExerciseNumber": "លំហាត់ទី {number}",
+  "@lessonExerciseNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "lessonResponseProgress": "បានពិនិត្យចម្លើយ {done} ក្នុងចំណោម {total}",
+  "@lessonResponseProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lessonSectionComplete": "បានបញ្ចប់ផ្នែកនេះ",
+  "lessonUpNext": "បន្ទាប់មក",
+  "lessonReflectionTitle": "តើអ្នកបានយល់អ្វីខ្លះ?",
+  "lessonReflectionBody": "សរសេរគំនិតមួយជាពាក្យរបស់អ្នកផ្ទាល់។ កត់ត្រាចំណុចដែលអ្នកចង់រំលឹកឡើងវិញ។",
+  "lessonReflectionHint": "ខ្ញុំបានយល់ថា… ខ្ញុំនៅចង់សិក្សាបន្ថែមអំពី…",
+  "lessonConfidencePrompt": "តើអ្នកយល់មេរៀននេះកម្រិតណា?",
+  "lessonConfident": "ខ្ញុំអាចពន្យល់បាន",
+  "lessonNeedsReview": "ខ្ញុំចង់រំលឹកឡើងវិញ",
+  "lessonSaveReflection": "រក្សាទុក និងបញ្ចប់",
+  "lessonReflectionRequired": "សរសេរការយល់ដឹងខ្លីមួយ ដើម្បីបញ្ចប់មេរៀននេះ។",
+  "lessonSavedReflection": "ការយល់ដឹងរបស់អ្នក",
+  "lessonCompletedBody": "អ្នកបានបោះជំហានមួយទៀតក្នុងកម្មវិធីសិក្សា។ សម្រាក ឬបន្តពេលអ្នករួចរាល់។",
+  "lessonRevisitTitle": "ចំណុចដែលត្រូវរំលឹកឡើងវិញ",
+  "lessonRevisitBody": "អ្នកបានសម្គាល់ថាចង់រំលឹកមេរៀននេះ។ អ្នកអាចបើកវាម្ដងទៀតពីផែនទីសិក្សា។",
+  "lessonNextAction": "ចាប់ផ្តើមមេរៀនបន្ទាប់",
+  "lessonRoadmapAction": "ត្រឡប់ទៅផែនទីសិក្សា",
+  "lessonFinishSession": "បញ្ចប់ត្រឹមនេះសិន",
+  "lessonResumeAction": "បន្តមេរៀន",
+  "lessonStartAction": "ចាប់ផ្តើមមេរៀន",
+  "lessonOptions": "ជម្រើសមេរៀន",
+  "lessonSections": "ផ្នែកមេរៀន",
+  "lessonSave": "រក្សាទុកមេរៀន",
+  "lessonUnsave": "ដកចេញពីមេរៀនរក្សាទុក",
+  "lessonMute": "បិទសំឡេង",
+  "lessonUnmute": "បើកសំឡេង",
+  "lessonExitBody": "ចម្លើយដែលបានពិនិត្យត្រូវបានរក្សាទុក។ សំណេរដែលមិនទាន់បានរក្សាទុកនឹងបាត់បង់ ប្រសិនបើអ្នកចាកចេញ។",
+  "lessonAiHint": "ទទួលតម្រុយ",
+  "lessonExplainAnswer": "ពន្យល់ជាមួយ AI",
+  "lessonWhy": "សេចក្តីពន្យល់",
+  "lessonHint": "តម្រុយ",
+  "lessonEditWorking": "កែសម្រួលវិធីដោះស្រាយ",
+  "lessonWorkingStatus": "សូមរង់ចាំបន្តិច…",
+  "lessonAnswerSuccess": "ត្រឹមត្រូវហើយ។ បន្តពេលអ្នករួចរាល់។",
+  "lessonAnswerRetry": "មិនទាន់ត្រឹមត្រូវទេ។ សាកល្បងវិធីផ្សេងទៀត។",
+  "learningLoadErrorBody": "មេរៀនរបស់អ្នកមិនអាចផ្ទុកបាននៅពេលនេះ។ សូមព្យាយាមម្ដងទៀត។",
+  "savedLessonsEmptyTitle": "រក្សាគំនិតល្អទុកសម្រាប់ពេលក្រោយ",
+  "savedLessonsEmptyBody": "បានឃើញរូបមន្តដែលគួររំលឹកឡើងវិញ? រក្សាទុកមេរៀនពីម៉ឺនុយរបស់វា។ អ្នកនឹងរកឃើញវានៅទីនេះ។"
 }

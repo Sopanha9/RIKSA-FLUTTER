@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/riksa_interactions.dart';
 import '../../../userProfile/data/profile_models.dart';
 
 class LeaderboardScopeTabs extends StatelessWidget {
@@ -65,26 +66,28 @@ class LeaderboardPillTab extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppRadii.fullBorder,
-        child: AnimatedContainer(
-          duration: RiksaMotion.standard,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: selected
-                ? (isDark ? AppColors.editorialPink : AppColors.editorialBlack)
-                : Colors.transparent,
-            borderRadius: AppRadii.fullBorder,
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
+      child: RiksaTapFeedback(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppRadii.fullBorder,
+          child: AnimatedContainer(
+            duration: RiksaMotion.standard,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
               color: selected
-                  ? (isDark ? AppColors.editorialAubergine : Colors.white)
-                  : palette.ink,
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
+                  ? (isDark ? AppColors.editorialPink : AppColors.editorialBlack)
+                  : Colors.transparent,
+              borderRadius: AppRadii.fullBorder,
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: selected
+                    ? (isDark ? AppColors.editorialAubergine : Colors.white)
+                    : palette.ink,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ),

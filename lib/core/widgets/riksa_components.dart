@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'riksa_interactions.dart';
+
+export 'riksa_interactions.dart';
 
 enum RiksaSubjectKind {
   math,
@@ -90,16 +93,19 @@ class RiksaRoundedIconButton extends StatelessWidget {
   final Color? foregroundColor;
 
   @override
-  Widget build(BuildContext context) => IconButton(
-    onPressed: onPressed,
-    tooltip: tooltip,
-    style: IconButton.styleFrom(
-      minimumSize: const Size.square(48),
-      backgroundColor: backgroundColor ?? context.riksa.surfaceRaised,
-      foregroundColor: foregroundColor ?? context.riksa.ink,
-      shape: const CircleBorder(),
+  Widget build(BuildContext context) => RiksaTapFeedback(
+    enabled: onPressed != null,
+    child: IconButton(
+      onPressed: onPressed,
+      tooltip: tooltip,
+      style: IconButton.styleFrom(
+        minimumSize: const Size.square(48),
+        backgroundColor: backgroundColor ?? context.riksa.surfaceRaised,
+        foregroundColor: foregroundColor ?? context.riksa.ink,
+        shape: const CircleBorder(),
+      ),
+      icon: Icon(icon, size: 22),
     ),
-    icon: Icon(icon, size: 22),
   );
 }
 
@@ -171,17 +177,20 @@ class RiksaPastelCard extends StatelessWidget {
       container: true,
       button: onTap != null,
       label: semanticLabel,
-      child: Material(
-        color: riksaPastelColor(context, tone),
-        borderRadius: AppRadii.extraLargeBorder,
-        clipBehavior: Clip.antiAlias,
-        child: onTap == null
-            ? content
-            : InkWell(
-                onTap: onTap,
-                borderRadius: AppRadii.extraLargeBorder,
-                child: content,
-              ),
+      child: RiksaTapFeedback(
+        enabled: onTap != null,
+        child: Material(
+          color: riksaPastelColor(context, tone),
+          borderRadius: AppRadii.extraLargeBorder,
+          clipBehavior: Clip.antiAlias,
+          child: onTap == null
+              ? content
+              : InkWell(
+                  onTap: onTap,
+                  borderRadius: AppRadii.extraLargeBorder,
+                  child: content,
+                ),
+        ),
       ),
     );
   }
@@ -1052,33 +1061,55 @@ class IllustratedEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(RiksaSpacing.xl),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SubjectArtwork(
-            kind: RiksaSubjectKind.general,
-            color: context.riksa.saffron,
-            size: 112,
-          ),
-          const SizedBox(height: RiksaSpacing.md),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: RiksaSpacing.xs),
-          Text(
-            body,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          if (actionLabel != null && onAction != null) ...[
+    child: SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(RiksaSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const RiksaContentReveal(
+              identity: 'empty-artwork',
+              child: RiksaEmptyArtwork(),
+            ),
             const SizedBox(height: RiksaSpacing.md),
-            FilledButton.tonal(onPressed: onAction, child: Text(actionLabel!)),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: RiksaTypography.titleStyleFor(
+                title,
+                Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            const SizedBox(height: RiksaSpacing.xs),
+            Text(
+              body,
+              textAlign: TextAlign.center,
+              style: RiksaTypography.bodyStyleFor(
+                body,
+                Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: context.riksa.inkMuted,
+                  height: 1.6,
+                ),
+              ),
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: RiksaSpacing.md),
+              RiksaTapFeedback(
+                child: FilledButton(
+                  onPressed: onAction,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    minimumSize: const Size(0, 54),
+                  ),
+                  child: Text(actionLabel!),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     ),
   );
@@ -1130,7 +1161,7 @@ class _RiksaPressableScaleState extends State<RiksaPressableScale> {
       onTapUp: (_) => _setPressed(false),
       onTap: widget.onTap,
       child: AnimatedScale(
-        scale: _pressed ? .985 : 1,
+        scale: _pressed && !MediaQuery.disableAnimationsOf(context) ? .985 : 1,
         duration: RiksaMotion.resolve(context, RiksaMotion.fast),
         curve: RiksaMotion.standardCurve,
         child: widget.child,
@@ -1487,5 +1518,67 @@ class _RiksaEntranceState extends State<RiksaEntrance>
       );
     },
     child: widget.child,
+  );
+}
+
+/// Riksa's empty-state motif: an open book, a tucked-in bookmark and two
+/// small sparkles. Vector shapes stay sharp without an image download.
+class RiksaEmptyArtwork extends StatelessWidget {
+  const RiksaEmptyArtwork({super.key});
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: SizedBox(
+      width: 148,
+      height: 132,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 124,
+            height: 108,
+            decoration: BoxDecoration(
+              color: context.riksa.creamSoft,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(48),
+                topRight: Radius.circular(32),
+                bottomLeft: Radius.circular(32),
+                bottomRight: Radius.circular(48),
+              ),
+            ),
+          ),
+          SubjectArtwork(
+            kind: RiksaSubjectKind.general,
+            color: context.riksa.saffron,
+            size: 102,
+          ),
+          Positioned(
+            right: 22,
+            top: 18,
+            child: Transform.rotate(
+              angle: .16,
+              child: Icon(
+                Icons.bookmark_rounded,
+                size: 32,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+            ),
+          ),
+          Positioned(
+            left: 3,
+            top: 15,
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              size: 18,
+              color: context.riksa.saffron,
+            ),
+          ),
+          Positioned(
+            right: 0,
+            bottom: 20,
+            child: Icon(Icons.add_rounded, size: 16, color: context.riksa.jade),
+          ),
+        ],
+      ),
+    ),
   );
 }

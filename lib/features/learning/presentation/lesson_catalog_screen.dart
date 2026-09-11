@@ -41,7 +41,7 @@ class LessonCatalogScreen extends ConsumerWidget {
             loading: () => const _HomeSkeleton(),
             error: (_, _) => _HomeMessage(
               title: l10n.lessonLoadFailed,
-              body: l10n.noLessonsForFilters,
+              body: l10n.learningLoadErrorBody,
               actionLabel: l10n.tryAgain,
               onAction: () => ref.invalidate(learningHomeProvider),
             ),
@@ -280,20 +280,22 @@ class _SearchButton extends ConsumerWidget {
     return Semantics(
       button: true,
       label: l10n.searchLessons,
-      child: Material(
-        color: context.riksa.surface,
-        shape: const CircleBorder(),
-        child: InkWell(
-          key: const ValueKey('learning-search-button'),
-          customBorder: const CircleBorder(),
-          onTap: () => _openSearch(context, ref),
-          child: SizedBox(
-            width: 42,
-            height: 42,
-            child: Icon(
-              Icons.search_rounded,
-              size: 20,
-              color: context.riksa.ink,
+      child: RiksaTapFeedback(
+        child: Material(
+          color: context.riksa.surface,
+          shape: const CircleBorder(),
+          child: InkWell(
+            key: const ValueKey('learning-search-button'),
+            customBorder: const CircleBorder(),
+            onTap: () => _openSearch(context, ref),
+            child: SizedBox(
+              width: 42,
+              height: 42,
+              child: Icon(
+                Icons.search_rounded,
+                size: 20,
+                color: context.riksa.ink,
+              ),
             ),
           ),
         ),
@@ -304,8 +306,9 @@ class _SearchButton extends ConsumerWidget {
   Future<void> _openSearch(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
     final lessons = [
-      for (final subject in ref.read(learningHomeProvider).asData?.value.subjects ??
-          const <SubjectProgress>[])
+      for (final subject
+          in ref.read(learningHomeProvider).asData?.value.subjects ??
+              const <SubjectProgress>[])
         ...subject.lessons,
     ];
     final selected = await showSearch<LessonSummary?>(
@@ -330,38 +333,40 @@ class _SavedLessonsButton extends ConsumerWidget {
     return Semantics(
       button: true,
       label: isKhmer ? 'មេរៀនបានរក្សាទុក' : 'Saved Lessons',
-      child: Material(
-        color: context.riksa.surface,
-        shape: const CircleBorder(),
-        child: InkWell(
-          key: const ValueKey('learning-saved-lessons-button'),
-          customBorder: const CircleBorder(),
-          onTap: () => context.push('/learn/saved'),
-          child: SizedBox(
-            width: 42,
-            height: 42,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(
-                  Icons.bookmark_border_rounded,
-                  size: 20,
-                  color: context.riksa.ink,
-                ),
-                if (savedCount > 0)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: context.riksa.jade,
-                        shape: BoxShape.circle,
+      child: RiksaTapFeedback(
+        child: Material(
+          color: context.riksa.surface,
+          shape: const CircleBorder(),
+          child: InkWell(
+            key: const ValueKey('learning-saved-lessons-button'),
+            customBorder: const CircleBorder(),
+            onTap: () => context.push('/learn/saved'),
+            child: SizedBox(
+              width: 42,
+              height: 42,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(
+                    Icons.bookmark_border_rounded,
+                    size: 20,
+                    color: context.riksa.ink,
+                  ),
+                  if (savedCount > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: context.riksa.jade,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -369,7 +374,6 @@ class _SavedLessonsButton extends ConsumerWidget {
     );
   }
 }
-
 
 // ---------------------------------------------------------------------------
 // Continue
@@ -396,152 +400,133 @@ class _ContinueCard extends StatelessWidget {
     final minutes = lesson.durationMinutes;
     final progress = lesson.progress ?? 0;
 
-    return Material(
-      color: tone.surface,
-      borderRadius: AppRadii.featureBorder,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        key: ValueKey('continue-lesson-${lesson.id}'),
-        onTap: onTap,
-        child: Stack(
-          children: [
-            PositionedDirectional(
-              top: -44,
-              end: -48,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: tone.accent.withValues(alpha: .13),
-                  shape: BoxShape.circle,
+    return RiksaTapFeedback(
+      child: Material(
+        color: tone.surface,
+        borderRadius: AppRadii.featureBorder,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: ValueKey('continue-lesson-${lesson.id}'),
+          onTap: onTap,
+          child: Stack(
+            children: [
+              PositionedDirectional(
+                top: -44,
+                end: -48,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: tone.accent.withValues(alpha: .13),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox.square(dimension: 152),
                 ),
-                child: const SizedBox.square(dimension: 152),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      LearningBadge(
-                        icon: stemSubjectIcon(subject.subject),
-                        foreground: tone.accent,
-                        background: context.riksa.surface,
-                      ),
-                      const SizedBox(width: RiksaSpacing.sm - 2),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              subject.category.name.toUpperCase(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: tone.accent,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: .9,
-                                fontSize: 10.5,
-                              ),
-                            ),
-                            Text(
-                              l10n.continueLearning,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: context.riksa.inkMuted,
-                              ),
-                            ),
-                          ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        LearningBadge(
+                          icon: stemSubjectIcon(subject.subject),
+                          foreground: tone.accent,
+                          background: context.riksa.surface,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: RiksaSpacing.md - 2),
-                  Text(
-                    lesson.title,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: RiksaTypography.titleStyleFor(
-                      lesson.title,
-                      theme.textTheme.headlineSmall?.copyWith(
-                        color: tone.ink,
-                        fontSize: 24,
-                        height: 1.16,
-                        letterSpacing: -.6,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      khmerHeight: 1.3,
+                        const SizedBox(width: RiksaSpacing.sm - 2),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                subject.category.name.toUpperCase(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: tone.accent,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: .9,
+                                  fontSize: 10.5,
+                                ),
+                              ),
+                              Text(
+                                l10n.continueLearning,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: context.riksa.inkMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: RiksaSpacing.md - 2),
-                  Wrap(
-                    spacing: RiksaSpacing.xs - 1,
-                    runSpacing: RiksaSpacing.xs - 1,
-                    children: [
-                      if (minutes != null)
-                        LearningPill(
-                          icon: Icons.schedule_rounded,
-                          label: l10n.minutesShort(minutes),
-                          accent: tone.accent,
+                    const SizedBox(height: RiksaSpacing.md - 2),
+                    Text(
+                      lesson.title,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: RiksaTypography.titleStyleFor(
+                        lesson.title,
+                        theme.textTheme.headlineSmall?.copyWith(
+                          color: tone.ink,
+                          fontSize: 24,
+                          height: 1.16,
+                          letterSpacing: -.6,
+                          fontWeight: FontWeight.w700,
                         ),
-                      if (lesson.baseXp > 0)
-                        LearningPill(
-                          icon: Icons.auto_awesome_rounded,
-                          label: l10n.xpRewardAmount(lesson.baseXp),
-                          accent: tone.accent,
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: RiksaSpacing.md + 2),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: LearningTrack(
-                          key: ValueKey('continue-progress-${lesson.id}'),
-                          value: progress,
-                          color: tone.accent,
-                          background: tone.accent.withValues(alpha: .22),
-                        ),
+                        khmerHeight: 1.3,
                       ),
-                      const SizedBox(width: RiksaSpacing.md),
-                      _AnchorCircle(
-                        icon: Icons.arrow_forward_rounded,
-                        semanticLabel: l10n.continueReading,
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: RiksaSpacing.md - 2),
+                    Wrap(
+                      spacing: RiksaSpacing.xs - 1,
+                      runSpacing: RiksaSpacing.xs - 1,
+                      children: [
+                        if (minutes != null)
+                          LearningPill(
+                            icon: Icons.schedule_rounded,
+                            label: l10n.minutesShort(minutes),
+                            accent: tone.accent,
+                          ),
+                        if (lesson.baseXp > 0)
+                          LearningPill(
+                            icon: Icons.auto_awesome_rounded,
+                            label: l10n.xpRewardAmount(lesson.baseXp),
+                            accent: tone.accent,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: RiksaSpacing.md + 2),
+                    LearningTrack(
+                      key: ValueKey('continue-progress-${lesson.id}'),
+                      value: progress,
+                      color: tone.accent,
+                      background: tone.accent.withValues(alpha: .22),
+                    ),
+                    const SizedBox(height: RiksaSpacing.md),
+                    LearningPrimaryButton(
+                      key: ValueKey('resume-lesson-${lesson.id}'),
+                      label: progress > 0
+                          ? l10n.lessonResumeAction
+                          : l10n.lessonStartAction,
+                      icon: Icons.arrow_forward_rounded,
+                      background: learningAnchor(context),
+                      foreground: onLearningAnchor(context),
+                      onPressed: onTap,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
-}
-
-class _AnchorCircle extends StatelessWidget {
-  const _AnchorCircle({required this.icon, required this.semanticLabel});
-
-  final IconData icon;
-  final String semanticLabel;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    label: semanticLabel,
-    child: Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        color: learningAnchor(context),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, size: 20, color: onLearningAnchor(context)),
-    ),
-  );
 }
 
 /// Shown in place of the continue card once no subject has an open lesson.
@@ -598,28 +583,28 @@ class _SubjectGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A fixed aspect ratio would clip Khmer subject names, which run taller
-    // than their English equivalents, so the tiles size to their content.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const gap = 11.0;
-        final columns = constraints.maxWidth >= 520 ? 3 : 2;
-        final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          children: [
-            for (final subject in subjects)
-              SizedBox(
-                width: width,
-                child: _SubjectTile(subject: subject),
-              ),
-          ],
-        );
-      },
+    // A vertical editorial list gives each subject illustration enough room to
+    // act as a recognition cue. It also leaves a reliable text column for tall
+    // Khmer titles instead of squeezing both into a small grid tile.
+    return Column(
+      children: [
+        for (var index = 0; index < subjects.length; index++) ...[
+          _SubjectTile(subject: subjects[index]),
+          if (index != subjects.length - 1)
+            const SizedBox(height: RiksaSpacing.sm + 2),
+        ],
+      ],
     );
   }
 }
+
+const _subjectArtworkPaths = <StemSubject, String>{
+  StemSubject.mathematics: 'assets/images/lessonsCard/issacnewton.png',
+  StemSubject.physics: 'assets/images/lessonsCard/enstein.png',
+  StemSubject.chemistry: 'assets/images/lessonsCard/chemistry.png',
+  StemSubject.biology: 'assets/images/lessonsCard/bio.png',
+  StemSubject.technology: 'assets/images/lessonsCard/computer.png',
+};
 
 class _SubjectTile extends StatelessWidget {
   const _SubjectTile({required this.subject});
@@ -631,80 +616,215 @@ class _SubjectTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final tone = subjectTone(context, subject.subject);
     final name = subject.category.name;
+    final description = _subjectDescription(l10n, subject.subject);
 
-    return Material(
-      color: tone.surface,
-      borderRadius: AppRadii.panelBorder,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        key: ValueKey('subject-tile-${subject.category.id}'),
-        onTap: () => context.push('/learn/roadmap/${subject.category.id}'),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(15, 15, 15, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              LearningBadge(
-                icon: stemSubjectIcon(subject.subject),
-                foreground: tone.accent,
-                background: context.riksa.surface.withValues(alpha: .72),
-              ),
-              const SizedBox(height: RiksaSpacing.lg + RiksaSpacing.xxs),
-              Text(
-                name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: RiksaTypography.titleStyleFor(
-                  name,
-                  Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -.25,
-                    height: 1.2,
-                  ),
-                  khmerHeight: 1.35,
-                ),
-              ),
-              const SizedBox(height: RiksaSpacing.xs + 1),
-              if (subject.unavailable)
-                Text(
-                  l10n.subjectUnavailable,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: context.riksa.inkMuted),
-                )
-              else
-                Row(
+    return Semantics(
+      button: true,
+      label: name,
+      child: RiksaTapFeedback(
+        child: Material(
+          color: tone.surface,
+          borderRadius: AppRadii.panelBorder,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            key: ValueKey('subject-tile-${subject.category.id}'),
+            onTap: () => context.push('/learn/roadmap/${subject.category.id}'),
+            child: SizedBox(
+              height: 158,
+              child: LayoutBuilder(
+                builder: (context, constraints) => Stack(
                   children: [
-                    Expanded(
-                      child: Text(
-                        l10n.subjectCountShort(subject.completed, subject.total),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: tone.accent,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 11.5,
+                    PositionedDirectional(
+                      top: 24,
+                      bottom: -46,
+                      end: -38,
+                      width: constraints.maxWidth * .55,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: tone.accent.withValues(alpha: .08),
+                          shape: BoxShape.circle,
                         ),
                       ),
                     ),
-                    const SizedBox(width: RiksaSpacing.xs),
-                    SizedBox(
-                      width: 42,
-                      child: LearningTrack(
-                        key: ValueKey('subject-progress-${subject.category.id}'),
-                        value: subject.fraction,
-                        color: tone.accent,
-                        background: tone.accent.withValues(alpha: .2),
-                        height: 5,
+                    PositionedDirectional(
+                      top: 40,
+                      bottom: -8,
+                      end: 2,
+                      width: constraints.maxWidth * .48,
+                      child: _SubjectArtwork(
+                        subject: subject.subject,
+                        accent: tone.accent,
+                      ),
+                    ),
+                    PositionedDirectional(
+                      top: 14,
+                      start: 14,
+                      child: LearningBadge(
+                        icon: stemSubjectIcon(subject.subject),
+                        foreground: tone.accent,
+                        background: context.riksa.surface.withValues(
+                          alpha: .78,
+                        ),
+                        size: 34,
+                      ),
+                    ),
+                    PositionedDirectional(
+                      top: 55,
+                      start: 14,
+                      width: constraints.maxWidth * .57,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: RiksaTypography.titleStyleFor(
+                              name,
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: tone.ink,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -.3,
+                                height: 1.1,
+                              ),
+                              khmerHeight: 1.3,
+                            ),
+                          ),
+                          const SizedBox(height: RiksaSpacing.xxs),
+                          Text(
+                            description,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: context.riksa.inkMuted,
+                                  fontSize: 11,
+                                  height: 1.25,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    PositionedDirectional(
+                      top: 14,
+                      end: 14,
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: context.riksa.surface.withValues(alpha: .62),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.chevron_right_rounded,
+                          size: 19,
+                          color: tone.accent.withValues(alpha: .82),
+                        ),
+                      ),
+                    ),
+                    PositionedDirectional(
+                      start: 14,
+                      bottom: 14,
+                      width: constraints.maxWidth * .43,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (subject.unavailable)
+                            Text(
+                              l10n.subjectUnavailable,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: context.riksa.inkMuted),
+                            )
+                          else ...[
+                            Text(
+                              l10n.subjectCountShort(
+                                subject.completed,
+                                subject.total,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: tone.accent,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 11.5,
+                                  ),
+                            ),
+                            const SizedBox(height: 6),
+                            SizedBox(
+                              width: 94,
+                              child: LearningTrack(
+                                key: ValueKey(
+                                  'subject-progress-${subject.category.id}',
+                                ),
+                                value: subject.fraction,
+                                color: tone.accent,
+                                background: tone.accent.withValues(alpha: .2),
+                                height: 5,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ],
                 ),
-            ],
+              ),
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+String _subjectDescription(AppLocalizations l10n, StemSubject subject) =>
+    switch (subject) {
+      StemSubject.mathematics => l10n.mathematicsSubjectDescription,
+      StemSubject.physics => l10n.physicsSubjectDescription,
+      StemSubject.chemistry => l10n.chemistrySubjectDescription,
+      StemSubject.biology => l10n.biologySubjectDescription,
+      StemSubject.technology => l10n.technologySubjectDescription,
+      StemSubject.other => l10n.generalSubjectDescription,
+    };
+
+class _SubjectArtwork extends StatelessWidget {
+  const _SubjectArtwork({required this.subject, required this.accent});
+
+  final StemSubject subject;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final assetPath = _subjectArtworkPaths[subject];
+    if (assetPath == null) {
+      return Align(
+        alignment: AlignmentDirectional.bottomEnd,
+        child: Icon(
+          stemSubjectIcon(subject),
+          size: 88,
+          color: accent.withValues(alpha: .24),
+        ),
+      );
+    }
+
+    return Image.asset(
+      assetPath,
+      key: ValueKey('subject-artwork-${subject.name}'),
+      fit: BoxFit.contain,
+      alignment: AlignmentDirectional.bottomEnd,
+      filterQuality: FilterQuality.high,
+      excludeFromSemantics: true,
+      errorBuilder: (context, error, stackTrace) => Align(
+        alignment: AlignmentDirectional.bottomEnd,
+        child: Icon(
+          stemSubjectIcon(subject),
+          size: 88,
+          color: accent.withValues(alpha: .24),
         ),
       ),
     );

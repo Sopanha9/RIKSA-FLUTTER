@@ -4,10 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
+import '../../../l10n/gen/app_localizations.dart';
+import '../data/learning_models.dart';
+import '../providers/learning_roadmap_provider.dart';
 import '../providers/lesson_catalog_provider.dart';
-import 'widgets/learning_insights.dart';
+import 'widgets/learning_atoms.dart';
 
-class LessonCompletionScreen extends StatelessWidget {
+class LessonCompletionScreen extends ConsumerWidget {
   const LessonCompletionScreen({
     super.key,
     required this.xpEarned,
@@ -15,281 +18,183 @@ class LessonCompletionScreen extends StatelessWidget {
     this.lessonTitle,
     this.categoryName,
     this.totalExercises,
+    this.reflection,
+    this.needsReview = false,
+    this.lessonId,
   });
 
   final int xpEarned;
-  final String? roadmapCategoryId;
-  final String? lessonTitle;
-  final String? categoryName;
+  final String? roadmapCategoryId,
+      lessonTitle,
+      categoryName,
+      reflection,
+      lessonId;
   final int? totalExercises;
+  final bool needsReview;
 
   @override
-  Widget build(BuildContext context) {
-    final riksa = context.riksa;
-    final insight = resolveInsightForCategory(categoryName);
-    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final palette = context.riksa;
+    final theme = Theme.of(context);
+    final roadmap = roadmapCategoryId == null
+        ? null
+        : ref.watch(learningRoadmapProvider(roadmapCategoryId!)).asData?.value;
+    // Only offer an unlocked, unfinished lesson that the server identifies
+    // as current. An unavailable recommendation falls back to the roadmap.
+    final next = roadmap?.units
+        .expand((unit) => unit.lessons)
+        .where(
+          (lesson) =>
+              lesson.id != lessonId &&
+              lesson.id == roadmap.currentLessonId &&
+              lesson.status != RoadmapLessonStatus.locked &&
+              lesson.status != RoadmapLessonStatus.completed,
+        )
+        .firstOrNull;
+    void openRoadmap() => context.go(
+      roadmapCategoryId == null
+          ? '/learn'
+          : '/learn/roadmap/${Uri.encodeComponent(roadmapCategoryId!)}',
+    );
 
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            RiksaSpacing.lg,
-            RiksaSpacing.xl,
-            RiksaSpacing.lg,
-            RiksaSpacing.xl,
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 500),
+              constraints: const BoxConstraints(maxWidth: 620),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: RiksaSpacing.sm),
-                  // Celebration Badge
                   Container(
-                    height: 100,
-                    width: 100,
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: riksa.saffronSoft,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: riksa.saffron.withValues(alpha: 0.3),
-                          blurRadius: 24,
-                          spreadRadius: 4,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.emoji_events_rounded,
-                      size: 56,
-                      color: riksa.saffron,
-                    ),
-                  ),
-                  const SizedBox(height: RiksaSpacing.md),
-
-                  Text(
-                    isKhmer ? 'បានបញ្ចប់មេរៀនជោគជ័យ!' : 'Lesson Mastered!',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: RiksaSpacing.xs),
-
-                  if (lessonTitle != null && lessonTitle!.isNotEmpty)
-                    Text(
-                      lessonTitle!,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: riksa.inkMuted,
-                          ),
-                    ),
-
-                  const SizedBox(height: RiksaSpacing.md),
-
-                  // Achievement Badges Row
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: RiksaSpacing.sm,
-                    runSpacing: RiksaSpacing.xs,
-                    children: [
-                      // XP Reward Pill
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: RiksaSpacing.md,
-                          vertical: RiksaSpacing.xs,
-                        ),
-                        decoration: BoxDecoration(
-                          color: riksa.saffron.withValues(alpha: 0.15),
-                          borderRadius: AppRadii.fullBorder,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.bolt_rounded, size: 20, color: riksa.saffron),
-                            const SizedBox(width: 4),
-                            Text(
-                              isKhmer
-                                  ? '+$xpEarned ពិន្ទុ XP ទទួលបាន'
-                                  : '+$xpEarned XP Earned',
-                              style: TextStyle(
-                                color: riksa.saffron,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Exercises Completed Pill
-                      if (totalExercises != null && totalExercises! > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: RiksaSpacing.md,
-                            vertical: RiksaSpacing.xs,
-                          ),
-                          decoration: BoxDecoration(
-                            color: riksa.jade.withValues(alpha: 0.15),
-                            borderRadius: AppRadii.fullBorder,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.check_circle_rounded,
-                                size: 18,
-                                color: riksa.jade,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                isKhmer
-                                    ? '$totalExercises លំហាត់បានអនុវត្ត'
-                                    : '$totalExercises ${totalExercises == 1 ? "Exercise" : "Exercises"} Completed',
-                                style: TextStyle(
-                                  color: riksa.jade,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-
-                  const SizedBox(height: RiksaSpacing.lg),
-
-                  // Micro-Insight Card (Cultural / Academic Wisdom)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(RiksaSpacing.md),
-                    decoration: BoxDecoration(
-                      color: riksa.surfaceRaised,
-                      borderRadius: AppRadii.largeBorder,
-                      border: Border.all(
-                        color: riksa.jade.withValues(alpha: 0.25),
-                      ),
+                      color: palette.jadeSoft,
+                      borderRadius: AppRadii.featureBorder,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: riksa.jade.withValues(alpha: 0.12),
-                                borderRadius: AppRadii.smallBorder,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.lightbulb_rounded,
-                                    size: 14,
-                                    color: riksa.jade,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    insight.tag,
-                                    style: TextStyle(
-                                      color: riksa.jade,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 10,
-                                      letterSpacing: 0.6,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                        RiksaSuccessMark(label: l10n.lessonCompletionReward),
+                        const SizedBox(height: 20),
+                        Text(
+                          l10n.lessonCompletionReward,
+                          style: theme.textTheme.headlineSmall,
+                        ),
+                        if (lessonTitle?.isNotEmpty == true) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            lessonTitle!,
+                            style: RiksaTypography.titleStyleFor(
+                              lessonTitle!,
+                              theme.textTheme.titleMedium,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: RiksaSpacing.xs),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
                         Text(
-                          insight.title,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          l10n.lessonCompletedBody,
+                          style: theme.textTheme.bodyMedium,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          insight.body,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: riksa.inkMuted,
-                                height: 1.4,
-                              ),
-                        ),
-                        const SizedBox(height: RiksaSpacing.xs),
-                        Text(
-                          '💡 ${insight.takeaway}',
-                          style: TextStyle(
-                            color: riksa.jadeStrong,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            fontStyle: FontStyle.italic,
+                        const SizedBox(height: 16),
+                        RiksaCountUp(
+                          value: xpEarned,
+                          format: l10n.xpRewardAmount,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: palette.jadeStrong,
                           ),
                         ),
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: RiksaSpacing.lg),
-
-                  // Share to Community Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      key: const ValueKey('lesson-completion-share'),
-                      onPressed: () {
-                        context.push('/community/create');
-                      },
-                      icon: const Icon(Icons.share_rounded, size: 18),
-                      label: Text(
-                        isKhmer
-                            ? 'ចែករំលែកទៅកាន់សហគមន៍'
-                            : 'Share Achievement to Community',
+                  if (reflection?.trim().isNotEmpty == true) ...[
+                    const SizedBox(height: 28),
+                    Text(
+                      l10n.lessonSavedReflection,
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    SelectableText(
+                      reflection!,
+                      style: RiksaTypography.bodyStyleFor(
+                        reflection!,
+                        theme.textTheme.bodyLarge,
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: RiksaSpacing.sm),
-
-                  // Primary Navigation Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      key: const ValueKey('lesson-completion-continue'),
-                      onPressed: () => context.go(
-                        roadmapCategoryId == null
-                            ? '/learn'
-                            : '/learn/roadmap/$roadmapCategoryId',
-                      ),
-                      icon: const Icon(Icons.school_rounded, size: 19),
-                      label: Text(
-                        roadmapCategoryId == null
-                            ? (isKhmer ? 'បន្តការរៀន' : 'Continue learning')
-                            : (isKhmer ? 'ត្រឡប់ទៅផែនទីសិក្សា' : 'Back to roadmap'),
+                  ],
+                  if (needsReview) ...[
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.lessonRevisitTitle,
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.lessonRevisitBody,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: palette.inkMuted,
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: RiksaSpacing.xs),
-
+                  ],
+                  if (next != null) ...[
+                    const SizedBox(height: 28),
+                    Text(
+                      l10n.lessonUpNext,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: palette.inkMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      next.title,
+                      key: const ValueKey('lesson-completion-next-title'),
+                      style: RiksaTypography.titleStyleFor(
+                        next.title,
+                        theme.textTheme.titleLarge,
+                      ),
+                    ),
+                    if (next.estimatedMinutes > 0) ...[
+                      const SizedBox(height: 8),
+                      Text(l10n.minutesShort(next.estimatedMinutes)),
+                    ],
+                    const SizedBox(height: 8),
+                    TextButton(
+                      key: const ValueKey('lesson-completion-roadmap'),
+                      onPressed: openRoadmap,
+                      child: Text(l10n.lessonRoadmapAction),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
                   TextButton(
                     key: const ValueKey('lesson-completion-home'),
-                    onPressed: () => context.go('/home'),
-                    child: Text(isKhmer ? 'ត្រឡប់ទៅទំព័រដើម' : 'Back home'),
+                    onPressed: () => context.go('/learn'),
+                    child: Text(l10n.lessonFinishSession),
                   ),
                 ],
               ),
             ),
           ),
         ),
+      ),
+      bottomNavigationBar: LearningActionBar(
+        primaryKey: const ValueKey('lesson-completion-continue'),
+        primaryLabel: next != null
+            ? l10n.lessonNextAction
+            : roadmapCategoryId == null
+            ? l10n.continueLearning
+            : l10n.lessonRoadmapAction,
+        primaryIcon: Icons.arrow_forward_rounded,
+        onPrimary: next == null
+            ? openRoadmap
+            : () => context.pushReplacement(
+                '/learn/${Uri.encodeComponent(next.id)}',
+                extra: next.toSummary(
+                  categoryId: roadmap!.categoryId,
+                  categoryName: roadmap.categoryName,
+                ),
+              ),
       ),
     );
   }
@@ -305,14 +210,14 @@ class ResumeLearningScreen extends ConsumerWidget {
         .where((lesson) => !lesson.completed && (lesson.progress ?? 0) > 0)
         .toList();
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isKhmer ? 'បន្តការរៀន' : 'Resume learning'),
-      ),
+      appBar: AppBar(title: Text(isKhmer ? 'បន្តការរៀន' : 'Resume learning')),
       body: state.isLoading
           ? const Center(child: CircularProgressIndicator())
           : active.isEmpty
           ? IllustratedEmptyState(
-              title: isKhmer ? 'មិនមានមេរៀនកំពុងរៀនទេ' : 'No lesson in progress',
+              title: isKhmer
+                  ? 'មិនមានមេរៀនកំពុងរៀនទេ'
+                  : 'No lesson in progress',
               body: isKhmer
                   ? 'ជ្រើសរើសមេរៀនដើម្បីចាប់ផ្តើមការសិក្សាជាបន្ត។'
                   : 'Choose a lesson to begin your next learning streak.',

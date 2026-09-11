@@ -218,8 +218,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                         xp = (extra['xpEarned'] as num?)?.toInt() ?? 0;
                         lessonTitle = extra['lessonTitle'] as String?;
                         categoryName = extra['categoryName'] as String?;
-                        totalExercises =
-                            (extra['totalExercises'] as num?)?.toInt();
+                        totalExercises = (extra['totalExercises'] as num?)
+                            ?.toInt();
                       } else {
                         xp = 0;
                         lessonTitle = null;
@@ -233,6 +233,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                         lessonTitle: lessonTitle,
                         categoryName: categoryName,
                         totalExercises: totalExercises,
+                        reflection: extra is Map
+                            ? extra['reflection'] as String?
+                            : null,
+                        needsReview:
+                            extra is Map && extra['needsReview'] == true,
+                        lessonId: extra is Map
+                            ? extra['lessonId'] as String?
+                            : null,
                       );
                     },
                   ),

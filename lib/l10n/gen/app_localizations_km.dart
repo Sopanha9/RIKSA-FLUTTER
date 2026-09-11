@@ -740,6 +740,28 @@ class AppLocalizationsKm extends AppLocalizations {
   String get yourSubjects => 'មុខវិជ្ជារបស់អ្នក';
 
   @override
+  String get mathematicsSubjectDescription =>
+      'ពង្រឹងជំនាញលេខ និងការដោះស្រាយបញ្ហា';
+
+  @override
+  String get physicsSubjectDescription => 'ស្វែងយល់ពីចលនា កម្លាំង និងសកលលោក';
+
+  @override
+  String get chemistrySubjectDescription =>
+      'ស្វែងយល់ពីសារធាតុ ប្រតិកម្ម និងការប្រែប្រួល';
+
+  @override
+  String get biologySubjectDescription =>
+      'ស្វែងយល់ពីប្រព័ន្ធរស់ និងវិទ្យាសាស្ត្រជីវិត';
+
+  @override
+  String get technologySubjectDescription =>
+      'អនុវត្តកុំព្យូទ័រ និងបច្ចេកវិទ្យាឌីជីថល';
+
+  @override
+  String get generalSubjectDescription => 'ស្វែងយល់ពីមុខវិជ្ជា និងមេរៀននេះ';
+
+  @override
   String get continueReading => 'បន្តអាន';
 
   @override
@@ -1280,4 +1302,176 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get otpDeliveryHelp =>
       'បើកការសន្ទនាជាមួយបូត Riksa ដើម្បីរកលេខកូដចុងក្រោយ។ ប្រសិនបើលេខកូដផុតកំណត់ សូមស្នើសុំលេខកូដថ្មី។';
+
+  @override
+  String get lessonRead => 'អាន';
+
+  @override
+  String get lessonRespond => 'ឆ្លើយ';
+
+  @override
+  String get lessonReflect => 'សរសេរការយល់ដឹង';
+
+  @override
+  String lessonSectionCounter(int current, int total) {
+    return 'ផ្នែកទី $current នៃ $total';
+  }
+
+  @override
+  String get lessonTrySection => 'សាកល្បងដោយខ្លួនឯង';
+
+  @override
+  String get lessonReflectAction => 'សរសេរការយល់ដឹងពីមេរៀន';
+
+  @override
+  String get lessonCheckAnswer => 'ពិនិត្យចម្លើយ';
+
+  @override
+  String get lessonCompareAnswers => 'ប្រៀបធៀបចម្លើយ';
+
+  @override
+  String get lessonWorkFirst => 'សាកល្បងដោះស្រាយជាមុន';
+
+  @override
+  String get lessonWorkHint =>
+      'សរសេរចម្លើយ និងរបៀបដែលអ្នករកបាន។ បន្ទាប់មកប្រៀបធៀបជាមួយជម្រើស។';
+
+  @override
+  String get lessonAnswerHint => 'សរសេរចម្លើយរបស់អ្នក';
+
+  @override
+  String get lessonYourWork => 'វិធីដោះស្រាយរបស់អ្នក';
+
+  @override
+  String get lessonChooseAnswer =>
+      'ប្រៀបធៀបវិធីដោះស្រាយរបស់អ្នក ហើយជ្រើសរើសចម្លើយ។';
+
+  @override
+  String lessonExerciseNumber(int number) {
+    return 'លំហាត់ទី $number';
+  }
+
+  @override
+  String lessonResponseProgress(int done, int total) {
+    return 'បានពិនិត្យចម្លើយ $done ក្នុងចំណោម $total';
+  }
+
+  @override
+  String get lessonSectionComplete => 'បានបញ្ចប់ផ្នែកនេះ';
+
+  @override
+  String get lessonUpNext => 'បន្ទាប់មក';
+
+  @override
+  String get lessonReflectionTitle => 'តើអ្នកបានយល់អ្វីខ្លះ?';
+
+  @override
+  String get lessonReflectionBody =>
+      'សរសេរគំនិតមួយជាពាក្យរបស់អ្នកផ្ទាល់។ កត់ត្រាចំណុចដែលអ្នកចង់រំលឹកឡើងវិញ។';
+
+  @override
+  String get lessonReflectionHint =>
+      'ខ្ញុំបានយល់ថា… ខ្ញុំនៅចង់សិក្សាបន្ថែមអំពី…';
+
+  @override
+  String get lessonConfidencePrompt => 'តើអ្នកយល់មេរៀននេះកម្រិតណា?';
+
+  @override
+  String get lessonConfident => 'ខ្ញុំអាចពន្យល់បាន';
+
+  @override
+  String get lessonNeedsReview => 'ខ្ញុំចង់រំលឹកឡើងវិញ';
+
+  @override
+  String get lessonSaveReflection => 'រក្សាទុក និងបញ្ចប់';
+
+  @override
+  String get lessonReflectionRequired =>
+      'សរសេរការយល់ដឹងខ្លីមួយ ដើម្បីបញ្ចប់មេរៀននេះ។';
+
+  @override
+  String get lessonSavedReflection => 'ការយល់ដឹងរបស់អ្នក';
+
+  @override
+  String get lessonCompletedBody =>
+      'អ្នកបានបោះជំហានមួយទៀតក្នុងកម្មវិធីសិក្សា។ សម្រាក ឬបន្តពេលអ្នករួចរាល់។';
+
+  @override
+  String get lessonRevisitTitle => 'ចំណុចដែលត្រូវរំលឹកឡើងវិញ';
+
+  @override
+  String get lessonRevisitBody =>
+      'អ្នកបានសម្គាល់ថាចង់រំលឹកមេរៀននេះ។ អ្នកអាចបើកវាម្ដងទៀតពីផែនទីសិក្សា។';
+
+  @override
+  String get lessonNextAction => 'ចាប់ផ្តើមមេរៀនបន្ទាប់';
+
+  @override
+  String get lessonRoadmapAction => 'ត្រឡប់ទៅផែនទីសិក្សា';
+
+  @override
+  String get lessonFinishSession => 'បញ្ចប់ត្រឹមនេះសិន';
+
+  @override
+  String get lessonResumeAction => 'បន្តមេរៀន';
+
+  @override
+  String get lessonStartAction => 'ចាប់ផ្តើមមេរៀន';
+
+  @override
+  String get lessonOptions => 'ជម្រើសមេរៀន';
+
+  @override
+  String get lessonSections => 'ផ្នែកមេរៀន';
+
+  @override
+  String get lessonSave => 'រក្សាទុកមេរៀន';
+
+  @override
+  String get lessonUnsave => 'ដកចេញពីមេរៀនរក្សាទុក';
+
+  @override
+  String get lessonMute => 'បិទសំឡេង';
+
+  @override
+  String get lessonUnmute => 'បើកសំឡេង';
+
+  @override
+  String get lessonExitBody =>
+      'ចម្លើយដែលបានពិនិត្យត្រូវបានរក្សាទុក។ សំណេរដែលមិនទាន់បានរក្សាទុកនឹងបាត់បង់ ប្រសិនបើអ្នកចាកចេញ។';
+
+  @override
+  String get lessonAiHint => 'ទទួលតម្រុយ';
+
+  @override
+  String get lessonExplainAnswer => 'ពន្យល់ជាមួយ AI';
+
+  @override
+  String get lessonWhy => 'សេចក្តីពន្យល់';
+
+  @override
+  String get lessonHint => 'តម្រុយ';
+
+  @override
+  String get lessonEditWorking => 'កែសម្រួលវិធីដោះស្រាយ';
+
+  @override
+  String get lessonWorkingStatus => 'សូមរង់ចាំបន្តិច…';
+
+  @override
+  String get lessonAnswerSuccess => 'ត្រឹមត្រូវហើយ។ បន្តពេលអ្នករួចរាល់។';
+
+  @override
+  String get lessonAnswerRetry => 'មិនទាន់ត្រឹមត្រូវទេ។ សាកល្បងវិធីផ្សេងទៀត។';
+
+  @override
+  String get learningLoadErrorBody =>
+      'មេរៀនរបស់អ្នកមិនអាចផ្ទុកបាននៅពេលនេះ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get savedLessonsEmptyTitle => 'រក្សាគំនិតល្អទុកសម្រាប់ពេលក្រោយ';
+
+  @override
+  String get savedLessonsEmptyBody =>
+      'បានឃើញរូបមន្តដែលគួររំលឹកឡើងវិញ? រក្សាទុកមេរៀនពីម៉ឺនុយរបស់វា។ អ្នកនឹងរកឃើញវានៅទីនេះ។';
 }

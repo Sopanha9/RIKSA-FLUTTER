@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 
 /// Raw color values for Riksa's warm, Cambodian-inspired visual language.
 /// Feature code should prefer [RiksaPalette] so dark mode stays semantic.
@@ -485,6 +486,18 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: RiksaPageTransitionsBuilder(
+            predictiveBack: true,
+          ),
+          TargetPlatform.iOS: RiksaPageTransitionsBuilder(cupertino: true),
+          TargetPlatform.macOS: RiksaPageTransitionsBuilder(),
+          TargetPlatform.windows: RiksaPageTransitionsBuilder(),
+          TargetPlatform.linux: RiksaPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: RiksaPageTransitionsBuilder(),
+        },
+      ),
       brightness: brightness,
       fontFamily: RiksaTypography.latinFamily,
       fontFamilyFallback: RiksaTypography.fallback,
@@ -633,6 +646,60 @@ class AppTheme {
             : AppColors.editorialBlack,
         foregroundColor: isDark ? AppColors.editorialAubergine : Colors.white,
         elevation: 2,
+      ),
+    );
+  }
+}
+
+/// A quiet fade and short lift for navigation. iOS keeps its interactive back
+/// swipe. Reduced motion renders the destination without a visual transition.
+class RiksaPageTransitionsBuilder extends PageTransitionsBuilder {
+  const RiksaPageTransitionsBuilder({
+    this.cupertino = false,
+    this.predictiveBack = false,
+  });
+  final bool cupertino;
+  final bool predictiveBack;
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 240);
+  @override
+  Duration get reverseTransitionDuration => RiksaMotion.standard;
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    if (predictiveBack) {
+      return const PredictiveBackPageTransitionsBuilder().buildTransitions(
+        route,
+        context,
+        animation,
+        secondaryAnimation,
+        child,
+      );
+    }
+    if (cupertino) {
+      return const CupertinoPageTransitionsBuilder().buildTransitions(
+        route,
+        context,
+        animation,
+        secondaryAnimation,
+        child,
+      );
+    }
+    final eased = animation.drive(CurveTween(curve: RiksaMotion.standardCurve));
+    return FadeTransition(
+      opacity: eased,
+      child: SlideTransition(
+        position: eased.drive(
+          Tween(begin: const Offset(0, .025), end: Offset.zero),
+        ),
+        child: child,
       ),
     );
   }

@@ -117,24 +117,25 @@ Iterable<TextSpan> _textSpans(InlineSpan span) sync* {
 bool _hasKhmer(String? text) =>
     text != null && RegExp(r'[\u1780-\u17FF\u19E0-\u19FF]').hasMatch(text);
 
-Widget _lessonApp({TextScaler textScaler = TextScaler.noScaling}) => ProviderScope(
-  overrides: [learningApiProvider.overrideWithValue(_FakeLearningApi())],
-  child: MaterialApp(
-    theme: AppTheme.light,
-    localizationsDelegates: const [
-      AppLocalizations.delegate,
-      GlobalMaterialLocalizations.delegate,
-      GlobalWidgetsLocalizations.delegate,
-      GlobalCupertinoLocalizations.delegate,
-    ],
-    supportedLocales: const [Locale('en'), Locale('km')],
-    builder: (context, child) => MediaQuery(
-      data: MediaQuery.of(context).copyWith(textScaler: textScaler),
-      child: child!,
-    ),
-    home: const LessonExperienceScreen(lessonId: 'biology-1'),
-  ),
-);
+Widget _lessonApp({TextScaler textScaler = TextScaler.noScaling}) =>
+    ProviderScope(
+      overrides: [learningApiProvider.overrideWithValue(_FakeLearningApi())],
+      child: MaterialApp(
+        theme: AppTheme.light,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('km')],
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+          child: child!,
+        ),
+        home: const LessonExperienceScreen(lessonId: 'biology-1'),
+      ),
+    );
 
 void main() {
   setUpAll(() async {
@@ -231,7 +232,7 @@ void main() {
   testWidgets('the header keeps progress pinned while the title scrolls away', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(393, 852);
+    tester.view.physicalSize = const Size(393, 600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -242,7 +243,7 @@ void main() {
     final track = find.byKey(const ValueKey('lesson-progress-track'));
     final title = find.text(_detail.title);
     final trackTop = tester.getTopLeft(track).dy;
-    final titleTop = tester.getTopLeft(title).dy;
+    expect(title, findsOneWidget);
 
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -260));
     await tester.pumpAndSettle();
@@ -251,7 +252,7 @@ void main() {
     // room to the reading.
     expect(track, findsOneWidget);
     expect(tester.getTopLeft(track).dy, trackTop);
-    expect(tester.getTopLeft(title).dy, lessThan(titleTop));
+    expect(title, findsNothing);
   });
 
   testWidgets('the header holds at 200% text scale', (tester) async {
@@ -262,9 +263,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(
-      _lessonApp(textScaler: const TextScaler.linear(2)),
-    );
+    await tester.pumpWidget(_lessonApp(textScaler: const TextScaler.linear(2)));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('lesson-progress-track')), findsOneWidget);
@@ -301,7 +300,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap practice button in action bar to enter practice phase
-      final practiceButton = find.text('Practice this section');
+      final practiceButton = find.text('Try it yourself');
       expect(practiceButton, findsOneWidget);
       await tester.tap(practiceButton);
       await tester.pumpAndSettle();
@@ -323,7 +322,9 @@ void main() {
       );
 
       // Tap keep learning to dismiss
-      await tester.tap(find.byKey(const ValueKey('leave-lesson-cancel-button')));
+      await tester.tap(
+        find.byKey(const ValueKey('leave-lesson-cancel-button')),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Leave this lesson?'), findsNothing);
 
@@ -332,71 +333,74 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Leave this lesson?'), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('leave-lesson-confirm-button')));
+      await tester.tap(
+        find.byKey(const ValueKey('leave-lesson-confirm-button')),
+      );
       await tester.pumpAndSettle();
     },
   );
 
-  testWidgets(
-    'toggles audio sound enabled/muted from header button',
-    (tester) async {
-      SharedPreferences.setMockInitialValues({});
-      final container = ProviderContainer(
-        overrides: [
-          learningApiProvider.overrideWithValue(_FakeLearningApi()),
-        ],
-      );
-      addTearDown(container.dispose);
+  testWidgets('toggles audio sound enabled/muted from header button', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final container = ProviderContainer(
+      overrides: [learningApiProvider.overrideWithValue(_FakeLearningApi())],
+    );
+    addTearDown(container.dispose);
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: MaterialApp(
-            theme: AppTheme.light,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [Locale('en'), Locale('km')],
-            home: const Scaffold(
-              body: LessonExperienceScreen(lessonId: 'biology-1'),
-            ),
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: const Scaffold(
+            body: LessonExperienceScreen(lessonId: 'biology-1'),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      final toggle = find.byKey(const ValueKey('lesson-sound-toggle'));
-      expect(toggle, findsOneWidget);
-      expect(find.byIcon(Icons.volume_up_rounded), findsOneWidget);
-      expect(container.read(soundEnabledProvider), isTrue);
+    await tester.tap(find.byKey(const ValueKey('lesson-options')));
+    await tester.pumpAndSettle();
+    final toggle = find.byKey(const ValueKey('lesson-sound-toggle'));
+    expect(toggle, findsOneWidget);
+    expect(find.byIcon(Icons.volume_up_rounded), findsOneWidget);
+    expect(container.read(soundEnabledProvider), isTrue);
 
-      // Tap toggle to mute
-      await tester.tap(toggle);
-      await tester.pumpAndSettle();
+    // Tap toggle to mute
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.volume_off_rounded), findsOneWidget);
-      expect(container.read(soundEnabledProvider), isFalse);
+    await tester.tap(find.byKey(const ValueKey('lesson-options')));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.volume_off_rounded), findsOneWidget);
+    expect(container.read(soundEnabledProvider), isFalse);
 
-      // Tap toggle again to unmute
-      await tester.tap(toggle);
-      await tester.pumpAndSettle();
+    // Tap toggle again to unmute
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.volume_up_rounded), findsOneWidget);
-      expect(container.read(soundEnabledProvider), isTrue);
-    },
-  );
+    await tester.tap(find.byKey(const ValueKey('lesson-options')));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.volume_up_rounded), findsOneWidget);
+    expect(container.read(soundEnabledProvider), isTrue);
+  });
 
   testWidgets(
     'toggles lesson bookmark from header button and updates saved state',
     (tester) async {
       SharedPreferences.setMockInitialValues({});
       final container = ProviderContainer(
-        overrides: [
-          learningApiProvider.overrideWithValue(_FakeLearningApi()),
-        ],
+        overrides: [learningApiProvider.overrideWithValue(_FakeLearningApi())],
       );
       addTearDown(container.dispose);
 
@@ -420,6 +424,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await tester.tap(find.byKey(const ValueKey('lesson-options')));
+      await tester.pumpAndSettle();
       final bookmarkToggle = find.byKey(
         const ValueKey('lesson-bookmark-toggle'),
       );
@@ -434,6 +440,8 @@ void main() {
       await tester.tap(bookmarkToggle);
       await tester.pumpAndSettle();
 
+      await tester.tap(find.byKey(const ValueKey('lesson-options')));
+      await tester.pumpAndSettle();
       expect(find.byIcon(Icons.bookmark_rounded), findsOneWidget);
       expect(
         container.read(savedLessonsProvider).contains('biology-1'),
@@ -442,6 +450,8 @@ void main() {
 
       // Tap toggle again to remove bookmark
       await tester.tap(bookmarkToggle);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('lesson-options')));
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.bookmark_border_rounded), findsOneWidget);
@@ -452,4 +462,3 @@ void main() {
     },
   );
 }
-

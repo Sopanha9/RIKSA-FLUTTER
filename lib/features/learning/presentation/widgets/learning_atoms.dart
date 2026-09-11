@@ -7,6 +7,9 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/riksa_interactions.dart';
+import '../../../../l10n/gen/app_localizations.dart';
+import '../learning_design.dart';
 
 /// A rounded-square icon badge. Never a circle, never a square.
 class LearningBadge extends StatelessWidget {
@@ -123,8 +126,10 @@ class LearningPrimaryButton extends StatelessWidget {
     this.icon,
     this.background,
     this.foreground,
+    this.busy = false,
   });
 
+  final bool busy;
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
@@ -133,30 +138,72 @@ class LearningPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayLabel = busy
+        ? AppLocalizations.of(context)!.lessonWorkingStatus
+        : label;
     final child = Text(
-      label,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
+      displayLabel,
+      textAlign: TextAlign.center,
       style: RiksaTypography.bodyStyleFor(
-        label,
+        displayLabel,
         const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
       ),
     );
     final style = FilledButton.styleFrom(
-      backgroundColor: background,
-      foregroundColor: foreground,
+      backgroundColor: background ?? learningAnchor(context),
+      foregroundColor: foreground ?? onLearningAnchor(context),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       minimumSize: const Size.fromHeight(54),
       shape: const StadiumBorder(),
     );
-    return icon == null
-        ? FilledButton(onPressed: onPressed, style: style, child: child)
-        : FilledButton.icon(
-            onPressed: onPressed,
-            style: style,
-            iconAlignment: IconAlignment.end,
-            icon: Icon(icon, size: 17),
-            label: child,
-          );
+    final callback = busy ? null : onPressed;
+    return RiksaTapFeedback(
+      enabled: callback != null,
+      child: busy
+          ? FilledButton(
+              onPressed: null,
+              style: style.copyWith(
+                backgroundColor: WidgetStatePropertyAll(
+                  background ?? learningAnchor(context),
+                ),
+                foregroundColor: WidgetStatePropertyAll(
+                  foreground ?? onLearningAnchor(context),
+                ),
+              ),
+              child: Semantics(
+                liveRegion: true,
+                label: displayLabel,
+                child: ExcludeSemantics(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (MediaQuery.disableAnimationsOf(context))
+                        const Icon(Icons.hourglass_top_rounded, size: 18)
+                      else
+                        SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: foreground ?? onLearningAnchor(context),
+                          ),
+                        ),
+                      const SizedBox(width: 10),
+                      Flexible(child: child),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          : icon == null
+          ? FilledButton(onPressed: callback, style: style, child: child)
+          : FilledButton.icon(
+              onPressed: onPressed,
+              style: style,
+              iconAlignment: IconAlignment.end,
+              icon: Icon(icon, size: 17),
+              label: child,
+            ),
+    );
   }
 }
 
@@ -179,16 +226,18 @@ class LearningCircleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Tooltip(
     message: tooltip,
-    child: Material(
-      color: context.riksa.surface,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Icon(icon, size: 20, color: foreground ?? context.riksa.ink),
+    child: RiksaTapFeedback(
+      child: Material(
+        color: context.riksa.surface,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(icon, size: 20, color: foreground ?? context.riksa.ink),
+          ),
         ),
       ),
     ),
@@ -225,25 +274,13 @@ class LearningActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.riksa;
-    final primary = busy
-        ? FilledButton(
-            key: primaryKey,
-            onPressed: null,
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(54),
-              shape: const StadiumBorder(),
-            ),
-            child: const SizedBox.square(
-              dimension: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          )
-        : LearningPrimaryButton(
-            key: primaryKey,
-            label: primaryLabel,
-            onPressed: onPrimary,
-            icon: primaryIcon,
-          );
+    final primary = LearningPrimaryButton(
+      key: primaryKey,
+      label: primaryLabel,
+      onPressed: onPrimary,
+      icon: primaryIcon,
+      busy: busy,
+    );
 
     return Container(
       decoration: BoxDecoration(

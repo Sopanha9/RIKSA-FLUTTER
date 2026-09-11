@@ -474,6 +474,18 @@
   "@gradeStemLabel": {},
   "yourSubjects": "Your subjects",
   "@yourSubjects": {},
+  "mathematicsSubjectDescription": "Build confidence with numbers and problem solving",
+  "@mathematicsSubjectDescription": {},
+  "physicsSubjectDescription": "Understand motion, forces, and the universe",
+  "@physicsSubjectDescription": {},
+  "chemistrySubjectDescription": "Discover matter, reactions, and change",
+  "@chemistrySubjectDescription": {},
+  "biologySubjectDescription": "Explore living systems and life science",
+  "@biologySubjectDescription": {},
+  "technologySubjectDescription": "Practice computing and digital technology",
+  "@technologySubjectDescription": {},
+  "generalSubjectDescription": "Explore this subject and its lessons",
+  "@generalSubjectDescription": {},
   "continueReading": "Continue reading",
   "@continueReading": {},
   "xpRewardAmount": "+{xp} XP",
@@ -807,5 +819,84 @@
         "type": "int"
       }
     }
-  }
+  },
+  "lessonRead": "Read",
+  "lessonRespond": "Respond",
+  "lessonReflect": "Reflect",
+  "lessonSectionCounter": "Section {current} of {total}",
+  "@lessonSectionCounter": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lessonTrySection": "Try it yourself",
+  "lessonReflectAction": "Reflect on this lesson",
+  "lessonCheckAnswer": "Check answer",
+  "lessonCompareAnswers": "Compare answers",
+  "lessonWorkFirst": "Work it out first",
+  "lessonWorkHint": "Write your answer and how you got there. Then compare it with the choices.",
+  "lessonAnswerHint": "Write your answer",
+  "lessonYourWork": "Your working",
+  "lessonChooseAnswer": "Compare your working and choose an answer.",
+  "lessonExerciseNumber": "Exercise {number}",
+  "@lessonExerciseNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "lessonResponseProgress": "{done} of {total} responses checked",
+  "@lessonResponseProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lessonSectionComplete": "Section complete",
+  "lessonUpNext": "Up next",
+  "lessonReflectionTitle": "What will you take away?",
+  "lessonReflectionBody": "Put one idea into your own words. Note anything you want to revisit.",
+  "lessonReflectionHint": "I understood… I still want to work on…",
+  "lessonConfidencePrompt": "How do you feel about this lesson?",
+  "lessonConfident": "I can explain it",
+  "lessonNeedsReview": "I want to revisit it",
+  "lessonSaveReflection": "Save and finish",
+  "lessonReflectionRequired": "Write a short reflection to finish this lesson.",
+  "lessonSavedReflection": "Your reflection",
+  "lessonCompletedBody": "One more step through your syllabus. Take a break or continue when you are ready.",
+  "lessonRevisitTitle": "Worth another look",
+  "lessonRevisitBody": "You marked this lesson for another look. You can reopen it from your roadmap.",
+  "lessonNextAction": "Start next lesson",
+  "lessonRoadmapAction": "Back to roadmap",
+  "lessonFinishSession": "Finish for now",
+  "lessonResumeAction": "Resume lesson",
+  "lessonStartAction": "Start lesson",
+  "lessonOptions": "Lesson options",
+  "lessonSections": "Lesson sections",
+  "lessonSave": "Save lesson",
+  "lessonUnsave": "Remove from saved",
+  "lessonMute": "Mute sound",
+  "lessonUnmute": "Unmute sound",
+  "lessonExitBody": "Checked answers are saved. Your unfinished writing will be lost if you leave.",
+  "lessonAiHint": "Get a hint",
+  "lessonExplainAnswer": "Explain with AI",
+  "lessonWhy": "Explanation",
+  "lessonHint": "Hint",
+  "lessonEditWorking": "Edit working",
+  "lessonWorkingStatus": "One moment…",
+  "lessonAnswerSuccess": "That’s it. Keep going when you’re ready.",
+  "lessonAnswerRetry": "Not quite yet. Try another approach.",
+  "learningLoadErrorBody": "Your lessons couldn’t load this time. Give it another try.",
+  "savedLessonsEmptyTitle": "Keep a good idea for later",
+  "savedLessonsEmptyBody": "Found a formula worth revisiting? Save the lesson from its menu. It will be waiting here."
 }

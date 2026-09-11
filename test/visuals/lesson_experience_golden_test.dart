@@ -6,9 +6,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/core/widgets/riksa_components.dart';
+import 'package:riksa_app/features/learning/presentation/widgets/learning_atoms.dart';
 import 'package:riksa_app/features/learning/data/learning_api.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_experience_screen.dart';
+import 'package:riksa_app/features/learning/presentation/learning_result_screens.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
@@ -87,15 +91,37 @@ class _PreviewLearningApi implements LearningApi {
   }) => throw UnimplementedError();
 
   @override
-  Future<LearningRoadmap> roadmap(String categoryId) =>
-      throw UnimplementedError();
+  Future<LearningRoadmap> roadmap(String categoryId) async =>
+      LearningRoadmap.fromJson({
+        'categoryId': 'physics',
+        'categoryName': 'Physics',
+        'currentLessonId': 'next',
+        'units': [
+          {
+            'lessons': [
+              {
+                'id': 'next',
+                'title': 'Momentum and collisions',
+                'status': 'AVAILABLE',
+                'estimatedMinutes': 10,
+              },
+            ],
+          },
+        ],
+      });
 
   @override
   Future<LessonAnswerResult> submitAnswer({
     required String lessonId,
     required String exerciseId,
     required String answer,
-  }) => throw UnimplementedError();
+  }) async => LessonAnswerResult(
+    exerciseId: exerciseId,
+    correct: true,
+    points: 10,
+    message: 'Correct.',
+    explanation: 'Use the relationship between force, mass and acceleration.',
+  );
 }
 
 Future<void> _loadFonts() async {
@@ -124,14 +150,34 @@ Future<void> _loadFonts() async {
         'MaterialIcons-Regular.otf',
       ).readAsBytes().then(ByteData.sublistView),
     );
-  await Future.wait([poppins.load(), khmer.load(), materialIcons.load()]);
+  final khmerTitle = FontLoader(RiksaTypography.khmerTitleFamily)
+    ..addFont(rootBundle.load('assets/fonts/Koulen-Regular.ttf'));
+  final khmerBody = FontLoader(RiksaTypography.khmerBodyFamily)
+    ..addFont(rootBundle.load('assets/fonts/KantumruyPro-Variable.ttf'));
+  await Future.wait([
+    poppins.load(),
+    khmer.load(),
+    materialIcons.load(),
+    khmerTitle.load(),
+    khmerBody.load(),
+  ]);
 }
 
-Widget _previewApp({ThemeData? theme}) => ProviderScope(
+Widget _previewApp({
+  ThemeData? theme,
+  Widget? home,
+  Locale locale = const Locale('en'),
+  TextScaler scaler = TextScaler.noScaling,
+}) => ProviderScope(
   overrides: [learningApiProvider.overrideWithValue(_PreviewLearningApi())],
   child: MaterialApp(
     debugShowCheckedModeBanner: false,
     theme: theme ?? AppTheme.light,
+    locale: locale,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: scaler),
+      child: child!,
+    ),
     localizationsDelegates: const [
       AppLocalizations.delegate,
       GlobalMaterialLocalizations.delegate,
@@ -139,12 +185,17 @@ Widget _previewApp({ThemeData? theme}) => ProviderScope(
       GlobalCupertinoLocalizations.delegate,
     ],
     supportedLocales: const [Locale('en'), Locale('km')],
-    home: const LessonExperienceScreen(lessonId: 'physics-2'),
+    home: home ?? const LessonExperienceScreen(lessonId: 'physics-2'),
   ),
 );
 
 void main() {
   setUpAll(_loadFonts);
+  setUp(
+    () => SharedPreferences.setMockInitialValues({
+      'riksa_learning_sound_enabled': false,
+    }),
+  );
 
   testWidgets('lesson reading and practice steps', (tester) async {
     tester.view.physicalSize = const Size(393, 852);
@@ -163,12 +214,62 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('start-section-1')));
     await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(LessonExperienceScreen),
+      matchesGoldenFile('goldens/lesson_working_en_light.png'),
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('lesson-working-ex-1')),
+      'F = m × a = 2 × 3 = 6 N',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('compare-answers')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('lesson-option-2')));
     await tester.tap(find.byKey(const ValueKey('lesson-option-2')));
     await tester.pumpAndSettle();
 
     await expectLater(
       find.byType(LessonExperienceScreen),
       matchesGoldenFile('goldens/lesson_practice_en_light.png'),
+    );
+    await tester.tap(find.byKey(const ValueKey('check-answer')));
+    await tester.pumpAndSettle();
+    expect(find.text('Correct.').hitTestable(), findsOneWidget);
+    await expectLater(
+      find.byType(LessonExperienceScreen),
+      matchesGoldenFile('goldens/lesson_feedback_en_light.png'),
+    );
+    await tester.tap(find.byKey(const ValueKey('continue-after-answer')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('continue-to-section-2')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('start-section-2')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('lesson-working-ex-2')),
+      'a = F / m, so twice the mass gives half the acceleration.',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('compare-answers')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('lesson-option-0')));
+    await tester.tap(find.byKey(const ValueKey('lesson-option-0')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('check-answer')));
+    await tester.pumpAndSettle();
+    expect(find.text('Correct.').hitTestable(), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('continue-after-answer')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('lesson-reflection')),
+      'Force depends on both mass and acceleration. I want to practise rearranging the formula.',
+    );
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(LessonExperienceScreen),
+      matchesGoldenFile('goldens/lesson_reflection_en_light.png'),
     );
   });
 
@@ -185,6 +286,96 @@ void main() {
     await expectLater(
       find.byType(LessonExperienceScreen),
       matchesGoldenFile('goldens/lesson_reading_en_dark.png'),
+    );
+  });
+  testWidgets('completion makes the next lesson clear', (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      _previewApp(
+        home: const LessonCompletionScreen(
+          xpEarned: 40,
+          lessonTitle: 'Forces and Motion',
+          roadmapCategoryId: 'physics',
+          lessonId: 'physics-2',
+          reflection:
+              'Force depends on both mass and acceleration. I want to practise rearranging the formula.',
+          needsReview: true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await expectLater(
+      find.byType(LessonCompletionScreen),
+      matchesGoldenFile('goldens/lesson_completion_en_light.png'),
+    );
+  });
+  for (final locale in ['en', 'km']) {
+    testWidgets('friendly empty state in $locale', (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        _previewApp(
+          locale: Locale(locale),
+          home: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Scaffold(
+                body: SafeArea(
+                  child: IllustratedEmptyState(
+                    title: l10n.savedLessonsEmptyTitle,
+                    body: l10n.savedLessonsEmptyBody,
+                    actionLabel: l10n.lessonStartAction,
+                    onAction: () {},
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await expectLater(
+        find.byType(Scaffold),
+        matchesGoldenFile('goldens/learning_empty_${locale}_light.png'),
+      );
+    });
+  }
+
+  testWidgets('busy button keeps its action color and explains the wait', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 180);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      _previewApp(
+        home: const Scaffold(
+          body: Padding(
+            padding: EdgeInsets.all(20),
+            child: Center(
+              child: LearningPrimaryButton(
+                label: 'Save and finish',
+                busy: true,
+                onPressed: null,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.takeException(), isNull);
+    await expectLater(
+      find.byType(Scaffold),
+      matchesGoldenFile('goldens/learning_busy_en_light.png'),
     );
   });
 }
