@@ -30,6 +30,7 @@ class CurrentUserRankCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasFrame = riksaAvatarFrameAssetPath(tier) != null;
 
     return Semantics(
       button: onTap != null,
@@ -70,10 +71,12 @@ class CurrentUserRankCard extends StatelessWidget {
                       height: 40,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.editorialPink,
-                          width: 2,
-                        ),
+                        border: hasFrame
+                            ? null
+                            : Border.all(
+                                color: AppColors.editorialPink,
+                                width: 2,
+                              ),
                       ),
                       child: RiksaAvatarImage(
                         value: avatarUrl,
@@ -81,6 +84,7 @@ class CurrentUserRankCard extends StatelessWidget {
                         size: 36,
                         backgroundColor: AppColors.editorialPinkSoft,
                         foregroundColor: AppColors.editorialAubergine,
+                        frameTier: tier,
                       ),
                     ),
                     const SizedBox(width: 14),

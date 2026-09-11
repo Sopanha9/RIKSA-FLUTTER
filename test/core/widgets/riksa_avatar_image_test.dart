@@ -25,6 +25,24 @@ void main() {
     expect(request.toJson()['avatarUrl'], '/avatars/avatar-1.png');
   });
 
+  test('maps supported server rank tiers to bundled avatar frames', () {
+    for (final tier in [
+      'BRONZE',
+      'SILVER',
+      'GOLD',
+      'PLATINUM',
+      'DIAMOND',
+      'LEGEND',
+    ]) {
+      expect(
+        riksaAvatarFrameAssetPath(' ${tier.toLowerCase()} '),
+        'assets/images/avatar_frames/${tier.toLowerCase()}.png',
+      );
+    }
+    expect(riksaAvatarFrameAssetPath('SCHOLAR'), isNull);
+    expect(riksaAvatarFrameAssetPath(null), isNull);
+  });
+
   test('round-trips local profile media paths', () {
     const path = '/documents/riksa-profile-media/user/avatar.jpg';
 
@@ -50,6 +68,31 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(
+      find.byKey(const ValueKey('humation-avatar-avatar-01.svg')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('layers the server tier frame over the avatar', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: RiksaAvatarImage(
+            value: '/avatars/avatar-1.png',
+            label: 'Sophea',
+            size: 72,
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            frameTier: ' gold ',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('avatar-frame-gold')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('humation-avatar-avatar-01.svg')),
       findsOneWidget,

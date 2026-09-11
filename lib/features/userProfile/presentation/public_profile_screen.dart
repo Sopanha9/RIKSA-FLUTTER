@@ -152,7 +152,11 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   padding: const EdgeInsets.fromLTRB(18, 12, 18, 20),
                   child: ProfileIdentityHeader(
                     cover: _PublicCover(url: profile.coverUrl),
-                    avatar: _PublicAvatar(value: avatarUrl, label: displayName),
+                    avatar: _PublicAvatar(
+                      value: avatarUrl,
+                      label: displayName,
+                      tier: profile.currentTier,
+                    ),
                     displayName: displayName,
                     username: username,
                     bio: profile.bio,
@@ -327,30 +331,45 @@ class _PublicCover extends StatelessWidget {
 }
 
 class _PublicAvatar extends StatelessWidget {
-  const _PublicAvatar({required this.value, required this.label});
+  const _PublicAvatar({
+    required this.value,
+    required this.label,
+    required this.tier,
+  });
 
   final String? value;
   final String label;
+  final String? tier;
 
   @override
-  Widget build(BuildContext context) => Container(
-    key: const ValueKey('public-profile-avatar-ring'),
-    width: 88,
-    height: 88,
-    padding: const EdgeInsets.all(3),
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      color: ProfilePalette.canvas(context),
-      border: Border.all(color: ProfilePalette.canvas(context), width: 2),
-    ),
-    child: RiksaAvatarImage(
+  Widget build(BuildContext context) {
+    final hasFrame = riksaAvatarFrameAssetPath(tier) != null;
+    final avatar = RiksaAvatarImage(
       value: value,
       label: label,
-      size: 82,
+      size: hasFrame ? 88 : 82,
       backgroundColor: ProfilePalette.panelSoft(context),
       foregroundColor: ProfilePalette.text(context),
-    ),
-  );
+      frameTier: tier,
+    );
+    return Container(
+      key: const ValueKey('public-profile-avatar-ring'),
+      width: 88,
+      height: 88,
+      padding: hasFrame ? EdgeInsets.zero : const EdgeInsets.all(3),
+      decoration: hasFrame
+          ? null
+          : BoxDecoration(
+              shape: BoxShape.circle,
+              color: ProfilePalette.canvas(context),
+              border: Border.all(
+                color: ProfilePalette.canvas(context),
+                width: 2,
+              ),
+            ),
+      child: avatar,
+    );
+  }
 }
 
 class _PublicPosts extends StatelessWidget {

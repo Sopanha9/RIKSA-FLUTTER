@@ -9,6 +9,7 @@ import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../social/providers/social_feed_provider.dart';
+import '../../userProfile/providers/profile_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
 import '../providers/saved_lessons_provider.dart';
@@ -159,6 +160,11 @@ class _GreetingRow extends ConsumerWidget {
         : user?.username ?? '';
     final tone = subjectTone(context, StemSubject.mathematics);
     final openDrawer = AppShellScope.maybeOf(context)?.openDrawer;
+    final frameTier = ref
+        .watch(profileDashboardProvider)
+        .value
+        ?.gamification
+        .currentTier;
 
     return Row(
       children: [
@@ -177,6 +183,7 @@ class _GreetingRow extends ConsumerWidget {
                 size: 44,
                 backgroundColor: tone.surface,
                 foregroundColor: tone.accent,
+                frameTier: frameTier,
               ),
             ),
           ),

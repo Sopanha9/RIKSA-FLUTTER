@@ -15,6 +15,7 @@ import '../../blog/providers/blog_provider.dart';
 import '../../userProfile/presentation/public_profile_navigation.dart';
 import '../../userProfile/presentation/widgets/profile_ui.dart';
 import '../../userProfile/providers/profile_cover_provider.dart';
+import '../../userProfile/providers/profile_provider.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
 import 'widgets/social_create_menu.dart';
@@ -502,6 +503,11 @@ class _AccountAvatarButton extends ConsumerWidget {
             user: user,
             radius: 19,
             avatarPath: ref.watch(profileAvatarProvider),
+            frameTier: ref
+                .watch(profileDashboardProvider)
+                .value
+                ?.gamification
+                .currentTier,
           ),
         ),
       ),

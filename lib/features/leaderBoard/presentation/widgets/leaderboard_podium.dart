@@ -167,6 +167,7 @@ class _PodiumColumn extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final palette = context.riksa;
     final displayName = row.fallbackName;
+    final hasFrame = riksaAvatarFrameAssetPath(row.rankingTier) != null;
 
     return Semantics(
       button: true,
@@ -199,7 +200,9 @@ class _PodiumColumn extends StatelessWidget {
                     height: avatarSize,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: ringColor, width: 2.5),
+                      border: hasFrame
+                          ? null
+                          : Border.all(color: ringColor, width: 2.5),
                       boxShadow: [
                         BoxShadow(
                           color: ringColor.withValues(alpha: 0.25),
@@ -216,6 +219,7 @@ class _PodiumColumn extends StatelessWidget {
                           ? palette.surfaceRaised
                           : AppColors.editorialField,
                       foregroundColor: palette.ink,
+                      frameTier: row.rankingTier,
                     ),
                   ),
                   // Rank number medal badge pinned at bottom-right (matching inspiration)
@@ -292,8 +296,8 @@ class _PodiumColumn extends StatelessWidget {
                     Text(
                       '${row.score}',
                       maxLines: 1,
-                      style: TextStyle(
-                        color: isWinner
+                        style: TextStyle(
+                          color: isWinner
                             ? (isDark ? context.riksa.jade : context.riksa.jadeStrong)
                             : palette.ink,
                         fontSize: 11,

@@ -10,6 +10,7 @@ import '../../../core/providers/theme_mode_provider.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/profile_cover_provider.dart';
+import '../providers/profile_provider.dart';
 import 'widgets/profile_ui.dart';
 
 class ProfileSettingsScreen extends ConsumerStatefulWidget {
@@ -30,6 +31,11 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     final soundEnabled = ref.watch(soundEnabledProvider);
     final locale = ref.watch(localeProvider).locale;
     final localAvatar = ref.watch(profileAvatarProvider);
+    final frameTier = ref
+        .watch(profileDashboardProvider)
+        .value
+        ?.gamification
+        .currentTier;
     final streakReminderAsync = ref.watch(streakReminderStateProvider);
     final streakReminderEnabled = streakReminderAsync.value ?? true;
 
@@ -64,6 +70,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                         user: user,
                         radius: 25,
                         avatarPath: localAvatar,
+                        frameTier: frameTier,
                       ),
                       title: Text(
                         user.displayName,

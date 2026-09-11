@@ -171,6 +171,7 @@ class _DrawerIdentity extends ConsumerWidget {
             user: signedIn,
             radius: 27,
             avatarPath: ref.watch(profileAvatarProvider),
+            frameTier: dashboard.value?.gamification.currentTier,
           ),
           const SizedBox(height: RiksaSpacing.sm),
           Text(

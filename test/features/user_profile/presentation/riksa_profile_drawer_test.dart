@@ -28,6 +28,7 @@ final _dashboard = ProfileDashboardData(
     currentStreak: 7,
     highestStreak: 12,
     xpToNext: 370,
+    currentTier: 'LEGEND',
   ),
   achievements: List.generate(
     3,
@@ -118,6 +119,7 @@ void main() {
     expect(find.text('7'), findsOneWidget);
     expect(find.text('2'), findsOneWidget);
     expect(find.text('Achievements'), findsOneWidget);
+    expect(find.byKey(const ValueKey('avatar-frame-legend')), findsOneWidget);
 
     // No follow graph exists, so nothing may imply one.
     expect(find.textContaining('Follow'), findsNothing);

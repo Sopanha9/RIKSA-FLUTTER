@@ -96,6 +96,7 @@ flutter:
     - assets/images/splashScreen/
     - assets/images/onboarding/
     - assets/images/lessonsCard/
+    - assets/images/avatar_frames/
     - assets/rive/
     - assets/audio/
 

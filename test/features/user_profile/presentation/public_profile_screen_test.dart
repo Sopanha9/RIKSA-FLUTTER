@@ -224,6 +224,7 @@ void main() {
     expect(find.text('@'), findsNothing);
     expect(find.text('RIKSA Learner'), findsOneWidget);
     expect(find.text('R'), findsOneWidget);
+    expect(find.byKey(const ValueKey('avatar-frame-diamond')), findsOneWidget);
     // A tier on the known ladder draws the rail.
     expect(find.byKey(const ValueKey('public-tier-rail')), findsOneWidget);
   });

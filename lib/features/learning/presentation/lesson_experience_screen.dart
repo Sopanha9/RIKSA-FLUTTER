@@ -12,6 +12,7 @@ import '../../../core/sound/sound_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../userProfile/providers/profile_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
 import '../providers/learning_roadmap_provider.dart';
@@ -794,6 +795,9 @@ class _LessonExperienceScreenState
       // not after the catalog and roadmaps have finished refetching.
       HapticFeedback.mediumImpact();
       ref.playSound(LearningSound.lessonComplete);
+      ref
+        ..invalidate(profileDashboardProvider)
+        ..invalidate(profileRankProvider);
       await ref.read(lessonCatalogProvider.notifier).load();
       // The roadmap owns this lesson's completed state, and the home screen
       // derives its counts and its resume target from every roadmap. Both are

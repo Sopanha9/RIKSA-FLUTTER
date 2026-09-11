@@ -105,6 +105,17 @@ void main() {
     final rankings = find.byKey(const ValueKey('leaderboard-rankings-section'));
     expect(card, findsOneWidget);
     expect(
+      find.descendant(
+        of: card,
+        matching: find.byKey(const ValueKey('avatar-frame-silver')),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('avatar-frame-gold')),
+      findsAtLeastNWidgets(3),
+    );
+    expect(
       tester
           .widget<RiksaRankBadge>(
             find.descendant(of: card, matching: find.byType(RiksaRankBadge)),

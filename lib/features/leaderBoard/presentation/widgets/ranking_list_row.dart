@@ -34,6 +34,7 @@ class RankingListRow extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final palette = context.riksa;
     final ink = isDark ? palette.ink : AppColors.editorialInk;
+    final hasFrame = riksaAvatarFrameAssetPath(tier) != null;
 
     // Movement trend indicator matching inspiration image (green ▲ for top tiers, neutral for others)
     final isRising = rank <= 6 || (tier?.toLowerCase().contains('gold') ?? false);
@@ -96,12 +97,14 @@ class RankingListRow extends StatelessWidget {
                     height: 42,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isCurrentUser
-                            ? AppColors.editorialPink
-                            : palette.outline.withValues(alpha: 0.6),
-                        width: 1.5,
-                      ),
+                      border: hasFrame
+                          ? null
+                          : Border.all(
+                              color: isCurrentUser
+                                  ? AppColors.editorialPink
+                                  : palette.outline.withValues(alpha: 0.6),
+                              width: 1.5,
+                            ),
                     ),
                     child: RiksaAvatarImage(
                       value: avatarUrl,
@@ -111,6 +114,7 @@ class RankingListRow extends StatelessWidget {
                           ? palette.surfaceRaised
                           : AppColors.editorialField,
                       foregroundColor: ink,
+                      frameTier: tier,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -223,4 +227,3 @@ class RankingListRow extends StatelessWidget {
     );
   }
 }
-

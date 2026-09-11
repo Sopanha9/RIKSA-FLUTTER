@@ -90,6 +90,7 @@ class BlogAvatar extends StatelessWidget {
       size: size,
       backgroundColor: blogAvatarBackground(context),
       foregroundColor: blogAvatarForeground(context),
+      frameTier: profile?.currentTier,
     );
     if (onTap == null) return avatar;
     return GestureDetector(

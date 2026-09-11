@@ -205,6 +205,7 @@ void main() {
     expect(find.text('@sophea'), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-cover')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-hero-avatar')), findsOneWidget);
+    expect(find.byKey(const ValueKey('avatar-frame-gold')), findsWidgets);
     final verificationBadge = tester.widget<Icon>(
       find.byKey(const ValueKey('profile-verification-badge')),
     );

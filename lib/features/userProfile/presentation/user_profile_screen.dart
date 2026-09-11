@@ -278,6 +278,7 @@ class _ProfileHeader extends ConsumerWidget {
         user: user,
         radius: 44,
         avatarPath: localAvatar,
+        frameTier: game?.currentTier,
         // A ring in the page ground separates the avatar from the banner.
         borderColor: ProfilePalette.canvas(context),
         ringColor: ProfilePalette.canvas(context),
@@ -536,6 +537,11 @@ class _PostsTabState extends ConsumerState<_PostsTab> {
         ProfileComposerPrompt(
           user: widget.user,
           avatarPath: ref.watch(profileAvatarProvider),
+          frameTier: ref
+              .watch(profileDashboardProvider)
+              .value
+              ?.gamification
+              .currentTier,
           onTap: _create,
         ),
         const SizedBox(height: 14),

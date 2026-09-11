@@ -182,6 +182,7 @@ class RiksaProfileAvatar extends StatelessWidget {
     this.avatarPath,
     this.borderColor,
     this.ringColor,
+    this.frameTier,
   });
 
   final AuthUser user;
@@ -189,12 +190,24 @@ class RiksaProfileAvatar extends StatelessWidget {
   final String? avatarPath;
   final Color? borderColor;
   final Color? ringColor;
+  final String? frameTier;
 
   @override
   Widget build(BuildContext context) {
     final name = user.displayName.trim().isEmpty
         ? user.username
         : user.displayName.trim();
+    if (riksaAvatarFrameAssetPath(frameTier) != null) {
+      return RiksaAvatarImage(
+        value: avatarPath ?? user.avatarUrl,
+        label: name,
+        size: radius * 2,
+        backgroundColor: ProfilePalette.panelSoft(context),
+        foregroundColor: ProfilePalette.text(context),
+        frameTier: frameTier,
+      );
+    }
+
     return Container(
       width: radius * 2,
       height: radius * 2,

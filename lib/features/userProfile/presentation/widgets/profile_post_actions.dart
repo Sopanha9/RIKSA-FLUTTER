@@ -17,11 +17,13 @@ class ProfileComposerPrompt extends StatelessWidget {
     required this.user,
     required this.avatarPath,
     required this.onTap,
+    this.frameTier,
   });
 
   final AuthUser user;
   final String? avatarPath;
   final VoidCallback onTap;
+  final String? frameTier;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +49,7 @@ class ProfileComposerPrompt extends StatelessWidget {
                   avatarPath: avatarPath,
                   borderColor: ProfilePalette.border(context),
                   ringColor: ProfilePalette.panel(context),
+                  frameTier: frameTier,
                 ),
                 const SizedBox(width: 11),
                 Expanded(

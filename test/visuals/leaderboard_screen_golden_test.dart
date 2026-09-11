@@ -160,6 +160,11 @@ void main() {
           context,
           onError: (error, stack) => fail('Badge failed to load: $error'),
         );
+        await precacheImage(
+          AssetImage('assets/images/avatar_frames/${tier.toLowerCase()}.png'),
+          context,
+          onError: (error, stack) => fail('Frame failed to load: $error'),
+        );
       }
     });
     await tester.pumpAndSettle();

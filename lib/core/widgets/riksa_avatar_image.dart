@@ -8,6 +8,27 @@ import '../network/api_config.dart';
 
 const humationAvatarCount = 24;
 const _humationAssetDirectory = 'assets/images/avatars/humation';
+const _avatarFrameAssetDirectory = 'assets/images/avatar_frames';
+const _avatarFrameTiers = <String>{
+  'BRONZE',
+  'SILVER',
+  'GOLD',
+  'PLATINUM',
+  'DIAMOND',
+  'LEGEND',
+};
+
+/// Resolves only rank tiers for which this build contains frame artwork.
+///
+/// XP thresholds remain server-owned. The client decorates the tier it was
+/// given and never tries to derive a tier from total XP.
+String? riksaAvatarFrameAssetPath(String? tier) {
+  final normalized = tier?.trim().toUpperCase();
+  if (normalized == null || !_avatarFrameTiers.contains(normalized)) {
+    return null;
+  }
+  return '$_avatarFrameAssetDirectory/${normalized.toLowerCase()}.png';
+}
 
 String humationAvatarValue(int index) {
   if (index < 0 || index >= humationAvatarCount) {
@@ -52,6 +73,7 @@ class RiksaAvatarImage extends StatelessWidget {
     required this.size,
     required this.backgroundColor,
     required this.foregroundColor,
+    this.frameTier,
   });
 
   final String? value;
@@ -59,53 +81,84 @@ class RiksaAvatarImage extends StatelessWidget {
   final double size;
   final Color backgroundColor;
   final Color foregroundColor;
+  final String? frameTier;
 
   @override
   Widget build(BuildContext context) {
     final localPath = localProfileMediaPath(value);
     final assetPath = humationAvatarAssetPath(value);
     final networkUrl = resolvedAvatarUrl(value);
-    final fallback = _AvatarFallback(
-      label: label,
-      foregroundColor: foregroundColor,
-      fontSize: size * .42,
-    );
+    final frameAssetPath = riksaAvatarFrameAssetPath(frameTier);
+
+    Widget avatar(double diameter) {
+      final fallback = _AvatarFallback(
+        label: label,
+        foregroundColor: foregroundColor,
+        fontSize: diameter * .42,
+      );
+
+      return SizedBox.square(
+        dimension: diameter,
+        child: ClipOval(
+          child: ColoredBox(
+            color: backgroundColor,
+            child: localPath != null
+                ? Image.file(
+                    File(localPath),
+                    key: const ValueKey('local-profile-avatar'),
+                    width: diameter,
+                    height: diameter,
+                    fit: BoxFit.cover,
+                    excludeFromSemantics: true,
+                    errorBuilder: (_, _, _) => fallback,
+                  )
+                : assetPath != null
+                ? SvgPicture.asset(
+                    assetPath,
+                    key: ValueKey(
+                      'humation-avatar-${assetPath.split('/').last}',
+                    ),
+                    width: diameter,
+                    height: diameter,
+                    fit: BoxFit.cover,
+                    excludeFromSemantics: true,
+                  )
+                : networkUrl != null
+                ? Image.network(
+                    networkUrl,
+                    width: diameter,
+                    height: diameter,
+                    fit: BoxFit.cover,
+                    excludeFromSemantics: true,
+                    errorBuilder: (_, _, _) => fallback,
+                  )
+                : fallback,
+          ),
+        ),
+      );
+    }
+
+    if (frameAssetPath == null) return avatar(size);
+    final frameName = frameAssetPath.split('/').last.split('.').first;
 
     return SizedBox.square(
       dimension: size,
-      child: ClipOval(
-        child: ColoredBox(
-          color: backgroundColor,
-          child: localPath != null
-              ? Image.file(
-                  File(localPath),
-                  key: const ValueKey('local-profile-avatar'),
-                  width: size,
-                  height: size,
-                  fit: BoxFit.cover,
-                  excludeFromSemantics: true,
-                  errorBuilder: (_, _, _) => fallback,
-                )
-              : assetPath != null
-              ? SvgPicture.asset(
-                  assetPath,
-                  key: ValueKey('humation-avatar-${assetPath.split('/').last}'),
-                  width: size,
-                  height: size,
-                  fit: BoxFit.cover,
-                  excludeFromSemantics: true,
-                )
-              : networkUrl != null
-              ? Image.network(
-                  networkUrl,
-                  width: size,
-                  height: size,
-                  fit: BoxFit.cover,
-                  excludeFromSemantics: true,
-                  errorBuilder: (_, _, _) => fallback,
-                )
-              : fallback,
-        ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          avatar(size * .66),
+          Positioned.fill(
+            child: Image.asset(
+              frameAssetPath,
+              key: ValueKey('avatar-frame-$frameName'),
+              fit: BoxFit.contain,
+              cacheWidth: 384,
+              cacheHeight: 384,
+              filterQuality: FilterQuality.high,
+              excludeFromSemantics: true,
+            ),
+          ),
+        ],
       ),
     );
   }
