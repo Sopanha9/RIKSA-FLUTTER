@@ -101,7 +101,6 @@ void main() {
     await tester.pumpAndSettle();
 
     final card = find.byKey(const ValueKey('current-user-rank-card'));
-    final podium = find.byKey(const ValueKey('leaderboard-podium'));
     final rankings = find.byKey(const ValueKey('leaderboard-rankings-section'));
     expect(card, findsOneWidget);
     expect(
@@ -136,7 +135,6 @@ void main() {
     );
 
     final initialTop = tester.getTopLeft(card).dy;
-    expect(tester.getBottomLeft(podium).dy, lessThan(initialTop));
     expect(
       tester.getBottomLeft(card).dy,
       lessThan(tester.getTopLeft(rankings).dy),
@@ -231,7 +229,7 @@ void main() {
   });
 
   testWidgets(
-    'renders gold crown for winner and distinction when user is on podium',
+    'marks the top three and the signed-in learner in the rankings',
     (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
@@ -304,14 +302,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Winner should have crown icon
-      expect(find.byKey(const ValueKey('podium-crown-icon')), findsOneWidget);
-
-      // Current user at rank 2 should have "You" badge
-      expect(
-        find.byKey(const ValueKey('podium-current-user-badge')),
-        findsOneWidget,
-      );
+      // The podium became ranked rows: the top three carry a medal colour.
+      for (final rank in [1, 2, 3]) {
+        expect(find.byKey(ValueKey('rank-medal-$rank')), findsOneWidget);
+      }
+      // The signed-in learner's own row is marked.
+      expect(find.byKey(const ValueKey('ranking-row-you')), findsOneWidget);
       expect(find.text('You'), findsOneWidget);
     },
   );

@@ -6,152 +6,118 @@ import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/core/widgets/riksa_bottom_navigation_bar.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
-Widget _testApp(
-  ThemeData theme, {
-  bool collapsed = false,
+Widget _testApp({
   int currentIndex = 0,
-}) {
-  return MaterialApp(
-    theme: theme,
-    localizationsDelegates: const [
-      AppLocalizations.delegate,
-      GlobalMaterialLocalizations.delegate,
-      GlobalWidgetsLocalizations.delegate,
-      GlobalCupertinoLocalizations.delegate,
-    ],
-    supportedLocales: const [Locale('en'), Locale('km')],
-    home: Scaffold(
-      bottomNavigationBar: RiksaBottomNavigationBar(
-        currentIndex: currentIndex,
-        collapsed: collapsed,
-        onSelected: (_) {},
-        onCollapsedTap: () {},
-      ),
+  ValueChanged<int>? onSelected,
+  Locale locale = const Locale('en'),
+  bool dark = false,
+  double textScale = 1,
+}) => MaterialApp(
+  theme: dark ? AppTheme.dark : AppTheme.light,
+  locale: locale,
+  builder: (context, child) => MediaQuery(
+    data: MediaQuery.of(
+      context,
+    ).copyWith(textScaler: TextScaler.linear(textScale)),
+    child: child!,
+  ),
+  localizationsDelegates: const [
+    AppLocalizations.delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+  ],
+  supportedLocales: const [Locale('en'), Locale('km')],
+  home: Scaffold(
+    bottomNavigationBar: RiksaBottomNavigationBar(
+      currentIndex: currentIndex,
+      onSelected: onSelected ?? (_) {},
     ),
-  );
-}
-
-BoxDecoration _decoration(WidgetTester tester, String key) {
-  return tester.widget<AnimatedContainer>(find.byKey(ValueKey(key))).decoration!
-      as BoxDecoration;
-}
-
-BoxDecoration _destinationDecoration(WidgetTester tester, int index) {
-  return tester
-          .widget<AnimatedContainer>(
-            find.byKey(ValueKey('bottom-nav-destination-$index')),
-          )
-          .decoration!
-      as BoxDecoration;
-}
+  ),
+);
 
 void main() {
-  testWidgets('light navigation uses the editorial palette', (tester) async {
-    await tester.pumpWidget(_testApp(AppTheme.light));
-
+  testWidgets('floating pill labels every tab and keeps all tabs accessible', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(_testApp(currentIndex: 1));
+    await tester.pumpAndSettle();
+    final surface = find.byKey(const ValueKey('bottom-nav-surface'));
+    // A white pill floating off the screen edges, with the round AI Tutor
+    // button beside it.
     expect(
-      _decoration(tester, 'bottom-nav-surface').color,
+      tester.widget<Material>(surface).color,
       AppColors.editorialNeutralSurface,
     );
-    expect(_destinationDecoration(tester, 0).color, AppColors.editorialBlack);
-    expect(find.byKey(const ValueKey('bottom-nav-label-0')), findsOneWidget);
-    expect(find.byKey(const ValueKey('bottom-nav-label-1')), findsNothing);
-
-    final activeIcon = tester.widget<Icon>(
-      find.descendant(
-        of: find.byKey(const ValueKey('bottom-nav-destination-0')),
-        matching: find.byType(Icon),
-      ),
-    );
-    expect(activeIcon.color, Colors.white);
-  });
-
-  testWidgets('dark navigation uses the dark editorial palette', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_testApp(AppTheme.dark));
-
+    expect(tester.getRect(surface).left, greaterThanOrEqualTo(16));
     expect(
-      _decoration(tester, 'bottom-nav-surface').color,
-      AppColors.editorialAubergineRaised,
+      tester.getRect(find.byKey(const ValueKey('bottom-nav-item-2'))).left,
+      greaterThan(tester.getRect(surface).right),
     );
-    expect(_destinationDecoration(tester, 0).color, AppColors.editorialPink);
+    for (var index = 0; index < 5; index++) {
+      expect(
+        find.byKey(ValueKey('bottom-nav-label-$index')),
+        index == RiksaBottomNavigationBar.aiTutorIndex
+            ? findsNothing
+            : findsOneWidget,
+      );
+      final semantics = tester.getSemantics(
+        find.byKey(ValueKey('bottom-nav-destination-$index')),
+      );
+      expect(
+        semantics.getSemanticsData().hasAction(SemanticsAction.tap),
+        isTrue,
+      );
+      expect(semantics.label, isNotEmpty);
+    }
+    handle.dispose();
   });
 
-  testWidgets('collapsed navigation is one centered button without a halo', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_testApp(AppTheme.light, collapsed: true));
-
-    expect(
-      tester
-          .widget<AnimatedOpacity>(
-            find.byKey(const ValueKey('bottom-nav-expanded-content')),
-          )
-          .opacity,
-      0,
-    );
-    expect(
-      tester
-          .widget<AnimatedOpacity>(
-            find.byKey(const ValueKey('bottom-nav-collapsed-content')),
-          )
-          .opacity,
-      1,
-    );
-    expect(
-      find.byKey(const ValueKey('bottom-nav-collapsed-item')),
-      findsOneWidget,
-    );
-
-    final activeCircle = tester.widget<Positioned>(
-      find.byKey(const ValueKey('bottom-nav-active-circle')),
-    );
-    expect(activeCircle.left, 3);
-    expect(activeCircle.bottom, 0);
-    expect(activeCircle.width, 52);
-    expect(activeCircle.height, 52);
+  testWidgets('every destination can be selected', (tester) async {
+    int? selected;
+    await tester.pumpWidget(_testApp(onSelected: (value) => selected = value));
+    for (var index = 0; index < 5; index++) {
+      await tester.tap(find.byKey(ValueKey('bottom-nav-item-$index')));
+      expect(selected, index);
+    }
   });
 
-  testWidgets('selected pill accommodates a longer localized label', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(393, 852);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    await tester.pumpWidget(_testApp(AppTheme.light, currentIndex: 3));
-
-    final label = tester.renderObject<RenderParagraph>(
-      find.byKey(const ValueKey('bottom-nav-label-3')),
-    );
-    expect(label.didExceedMaxLines, isFalse);
-  });
-
-  testWidgets('collapse visibly animates before reaching compact state', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_testApp(AppTheme.light));
-    final morph = find.byKey(const ValueKey('bottom-nav-morph'));
-    final expandedWidth = tester.getSize(morph).width;
-
-    await tester.pumpWidget(_testApp(AppTheme.light, collapsed: true));
-    await tester.pump(const Duration(milliseconds: 190));
-
-    final animatedWidth = tester.getSize(morph).width;
-    expect(animatedWidth, greaterThan(58));
-    expect(animatedWidth, lessThan(expandedWidth));
-    final expandedOpacity = tester.widget<AnimatedOpacity>(
-      find.byKey(const ValueKey('bottom-nav-expanded-content')),
-    );
-    final collapsedOpacity = tester.widget<AnimatedOpacity>(
-      find.byKey(const ValueKey('bottom-nav-collapsed-content')),
-    );
-    expect(expandedOpacity.opacity, 0);
-    expect(collapsedOpacity.opacity, 1);
-
-    await tester.pumpAndSettle();
-    expect(tester.getSize(morph).width, 58);
-  });
+  for (final locale in const [Locale('en'), Locale('km')]) {
+    for (final scale in [1.0, 2.0]) {
+      testWidgets(
+        '${locale.languageCode} labels fit at $scale text scale on a narrow phone',
+        (tester) async {
+          tester.view.physicalSize = const Size(360, 780);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.reset);
+          for (var index = 0; index < 5; index++) {
+            await tester.pumpWidget(
+              _testApp(
+                currentIndex: index,
+                locale: locale,
+                textScale: scale,
+                dark: index.isOdd,
+              ),
+            );
+            await tester.pumpAndSettle();
+            if (index != RiksaBottomNavigationBar.aiTutorIndex) {
+              final label = tester.renderObject<RenderParagraph>(
+                find.byKey(ValueKey('bottom-nav-label-$index')),
+              );
+              expect(label.didExceedMaxLines, isFalse);
+            }
+            for (var tab = 0; tab < 5; tab++) {
+              final rect = tester.getRect(
+                find.byKey(ValueKey('bottom-nav-item-$tab')),
+              );
+              expect(rect.width, greaterThanOrEqualTo(48));
+              expect(rect.height, greaterThanOrEqualTo(48));
+            }
+            expect(tester.takeException(), isNull);
+          }
+        },
+      );
+    }
+  }
 }

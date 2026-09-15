@@ -1,7 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/theme/app_theme.dart';
+import '../data/auth_api.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/auth_scaffold.dart';
+
+/// The rule the server enforces on new passwords, checked as the learner types
+/// so they never have to learn it from an error.
+class PasswordRules {
+  const PasswordRules(this.password, this.confirm);
+
+  final String password;
+  final String confirm;
+
+  bool get longEnough => password.length >= 8;
+  bool get hasUpper => password.contains(RegExp('[A-Z]'));
+  bool get hasLower => password.contains(RegExp('[a-z]'));
+  bool get hasDigit => password.contains(RegExp('[0-9]'));
+  bool get matches => password.isNotEmpty && password == confirm;
+  bool get strongEnough => longEnough && hasUpper && hasLower && hasDigit;
+}
+
+/// Turns what went wrong into something a learner can act on. Server text is
+/// never shown raw: it can carry field names and status codes.
+String friendlyRecoveryError(Object error, {required int step}) {
+  if (error is FormatException) return error.message;
+  if (error is AuthFailure) {
+    final text = error.message.toLowerCase();
+    switch (error.kind) {
+      case AuthFailureKind.network:
+        return "We couldn't reach Riksa. Check your internet and try again.";
+      case AuthFailureKind.rateLimited:
+        return "That's a lot of tries! Take a short break, then try again.";
+      case AuthFailureKind.server:
+        return 'Something went wrong on our side. Please try again in a moment.';
+      case AuthFailureKind.validation ||
+          AuthFailureKind.unauthorized ||
+          AuthFailureKind.forbidden:
+        if (text.contains('password')) {
+          return 'Almost there! Your password needs at least 8 characters, '
+              'with an uppercase letter, a lowercase letter and a number.';
+        }
+        if (text.contains('code') || text.contains('expired')) {
+          return "That code didn't work. It may have expired, so ask for a "
+              'new one and try again.';
+        }
+        if (step == 0) {
+          return "We couldn't find that account. Check the spelling and try "
+              'again.';
+        }
+        return "That didn't work. Please check your details and try again.";
+    }
+  }
+  return 'Something went wrong. Please try again.';
+}
 
 class AccountRecoveryScreen extends ConsumerStatefulWidget {
   const AccountRecoveryScreen({super.key});
@@ -17,7 +72,18 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
   final _confirm = TextEditingController();
   int _step = 0;
   bool _loading = false;
+  bool _obscure = true;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    // The checklist and button follow what the learner types.
+    for (final controller in [_password, _confirm]) {
+      controller.addListener(() => setState(() {}));
+    }
+  }
+
   Future<void> _continue() async {
     setState(() {
       _loading = true;
@@ -28,22 +94,31 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
       if (_step == 0) {
         if (_identifier.text.trim().isEmpty) {
           throw const FormatException(
-            'Enter your username, email, or Telegram ID.',
+            'Tell us your username, email or Telegram ID so we know whose '
+            'account to help with.',
           );
         }
         await api.forgotPassword(_identifier.text.trim());
         if (mounted) setState(() => _step = 1);
       } else if (_step == 1) {
         if (_code.text.trim().length != 6) {
-          throw const FormatException('Enter the 6-digit code.');
+          throw const FormatException(
+            'The code has 6 digits. Check your message and try again.',
+          );
         }
         setState(() => _step = 2);
       } else {
-        if (_password.text.length < 8) {
-          throw const FormatException('Use at least 8 characters.');
+        final rules = PasswordRules(_password.text, _confirm.text);
+        if (!rules.strongEnough) {
+          throw const FormatException(
+            'Almost there! Your password just needs everything in the '
+            'checklist ticked.',
+          );
         }
-        if (_password.text != _confirm.text) {
-          throw const FormatException('Passwords do not match.');
+        if (!rules.matches) {
+          throw const FormatException(
+            "The two passwords don't match yet. Try typing them again.",
+          );
         }
         await api.resetPassword(
           identifier: _identifier.text.trim(),
@@ -53,7 +128,7 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Password reset. You can sign in now.'),
+              content: Text('All set! Sign in with your new password.'),
             ),
           );
           context.go('/auth/login');
@@ -61,14 +136,23 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
       }
     } catch (error) {
       if (mounted) {
-        setState(
-          () => _error = error is FormatException
-              ? error.message
-              : error.toString().replaceFirst('AuthFailure: ', ''),
-        );
+        setState(() => _error = friendlyRecoveryError(error, step: _step));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _back() {
+    if (_step > 0) {
+      setState(() {
+        _step--;
+        _error = null;
+      });
+    } else if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/auth/login');
     }
   }
 
@@ -83,84 +167,472 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final titles = [
-      'Recover your account',
-      'Enter verification code',
-      'Choose a new password',
-    ];
-    return Scaffold(
-      appBar: AppBar(leading: const BackButton(), title: Text(titles[_step])),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            Text(
-              'Step ${_step + 1} of 3',
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            const SizedBox(height: 20),
-            if (_step == 0)
-              TextField(
-                key: const ValueKey('recovery-identifier'),
-                controller: _identifier,
-                decoration: const InputDecoration(
-                  labelText: 'Username, email, or Telegram ID',
+    final palette = context.riksa;
+    final textTheme = Theme.of(context).textTheme;
+    final (title, subtitle) = switch (_step) {
+      0 => (
+        'Forgot your password?',
+        "No worries, it happens to everyone. Tell us who you are and we'll "
+            'send you a code.',
+      ),
+      1 => (
+        'Check your messages',
+        'We sent a 6-digit code to your email or Telegram. Enter it below.',
+      ),
+      _ => (
+        'Create a new password',
+        'Pick something you will remember but others can’t guess.',
+      ),
+    };
+    final rules = PasswordRules(_password.text, _confirm.text);
+
+    return PopScope(
+      canPop: _step == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _back();
+      },
+      child: AuthScaffold(
+        onBack: _back,
+        child: AuthPanel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _RecoveryIllustration(step: _step),
+              const SizedBox(height: 20),
+              _StepProgress(step: _step),
+              const SizedBox(height: 18),
+              AnimatedSwitcher(
+                duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+                child: AuthHeader(
+                  key: ValueKey('recovery-header-$_step'),
+                  title: title,
+                  subtitle: subtitle,
                 ),
               ),
-            if (_step == 1)
-              TextField(
-                key: const ValueKey('recovery-code'),
-                controller: _code,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                decoration: const InputDecoration(labelText: '6-digit code'),
+              const SizedBox(height: 22),
+              if (_step == 0)
+                TextField(
+                  key: const ValueKey('recovery-identifier'),
+                  controller: _identifier,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _loading ? null : _continue(),
+                  decoration: const InputDecoration(
+                    labelText: 'Username, email or Telegram ID',
+                    prefixIcon: Icon(Icons.person_outline_rounded),
+                  ),
+                ),
+              if (_step == 1)
+                TextField(
+                  key: const ValueKey('recovery-code'),
+                  controller: _code,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  maxLength: 6,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  onSubmitted: (_) => _loading ? null : _continue(),
+                  style: textTheme.headlineSmall?.copyWith(
+                    letterSpacing: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  decoration: const InputDecoration(
+                    hintText: '••••••',
+                    counterText: '',
+                  ),
+                ),
+              if (_step == 2) ...[
+                TextField(
+                  key: const ValueKey('recovery-password'),
+                  controller: _password,
+                  obscureText: _obscure,
+                  textInputAction: TextInputAction.next,
+                  decoration: InputDecoration(
+                    labelText: 'New password',
+                    prefixIcon: const Icon(Icons.lock_outline_rounded),
+                    suffixIcon: IconButton(
+                      tooltip: _obscure ? 'Show password' : 'Hide password',
+                      onPressed: () => setState(() => _obscure = !_obscure),
+                      icon: Icon(
+                        _obscure
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: const ValueKey('recovery-confirm'),
+                  controller: _confirm,
+                  obscureText: _obscure,
+                  onSubmitted: (_) => _loading ? null : _continue(),
+                  decoration: const InputDecoration(
+                    labelText: 'Type it again',
+                    prefixIcon: Icon(Icons.lock_reset_rounded),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _PasswordChecklist(rules: rules),
+              ],
+              if (_error != null) ...[
+                const SizedBox(height: 14),
+                _FriendlyNotice(message: _error!),
+              ],
+              const SizedBox(height: 22),
+              FilledButton(
+                key: const ValueKey('recovery-continue'),
+                onPressed: _loading ? null : _continue,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                ),
+                child: _loading
+                    ? SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.4,
+                          color: palette.brand,
+                        ),
+                      )
+                    : Text(switch (_step) {
+                        0 => 'Send me a code',
+                        1 => 'Verify code',
+                        _ => 'Save new password',
+                      }),
               ),
-            if (_step == 2) ...[
-              TextField(
-                key: const ValueKey('recovery-password'),
-                controller: _password,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'New password'),
+              if (_step == 1) ...[
+                const SizedBox(height: 6),
+                TextButton(
+                  onPressed: _loading
+                      ? null
+                      : () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          try {
+                            await ref
+                                .read(authApiProvider)
+                                .forgotPassword(_identifier.text.trim());
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text('A fresh code is on its way.'),
+                              ),
+                            );
+                          } catch (error) {
+                            if (mounted) {
+                              setState(
+                                () => _error = friendlyRecoveryError(
+                                  error,
+                                  step: _step,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                  child: const Text("Didn't get it? Send a new code"),
+                ),
+              ],
+              if (_step == 0) ...[
+                const SizedBox(height: 6),
+                TextButton(
+                  onPressed: () => context.go('/auth/login'),
+                  child: const Text('I remember it — back to sign in'),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A soft badge that changes with each step: someone to help, a message on
+/// its way, then a key for the new lock. Drawn in code so it follows the
+/// theme and costs no asset.
+class _RecoveryIllustration extends StatelessWidget {
+  const _RecoveryIllustration({required this.step});
+
+  final int step;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.riksa;
+    final icon = switch (step) {
+      0 => Icons.support_agent_rounded,
+      1 => Icons.mark_email_unread_rounded,
+      _ => Icons.key_rounded,
+    };
+    return Semantics(
+      image: true,
+      label: 'Account recovery, step ${step + 1}',
+      child: ExcludeSemantics(
+        child: SizedBox(
+          height: 150,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Outer halo and inner disc.
+              Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: palette.brandSoft.withValues(alpha: .55),
+                ),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _confirm,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Confirm password',
+              Container(
+                width: 108,
+                height: 108,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: palette.brandSoft,
+                ),
+              ),
+              // Floating bits around the badge.
+              const Positioned(
+                left: 0,
+                right: 0,
+                top: 6,
+                child: Align(
+                  alignment: Alignment(-.42, 0),
+                  child: _Dot(size: 12, lime: true),
+                ),
+              ),
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 18,
+                child: Align(
+                  alignment: Alignment(.46, 0),
+                  child: _Dot(size: 9, lime: false),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 20,
+                child: Align(
+                  alignment: const Alignment(.4, 0),
+                  child: Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 20,
+                    color: palette.brand.withValues(alpha: .7),
+                  ),
+                ),
+              ),
+              AnimatedSwitcher(
+                duration: RiksaMotion.resolve(context, RiksaMotion.emphasis),
+                switchInCurve: RiksaMotion.emphasisCurve,
+                transitionBuilder: (child, animation) =>
+                    ScaleTransition(scale: animation, child: child),
+                child: Container(
+                  key: ValueKey(step),
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: palette.brand,
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: [
+                      BoxShadow(
+                        color: palette.brand.withValues(alpha: .3),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Icon(icon, size: 36, color: Colors.white),
                 ),
               ),
             ],
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  _error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Dot extends StatelessWidget {
+  const _Dot({required this.size, required this.lime});
+
+  final double size;
+  final bool lime;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: lime ? AppColors.lime : context.riksa.brand.withValues(alpha: .45),
+    ),
+  );
+}
+
+/// Three segments that fill as the learner moves through recovery.
+class _StepProgress extends StatelessWidget {
+  const _StepProgress({required this.step});
+
+  final int step;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.riksa;
+    return Semantics(
+      label: 'Step ${step + 1} of 3',
+      child: Row(
+        children: [
+          for (var index = 0; index < 3; index++) ...[
+            if (index > 0) const SizedBox(width: 6),
+            Expanded(
+              child: AnimatedContainer(
+                duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+                height: 6,
+                decoration: BoxDecoration(
+                  borderRadius: AppRadii.fullBorder,
+                  color: index <= step ? palette.brand : palette.brandSoft,
                 ),
               ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _loading ? null : _continue,
-              child: Text(
-                _loading
-                    ? 'Please wait…'
-                    : _step == 2
-                    ? 'Reset password'
-                    : 'Continue',
+            ),
+          ],
+          const SizedBox(width: 12),
+          ExcludeSemantics(
+            child: Text(
+              '${step + 1}/3',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: palette.inkMuted,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            if (_step == 1)
-              TextButton(
-                onPressed: _loading
-                    ? null
-                    : () async {
-                        await ref
-                            .read(authApiProvider)
-                            .forgotPassword(_identifier.text.trim());
-                      },
-                child: const Text('Resend code'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Live checklist for the new password.
+class _PasswordChecklist extends StatelessWidget {
+  const _PasswordChecklist({required this.rules});
+
+  final PasswordRules rules;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      ('At least 8 characters', rules.longEnough),
+      ('An uppercase letter (A–Z)', rules.hasUpper),
+      ('A lowercase letter (a–z)', rules.hasLower),
+      ('A number (0–9)', rules.hasDigit),
+      ('Both passwords match', rules.matches),
+    ];
+    return Container(
+      key: const ValueKey('recovery-password-checklist'),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: context.riksa.surface,
+        borderRadius: AppRadii.mediumBorder,
+        border: Border.all(color: context.riksa.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final (label, done) in items)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: _ChecklistRow(label: label, done: done),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChecklistRow extends StatelessWidget {
+  const _ChecklistRow({required this.label, required this.done});
+
+  final String label;
+  final bool done;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final doneColor = isDark ? AppColors.lime : const Color(0xFF2E9E5B);
+    return Semantics(
+      label: '$label, ${done ? 'done' : 'not yet'}',
+      excludeSemantics: true,
+      child: Row(
+        children: [
+          AnimatedContainer(
+            duration: RiksaMotion.resolve(context, RiksaMotion.fast),
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: done ? doneColor : Colors.transparent,
+              border: Border.all(
+                color: done ? doneColor : palette.outline,
+                width: 1.6,
               ),
+            ),
+            child: done
+                ? Icon(
+                    Icons.check_rounded,
+                    size: 14,
+                    color: isDark ? AppColors.limeInk : Colors.white,
+                  )
+                : null,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: done ? palette.ink : palette.inkMuted,
+                fontWeight: done ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A gentle note instead of a red alarm: warm amber, a lightbulb, plain words.
+class _FriendlyNotice extends StatelessWidget {
+  const _FriendlyNotice({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final background = isDark
+        ? const Color(0xFF3A2E14)
+        : const Color(0xFFFFF4DC);
+    final ink = isDark ? const Color(0xFFFFD98A) : const Color(0xFF7A4B00);
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        key: const ValueKey('recovery-error'),
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: AppRadii.mediumBorder,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.lightbulb_outline_rounded, size: 20, color: ink),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: ink,
+                  fontWeight: FontWeight.w500,
+                  height: 1.4,
+                ),
+              ),
+            ),
           ],
         ),
       ),

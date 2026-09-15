@@ -72,67 +72,34 @@ class _HomeBody extends ConsumerWidget {
       );
     }
 
-    return Stack(
+    return ListView(
+      key: const PageStorageKey('learning-home-scroll'),
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       children: [
-        ListView(
-          key: const PageStorageKey('learning-home-scroll'),
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 196),
-          children: [
-            const _GreetingRow(),
-            const SizedBox(height: RiksaSpacing.lg),
-            if (data.resumeLesson case final lesson?)
-              _ContinueCard(
-                lesson: lesson,
-                subject: data.resumeSubject!,
-                onTap: () => _openLesson(context, lesson),
-              )
-            else
-              _AllDoneCard(),
-            const SizedBox(height: RiksaSpacing.lg + RiksaSpacing.xxs),
-            Text(
-              l10n.yourSubjects,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: -.3,
-              ),
-            ),
-            const SizedBox(height: RiksaSpacing.sm),
-            _SubjectGrid(subjects: data.subjects),
-          ],
+        const _GreetingRow(),
+        const SizedBox(height: RiksaSpacing.lg),
+        if (data.resumeLesson case final lesson?)
+          _ContinueCard(
+            lesson: lesson,
+            subject: data.resumeSubject!,
+            onTap: () => _openLesson(context, lesson),
+          )
+        else
+          _AllDoneCard(),
+        const SizedBox(height: RiksaSpacing.lg + RiksaSpacing.xxs),
+        Text(
+          l10n.yourSubjects,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: -.3,
+          ),
         ),
+        const SizedBox(height: RiksaSpacing.sm),
+        _SubjectGrid(subjects: data.subjects),
         if (data.hasCounts) ...[
-          // The destination bar is pinned, so content passes underneath it.
-          // Fade the canvas in behind it rather than letting a subject tile be
-          // sliced in half by an opaque bar.
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 200,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [
-                      context.riksa.canvas,
-                      context.riksa.canvas,
-                      context.riksa.canvas.withValues(alpha: 0),
-                    ],
-                    stops: const [0, .55, 1],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 20,
-            right: 20,
-            bottom: 108,
-            child: _DestinationBar(data: data),
-          ),
+          const SizedBox(height: 24),
+          _DestinationBar(data: data),
         ],
       ],
     );
@@ -367,7 +334,7 @@ class _SavedLessonsButton extends ConsumerWidget {
                         width: 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color: context.riksa.jade,
+                          color: context.riksa.brand,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -425,11 +392,11 @@ class _ContinueCard extends StatelessWidget {
                     color: tone.accent.withValues(alpha: .13),
                     shape: BoxShape.circle,
                   ),
-                  child: const SizedBox.square(dimension: 152),
+                  child: const SizedBox.square(dimension: 96),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -480,7 +447,7 @@ class _ContinueCard extends StatelessWidget {
                         lesson.title,
                         theme.textTheme.headlineSmall?.copyWith(
                           color: tone.ink,
-                          fontSize: 24,
+                          fontSize: 18,
                           height: 1.16,
                           letterSpacing: -.6,
                           fontWeight: FontWeight.w700,
@@ -507,7 +474,7 @@ class _ContinueCard extends StatelessWidget {
                           ),
                       ],
                     ),
-                    const SizedBox(height: RiksaSpacing.md + 2),
+                    const SizedBox(height: RiksaSpacing.sm),
                     LearningTrack(
                       key: ValueKey('continue-progress-${lesson.id}'),
                       value: progress,
@@ -605,183 +572,97 @@ class _SubjectGrid extends StatelessWidget {
   }
 }
 
-const _subjectArtworkPaths = <StemSubject, String>{
-  StemSubject.mathematics: 'assets/images/lessonsCard/issacnewton.png',
-  StemSubject.physics: 'assets/images/lessonsCard/enstein.png',
-  StemSubject.chemistry: 'assets/images/lessonsCard/chemistry.png',
-  StemSubject.biology: 'assets/images/lessonsCard/bio.png',
-  StemSubject.technology: 'assets/images/lessonsCard/computer.png',
-};
-
 class _SubjectTile extends StatelessWidget {
   const _SubjectTile({required this.subject});
-
   final SubjectProgress subject;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final palette = context.riksa;
     final tone = subjectTone(context, subject.subject);
+    final l10n = AppLocalizations.of(context)!;
     final name = subject.category.name;
-    final description = _subjectDescription(l10n, subject.subject);
-
-    return Semantics(
-      button: true,
-      label: name,
-      child: RiksaTapFeedback(
-        child: Material(
-          color: tone.surface,
-          borderRadius: AppRadii.panelBorder,
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            key: ValueKey('subject-tile-${subject.category.id}'),
-            onTap: () => context.push('/learn/roadmap/${subject.category.id}'),
-            child: SizedBox(
-              height: 158,
-              child: LayoutBuilder(
-                builder: (context, constraints) => Stack(
+    return Material(
+      color: palette.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: AppRadii.mediumBorder,
+        side: BorderSide(color: palette.outline),
+      ),
+      child: InkWell(
+        key: ValueKey('subject-tile-${subject.category.id}'),
+        borderRadius: AppRadii.mediumBorder,
+        onTap: () => context.push('/learn/roadmap/${subject.category.id}'),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: tone.surface,
+                  borderRadius: AppRadii.smallBorder,
+                ),
+                child: _SubjectArtwork(
+                  subject: subject.subject,
+                  accent: tone.accent,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    PositionedDirectional(
-                      top: 24,
-                      bottom: -46,
-                      end: -38,
-                      width: constraints.maxWidth * .55,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: tone.accent.withValues(alpha: .08),
-                          shape: BoxShape.circle,
+                    Text(
+                      name,
+                      style: RiksaTypography.titleStyleFor(
+                        name,
+                        Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    PositionedDirectional(
-                      top: 40,
-                      bottom: -8,
-                      end: 2,
-                      width: constraints.maxWidth * .48,
-                      child: _SubjectArtwork(
-                        subject: subject.subject,
-                        accent: tone.accent,
-                      ),
+                    const SizedBox(height: 3),
+                    Text(
+                      _subjectDescription(l10n, subject.subject),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    PositionedDirectional(
-                      top: 14,
-                      start: 14,
-                      child: LearningBadge(
-                        icon: stemSubjectIcon(subject.subject),
-                        foreground: tone.accent,
-                        background: context.riksa.surface.withValues(
-                          alpha: .78,
-                        ),
-                        size: 34,
-                      ),
-                    ),
-                    PositionedDirectional(
-                      top: 55,
-                      start: 14,
-                      width: constraints.maxWidth * .57,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: RiksaTypography.titleStyleFor(
-                              name,
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: tone.ink,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -.3,
-                                height: 1.1,
-                              ),
-                              khmerHeight: 1.3,
+                    const SizedBox(height: 6),
+                    Text(
+                      subject.unavailable
+                          ? l10n.subjectUnavailable
+                          : l10n.subjectCountShort(
+                              subject.completed,
+                              subject.total,
                             ),
-                          ),
-                          const SizedBox(height: RiksaSpacing.xxs),
-                          Text(
-                            description,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  color: context.riksa.inkMuted,
-                                  fontSize: 11,
-                                  height: 1.25,
-                                ),
-                          ),
-                        ],
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(color: palette.inkMuted),
                     ),
-                    PositionedDirectional(
-                      top: 14,
-                      end: 14,
-                      child: Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: context.riksa.surface.withValues(alpha: .62),
-                          borderRadius: BorderRadius.circular(12),
+                    if (!subject.unavailable) ...[
+                      const SizedBox(height: 5),
+                      LearningTrack(
+                        key: ValueKey(
+                          'subject-progress-${subject.category.id}',
                         ),
-                        child: Icon(
-                          Icons.chevron_right_rounded,
-                          size: 19,
-                          color: tone.accent.withValues(alpha: .82),
-                        ),
+                        value: subject.fraction,
+                        color: AppColors.progressGreen,
+                        background: palette.surfaceRaised,
+                        height: 4,
                       ),
-                    ),
-                    PositionedDirectional(
-                      start: 14,
-                      bottom: 14,
-                      width: constraints.maxWidth * .43,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (subject.unavailable)
-                            Text(
-                              l10n.subjectUnavailable,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(color: context.riksa.inkMuted),
-                            )
-                          else ...[
-                            Text(
-                              l10n.subjectCountShort(
-                                subject.completed,
-                                subject.total,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    color: tone.accent,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 11.5,
-                                  ),
-                            ),
-                            const SizedBox(height: 6),
-                            SizedBox(
-                              width: 94,
-                              child: LearningTrack(
-                                key: ValueKey(
-                                  'subject-progress-${subject.category.id}',
-                                ),
-                                value: subject.fraction,
-                                color: tone.accent,
-                                background: tone.accent.withValues(alpha: .2),
-                                height: 5,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
+                    ],
                   ],
                 ),
               ),
-            ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: palette.inkMuted,
+                size: 18,
+              ),
+            ],
           ),
         ),
       ),
@@ -801,49 +682,22 @@ String _subjectDescription(AppLocalizations l10n, StemSubject subject) =>
 
 class _SubjectArtwork extends StatelessWidget {
   const _SubjectArtwork({required this.subject, required this.accent});
-
   final StemSubject subject;
   final Color accent;
-
   @override
-  Widget build(BuildContext context) {
-    final assetPath = _subjectArtworkPaths[subject];
-    if (assetPath == null) {
-      return Align(
-        alignment: AlignmentDirectional.bottomEnd,
-        child: Icon(
-          stemSubjectIcon(subject),
-          size: 88,
-          color: accent.withValues(alpha: .24),
-        ),
-      );
-    }
-
-    return Image.asset(
-      assetPath,
-      key: ValueKey('subject-artwork-${subject.name}'),
-      fit: BoxFit.contain,
-      alignment: AlignmentDirectional.bottomEnd,
-      filterQuality: FilterQuality.high,
-      excludeFromSemantics: true,
-      errorBuilder: (context, error, stackTrace) => Align(
-        alignment: AlignmentDirectional.bottomEnd,
-        child: Icon(
-          stemSubjectIcon(subject),
-          size: 88,
-          color: accent.withValues(alpha: .24),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Icon(
+    stemSubjectIcon(subject),
+    key: ValueKey('subject-artwork-${subject.name}'),
+    size: 30,
+    color: accent,
+  );
 }
 
 // ---------------------------------------------------------------------------
 // Destination
 // ---------------------------------------------------------------------------
 
-/// Pinned above the bottom navigation because it is the one thing that should
-/// never scroll away: progress is only meaningful against a visible end.
+/// Overall progress follows the subjects in the same scroll view.
 class _DestinationBar extends StatelessWidget {
   const _DestinationBar({required this.data});
 
@@ -852,18 +706,17 @@ class _DestinationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final anchor = learningAnchor(context);
-    final onAnchor = onLearningAnchor(context);
+    final anchor = context.riksa.surface;
+    final onAnchor = context.riksa.ink;
     final days = data.examDate?.difference(DateTime.now()).inDays;
 
     return Container(
       key: const ValueKey('learning-destination-bar'),
-      height: 68,
-      padding: const EdgeInsets.fromLTRB(13, 0, 14, 0),
+      constraints: const BoxConstraints(minHeight: 68),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: anchor,
         borderRadius: AppRadii.panelBorder,
-        boxShadow: RiksaElevation.low(Theme.of(context).brightness),
       ),
       child: Row(
         children: [
@@ -940,7 +793,7 @@ class _HomeSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListView(
     physics: const AlwaysScrollableScrollPhysics(),
-    padding: const EdgeInsets.fromLTRB(20, 4, 20, 196),
+    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
     children: [
       Row(
         children: [

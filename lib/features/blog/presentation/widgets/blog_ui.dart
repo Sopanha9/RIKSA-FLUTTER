@@ -22,7 +22,7 @@ abstract final class BlogMetrics {
 }
 
 /// Surface the blog sheet sits on. Rows have no card of their own.
-Color blogSheetColor(BuildContext context) => context.riksa.surface;
+Color blogSheetColor(BuildContext context) => context.riksa.canvas;
 
 Color blogAvatarBackground(BuildContext context) => context.riksa.blushSoft;
 
@@ -357,42 +357,33 @@ class BlogTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = context.riksa;
+    // A pill, filled lavender when selected, as on the reference blog tabs.
     return Semantics(
       button: true,
       selected: selected,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Center(
-                  child: Text(
-                    label,
-                    style: RiksaTypography.bodyStyleFor(
-                      label,
-                      theme.textTheme.labelLarge?.copyWith(
-                        color: selected ? palette.ink : palette.inkMuted,
-                        fontWeight: selected
-                            ? FontWeight.w800
-                            : FontWeight.w500,
-                      ),
-                    ),
-                  ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppRadii.fullBorder,
+          child: AnimatedContainer(
+            duration: RiksaMotion.resolve(context, RiksaMotion.fast),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected ? palette.brandSoft : Colors.transparent,
+              borderRadius: AppRadii.fullBorder,
+            ),
+            child: Text(
+              label,
+              style: RiksaTypography.bodyStyleFor(
+                label,
+                theme.textTheme.labelLarge?.copyWith(
+                  color: selected ? palette.brand : palette.inkMuted,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
-              AnimatedContainer(
-                duration: RiksaMotion.resolve(context, RiksaMotion.fast),
-                height: 3,
-                width: selected ? 44 : 0,
-                decoration: ShapeDecoration(
-                  color: theme.colorScheme.primary,
-                  shape: const StadiumBorder(),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

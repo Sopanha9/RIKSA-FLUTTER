@@ -131,10 +131,9 @@ void main() {
   ) async {
     await _pump(tester, api: _MockAiChatApi());
 
-    expect(
-      find.text('What would you like to understand today?'),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('ai-coach-greeting')), findsOneWidget);
+    expect(find.textContaining("I'm your AI Study Coach"), findsOneWidget);
+    expect(find.text('Try asking about:'), findsOneWidget);
     await tester.tap(find.text('Give me a worked example'));
     await tester.pumpAndSettle();
 

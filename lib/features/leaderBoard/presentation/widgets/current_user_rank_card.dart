@@ -5,6 +5,8 @@ import '../../../../core/widgets/riksa_components.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../core/widgets/riksa_rank_badge.dart';
 
+/// The learner's own standing, on lime as on the reference board: the rank
+/// leads, XP follows, and the framed avatar carries the tier badge.
 class CurrentUserRankCard extends StatelessWidget {
   const CurrentUserRankCard({
     super.key,
@@ -30,100 +32,84 @@ class CurrentUserRankCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hasFrame = riksaAvatarFrameAssetPath(tier) != null;
+    final ink = isDark ? context.riksa.accent : AppColors.limeInk;
+    final textTheme = Theme.of(context).textTheme;
 
     return Semantics(
       button: onTap != null,
       label: 'Your rank is $rank. $name, $scopeLabel, $tier, $xp XP.',
       child: Material(
-        color: isDark
-            ? AppColors.editorialAubergineRaised
-            : AppColors.editorialBlack,
-        borderRadius: AppRadii.extraLargeBorder,
+        color: isDark ? context.riksa.accentSoft : AppColors.limeSoft,
+        borderRadius: AppRadii.largeBorder,
         child: InkWell(
           onTap: onTap,
-          borderRadius: AppRadii.extraLargeBorder,
-          child: Container(
+          borderRadius: AppRadii.largeBorder,
+          child: Padding(
             key: const ValueKey('current-user-rank-card'),
-            constraints: const BoxConstraints(minHeight: 82),
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-            decoration: const BoxDecoration(
-              borderRadius: AppRadii.extraLargeBorder,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Row(
               children: [
-                Text(
-                  'Your rank',
-                  style: TextStyle(
-                    color: isDark
-                        ? AppColors.editorialPink
-                        : AppColors.editorialPink,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: hasFrame
-                            ? null
-                            : Border.all(
-                                color: AppColors.editorialPink,
-                                width: 2,
-                              ),
-                      ),
-                      child: RiksaAvatarImage(
-                        value: avatarUrl,
-                        label: avatarLabel,
-                        size: 36,
-                        backgroundColor: AppColors.editorialPinkSoft,
-                        foregroundColor: AppColors.editorialAubergine,
-                        frameTier: tier,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    RiksaRankBadge(tier: tier, size: 36),
-                    Expanded(
-                      child: Center(
-                        // The learner's own two numbers are the one place on
-                        // this screen worth animating. Every other row's XP is
-                        // reference data, and six counters ticking at once is
-                        // the gamified noise the product sets itself against.
-                        child: RiksaCountUp(
-                          value: rank,
-                          format: (value) => '#$value',
-                          key: const ValueKey('current-user-rank-number'),
-                          style: TextStyle(
-                            color: isDark ? Colors.white : Colors.white,
-                            fontSize: 25,
-                            fontWeight: FontWeight.w900,
-                            height: 1,
-                          ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your rank',
+                        style: textTheme.labelMedium?.copyWith(
+                          color: ink.withValues(alpha: .75),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ),
-                    Container(
-                      width: 1,
-                      height: 32,
-                      color: AppColors.editorialPink.withValues(alpha: .65),
-                    ),
-                    const SizedBox(width: 14),
-                    RiksaCountUp(
-                      value: xp,
-                      format: (value) => '$value XP',
-                      style: const TextStyle(
-                        color: AppColors.editorialPink,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
+                      const SizedBox(height: 2),
+                      // The learner's own two numbers are the one place on
+                      // this screen worth animating; every other row's XP is
+                      // reference data.
+                      RiksaCountUp(
+                        value: rank,
+                        format: (value) => '#$value',
+                        key: const ValueKey('current-user-rank-number'),
+                        style: textTheme.headlineSmall?.copyWith(
+                          color: ink,
+                          fontWeight: FontWeight.w700,
+                          height: 1.1,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      RiksaCountUp(
+                        value: xp,
+                        format: (value) => '$value XP',
+                        style: textTheme.labelMedium?.copyWith(
+                          color: ink.withValues(alpha: .8),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned.fill(
+                        child: RiksaAvatarImage(
+                          value: avatarUrl,
+                          label: avatarLabel,
+                          size: 56,
+                          backgroundColor: AppColors.editorialPinkSoft,
+                          foregroundColor: AppColors.editorialAubergine,
+                          frameTier: tier,
+                        ),
+                      ),
+                      Positioned(
+                        right: -4,
+                        bottom: -4,
+                        child: RiksaRankBadge(tier: tier, size: 26),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

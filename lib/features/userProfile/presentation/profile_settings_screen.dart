@@ -43,10 +43,10 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
       backgroundColor: ProfilePalette.canvas(context),
       appBar: AppBar(
         backgroundColor: ProfilePalette.canvas(context),
-        centerTitle: true,
+        centerTitle: false,
         title: Text(
           l10n.settings,
-          style: const TextStyle(fontWeight: FontWeight.w900),
+          style: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       body: SafeArea(
@@ -74,7 +74,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                       ),
                       title: Text(
                         user.displayName,
-                        style: const TextStyle(fontWeight: FontWeight.w900),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       subtitle: Text(
                         '@${user.username}',
@@ -98,7 +98,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                         onChanged: (value) {
                           final isKm =
                               Localizations.localeOf(context).languageCode ==
-                                  'km';
+                              'km';
                           ref
                               .read(streakReminderStateProvider.notifier)
                               .toggle(

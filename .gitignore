@@ -52,3 +52,10 @@ app.*.map.json
 # Generated Dart files
 *.g.dart
 *.freezed.dart
+
+
+# In app ScreenShot
+/screenshots/
+screenshots_redesign_reference
+UI_HANDOFF.md
+ui_map.json

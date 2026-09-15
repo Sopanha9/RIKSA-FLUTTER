@@ -14,7 +14,7 @@ class ProfilePalette {
       ProfilePaletteScope.maybeOf(context);
 
   static Color green(BuildContext context) =>
-      _scope(context)?.accent ?? context.riksa.jade;
+      _scope(context)?.accent ?? context.riksa.brand;
   static Color streak(BuildContext context) =>
       _scope(context)?.achievement ?? context.riksa.saffron;
   static Color xp(BuildContext context) =>
@@ -59,7 +59,7 @@ class ProfilePalette {
   static Color pinkSoft(BuildContext context) =>
       _scope(context)?.pinkSoft ??
       (Theme.of(context).brightness == Brightness.dark
-          ? const Color(0xFF4A253D)
+          ? AppColors.violetDarkSoft
           : AppColors.editorialPinkSoft);
 
   static Color editorialSurface(BuildContext context) =>
@@ -110,17 +110,17 @@ class ProfilePaletteScope extends InheritedWidget {
       muted: isDark ? palette.inkMuted : AppColors.editorialMuted,
       accent: AppColors.editorialPink,
       accentSoft: isDark
-          ? const Color(0xFF4A253D)
+          ? AppColors.violetDarkSoft
           : AppColors.editorialPinkSoft,
       achievement: AppColors.editorialPink,
       achievementSoft: isDark
-          ? const Color(0xFF4A253D)
+          ? AppColors.violetDarkSoft
           : AppColors.editorialPinkSoft,
       aubergine: isDark
           ? AppColors.editorialAubergineRaised
           : AppColors.editorialAubergine,
       pink: AppColors.editorialPink,
-      pinkSoft: isDark ? const Color(0xFF4A253D) : AppColors.editorialPinkSoft,
+      pinkSoft: isDark ? AppColors.violetDarkSoft : AppColors.editorialPinkSoft,
       editorialSurface: isDark
           ? palette.surface
           : AppColors.editorialNeutralSurface,
@@ -215,7 +215,7 @@ class RiksaProfileAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: ringColor ?? context.riksa.jadeSoft,
-        border: Border.all(color: borderColor ?? context.riksa.jade, width: 2),
+        border: Border.all(color: borderColor ?? context.riksa.brand, width: 2),
       ),
       child: RiksaAvatarImage(
         value: avatarPath ?? user.avatarUrl,
@@ -476,7 +476,7 @@ class ProfileIdentityHeader extends StatelessWidget {
             ],
           ),
         ],
-        if (footer != null) ...[const SizedBox(height: 18), footer!],
+        if (footer != null) ...[const SizedBox(height: 12), footer!],
       ],
     );
   }

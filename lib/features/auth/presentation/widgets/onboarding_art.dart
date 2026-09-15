@@ -136,7 +136,29 @@ class _StaticOnboardingArt extends StatelessWidget {
     scene.fallbackAsset,
     key: ValueKey(scene.fallbackAsset),
     fit: BoxFit.contain,
+    colorMapper: const _VioletArtMapper(),
   );
+}
+
+/// The artwork was drawn in the old aubergine and pink. This maps those inks
+/// onto the violet system so the illustrations match the rest of the app.
+class _VioletArtMapper extends ColorMapper {
+  const _VioletArtMapper();
+
+  static const _map = {
+    0xFF2A061D: Color(0xFF2B2247),
+    0xFF3A0A29: Color(0xFF3B2E66),
+    0xFFEE8FD0: Color(0xFF7657EE),
+    0xFFE6E6E6: Color(0xFFB7A6ED),
+  };
+
+  @override
+  Color substitute(
+    String? id,
+    String elementName,
+    String attributeName,
+    Color color,
+  ) => _map[color.toARGB32()] ?? color;
 }
 
 extension on OnboardingScene {

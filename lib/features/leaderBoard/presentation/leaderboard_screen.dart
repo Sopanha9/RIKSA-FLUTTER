@@ -9,7 +9,6 @@ import 'package:riksa_app/features/userProfile/data/profile_models.dart';
 import 'package:riksa_app/features/userProfile/presentation/widgets/profile_ui.dart';
 import 'package:riksa_app/features/userProfile/providers/profile_provider.dart';
 import 'widgets/leaderboard_header.dart';
-import 'widgets/leaderboard_podium.dart';
 import 'widgets/leaderboard_scope_tabs.dart';
 import 'widgets/leaderboard_states.dart';
 import 'widgets/current_user_rank_card.dart';
@@ -104,9 +103,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       LeaderboardHeader(title: l10n.leaderboard),
-                      const SizedBox(height: RiksaSpacing.lg),
-                      _LeaderboardSearchField(controller: _searchController),
-                      const SizedBox(height: RiksaSpacing.md),
+                      const SizedBox(height: RiksaSpacing.sm),
                       LeaderboardScopeTabs(
                         selected: _scope,
                         onChanged: (scope) => setState(() => _scope = scope),
@@ -133,20 +130,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                           }
 
                           final filtered = _filterRows(rows, _searchQuery);
-                          final podium = filtered.take(3).toList();
-                          final listRows = filtered.length > 3
-                              ? filtered.skip(3).toList()
-                              : const <LeaderboardRow>[];
+                          final listRows = filtered;
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              LeaderboardPodium(
-                                podium: podium,
-                                currentUserId: currentUser?.id,
-                              ),
-                              if (showCurrentUserRank) ...[
-                                const SizedBox(height: RiksaSpacing.sm),
+                              if (showCurrentUserRank)
                                 CurrentUserRankCard(
                                   rank: userRankNumber,
                                   name:
@@ -166,7 +155,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                       : currentUser.username,
                                   onTap: () => context.push('/profile'),
                                 ),
-                              ],
+                              const SizedBox(height: RiksaSpacing.md),
+                              _LeaderboardSearchField(
+                                controller: _searchController,
+                              ),
                               const SizedBox(height: RiksaSpacing.md),
                               RankingsSheet(
                                 listRows: listRows,
@@ -223,18 +215,18 @@ class _LeaderboardSearchField extends StatelessWidget {
         filled: true,
         fillColor: isDark
             ? context.riksa.surfaceRaised
-            : AppColors.editorialField,
+            : AppColors.editorialNeutralSurface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: RiksaSpacing.md,
-          vertical: 14,
+          vertical: 10,
         ),
-        border: const OutlineInputBorder(
+        border: OutlineInputBorder(
           borderRadius: AppRadii.fullBorder,
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: context.riksa.outline),
         ),
-        enabledBorder: const OutlineInputBorder(
+        enabledBorder: OutlineInputBorder(
           borderRadius: AppRadii.fullBorder,
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: context.riksa.outline),
         ),
         focusedBorder: const OutlineInputBorder(
           borderRadius: AppRadii.fullBorder,

@@ -62,8 +62,14 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           ref.invalidate(profileRankProvider);
           ref.invalidate(leaderboardProvider(_scope));
           await Future.wait([
-            ref.refresh(profileRankProvider.future).catchError((_) => const LeaderboardRank(countryRank: 0, countryScore: 0)),
-            ref.refresh(leaderboardProvider(_scope).future).catchError((_) => const <LeaderboardRow>[]),
+            ref
+                .refresh(profileRankProvider.future)
+                .catchError(
+                  (_) => const LeaderboardRank(countryRank: 0, countryScore: 0),
+                ),
+            ref
+                .refresh(leaderboardProvider(_scope).future)
+                .catchError((_) => const <LeaderboardRow>[]),
           ]);
         },
         child: CustomScrollView(
@@ -119,9 +125,13 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                           },
                         ),
                         data: (rows) {
-                          if (rows.isEmpty && _scope == LeaderboardScope.province && (currentUser?.provinceId == null || currentUser!.provinceId!.isEmpty)) {
+                          if (rows.isEmpty &&
+                              _scope == LeaderboardScope.province &&
+                              (currentUser?.provinceId == null ||
+                                  currentUser!.provinceId!.isEmpty)) {
                             return _ProvincePrompt(
-                              onSelectProvince: () => context.push('/auth/province'),
+                              onSelectProvince: () =>
+                                  context.push('/auth/province'),
                             );
                           }
                           final filtered = _filterRows(rows, _searchQuery);
@@ -146,7 +156,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               child: boardAsync.maybeWhen(
                 data: (rows) {
                   final filtered = _filterRows(rows, _searchQuery);
-                  final listRows = filtered.length > 3 ? filtered.skip(3).toList() : const <LeaderboardRow>[];
+                  final listRows = filtered.length > 3
+                      ? filtered.skip(3).toList()
+                      : const <LeaderboardRow>[];
                   return _RankingsSheet(
                     listRows: listRows,
                     currentUser: currentUser,
@@ -160,9 +172,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             ),
 
             // Clearance for bottom navigation
-            const SliverToBoxAdapter(
-              child: SizedBox(height: RiksaSpacing.xxl),
-            ),
+            const SliverToBoxAdapter(child: SizedBox(height: RiksaSpacing.xxl)),
           ],
         ),
       ),
@@ -198,9 +208,9 @@ class _TopHeader extends StatelessWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
-              ),
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+          ),
         ),
         Container(
           width: 44,
@@ -242,9 +252,9 @@ class _ScopeFilterTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-   final label = (provinceLabel != null && provinceLabel!.trim().isNotEmpty)
-    ? readableProfileName(provinceLabel!)
-    : 'Province';
+    final label = (provinceLabel != null && provinceLabel!.trim().isNotEmpty)
+        ? readableProfileName(provinceLabel!)
+        : 'Province';
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -324,10 +334,7 @@ class _PillTab extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _LeaderboardPodium extends StatelessWidget {
-  const _LeaderboardPodium({
-    required this.podium,
-    required this.currentUserId,
-  });
+  const _LeaderboardPodium({required this.podium, required this.currentUserId});
 
   final List<LeaderboardRow> podium;
   final String? currentUserId;
@@ -339,7 +346,11 @@ class _LeaderboardPodium extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
         child: Column(
           children: [
-            Icon(Icons.emoji_events_outlined, size: 36, color: context.riksa.inkMuted),
+            Icon(
+              Icons.emoji_events_outlined,
+              size: 36,
+              color: context.riksa.inkMuted,
+            ),
             const SizedBox(height: 8),
             Text(
               'No ranked scholars in this scope yet.',
@@ -351,9 +362,15 @@ class _LeaderboardPodium extends StatelessWidget {
       );
     }
 
-    final rank1 = podium.isNotEmpty ? podium.firstWhere((r) => r.rank == 1, orElse: () => podium[0]) : null;
-    final rank2 = podium.length > 1 ? podium.firstWhere((r) => r.rank == 2, orElse: () => podium[1]) : null;
-    final rank3 = podium.length > 2 ? podium.firstWhere((r) => r.rank == 3, orElse: () => podium[2]) : null;
+    final rank1 = podium.isNotEmpty
+        ? podium.firstWhere((r) => r.rank == 1, orElse: () => podium[0])
+        : null;
+    final rank2 = podium.length > 1
+        ? podium.firstWhere((r) => r.rank == 2, orElse: () => podium[1])
+        : null;
+    final rank3 = podium.length > 2
+        ? podium.firstWhere((r) => r.rank == 3, orElse: () => podium[2])
+        : null;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -364,7 +381,8 @@ class _LeaderboardPodium extends StatelessWidget {
               ? _PodiumCard(
                   row: rank2,
                   ringColor: const Color(0xFFA39A8C),
-                  isCurrentUser: currentUserId != null && rank2.userId == currentUserId,
+                  isCurrentUser:
+                      currentUserId != null && rank2.userId == currentUserId,
                   onTap: () => _openProfile(context, rank2.userId),
                 )
               : const SizedBox.shrink(),
@@ -378,7 +396,8 @@ class _LeaderboardPodium extends StatelessWidget {
                   ringColor: const Color(0xFFE69A18),
                   isElevated: true,
                   hasCrown: true,
-                  isCurrentUser: currentUserId != null && rank1.userId == currentUserId,
+                  isCurrentUser:
+                      currentUserId != null && rank1.userId == currentUserId,
                   onTap: () => _openProfile(context, rank1.userId),
                 )
               : const SizedBox.shrink(),
@@ -390,7 +409,8 @@ class _LeaderboardPodium extends StatelessWidget {
               ? _PodiumCard(
                   row: rank3,
                   ringColor: const Color(0xFFB87824),
-                  isCurrentUser: currentUserId != null && rank3.userId == currentUserId,
+                  isCurrentUser:
+                      currentUserId != null && rank3.userId == currentUserId,
                   onTap: () => _openProfile(context, rank3.userId),
                 )
               : const SizedBox.shrink(),
@@ -428,7 +448,9 @@ class _PodiumCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final displayName = row.fallbackName;
-    final tierLabel = row.rankingTier != null ? readableProfileName(row.rankingTier!) : 'Scholar';
+    final tierLabel = row.rankingTier != null
+        ? readableProfileName(row.rankingTier!)
+        : 'Scholar';
 
     final cardContent = Material(
       color: palette.surface,
@@ -444,8 +466,8 @@ class _PodiumCard extends StatelessWidget {
               color: isCurrentUser
                   ? AppColors.editorialPink
                   : (isElevated
-                      ? AppColors.editorialPink.withValues(alpha: 0.8)
-                      : palette.outline.withValues(alpha: 0.5)),
+                        ? AppColors.editorialPink.withValues(alpha: 0.8)
+                        : palette.outline.withValues(alpha: 0.5)),
               width: (isElevated || isCurrentUser) ? 1.5 : 1.0,
             ),
             boxShadow: isElevated
@@ -496,7 +518,9 @@ class _PodiumCard extends StatelessWidget {
                       width: 20,
                       height: 20,
                       decoration: BoxDecoration(
-                        color: row.rank == 1 ? AppColors.achievementSaffron : AppColors.ink,
+                        color: row.rank == 1
+                            ? AppColors.achievementSaffron
+                            : AppColors.ink,
                         shape: BoxShape.circle,
                         border: Border.all(color: palette.surface, width: 2),
                       ),
@@ -542,7 +566,9 @@ class _PodiumCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: isElevated ? AppColors.editorialPink : palette.inkMuted,
+                    color: isElevated
+                        ? AppColors.editorialPink
+                        : palette.inkMuted,
                     fontSize: 10.5,
                     fontWeight: isElevated ? FontWeight.w700 : FontWeight.w600,
                   ),
@@ -627,12 +653,13 @@ class _RankingsSheet extends StatelessWidget {
 
     final userName = currentUser != null
         ? (currentUser.displayName.trim().isNotEmpty
-            ? '${currentUser.displayName.trim()} (You)'
-            : '${currentUser.username} (You)')
+              ? '${currentUser.displayName.trim()} (You)'
+              : '${currentUser.username} (You)')
         : 'You';
 
     // Check if the current user is already shown in the displayed rows
-    final userInList = currentUser != null && listRows.any((r) => r.userId == currentUser.id);
+    final userInList =
+        currentUser != null && listRows.any((r) => r.userId == currentUser.id);
 
     return Container(
       decoration: BoxDecoration(
@@ -700,11 +727,14 @@ class _RankingsSheet extends StatelessWidget {
             _RankingListRow(
               rank: row.rank,
               name: row.fallbackName,
-              subtitle: row.rankingTier != null ? readableProfileName(row.rankingTier!) : 'Scholar',
+              subtitle: row.rankingTier != null
+                  ? readableProfileName(row.rankingTier!)
+                  : 'Scholar',
               xp: row.score,
               avatarUrl: row.avatarUrl,
               avatarLabel: row.fallbackName,
-              isCurrentUser: currentUser != null && row.userId == currentUser.id,
+              isCurrentUser:
+                  currentUser != null && row.userId == currentUser.id,
               onTap: () {
                 final path = publicProfilePath(row.userId);
                 if (path != null) context.push(path);
@@ -720,7 +750,8 @@ class _RankingsSheet extends StatelessWidget {
             _RankingListRow(
               rank: userRankNumber,
               name: userName,
-              subtitle: '${readableProfileName(userTierName)} • ${scope == LeaderboardScope.province ? "Province" : "National"}',
+              subtitle:
+                  '${readableProfileName(userTierName)} • ${scope == LeaderboardScope.province ? "Province" : "National"}',
               xp: userScore,
               avatarUrl: currentUser.avatarUrl,
               avatarLabel: userName,
@@ -772,7 +803,9 @@ class _RankingListRow extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: AppRadii.largeBorder,
             border: Border.all(
-              color: isCurrentUser ? AppColors.editorialPink : Colors.transparent,
+              color: isCurrentUser
+                  ? AppColors.editorialPink
+                  : Colors.transparent,
               width: 1.5,
             ),
           ),
@@ -882,7 +915,9 @@ class _RankingListRow extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isCurrentUser ? AppColors.editorialPink : AppColors.ink,
+                  color: isCurrentUser
+                      ? AppColors.editorialPink
+                      : AppColors.ink,
                   borderRadius: AppRadii.fullBorder,
                 ),
                 child: Text(
@@ -932,9 +967,7 @@ class _PodiumLoadingShimmer extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: 36),
-      child: Center(
-        child: CircularProgressIndicator(),
-      ),
+      child: Center(child: CircularProgressIndicator()),
     );
   }
 }

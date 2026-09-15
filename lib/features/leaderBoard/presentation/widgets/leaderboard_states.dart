@@ -22,7 +22,9 @@ class PodiumLoadingShimmer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
       decoration: BoxDecoration(
-        color: isDark ? context.riksa.surface : AppColors.editorialNeutralSurface,
+        color: isDark
+            ? context.riksa.surface
+            : AppColors.editorialNeutralSurface,
         borderRadius: AppRadii.extraLargeBorder,
       ),
       child: Column(
@@ -169,12 +171,14 @@ class ProvincePrompt extends StatelessWidget {
             child: Icon(
               Icons.location_on_rounded,
               size: 28,
-              color: context.riksa.jade,
+              color: context.riksa.brand,
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            isKhmer ? 'តំណាងខេត្តរបស់អ្នក! 📍' : 'Represent your home province! 📍',
+            isKhmer
+                ? 'តំណាងខេត្តរបស់អ្នក! 📍'
+                : 'Represent your home province! 📍',
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 15,
@@ -200,7 +204,10 @@ class ProvincePrompt extends StatelessWidget {
               onPressed: onSelectProvince,
               style: FilledButton.styleFrom(
                 shape: const StadiumBorder(),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
               ),
               child: Text(
                 isKhmer ? 'ជ្រើសរើសខេត្ត →' : 'Choose My Province →',
@@ -237,7 +244,11 @@ class RankGapIndicator extends StatelessWidget {
 }
 
 class LeaderboardError extends StatelessWidget {
-  const LeaderboardError({super.key, required this.message, required this.onRetry});
+  const LeaderboardError({
+    super.key,
+    required this.message,
+    required this.onRetry,
+  });
 
   final String message;
   final VoidCallback onRetry;

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_brand.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../data/ai_chat_models.dart';
@@ -192,12 +193,41 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            RiksaPageHeader(
-              title: l10n.aiTutor,
-              leading: RiksaRoundedIconButton(
-                icon: Icons.arrow_back_rounded,
-                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                onPressed: context.pop,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: context.pop,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                    ),
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).backButtonTooltip,
+                    icon: const Icon(Icons.arrow_back_rounded),
+                  ),
+                  const SizedBox(width: 2),
+                  RiksaDoodle(
+                    RiksaDoodleKind.sparkle,
+                    size: 16,
+                    color: context.riksa.brand,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.aiCoachTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: RiksaTypography.titleStyleFor(
+                        l10n.aiCoachTitle,
+                        Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             if (lesson != null && lesson.isNotEmpty)
@@ -225,7 +255,12 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: AiContextChip(
-                    label: widget.learningContext!.split('\n').first.split('.').first.trim(),
+                    label: widget.learningContext!
+                        .split('\n')
+                        .first
+                        .split('.')
+                        .first
+                        .trim(),
                   ),
                 ),
               ),
@@ -278,7 +313,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   }
 }
 
-/// First screen of a new conversation: one question, and three ways in.
+//// First screen of a new conversation: the coach says hello, then offers
+/// a few ways in.
 class _Opener extends StatelessWidget {
   const _Opener({required this.onSelected, this.lesson});
 
@@ -288,66 +324,68 @@ class _Opener extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
+    final theme = Theme.of(context);
+    final palette = context.riksa;
+    final greeting = lesson == null || lesson!.isEmpty
+        ? l10n.aiCoachGreeting
+        : '${l10n.aiLessonContext(lesson!)}\n${l10n.aiChatOpener}';
 
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(RiksaSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Sparkling Study Coach Mascot Badge
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: context.riksa.jadeSoft,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: context.riksa.jade.withValues(alpha: 0.35),
-                  width: 2,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: palette.brandSoft,
+                  shape: BoxShape.circle,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: context.riksa.jade.withValues(alpha: 0.18),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
+                alignment: Alignment.center,
+                child: const RiksaMascot(size: 54, showSparkles: false),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  key: const ValueKey('ai-coach-greeting'),
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                  decoration: BoxDecoration(
+                    color: palette.surface,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(6),
+                      topRight: Radius.circular(AppRadii.large),
+                      bottomLeft: Radius.circular(AppRadii.large),
+                      bottomRight: Radius.circular(AppRadii.large),
+                    ),
+                    border: Border.all(color: palette.outline),
+                    boxShadow: RiksaElevation.low(theme.brightness),
                   ),
-                ],
+                  child: Text(
+                    greeting,
+                    style: RiksaTypography.bodyStyleFor(
+                      greeting,
+                      theme.textTheme.bodyMedium?.copyWith(height: 1.55),
+                    ),
+                  ),
+                ),
               ),
-              child: Icon(
-                Icons.auto_awesome_rounded,
-                size: 32,
-                color: context.riksa.jade,
-              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+          Text(
+            l10n.aiTryAskingAbout,
+            style: RiksaTypography.bodyStyleFor(
+              l10n.aiTryAskingAbout,
+              theme.textTheme.titleSmall,
             ),
-            const SizedBox(height: RiksaSpacing.md),
-            Text(
-              lesson == null || lesson!.isEmpty
-                  ? l10n.aiChatOpener
-                  : l10n.aiLessonContext(lesson!),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -.3,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              isKhmer
-                  ? 'សួរអំពីទ្រឹស្តី លំហាត់ ឬការអនុវត្ត — Sora នឹងជួយពន្យល់មួយជំហានម្តងៗ ✨'
-                  : 'Ask about concepts, formulas, or tricky problems — Sora is here to guide you step by step ✨',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: context.riksa.inkMuted,
-                fontSize: 12.5,
-                height: 1.45,
-              ),
-            ),
-            const SizedBox(height: RiksaSpacing.lg),
-            AiStarterPrompts(onSelected: onSelected),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          AiStarterPrompts(onSelected: onSelected, vertical: true),
+        ],
       ),
     );
   }
@@ -369,58 +407,61 @@ class _Composer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final palette = context.riksa;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        RiksaSpacing.sm,
-        RiksaSpacing.xs,
-        RiksaSpacing.sm,
-        RiksaSpacing.sm,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Expanded(
-            child: TextField(
-              key: const ValueKey('ai-message-input'),
-              controller: controller,
-              focusNode: focusNode,
-              minLines: 1,
-              maxLines: 5,
-              textInputAction: TextInputAction.newline,
-              decoration: InputDecoration(
-                hintText: l10n.aiComposerHint,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: RiksaSpacing.md,
-                  vertical: RiksaSpacing.sm,
-                ),
-                border: const OutlineInputBorder(
-                  borderRadius: AppRadii.panelBorder,
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: const OutlineInputBorder(
-                  borderRadius: AppRadii.panelBorder,
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: AppRadii.panelBorder,
-                  borderSide: BorderSide(color: context.riksa.jade, width: 1.5),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(4, 4, 5, 4),
+        decoration: BoxDecoration(
+          color: palette.surface,
+          borderRadius: AppRadii.panelBorder,
+          border: Border.all(color: palette.outline),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: TextField(
+                key: const ValueKey('ai-message-input'),
+                controller: controller,
+                focusNode: focusNode,
+                minLines: 1,
+                maxLines: 5,
+                textInputAction: TextInputAction.newline,
+                decoration: InputDecoration(
+                  hintText: l10n.aiComposerHint,
+                  hintStyle: TextStyle(color: palette.inkFaint),
+                  filled: false,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: RiksaSpacing.xs),
-          RiksaTapFeedback(
-            enabled: enabled,
-            child: IconButton.filled(
-              key: const ValueKey('send-ai-message'),
-              tooltip: l10n.aiSendMessage,
-              onPressed: enabled ? onSend : null,
-              iconSize: 22,
-              style: IconButton.styleFrom(minimumSize: const Size.square(48)),
-              icon: const Icon(Icons.arrow_upward_rounded),
+            RiksaTapFeedback(
+              enabled: enabled,
+              child: IconButton.filled(
+                key: const ValueKey('send-ai-message'),
+                tooltip: l10n.aiSendMessage,
+                onPressed: enabled ? onSend : null,
+                iconSize: 20,
+                style: IconButton.styleFrom(
+                  backgroundColor: palette.brand,
+                  foregroundColor: palette.onBrand,
+                  disabledBackgroundColor: palette.brandSoft,
+                  disabledForegroundColor: palette.brand.withValues(alpha: .5),
+                  minimumSize: const Size.square(42),
+                ),
+                icon: const Icon(Icons.send_rounded),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -465,11 +506,14 @@ class _QuickPromptsBar extends StatelessWidget {
               avatar: Icon(
                 Icons.auto_awesome,
                 size: 13,
-                color: context.riksa.jade,
+                color: context.riksa.brand,
               ),
               label: Text(
                 prompt,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 4),
               visualDensity: VisualDensity.compact,
@@ -481,4 +525,3 @@ class _QuickPromptsBar extends StatelessWidget {
     );
   }
 }
-

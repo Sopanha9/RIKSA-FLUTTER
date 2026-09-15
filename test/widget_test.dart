@@ -133,16 +133,16 @@ void main() {
     expect(find.byKey(const Key('telegram_auth_button')), findsOneWidget);
   });
 
-  testWidgets('auth top bar does not repeat language selection', (
+  testWidgets('login offers the language toggle in its top bar', (
     tester,
   ) async {
     await tester.pumpWidget(_testApp(const LoginScreen()));
     await tester.pump();
 
-    expect(find.byType(LanguageToggle), findsNothing);
+    expect(find.byType(LanguageToggle), findsOneWidget);
   });
 
-  testWidgets('login card is vertically centered when it fits', (tester) async {
+  testWidgets('login content sits in the upper part of a tall screen', (tester) async {
     tester.view.physicalSize = const Size(800, 1200);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -150,7 +150,11 @@ void main() {
     await tester.pumpWidget(_testApp(const LoginScreen()));
     await tester.pump();
 
-    expect(tester.getCenter(find.byType(AuthPanel)).dy, closeTo(600, 1));
+    // Like the reference, the form rides high and leaves the spare room below.
+    final top = tester.getTopLeft(find.byType(LanguageToggle)).dy;
+    final bottom = tester.getBottomLeft(find.byType(AuthPanel)).dy;
+    expect(top, greaterThan(12));
+    expect(top, lessThan(1200 - bottom));
   });
 
   testWidgets('auth submission shows a dedicated loading process', (
@@ -277,7 +281,11 @@ void main() {
     await tester.pumpWidget(_testApp(const AuthSwitcherScreen()));
 
     await tester.tap(find.byKey(const Key('register_toggle')));
-    await tester.tap(find.byKey(const Key('login_toggle')));
+    await tester.pump(const Duration(milliseconds: 60));
+    await tester.tap(
+      find.byKey(const Key('login_toggle')),
+      warnIfMissed: false,
+    );
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('register_username')), findsOneWidget);

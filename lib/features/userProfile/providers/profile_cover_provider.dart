@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../auth/providers/auth_provider.dart';
 
-const defaultProfileCoverId = 'jade';
+const defaultProfileCoverId = 'violet';
 
 class ProfileCoverNotifier extends Notifier<String> {
   String? _userId;

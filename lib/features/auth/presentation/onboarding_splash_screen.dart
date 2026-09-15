@@ -1,18 +1,20 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_brand.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import 'widgets/onboarding_art.dart';
 
-/// The three-card introduction to the app.
+/// The three-page introduction to the app.
 ///
-/// Each card is a full-bleed pastel stage with its own illustration, headline
-/// and promise, under a sheet that holds the copy and the single way forward.
-/// The illustration is edge to edge rather than framed in a card: a boxed
-/// picture reads as content inside the app, and this screen is not the app yet.
+/// Each page stages its illustration on a soft lavender disc with floating
+/// subject bubbles, then the headline and promise. Skip and Next sit together
+/// at the bottom so the learner can always leave or move on with one thumb.
 class OnboardingSplashScreen extends ConsumerStatefulWidget {
   const OnboardingSplashScreen({super.key, this.onComplete});
 
@@ -24,18 +26,12 @@ class OnboardingSplashScreen extends ConsumerStatefulWidget {
       _OnboardingSplashScreenState();
 }
 
-class _OnboardingSplashScreenState
-    extends ConsumerState<OnboardingSplashScreen> {
+class _OnboardingSplashScreenState extends ConsumerState<OnboardingSplashScreen>
+    with SingleTickerProviderStateMixin {
   late final PageController _pageController;
+  late final AnimationController _float;
   int _currentPage = 0;
   bool _finishing = false;
-
-  /// How far the sheet rides up over the stage.
-  ///
-  /// The Scaffold is painted in the sheet's own colour, so the strip the sheet
-  /// vacates at the bottom is invisible and no measurement is needed to make
-  /// the rounded corners sit on the artwork.
-  static const _sheetOverlap = 28.0;
 
   static const _scenes = [
     OnboardingScene.learning,
@@ -47,11 +43,28 @@ class _OnboardingSplashScreenState
   void initState() {
     super.initState();
     _pageController = PageController();
+    _float = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (reduceMotion) {
+      _float.stop();
+    } else if (!_float.isAnimating) {
+      _float.repeat();
+    }
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _float.dispose();
     super.dispose();
   }
 
@@ -59,9 +72,8 @@ class _OnboardingSplashScreenState
 
   Future<void> _continue() async {
     if (_finishing) return;
-    if (_currentPage < _scenes.length - 1) {
-      final reduceMotion = MediaQuery.of(context).disableAnimations;
-      if (reduceMotion) {
+    if (!_isLastPage) {
+      if (MediaQuery.of(context).disableAnimations) {
         _pageController.jumpToPage(_currentPage + 1);
       } else {
         await _pageController.nextPage(
@@ -71,7 +83,11 @@ class _OnboardingSplashScreenState
       }
       return;
     }
+    await _finish();
+  }
 
+  Future<void> _finish() async {
+    if (_finishing) return;
     setState(() => _finishing = true);
     await ref.read(localeProvider.notifier).completeIntro();
     if (!mounted) return;
@@ -98,198 +114,280 @@ class _OnboardingSplashScreenState
       l10n.onboardingAchievementBody,
       l10n.onboardingCommunityBody,
     ];
+    final actionLabel = _isLastPage
+        ? l10n.onboardingGetStarted
+        : l10n.nextLabel;
 
     return Scaffold(
-      backgroundColor: palette.surface,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: AnimatedContainer(
-              duration: RiksaMotion.resolve(context, RiksaMotion.emphasis),
-              curve: RiksaMotion.standardCurve,
-              color: theme.brightness == Brightness.dark
-                  ? palette.canvas
-                  : _sceneColor(_scenes[_currentPage]),
-              child: SafeArea(
-                bottom: false,
-                child: PageView.builder(
-                  key: const Key('onboarding_pages'),
-                  controller: _pageController,
-                  itemCount: _scenes.length,
-                  onPageChanged: (index) =>
-                      setState(() => _currentPage = index),
-                  itemBuilder: (context, index) => Padding(
-                    // Only the bottom inset matters: the sheet covers the last
-                    // stretch of the stage, and art tucked under it is lost.
-                    padding: const EdgeInsets.fromLTRB(
-                      24,
-                      RiksaSpacing.md,
-                      24,
-                      RiksaSpacing.lg + _sheetOverlap,
-                    ),
-                    child: OnboardingArt(
-                      scene: _scenes[index],
-                      active: index == _currentPage,
-                      semanticLabel: titles[index],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Transform.translate(
-            offset: const Offset(0, -_sheetOverlap),
-            child: _OnboardingSheet(
-              title: titles[_currentPage],
-              body: bodies[_currentPage],
-              page: _currentPage,
-              pageCount: _scenes.length,
-              actionLabel: _isLastPage
-                  ? l10n.onboardingGetStarted
-                  : l10n.continueLabel,
-              busy: _finishing,
-              onAction: _finishing ? null : _continue,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _sceneColor(OnboardingScene scene) => switch (scene) {
-    OnboardingScene.learning => AppColors.editorialPinkSoft,
-    OnboardingScene.achievement => AppColors.editorialCreamSoft,
-    OnboardingScene.community => AppColors.editorialMint,
-  };
-}
-
-/// The white panel that carries the words and the one way forward.
-class _OnboardingSheet extends StatelessWidget {
-  const _OnboardingSheet({
-    required this.title,
-    required this.body,
-    required this.page,
-    required this.pageCount,
-    required this.actionLabel,
-    required this.busy,
-    required this.onAction,
-  });
-
-  final String title;
-  final String body;
-  final int page;
-  final int pageCount;
-  final String actionLabel;
-  final bool busy;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final palette = context.riksa;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: palette.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppRadii.feature + 4),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
+      backgroundColor: palette.canvas,
+      body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                24,
-                RiksaSpacing.lg,
-                24,
-                RiksaSpacing.md,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _PageIndicator(count: pageCount, currentPage: page),
-                  const SizedBox(height: RiksaSpacing.lg),
-                  // Both strings cross-fade together: the headline and its
-                  // promise are one thought, and swapping them apart would read
-                  // as two unrelated changes.
-                  AnimatedSwitcher(
-                    duration: RiksaMotion.resolve(
-                      context,
-                      RiksaMotion.standard,
-                    ),
-                    child: Column(
-                      key: ValueKey(page),
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          title,
-                          textAlign: TextAlign.center,
-                          style: RiksaTypography.titleStyleFor(
-                            title,
-                            theme.textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -.6,
-                              height: 1.15,
-                            ),
-                            khmerHeight: 1.3,
-                          ),
-                        ),
-                        const SizedBox(height: RiksaSpacing.sm),
-                        Text(
-                          body,
-                          textAlign: TextAlign.center,
-                          style: RiksaTypography.bodyStyleFor(
-                            body,
-                            theme.textTheme.bodyMedium?.copyWith(
-                              color: palette.inkMuted,
-                              height: 1.6,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: RiksaSpacing.lg),
-                  FilledButton(
-                    key: const Key('onboarding_continue'),
-                    onPressed: busy ? null : onAction,
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(54),
-                      shape: const StadiumBorder(),
-                      backgroundColor: theme.brightness == Brightness.dark
-                          ? AppColors.editorialPink
-                          : AppColors.editorialAubergine,
-                      foregroundColor: theme.brightness == Brightness.dark
-                          ? AppColors.editorialAubergine
-                          : const Color(0xFFFFF7FB),
-                    ),
-                    child: busy
-                        ? const SizedBox.square(
-                            dimension: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            actionLabel,
-                            style: RiksaTypography.bodyStyleFor(
-                              actionLabel,
-                              const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: PageView.builder(
+                    key: const Key('onboarding_pages'),
+                    controller: _pageController,
+                    itemCount: _scenes.length,
+                    onPageChanged: (index) =>
+                        setState(() => _currentPage = index),
+                    itemBuilder: (context, index) => Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: AspectRatio(
+                              aspectRatio: 1,
+                              child: _OnboardingStage(
+                                scene: _scenes[index],
+                                float: _float,
+                                child: OnboardingArt(
+                                  scene: _scenes[index],
+                                  active: index == _currentPage,
+                                  semanticLabel: titles[index],
+                                ),
                               ),
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          Text(
+                            titles[index],
+                            textAlign: TextAlign.center,
+                            style: RiksaTypography.titleStyleFor(
+                              titles[index],
+                              theme.textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -.4,
+                              ),
+                              khmerHeight: 1.35,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            bodies[index],
+                            textAlign: TextAlign.center,
+                            style: RiksaTypography.bodyStyleFor(
+                              bodies[index],
+                              theme.textTheme.bodyMedium?.copyWith(
+                                color: palette.inkMuted,
+                                height: 1.6,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 20),
+                _PageIndicator(
+                  count: _scenes.length,
+                  currentPage: _currentPage,
+                ),
+                const SizedBox(height: 28),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 24, 16),
+                  child: Row(
+                    children: [
+                      AnimatedOpacity(
+                        opacity: _isLastPage ? 0 : 1,
+                        duration: RiksaMotion.resolve(
+                          context,
+                          RiksaMotion.standard,
+                        ),
+                        child: TextButton(
+                          key: const Key('onboarding_skip'),
+                          onPressed: _isLastPage || _finishing ? null : _finish,
+                          style: TextButton.styleFrom(
+                            foregroundColor: palette.inkMuted,
+                          ),
+                          child: Text(l10n.skipLabel),
+                        ),
+                      ),
+                      const Spacer(),
+                      FilledButton(
+                        key: const Key('onboarding_continue'),
+                        onPressed: _finishing ? null : _continue,
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(128, 54),
+                          padding: const EdgeInsets.symmetric(horizontal: 28),
+                        ),
+                        child: _finishing
+                            ? const SizedBox.square(
+                                dimension: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                actionLabel,
+                                style: RiksaTypography.bodyStyleFor(
+                                  actionLabel,
+                                  const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The illustration on a lavender disc, ringed by floating subject bubbles.
+class _OnboardingStage extends StatelessWidget {
+  const _OnboardingStage({
+    required this.scene,
+    required this.float,
+    required this.child,
+  });
+
+  final OnboardingScene scene;
+  final Animation<double> float;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.riksa;
+    final bubbles = switch (scene) {
+      OnboardingScene.learning => const [
+        (
+          Icons.menu_book_outlined,
+          Alignment(-.62, -.72),
+          AppColors.tileLavender,
+        ),
+        (Icons.science_outlined, Alignment(.66, -.62), AppColors.tileLavender),
+        (Icons.eco_outlined, Alignment(-.8, .5), AppColors.tileGreen),
+      ],
+      OnboardingScene.achievement => const [
+        (
+          Icons.emoji_events_outlined,
+          Alignment(-.66, -.7),
+          AppColors.tileYellow,
+        ),
+        (
+          Icons.local_fire_department_outlined,
+          Alignment(.7, -.6),
+          AppColors.tilePeach,
+        ),
+        (
+          Icons.star_outline_rounded,
+          Alignment(.82, .48),
+          AppColors.tileLavender,
+        ),
+      ],
+      OnboardingScene.community => const [
+        (Icons.forum_outlined, Alignment(-.66, -.7), AppColors.tileBlue),
+        (
+          Icons.favorite_border_rounded,
+          Alignment(.7, -.62),
+          AppColors.tilePink,
+        ),
+        (Icons.groups_outlined, Alignment(-.82, .5), AppColors.tileLavender),
+      ],
+    };
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final disc =
+            math.min(constraints.maxWidth, constraints.maxHeight) * .92;
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: disc,
+              height: disc,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [palette.brandSoft, palette.canvas],
+                  stops: const [.62, 1],
+                ),
+              ),
+            ),
+            Positioned(
+              right: constraints.maxWidth * .12,
+              bottom: constraints.maxHeight * .1,
+              child: RiksaDoodle(
+                RiksaDoodleKind.sparkle,
+                size: 22,
+                color: palette.brand.withValues(alpha: .6),
+              ),
+            ),
+            Positioned(
+              left: constraints.maxWidth * .1,
+              top: constraints.maxHeight * .42,
+              child: RiksaDoodle(
+                RiksaDoodleKind.squiggle,
+                size: 26,
+                color: AppColors.lime,
+              ),
+            ),
+            SizedBox(width: disc, height: disc, child: child),
+            for (final (index, (icon, alignment, tint)) in bubbles.indexed)
+              Align(
+                alignment: alignment,
+                child: AnimatedBuilder(
+                  animation: float,
+                  builder: (context, bubble) => Transform.translate(
+                    offset: Offset(
+                      0,
+                      math.sin((float.value + index / 3) * 2 * math.pi) * 5,
+                    ),
+                    child: bubble,
+                  ),
+                  child: _Bubble(icon: icon, tint: tint),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _Bubble extends StatelessWidget {
+  const _Bubble({required this.icon, required this.tint});
+
+  final IconData icon;
+  final Color tint;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.riksa;
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: AppRadii.rowBorder,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.violet.withValues(alpha: .12),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(6),
+      child: RiksaIconTile(
+        icon: icon,
+        background: tint,
+        foreground: palette.brand,
+        size: 40,
+        iconSize: 22,
       ),
     );
   }
@@ -303,27 +401,21 @@ class _PageIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final palette = context.riksa;
     return Semantics(
       label: 'Page ${currentPage + 1} of $count',
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(
           count,
-          // The current page reads as a bar rather than a bigger dot, so the
-          // position is legible without comparing three similar circles.
           (index) => AnimatedContainer(
             duration: RiksaMotion.resolve(context, RiksaMotion.standard),
             curve: RiksaMotion.standardCurve,
-            width: index == currentPage ? 22 : 6,
-            height: 6,
+            width: index == currentPage ? 22 : 7,
+            height: 7,
             margin: const EdgeInsets.symmetric(horizontal: 3),
             decoration: BoxDecoration(
-              color: index == currentPage
-                  ? AppColors.editorialPink
-                  : theme.brightness == Brightness.dark
-                  ? context.riksa.outline
-                  : AppColors.editorialOutline,
+              color: index == currentPage ? palette.brand : palette.outline,
               borderRadius: AppRadii.fullBorder,
             ),
           ),

@@ -177,7 +177,8 @@ void main() {
     expect(find.byKey(const ValueKey('subject-tile-physics')), findsOneWidget);
     expect(
       tester.getSize(find.byKey(const ValueKey('subject-tile-math'))).height,
-      158,
+      // Compact subject rows, as on the reference learning screen.
+      lessThanOrEqualTo(120),
     );
     expect(
       find.byKey(const ValueKey('subject-artwork-mathematics')),
@@ -208,14 +209,22 @@ void main() {
     expect(find.text('1 / 3'), findsOneWidget);
     expect(find.text('Could not load'), findsOneWidget);
 
-    // The destination never scrolls away, and it aggregates every subject.
+    expect(find.byKey(const ValueKey('learning-streak-chip')), findsOneWidget);
+
+    // Overall progress follows the subject list and remains reachable.
+    final destination = find.byKey(const ValueKey('learning-destination-bar'));
+    await tester.scrollUntilVisible(
+      destination,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('learning-destination-bar')),
       findsOneWidget,
     );
     expect(find.text('1 of 4 lessons'), findsOneWidget);
 
-    expect(find.byKey(const ValueKey('learning-streak-chip')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

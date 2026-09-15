@@ -141,10 +141,8 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
                   bottom: RiksaSpacing.sm,
                 ),
                 child: AiStudyCoachHub(
-                  onTopicSelected: (topic) => _startChat(
-                    prompt: topic.prompt,
-                    context: topic.context,
-                  ),
+                  onTopicSelected: (topic) =>
+                      _startChat(prompt: topic.prompt, context: topic.context),
                 ),
               ),
             ),

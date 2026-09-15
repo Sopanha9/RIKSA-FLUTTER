@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/riksa_brand.dart';
 import '../../../../core/widgets/riksa_components.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 
@@ -49,7 +50,7 @@ class AiUserBubble extends StatelessWidget {
           constraints: BoxConstraints(maxWidth: _maxBubbleWidth(context)),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: failed ? palette.surfaceRaised : palette.jade,
+              color: failed ? palette.surfaceRaised : palette.brand,
               borderRadius: _userRadius,
             ),
             child: Padding(
@@ -60,7 +61,7 @@ class AiUserBubble extends StatelessWidget {
               child: Text(
                 content,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: failed ? palette.inkMuted : palette.onJade,
+                  color: failed ? palette.inkMuted : palette.onBrand,
                   fontSize: 15,
                   height: 1.45,
                 ),
@@ -112,112 +113,147 @@ class AiTutorBubble extends StatelessWidget {
     final palette = context.riksa;
     return Align(
       alignment: Alignment.centerLeft,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: _maxBubbleWidth(context)),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: palette.surface,
-            borderRadius: _tutorRadius,
-            border: Border.all(color: palette.outline),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: RiksaSpacing.md,
-              vertical: RiksaSpacing.sm,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                MarkdownBody(
-                  data: content,
-                  styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
-                    p: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 16,
-                      height: 1.6,
-                      color: palette.ink,
-                    ),
-                    code: theme.textTheme.bodySmall?.copyWith(
-                      backgroundColor: palette.surfaceRaised,
-                    ),
-                    codeblockDecoration: BoxDecoration(
-                      color: palette.surfaceRaised,
-                      borderRadius: AppRadii.mediumBorder,
-                    ),
-                    blockquoteDecoration: BoxDecoration(
-                      color: palette.creamSoft,
-                      borderRadius: AppRadii.mediumBorder,
-                    ),
-                  ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const AiCoachAvatar(),
+          const SizedBox(width: RiksaSpacing.xs),
+          Flexible(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: _maxBubbleWidth(context) - 42,
+              ),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: palette.surface,
+                  borderRadius: _tutorRadius,
+                  border: Border.all(color: palette.outline),
                 ),
-                const SizedBox(height: RiksaSpacing.xs),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Builder(
-                    builder: (context) {
-                      final isKhmer =
-                          Localizations.localeOf(context).languageCode == 'km';
-                      return Semantics(
-                        button: true,
-                        label: isKhmer ? 'ចម្លងចម្លើយ' : 'Copy answer',
-                        child: InkWell(
-                          key: const ValueKey('copy-ai-response'),
-                          borderRadius: AppRadii.fullBorder,
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            Clipboard.setData(ClipboardData(text: content));
-                            ScaffoldMessenger.of(context)
-                              ..hideCurrentSnackBar()
-                              ..showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    isKhmer
-                                        ? 'បានចម្លងទៅក្តារតម្កល់'
-                                        : 'Copied to clipboard',
-                                  ),
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 4,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: RiksaSpacing.md,
+                    vertical: RiksaSpacing.sm,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      MarkdownBody(
+                        data: content,
+                        styleSheet: MarkdownStyleSheet.fromTheme(theme)
+                            .copyWith(
+                              p: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: 16,
+                                height: 1.6,
+                                color: palette.ink,
+                              ),
+                              code: theme.textTheme.bodySmall?.copyWith(
+                                backgroundColor: palette.surfaceRaised,
+                              ),
+                              codeblockDecoration: BoxDecoration(
+                                color: palette.surfaceRaised,
+                                borderRadius: AppRadii.mediumBorder,
+                              ),
+                              blockquoteDecoration: BoxDecoration(
+                                color: palette.brandSoft,
+                                borderRadius: AppRadii.mediumBorder,
+                              ),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.copy_rounded,
-                                  size: 14,
-                                  color: palette.inkMuted,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  isKhmer ? 'ចម្លង' : 'Copy',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelSmall
-                                      ?.copyWith(
-                                        color: palette.inkMuted,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
+                      ),
+                      const SizedBox(height: RiksaSpacing.xs),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Builder(
+                          builder: (context) {
+                            final isKhmer =
+                                Localizations.localeOf(context).languageCode ==
+                                'km';
+                            return Semantics(
+                              button: true,
+                              label: isKhmer ? 'ចម្លងចម្លើយ' : 'Copy answer',
+                              child: InkWell(
+                                key: const ValueKey('copy-ai-response'),
+                                borderRadius: AppRadii.fullBorder,
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  Clipboard.setData(
+                                    ClipboardData(text: content),
+                                  );
+                                  ScaffoldMessenger.of(context)
+                                    ..hideCurrentSnackBar()
+                                    ..showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          isKhmer
+                                              ? 'បានចម្លងទៅក្តារតម្កល់'
+                                              : 'Copied to clipboard',
+                                        ),
+                                        duration: const Duration(seconds: 2),
                                       ),
+                                    );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 4,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.copy_rounded,
+                                        size: 14,
+                                        color: palette.inkMuted,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        isKhmer ? 'ចម្លង' : 'Copy',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: palette.inkMuted,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ],
-                            ),
-                          ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
+}
+
+/// The coach's face beside each of its answers.
+class AiCoachAvatar extends StatelessWidget {
+  const AiCoachAvatar({super.key, this.size = 34});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: context.riksa.brandSoft,
+      shape: BoxShape.circle,
+    ),
+    alignment: Alignment.center,
+    child: RiksaMascot(size: size * .86, showSparkles: false),
+  );
 }
 
 /// Waiting state in the tutor's own position, so the answer does not arrive
@@ -234,26 +270,34 @@ class AiThinkingBubble extends StatelessWidget {
       label: l10n.aiThinking,
       child: Align(
         alignment: Alignment.centerLeft,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: palette.surface,
-            borderRadius: _tutorRadius,
-            border: Border.all(color: palette.outline),
-          ),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: RiksaSpacing.md,
-              vertical: RiksaSpacing.sm,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const AiCoachAvatar(),
+            const SizedBox(width: RiksaSpacing.xs),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: palette.surface,
+                borderRadius: _tutorRadius,
+                border: Border.all(color: palette.outline),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: RiksaSpacing.md,
+                  vertical: RiksaSpacing.sm,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RiksaSkeleton(width: 150, height: 11),
+                    SizedBox(height: RiksaSpacing.xs),
+                    RiksaSkeleton(width: 96, height: 11),
+                  ],
+                ),
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RiksaSkeleton(width: 150, height: 11),
-                SizedBox(height: RiksaSpacing.xs),
-                RiksaSkeleton(width: 96, height: 11),
-              ],
-            ),
-          ),
+          ],
         ),
       ),
     );
@@ -276,7 +320,7 @@ class AiContextChip extends StatelessWidget {
         vertical: RiksaSpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: palette.creamSoft,
+        color: palette.brandSoft,
         borderRadius: AppRadii.fullBorder,
       ),
       child: Row(

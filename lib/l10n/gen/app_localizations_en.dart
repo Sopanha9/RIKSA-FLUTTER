@@ -12,10 +12,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appName => 'Riksa';
 
   @override
-  String get welcomeBack => 'Welcome Back';
+  String get welcomeBack => 'Welcome back!';
 
   @override
-  String get loginSubtitle => 'Sign in to continue your learning journey';
+  String get loginSubtitle => 'Sign in to continue your learning journey.';
 
   @override
   String get loginEyebrow => 'Your learning space';
@@ -101,7 +101,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneNumberHint => 'Optional';
 
   @override
-  String get login => 'Log In';
+  String get login => 'Log in';
 
   @override
   String get register => 'Register';
@@ -137,29 +137,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInWithTelegram => 'Continue with Telegram';
 
   @override
-  String get telegramChatId => 'Telegram Chat ID';
-
-  @override
-  String get telegramChatIdHint => 'Start our bot and paste your chat ID';
-
-  @override
-  String get telegramOtpInstructions =>
-      'We sent a code to your Telegram. Enter it below.';
-
-  @override
-  String get otpCode => 'OTP Code';
-
-  @override
-  String get otpCodeHint => '6-digit code';
-
-  @override
-  String get sendCode => 'Send Code';
-
-  @override
   String get verify => 'Verify';
-
-  @override
-  String get resendCode => 'Resend code';
 
   @override
   String get noAccount => 'Don\'t have an account?';
@@ -229,39 +207,151 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use the Google button provided by your browser to continue.';
 
   @override
-  String get otpSendFailed => 'Failed to send OTP code';
+  String get telegramEyebrow => 'No password needed';
 
   @override
-  String get otpVerifyFailed => 'Invalid or expired code';
+  String get telegramAuthTitle => 'Continue with Telegram';
 
   @override
-  String get otpSendSuccess => 'Code sent to your Telegram';
+  String get telegramAuthSubtitle =>
+      'No Telegram ID to remember. Pick a way to sign in. New to Riksa? Both options create your account.';
 
   @override
-  String get telegramEyebrow => 'Fast passwordless access';
+  String get telegramAuthorize => 'Open Telegram';
 
   @override
-  String get telegramLoginTitle => 'Log in with Telegram';
+  String get telegramAuthorizeHint =>
+      'Fastest: tap Confirm in the Riksa bot and come straight back.';
 
   @override
-  String get telegramLoginSubtitle =>
-      'Enter the chat ID from the Riksa bot and we’ll send a one-time code.';
+  String get telegramUseCode => 'Log in with code';
 
   @override
-  String get telegramRegisterTitle => 'Register with Telegram';
+  String get telegramUseCodeHint =>
+      'Telegram on another device? Get a code from the bot and paste it here.';
 
   @override
-  String get telegramRegisterSubtitle =>
-      'Choose your Riksa name, then verify your Telegram account with a one-time code.';
+  String get telegramTheBot => 'the Riksa bot';
 
   @override
-  String get enterTelegramCode => 'Enter your Telegram code';
+  String get telegramCodeTitle => 'Log in with code';
 
   @override
-  String get invalidTelegramChatId => 'Enter a valid numeric Telegram chat ID';
+  String telegramCodeSubtitle(String bot) {
+    return 'Paste the code from $bot to sign in.';
+  }
 
   @override
-  String get invalidOtpCode => 'Enter the 6-digit code';
+  String telegramCodeStepOpen(String bot) {
+    return 'Open $bot and tap Start, or send /code';
+  }
+
+  @override
+  String get telegramCodeStepCopy => 'Copy the 8-character code it sends you';
+
+  @override
+  String get telegramCodeStepPaste => 'Paste it below';
+
+  @override
+  String telegramOpenBot(String bot) {
+    return 'Open $bot';
+  }
+
+  @override
+  String get telegramCodeLabel => 'Sign-in code';
+
+  @override
+  String get telegramCodeHint => 'e.g. VE9BLZ8J';
+
+  @override
+  String get telegramPasteCode => 'Paste code';
+
+  @override
+  String get telegramCodeInvalidFormat =>
+      'Enter the 8-character code from the bot';
+
+  @override
+  String get telegramCodeRejected =>
+      'This code is invalid or expired. Send /code to the bot for a new one.';
+
+  @override
+  String get telegramNoCodeInClipboard =>
+      'No sign-in code found in your clipboard.';
+
+  @override
+  String get telegramSignIn => 'Sign in';
+
+  @override
+  String get telegramUseOpenInstead => 'Use Open Telegram instead';
+
+  @override
+  String get telegramSwitchToCode => 'Having trouble? Log in with code';
+
+  @override
+  String get telegramPrivacyNote =>
+      'Riksa only receives your public Telegram name and username. Never your phone number or chats.';
+
+  @override
+  String get telegramWaitingTitle => 'Waiting for Telegram';
+
+  @override
+  String get telegramWaitingSubtitle =>
+      'Confirm the request in the Riksa bot, then return to this screen.';
+
+  @override
+  String telegramExpiresIn(String time) {
+    return 'Request expires in $time';
+  }
+
+  @override
+  String get telegramOpenAgain => 'Open Telegram again';
+
+  @override
+  String get telegramCopyLink => 'Copy link';
+
+  @override
+  String get telegramLinkCopied =>
+      'Link copied. Open it on any device with Telegram.';
+
+  @override
+  String get telegramOpenFailed =>
+      'Couldn\'t open Telegram. Install Telegram, or copy the link and open it on another device.';
+
+  @override
+  String get telegramStartFailed =>
+      'Couldn\'t start Telegram authorization. Please try again.';
+
+  @override
+  String get telegramExpired =>
+      'This request expired. Start again to get a fresh link.';
+
+  @override
+  String get telegramDenied => 'The request was declined in Telegram.';
+
+  @override
+  String get telegramSignupExpired =>
+      'Your Telegram approval expired before the account was created. Please authorize again.';
+
+  @override
+  String get telegramProfileEyebrow => 'Telegram connected';
+
+  @override
+  String get telegramProfileTitle => 'Set up your Riksa profile';
+
+  @override
+  String get telegramProfileSubtitle =>
+      'Choose how other learners will see you. You can change your display name later.';
+
+  @override
+  String telegramConnectedAs(String name) {
+    return 'Connected as $name';
+  }
+
+  @override
+  String get telegramCreateAccount => 'Create account';
+
+  @override
+  String get telegramUseAnotherAccount => 'Use a different Telegram account';
 
   @override
   String get languageEn => 'English';
@@ -625,6 +715,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get leaderboard => 'Leaderboard';
+
+  @override
+  String get ranksTab => 'Ranks';
 
   @override
   String get logout => 'Log Out';
@@ -1269,7 +1362,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiChatFallbackTitle => 'Learning chat';
 
   @override
-  String get aiComposerHint => 'Ask your tutor';
+  String get aiComposerHint => 'Type your question...';
 
   @override
   String get aiSendMessage => 'Send message';
@@ -1329,23 +1422,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String aiTimeDays(int count) {
     return '${count}d';
   }
-
-  @override
-  String otpSentTo(String chatId) {
-    return 'Sent to Telegram chat $chatId';
-  }
-
-  @override
-  String otpResendCountdown(int seconds) {
-    return 'Resend in ${seconds}s';
-  }
-
-  @override
-  String get otpChangeAccount => 'Change Telegram account';
-
-  @override
-  String get otpDeliveryHelp =>
-      'Open your Riksa bot conversation to find the latest code. If it has expired, request a new one.';
 
   @override
   String get lessonRead => 'Read';
@@ -1516,4 +1592,103 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get savedLessonsEmptyBody =>
       'Found a formula worth revisiting? Save the lesson from its menu. It will be waiting here.';
+
+  @override
+  String get splashTagline => 'Learn Today, Build Tomorrow';
+
+  @override
+  String get splashDescription =>
+      'Your Grade 12 STEM learning companion for a brighter Cambodia.';
+
+  @override
+  String get skipLabel => 'Skip';
+
+  @override
+  String get nextLabel => 'Next';
+
+  @override
+  String homeGreeting(String name) {
+    return 'Hello, $name! 👋';
+  }
+
+  @override
+  String get homeSubtitle => 'Keep going! Knowledge builds your future.';
+
+  @override
+  String get homeSearchHint => 'Search posts, topics, or lessons...';
+
+  @override
+  String get homeLessons => 'Lessons';
+
+  @override
+  String get homeLessonsCaption => 'Continue';
+
+  @override
+  String get homeCommunityCaption => 'Join & share';
+
+  @override
+  String get homeAiCaption => 'Ask anything';
+
+  @override
+  String get homeLeaderboardCaption => 'See rankings';
+
+  @override
+  String get todaysLearning => 'Today\'s learning';
+
+  @override
+  String get communityFeed => 'Community Feed';
+
+  @override
+  String get viewAllShort => 'View all';
+
+  @override
+  String get feedFilterAll => 'All';
+
+  @override
+  String get aiCoachTitle => 'AI Study Coach';
+
+  @override
+  String get aiCoachGreeting =>
+      'Hi! I\'m your AI Study Coach. Ask me anything about your lessons, and I\'ll help you learn step by step!';
+
+  @override
+  String get aiTryAskingAbout => 'Try asking about:';
+
+  @override
+  String get menuMyProgress => 'My Progress';
+
+  @override
+  String get menuSavedLessons => 'Saved Lessons';
+
+  @override
+  String get menuCommunities => 'Communities';
+
+  @override
+  String get communitiesDiscover => 'Discover';
+
+  @override
+  String get communitiesMine => 'My Communities';
+
+  @override
+  String get communitiesSearchHint => 'Search communities...';
+
+  @override
+  String get communityJoin => 'Join';
+
+  @override
+  String get communityJoined => 'Joined';
+
+  @override
+  String get communitiesUnavailable => 'Communities unavailable';
+
+  @override
+  String get communitiesLoadFailed => 'Could not load communities.';
+
+  @override
+  String get communitiesNoneJoined => 'You haven\'t joined a community yet.';
+
+  @override
+  String communityMembers(String count) {
+    return '$count members';
+  }
 }

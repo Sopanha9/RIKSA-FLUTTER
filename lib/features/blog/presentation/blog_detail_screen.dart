@@ -63,9 +63,10 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
 
     if (_scrollController.hasClients &&
         _scrollController.position.maxScrollExtent > 0) {
-      final progress = (_scrollController.offset /
-              _scrollController.position.maxScrollExtent)
-          .clamp(0.0, 1.0);
+      final progress =
+          (_scrollController.offset /
+                  _scrollController.position.maxScrollExtent)
+              .clamp(0.0, 1.0);
       if ((progress - _readingProgress).abs() > 0.005) {
         setState(() => _readingProgress = progress);
       }
@@ -86,20 +87,17 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
     });
     final label = _textScale > 1.2
         ? (isKhmer
-            ? 'ទំហំអក្សរ៖ ធំខ្លាំង (1.35x)'
-            : 'Text size: Extra Large (1.35x)')
+              ? 'ទំហំអក្សរ៖ ធំខ្លាំង (1.35x)'
+              : 'Text size: Extra Large (1.35x)')
         : (_textScale > 1.0
-            ? (isKhmer ? 'ទំហំអក្សរ៖ ធំ (1.18x)' : 'Text size: Large (1.18x)')
-            : (isKhmer
-                ? 'ទំហំអក្សរ៖ ធម្មតា (1.0x)'
-                : 'Text size: Default (1.0x)'));
+              ? (isKhmer ? 'ទំហំអក្សរ៖ ធំ (1.18x)' : 'Text size: Large (1.18x)')
+              : (isKhmer
+                    ? 'ទំហំអក្សរ៖ ធម្មតា (1.0x)'
+                    : 'Text size: Default (1.0x)'));
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
-          content: Text(label),
-          duration: const Duration(seconds: 1),
-        ),
+        SnackBar(content: Text(label), duration: const Duration(seconds: 1)),
       );
   }
 
@@ -268,7 +266,7 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
                     value: _readingProgress,
                     minHeight: 2.5,
                     backgroundColor: Colors.transparent,
-                    valueColor: AlwaysStoppedAnimation<Color>(palette.jade),
+                    valueColor: AlwaysStoppedAnimation<Color>(palette.brand),
                   ),
                 ],
               ),
@@ -280,7 +278,8 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
                   child: _ChromeButton(
                     key: const ValueKey('blog-font-size-toggle'),
                     icon: Icons.format_size_rounded,
-                    tooltip: Localizations.localeOf(context).languageCode == 'km'
+                    tooltip:
+                        Localizations.localeOf(context).languageCode == 'km'
                         ? 'ប្តូរទំហំអក្សរ'
                         : 'Adjust text size',
                     onPressed: _cycleFontSize,

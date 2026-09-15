@@ -82,7 +82,6 @@ class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
             ),
           ),
           _CategoryTabs(selectedCategoryId: selectedCategoryId),
-          const BlogDivider(),
           Expanded(child: _buildBody(feedState)),
         ],
       ),
@@ -121,9 +120,9 @@ class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
                 controller: _scrollController,
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: const EdgeInsets.only(bottom: 96),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                 itemCount: posts.length + (hasMore ? 1 : 0),
-                separatorBuilder: (_, _) => const BlogDivider(),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   if (index == posts.length) {
                     return Padding(
@@ -158,7 +157,7 @@ class _CategoryTabs extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = ref.watch(blogCategoriesProvider);
     return SizedBox(
-      height: 46,
+      height: 48,
       child: categories.when(
         loading: () => const Padding(
           padding: EdgeInsets.fromLTRB(BlogMetrics.gutter, 12, 0, 16),
@@ -175,7 +174,7 @@ class _CategoryTabs extends ConsumerWidget {
         error: (_, _) => const SizedBox.shrink(),
         data: (items) => ListView.builder(
           scrollDirection: Axis.horizontal,
-          padding: EdgeInsets.zero,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           itemCount: items.length + 1,
           itemBuilder: (context, index) {
             final category = index == 0 ? null : items[index - 1];
@@ -207,104 +206,112 @@ class BlogTimelineRow extends ConsumerWidget {
     final isOwner = ref.watch(currentUserIdProvider) == post.authorId;
     final preview = post.plainTextPreview;
 
-    return InkWell(
-      onTap: () => context.push('/blog/${post.id}'),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(BlogMetrics.gutter, 12, 12, 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            BlogAvatar(
-              profile: profile,
-              size: BlogMetrics.rowAvatar,
-              onTap: () => _openProfile(context, profile),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: BlogAuthorMetaLine(
-                          profile: profile,
-                          createdAt: post.createdAt,
+    return Material(
+      color: palette.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: AppRadii.largeBorder,
+        side: BorderSide(color: palette.outline),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/blog/${post.id}'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 14, 10, 6),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              BlogAvatar(
+                profile: profile,
+                size: BlogMetrics.rowAvatar,
+                onTap: () => _openProfile(context, profile),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: BlogAuthorMetaLine(
+                            profile: profile,
+                            createdAt: post.createdAt,
+                          ),
                         ),
-                      ),
-                      if (isOwner)
-                        BlogOwnerMenu(
-                          onEdit: () => _edit(context, ref),
-                          onDelete: () => _delete(context, ref),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    post.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: RiksaTypography.bodyStyleFor(
-                      post.title,
-                      theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        height: 1.3,
-                        letterSpacing: -.2,
-                        color: palette.ink,
-                      ),
+                        if (isOwner)
+                          BlogOwnerMenu(
+                            onEdit: () => _edit(context, ref),
+                            onDelete: () => _delete(context, ref),
+                          ),
+                      ],
                     ),
-                  ),
-                  if (preview.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      preview,
-                      maxLines: 3,
+                      post.title,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: RiksaTypography.bodyStyleFor(
-                        preview,
-                        theme.textTheme.bodyMedium?.copyWith(
-                          color: palette.inkMuted,
-                          height: 1.5,
+                        post.title,
+                        theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          height: 1.3,
+                          letterSpacing: -.2,
+                          color: palette.ink,
                         ),
                       ),
                     ),
-                  ],
-                  if (post.hasCover) ...[
-                    const SizedBox(height: 12),
-                    BlogCoverImage(url: post.coverUrl!),
-                  ],
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      BlogAction(
-                        icon: Icons.favorite_border_rounded,
-                        activeIcon: Icons.favorite_rounded,
-                        label: blogCountLabel(post.likeCount),
-                        semanticLabel: post.liked
-                            ? 'Unlike, ${post.likeCount} likes'
-                            : 'Like, ${post.likeCount} likes',
-                        selected: post.liked,
-                        selectedColor: theme.colorScheme.error,
-                        onTap: () => ref
-                            .read(blogFeedProvider.notifier)
-                            .toggleLike(post.id),
-                      ),
-                      const SizedBox(width: RiksaSpacing.md),
-                      BlogAction(
-                        icon: Icons.bar_chart_rounded,
-                        label: blogCountLabel(post.viewCount),
-                        semanticLabel: '${post.viewCount} views',
-                      ),
-                      const Spacer(),
-                      Flexible(
-                        child: BlogCategoryTag(categoryId: post.categoryId),
+                    if (preview.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        preview,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: RiksaTypography.bodyStyleFor(
+                          preview,
+                          theme.textTheme.bodyMedium?.copyWith(
+                            color: palette.inkMuted,
+                            height: 1.5,
+                          ),
+                        ),
                       ),
                     ],
-                  ),
-                ],
+                    if (post.hasCover) ...[
+                      const SizedBox(height: 12),
+                      BlogCoverImage(url: post.coverUrl!),
+                    ],
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        BlogAction(
+                          icon: Icons.favorite_border_rounded,
+                          activeIcon: Icons.favorite_rounded,
+                          label: blogCountLabel(post.likeCount),
+                          semanticLabel: post.liked
+                              ? 'Unlike, ${post.likeCount} likes'
+                              : 'Like, ${post.likeCount} likes',
+                          selected: post.liked,
+                          selectedColor: theme.colorScheme.error,
+                          onTap: () => ref
+                              .read(blogFeedProvider.notifier)
+                              .toggleLike(post.id),
+                        ),
+                        const SizedBox(width: RiksaSpacing.md),
+                        BlogAction(
+                          icon: Icons.bar_chart_rounded,
+                          label: blogCountLabel(post.viewCount),
+                          semanticLabel: '${post.viewCount} views',
+                        ),
+                        const Spacer(),
+                        Flexible(
+                          child: BlogCategoryTag(categoryId: post.categoryId),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

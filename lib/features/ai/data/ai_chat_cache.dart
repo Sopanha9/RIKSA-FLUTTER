@@ -24,7 +24,10 @@ class AiChatCache {
       final list = jsonDecode(data) as List?;
       if (list == null) return const [];
       return list
-          .map((item) => AiChatSession.fromJson((item as Map).cast<String, dynamic>()))
+          .map(
+            (item) =>
+                AiChatSession.fromJson((item as Map).cast<String, dynamic>()),
+          )
           .toList();
     } catch (_) {
       return const [];

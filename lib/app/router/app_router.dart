@@ -11,7 +11,7 @@ import '../../features/auth/presentation/splash_animation_screen.dart';
 import '../../features/auth/presentation/language_select_screen.dart';
 import '../../features/auth/presentation/onboarding_splash_screen.dart';
 import '../../features/auth/presentation/province_select_screen.dart';
-import '../../features/auth/presentation/telegram_otp_screen.dart';
+import '../../features/auth/presentation/telegram_auth_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/blog/data/blog_models.dart';
 import '../../features/blog/presentation/blog_composer_screen.dart';
@@ -113,9 +113,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/auth/telegram',
-        builder: (context, state) => TelegramOtpScreen(
-          isRegistration: state.uri.queryParameters['register'] == 'true',
-        ),
+        builder: (context, state) => const TelegramAuthScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

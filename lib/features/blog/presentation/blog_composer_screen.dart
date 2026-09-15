@@ -283,9 +283,7 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
                   foregroundColor: blogAvatarForeground(context),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: _previewing ? _buildPreview() : _buildFields(),
-                ),
+                Expanded(child: _previewing ? _buildPreview() : _buildFields()),
               ],
             ),
           ),
@@ -528,9 +526,7 @@ class _ComposerBar extends StatelessWidget {
                     : context.riksa.inkMuted,
               ),
               icon: Icon(
-                previewing
-                    ? Icons.edit_outlined
-                    : Icons.visibility_outlined,
+                previewing ? Icons.edit_outlined : Icons.visibility_outlined,
                 size: 21,
               ),
             ),

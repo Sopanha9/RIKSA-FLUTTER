@@ -99,7 +99,9 @@ class RiksaProfileDrawer extends ConsumerWidget {
                         _DrawerItem(
                           itemKey: const ValueKey('drawer-saved-lessons'),
                           icon: Icons.bookmark_border_rounded,
-                          label: Localizations.localeOf(context).languageCode == 'km'
+                          label:
+                              Localizations.localeOf(context).languageCode ==
+                                  'km'
                               ? 'មេរៀនបានរក្សាទុក'
                               : 'Saved Lessons',
                           onTap: () => _go(context, '/learn/saved'),
@@ -370,7 +372,10 @@ class _DrawerFooter extends ConsumerWidget {
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 260),
                           transitionBuilder: (child, animation) =>
-                              RotationTransition(turns: animation, child: child),
+                              RotationTransition(
+                                turns: animation,
+                                child: child,
+                              ),
                           child: Icon(
                             isDark
                                 ? Icons.light_mode_rounded

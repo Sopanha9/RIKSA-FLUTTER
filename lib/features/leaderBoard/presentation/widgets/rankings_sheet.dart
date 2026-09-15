@@ -33,17 +33,15 @@ class RankingsSheet extends StatelessWidget {
             Text(
               'Rankings',
               style: TextStyle(
-                color: isDark
-                    ? context.riksa.ink
-                    : AppColors.editorialAubergine,
-                fontSize: 20,
+                color: isDark ? context.riksa.ink : AppColors.editorialInk,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -.3,
               ),
             ),
             if (listRows.isNotEmpty)
               Text(
-                'Top ${listRows.length + 3}',
+                'Top ${listRows.length}',
                 style: TextStyle(
                   color: isDark
                       ? context.riksa.inkMuted
@@ -80,7 +78,7 @@ class RankingsSheet extends StatelessWidget {
                     RiksaEntrance(
                       index: index,
                       child: Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.only(bottom: 6),
                         child: RankingListRow(
                           rank: listRows[index].rank,
                           tier: listRows[index].rankingTier,

@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/sound/learning_sound.dart';
 import '../../../core/sound/sound_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_brand.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../userProfile/providers/profile_provider.dart';
@@ -275,6 +276,10 @@ class _LessonExperienceScreenState
             children: [
               _JourneyStages(phase: flow.phase),
               const SizedBox(height: RiksaSpacing.lg),
+              if (flow.phase == _LessonPhase.reading) ...[
+                _LessonArtCard(subject: subject),
+                const SizedBox(height: RiksaSpacing.lg),
+              ],
               RiksaContentReveal(
                 identity: (
                   flow.section.index,
@@ -950,7 +955,7 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
 
   double get _rowHeight => math.max(48, controlsHeight + 16);
   @override
-  double get maxExtent => topInset + _rowHeight + 16;
+  double get maxExtent => topInset + _rowHeight + 20;
   @override
   double get minExtent => maxExtent;
 
@@ -1061,9 +1066,9 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
               child: LearningTrack(
                 key: const ValueKey('lesson-progress-track'),
                 value: flow.progress,
-                color: palette.jade,
+                color: AppColors.progressGreen,
                 background: palette.surfaceRaised,
-                height: 4,
+                height: 8,
               ),
             ),
           ],
@@ -1109,6 +1114,78 @@ class _LessonIdentity extends StatelessWidget {
   );
 }
 
+/// The picture at the head of a reading step: the subject's pastel, its
+/// icon drawn large, and the mascot taking notes.
+class _LessonArtCard extends StatelessWidget {
+  const _LessonArtCard({required this.subject});
+  final String subject;
+
+  @override
+  Widget build(BuildContext context) {
+    final stem = stemSubjectFor(subject);
+    final tone = subjectTone(context, stem);
+    return ExcludeSemantics(
+      child: Container(
+        key: const ValueKey('lesson-art-card'),
+        height: 164,
+        decoration: BoxDecoration(
+          color: tone.surface,
+          borderRadius: AppRadii.extraLargeBorder,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            Positioned(
+              left: -30,
+              bottom: -40,
+              child: Container(
+                width: 170,
+                height: 170,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: tone.accent.withValues(alpha: .1),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 36,
+              top: 26,
+              child: Icon(
+                stemSubjectIcon(stem),
+                size: 104,
+                color: tone.accent.withValues(alpha: .85),
+              ),
+            ),
+            const Positioned(
+              right: 22,
+              bottom: 12,
+              child: RiksaMascot(size: 112, pose: RiksaMascotPose.pencil),
+            ),
+            Positioned(
+              right: 28,
+              top: 18,
+              child: RiksaDoodle(
+                RiksaDoodleKind.sparkle,
+                size: 20,
+                color: tone.accent,
+              ),
+            ),
+            const Positioned(
+              left: 150,
+              top: 22,
+              child: RiksaDoodle(
+                RiksaDoodleKind.squiggle,
+                size: 26,
+                color: AppColors.lime,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _StepCounter {
   static TextStyle styleFor(BuildContext context) => TextStyle(
     fontSize: 13,
@@ -1129,27 +1206,81 @@ class _JourneyStages extends StatelessWidget {
       _ => 1,
     };
     final labels = [l10n.lessonRead, l10n.lessonRespond, l10n.lessonReflect];
-    return Wrap(
-      spacing: 16,
-      runSpacing: 8,
+    final palette = context.riksa;
+    // Numbered circles joined by a rail, as on the reference step indicator.
+    // Labels give way first when space runs out, so large text never pushes
+    // the row past the screen edge.
+    return Row(
       children: [
-        for (var i = 0; i < labels.length; i++)
-          Semantics(
-            selected: i == active,
-            child: Text(
-              '${i + 1}  ${labels[i]}',
-              style: RiksaTypography.bodyStyleFor(
-                labels[i],
-                TextStyle(
-                  fontSize: 12,
-                  fontWeight: i == active ? FontWeight.w700 : FontWeight.w400,
-                  color: i == active
-                      ? context.riksa.ink
-                      : context.riksa.inkMuted,
-                ),
+        for (var i = 0; i < labels.length; i++) ...[
+          if (i > 0)
+            Expanded(
+              child: Container(
+                height: 2,
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+                color: i <= active ? palette.brand : palette.outline,
+              ),
+            ),
+          Flexible(
+            flex: 4,
+            child: Semantics(
+              selected: i == active,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  MediaQuery.withNoTextScaling(
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: i <= active ? palette.brand : palette.surface,
+                        border: Border.all(
+                          color: i <= active ? palette.brand : palette.outline,
+                        ),
+                      ),
+                      child: i < active
+                          ? Icon(
+                              Icons.check_rounded,
+                              size: 15,
+                              color: palette.onBrand,
+                            )
+                          : Text(
+                              '${i + 1}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: i == active
+                                    ? palette.onBrand
+                                    : palette.inkMuted,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      labels[i],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: RiksaTypography.bodyStyleFor(
+                        labels[i],
+                        TextStyle(
+                          fontSize: 12,
+                          fontWeight: i == active
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: i == active ? palette.ink : palette.inkMuted,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
+        ],
       ],
     );
   }
@@ -1549,48 +1680,48 @@ class _ChoiceAnswersState extends State<_ChoiceAnswers> {
               horizontal: RiksaSpacing.md - 2,
               vertical: RiksaSpacing.sm + 2,
             ),
-          child: Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: badgeBackground,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  badgeLabel,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: badgeInk,
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: badgeBackground,
+                    shape: BoxShape.circle,
                   ),
-                ),
-              ),
-              const SizedBox(width: RiksaSpacing.sm),
-              Expanded(
-                child: Text(
-                  option,
-                  style: RiksaTypography.bodyStyleFor(
-                    option,
-                    theme.textTheme.bodyMedium?.copyWith(
-                      color: ink,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w400,
+                  child: Text(
+                    badgeLabel,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: badgeInk,
                     ),
                   ),
                 ),
-              ),
-              ?trailing,
-            ],
+                const SizedBox(width: RiksaSpacing.sm),
+                Expanded(
+                  child: Text(
+                    option,
+                    style: RiksaTypography.bodyStyleFor(
+                      option,
+                      theme.textTheme.bodyMedium?.copyWith(
+                        color: ink,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                ),
+                ?trailing,
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 class _Feedback extends StatelessWidget {

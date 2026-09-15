@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_brand.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../data/auth_models.dart';
 import '../data/auth_validators.dart';
@@ -34,7 +35,6 @@ class AuthSwitcherScreen extends ConsumerStatefulWidget {
 }
 
 class _AuthSwitcherScreenState extends ConsumerState<AuthSwitcherScreen> {
-  static const _toggleDuration = Duration(milliseconds: 250);
   static const _formDuration = Duration(milliseconds: 300);
 
   final _loginFormKey = GlobalKey<FormState>();
@@ -195,25 +195,24 @@ class _AuthSwitcherScreenState extends ConsumerState<AuthSwitcherScreen> {
     });
 
     return AuthScaffold(
+      showLanguageToggle: true,
       child: AutofillGroup(
-        child: AnimatedSize(
-          duration: _formDuration,
-          curve: Curves.easeInOutCubic,
-          alignment: Alignment.topCenter,
-          child: Stack(
-            children: [
-              AuthPanel(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _AuthSegmentedToggle(
-                      pageState: _pageState,
-                      enabled: !loading,
-                      duration: _toggleDuration,
-                      onSelected: _selectPage,
-                    ),
-                    const SizedBox(height: 28),
-                    AnimatedSwitcher(
+        child: Stack(
+          children: [
+            AuthPanel(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: RiksaWordmark(fontSize: 46),
+                  ),
+                  const SizedBox(height: 28),
+                  AnimatedSize(
+                    duration: _formDuration,
+                    curve: Curves.easeInOutCubic,
+                    alignment: Alignment.topCenter,
+                    child: AnimatedSwitcher(
                       duration: _formDuration,
                       reverseDuration: _formDuration,
                       switchInCurve: Curves.easeInOutCubic,
@@ -262,28 +261,34 @@ class _AuthSwitcherScreenState extends ConsumerState<AuthSwitcherScreen> {
                               onSubmit: _submitRegistration,
                             ),
                     ),
-                    const SizedBox(height: 20),
-                    AuthDivider(label: strings.orLabel),
-                    const SizedBox(height: 18),
-                    SocialAuthSection(
-                      isRegistration: _pageState == PageState.register,
-                      showDivider: false,
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 24),
+                  AuthDivider(label: strings.orContinueWith),
+                  const SizedBox(height: 18),
+                  SocialAuthSection(
+                    showDivider: false,
+                    compact: _pageState == PageState.login,
+                  ),
+                  const SizedBox(height: 28),
+                  _AuthSwitchPrompt(
+                    pageState: _pageState,
+                    enabled: !loading,
+                    onSelected: _selectPage,
+                  ),
+                ],
               ),
-              Positioned.fill(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  child: loading
-                      ? const _AuthLoadingOverlay(
-                          key: Key('auth_loading_overlay'),
-                        )
-                      : const SizedBox(key: Key('auth_loading_idle')),
-                ),
+            ),
+            Positioned.fill(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                child: loading
+                    ? const _AuthLoadingOverlay(
+                        key: Key('auth_loading_overlay'),
+                      )
+                    : const SizedBox(key: Key('auth_loading_idle')),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -298,51 +303,45 @@ class _AuthLoadingOverlay extends StatelessWidget {
     final strings = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final palette = context.riksa;
-    final dark = theme.brightness == Brightness.dark;
-    final surface = dark
-        ? theme.colorScheme.surfaceContainer
-        : AppColors.editorialNeutralSurface;
     return Semantics(
       liveRegion: true,
       label: strings.preparingYourSpace,
       child: Container(
         decoration: BoxDecoration(
-          color: surface.withValues(alpha: .78),
+          color: palette.canvas.withValues(alpha: .8),
           borderRadius: AppRadii.largeBorder,
         ),
         child: Center(
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+            padding: const EdgeInsets.fromLTRB(14, 12, 24, 12),
             decoration: BoxDecoration(
-              color: surface,
+              color: palette.surface,
               borderRadius: AppRadii.fullBorder,
-              border: Border.all(
-                color: dark ? palette.outline : AppColors.editorialOutline,
-              ),
+              border: Border.all(color: palette.outline),
               boxShadow: RiksaElevation.low(theme.brightness),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const RiksaMascot(size: 44, showSparkles: false),
+                const SizedBox(width: 10),
                 SizedBox.square(
                   key: const Key('auth_loading_animation'),
-                  dimension: 46,
+                  dimension: 30,
                   child: LoadingAnimationWidget.twistingDots(
-                    leftDotColor: AppColors.editorialPink,
-                    rightDotColor: dark
-                        ? palette.ink
-                        : AppColors.editorialAubergine,
-                    size: 46,
+                    leftDotColor: palette.brand,
+                    rightDotColor: AppColors.lime,
+                    size: 30,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Flexible(
                   child: Text(
                     strings.preparingYourSpace,
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: dark ? palette.ink : AppColors.editorialInk,
-                      fontWeight: FontWeight.w700,
+                    style: RiksaTypography.bodyStyleFor(
+                      strings.preparingYourSpace,
+                      theme.textTheme.titleSmall,
                     ),
                   ),
                 ),
@@ -355,135 +354,56 @@ class _AuthLoadingOverlay extends StatelessWidget {
   }
 }
 
-class _AuthSegmentedToggle extends StatelessWidget {
-  const _AuthSegmentedToggle({
+/// "Don't have an account? Sign up" under the login form, and the way back
+/// under the registration form.
+class _AuthSwitchPrompt extends StatelessWidget {
+  const _AuthSwitchPrompt({
     required this.pageState,
     required this.enabled,
-    required this.duration,
     required this.onSelected,
   });
 
   final PageState pageState;
   final bool enabled;
-  final Duration duration;
   final ValueChanged<PageState> onSelected;
 
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
-
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: dark
-            ? theme.colorScheme.surfaceContainerHighest
-            : AppColors.editorialPinkSoft,
-        borderRadius: AppRadii.fullBorder,
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: .65),
-        ),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          AnimatedAlign(
-            key: const Key('auth_tab_indicator'),
-            duration: duration,
-            curve: Curves.easeInOutCubic,
-            alignment: pageState == PageState.login
-                ? Alignment.centerLeft
-                : Alignment.centerRight,
-            child: FractionallySizedBox(
-              widthFactor: .5,
-              heightFactor: 1,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: dark
-                      ? AppColors.editorialPink
-                      : AppColors.editorialAubergine,
-                  borderRadius: AppRadii.fullBorder,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.editorialPink.withValues(alpha: .24),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: _ToggleLabel(
-                  key: const Key('login_toggle'),
-                  label: strings.login,
-                  selected: pageState == PageState.login,
-                  enabled: enabled,
-                  onTap: () => onSelected(PageState.login),
-                ),
-              ),
-              Expanded(
-                child: _ToggleLabel(
-                  key: const Key('register_toggle'),
-                  label: strings.register,
-                  selected: pageState == PageState.register,
-                  enabled: enabled,
-                  onTap: () => onSelected(PageState.register),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ToggleLabel extends StatelessWidget {
-  const _ToggleLabel({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.enabled,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final bool enabled;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: InkWell(
-        borderRadius: AppRadii.fullBorder,
-        onTap: enabled ? onTap : null,
-        child: Center(
-          child: AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOutCubic,
-            style: theme.textTheme.labelLarge!.copyWith(
-              color: selected
-                  ? (dark
-                        ? AppColors.editorialAubergine
-                        : const Color(0xFFFFF8FC))
-                  : theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
-            ),
-            child: Text(label),
+    final palette = context.riksa;
+    final login = pageState == PageState.login;
+    final question = login ? strings.noAccount : strings.haveAccount;
+    final action = login ? strings.signUpNow : strings.login;
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(
+          question,
+          style: RiksaTypography.bodyStyleFor(
+            question,
+            theme.textTheme.bodyMedium?.copyWith(color: palette.inkMuted),
           ),
         ),
-      ),
+        TextButton(
+          key: Key(login ? 'register_toggle' : 'login_toggle'),
+          onPressed: enabled
+              ? () => onSelected(login ? PageState.register : PageState.login)
+              : null,
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            minimumSize: const Size(0, 40),
+          ),
+          child: Text(
+            action,
+            style: RiksaTypography.bodyStyleFor(
+              action,
+              const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -541,8 +461,7 @@ class _LoginForm extends StatelessWidget {
             enableSuggestions: false,
             decoration: InputDecoration(
               labelText: strings.emailOrUsername,
-              hintText: strings.emailOrUsernameHint,
-              prefixIcon: const Icon(Icons.alternate_email_rounded),
+              prefixIcon: const Icon(Icons.mail_outline_rounded),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -562,7 +481,6 @@ class _LoginForm extends StatelessWidget {
             onFieldSubmitted: (_) => onSubmit(),
             decoration: InputDecoration(
               labelText: strings.password,
-              hintText: strings.passwordHint,
               prefixIcon: const Icon(Icons.lock_outline_rounded),
               suffixIcon: IconButton(
                 onPressed: loading ? null : onTogglePassword,
@@ -597,11 +515,6 @@ class _LoginForm extends StatelessWidget {
             loading: loading,
             label: strings.login,
             onPressed: onSubmit,
-          ),
-          const SizedBox(height: 14),
-          _AuthSupportNote(
-            icon: Icons.shield_outlined,
-            label: strings.signInSecureNote,
           ),
         ],
       ),
@@ -668,7 +581,6 @@ class _RegisterForm extends StatelessWidget {
             textInputAction: TextInputAction.next,
             decoration: InputDecoration(
               labelText: strings.username,
-              hintText: strings.usernameHint,
               prefixIcon: const Icon(Icons.person_outline_rounded),
               counterText: '',
             ),
@@ -693,7 +605,6 @@ class _RegisterForm extends StatelessWidget {
             textInputAction: TextInputAction.next,
             decoration: InputDecoration(
               labelText: strings.email,
-              hintText: strings.emailHint,
               prefixIcon: const Icon(Icons.mail_outline_rounded),
             ),
             validator: (value) {
@@ -715,7 +626,6 @@ class _RegisterForm extends StatelessWidget {
             textInputAction: TextInputAction.next,
             decoration: InputDecoration(
               labelText: strings.password,
-              hintText: strings.passwordHint,
               prefixIcon: const Icon(Icons.lock_outline_rounded),
               suffixIcon: IconButton(
                 onPressed: loading ? null : onTogglePassword,
@@ -750,7 +660,6 @@ class _RegisterForm extends StatelessWidget {
             onFieldSubmitted: (_) => onSubmit(),
             decoration: InputDecoration(
               labelText: strings.confirmPassword,
-              hintText: strings.confirmPasswordHint,
               prefixIcon: const Icon(Icons.verified_user_outlined),
               suffixIcon: IconButton(
                 onPressed: loading ? null : onToggleConfirmation,
@@ -810,15 +719,7 @@ class _AuthSubmitButton extends StatelessWidget {
     return FilledButton(
       key: buttonKey,
       onPressed: loading ? null : onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.editorialPink
-            : AppColors.editorialAubergine,
-        foregroundColor: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.editorialAubergine
-            : const Color(0xFFFFF8FC),
-        minimumSize: const Size.fromHeight(54),
-      ),
+      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(54)),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 160),
         child: Text(label, key: const ValueKey('label')),
@@ -837,16 +738,14 @@ class _AuthSupportNote extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Icon(icon, size: 17, color: AppColors.editorialPink),
+      Icon(icon, size: 17, color: context.riksa.brand),
       const SizedBox(width: 8),
       Expanded(
         child: Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? context.riksa.inkMuted
-                : AppColors.editorialMuted,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: context.riksa.inkMuted),
         ),
       ),
     ],

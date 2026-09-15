@@ -1,90 +1,103 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/language_toggle.dart';
 
+/// Page frame for the sign-in screens: the lavender ground, an optional back
+/// button and language toggle along the top, and content that rides in the
+/// upper part of the screen when it fits and scrolls when the keyboard needs
+/// the room.
 class AuthScaffold extends StatelessWidget {
-  const AuthScaffold({super.key, required this.child, this.onBack});
+  const AuthScaffold({
+    super.key,
+    required this.child,
+    this.onBack,
+    this.showLanguageToggle = false,
+  });
 
   final Widget child;
   final VoidCallback? onBack;
+  final bool showLanguageToggle;
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.riksa;
+    final hasTopBar = onBack != null || showLanguageToggle;
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          const _AuthBackground(),
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, viewport) {
-                const contentPadding = EdgeInsets.all(RiksaSpacing.md);
-                final minimumContentHeight =
-                    viewport.maxHeight > contentPadding.vertical
-                    ? viewport.maxHeight - contentPadding.vertical
-                    : 0.0;
-                return CustomScrollView(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  slivers: [
-                    SliverPadding(
-                      padding: contentPadding,
-                      sliver: SliverToBoxAdapter(
+      backgroundColor: palette.canvas,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, viewport) {
+            const contentPadding = EdgeInsets.fromLTRB(24, 12, 24, 20);
+            final minimumContentHeight =
+                viewport.maxHeight > contentPadding.vertical
+                ? viewport.maxHeight - contentPadding.vertical
+                : 0.0;
+            return CustomScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              slivers: [
+                SliverPadding(
+                  padding: contentPadding,
+                  sliver: SliverToBoxAdapter(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: minimumContentHeight,
+                      ),
+                      child: Align(
+                        alignment: const Alignment(0, -.6),
                         child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: minimumContentHeight,
-                          ),
-                          child: Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 520),
-                              child: SizedBox(
-                                width: double.infinity,
-                                child: _AuthContent(
+                          constraints: const BoxConstraints(maxWidth: 480),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (hasTopBar)
+                                _AuthTopBar(
                                   onBack: onBack,
-                                  child: child,
+                                  showLanguageToggle: showLanguageToggle,
                                 ),
-                              ),
-                            ),
+                              child,
+                            ],
                           ),
                         ),
                       ),
                     ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 }
 
-class _AuthContent extends StatelessWidget {
-  const _AuthContent({required this.child, this.onBack});
+class _AuthTopBar extends StatelessWidget {
+  const _AuthTopBar({required this.onBack, required this.showLanguageToggle});
 
-  final Widget child;
   final VoidCallback? onBack;
+  final bool showLanguageToggle;
 
   @override
-  Widget build(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      if (onBack != null) ...[
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: IconButton.filledTonal(
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: RiksaSpacing.md),
+    child: Row(
+      children: [
+        if (onBack != null)
+          IconButton(
             onPressed: onBack,
+            style: IconButton.styleFrom(
+              backgroundColor: context.riksa.surface,
+            ),
             icon: const Icon(Icons.arrow_back_rounded),
             tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           ),
-        ),
-        const SizedBox(height: RiksaSpacing.md),
+        const Spacer(),
+        if (showLanguageToggle) const LanguageToggle(),
       ],
-      child,
-    ],
+    ),
   );
 }
 
@@ -103,7 +116,7 @@ class AuthHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.riksa;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -111,18 +124,17 @@ class AuthHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
             decoration: BoxDecoration(
-              color: dark
-                  ? const Color(0xFF4A253D)
-                  : AppColors.editorialPinkSoft,
-              borderRadius: AppRadii.smallBorder,
+              color: palette.brandSoft,
+              borderRadius: AppRadii.fullBorder,
             ),
             child: Text(
-              eyebrow!.toUpperCase(),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: dark
-                    ? AppColors.editorialPink
-                    : AppColors.editorialAubergine,
-                letterSpacing: 1,
+              eyebrow!,
+              style: RiksaTypography.bodyStyleFor(
+                eyebrow!,
+                textTheme.labelSmall?.copyWith(
+                  color: palette.brand,
+                  letterSpacing: .4,
+                ),
               ),
             ),
           ),
@@ -130,15 +142,17 @@ class AuthHeader extends StatelessWidget {
         ],
         Text(
           title,
-          style: textTheme.headlineMedium?.copyWith(
-            color: dark ? context.riksa.ink : AppColors.editorialInk,
+          style: RiksaTypography.titleStyleFor(
+            title,
+            textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         Text(
           subtitle,
-          style: textTheme.bodyLarge?.copyWith(
-            color: dark ? context.riksa.inkMuted : AppColors.editorialMuted,
+          style: RiksaTypography.bodyStyleFor(
+            subtitle,
+            textTheme.bodyMedium?.copyWith(color: palette.inkMuted),
           ),
         ),
       ],
@@ -146,6 +160,8 @@ class AuthHeader extends StatelessWidget {
   }
 }
 
+/// Groups a sign-in form. Fields inside read as placeholders with a leading
+/// icon, on white with a hairline border, the way the reference draws them.
 class AuthPanel extends StatelessWidget {
   const AuthPanel({super.key, required this.child});
 
@@ -155,102 +171,26 @@ class AuthPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = context.riksa;
-    final dark = theme.brightness == Brightness.dark;
-    final panelColor = dark
-        ? theme.colorScheme.surfaceContainer
-        : AppColors.editorialNeutralSurface;
-    return Container(
-      padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 380 ? 18 : 24),
-      decoration: BoxDecoration(
-        color: panelColor,
-        borderRadius: AppRadii.extraLargeBorder,
-        border: Border.all(
-          color: dark ? palette.outline : AppColors.editorialOutline,
-        ),
-        boxShadow: RiksaElevation.low(theme.brightness),
-      ),
-      child: Theme(
-        data: theme.copyWith(
-          colorScheme: theme.colorScheme.copyWith(
-            surface: panelColor,
-            surfaceContainer: dark
-                ? theme.colorScheme.surfaceContainer
-                : AppColors.editorialField,
-            onSurface: dark ? palette.ink : AppColors.editorialInk,
-            onSurfaceVariant: dark
-                ? palette.inkMuted
-                : AppColors.editorialMuted,
-            outline: dark ? palette.outline : AppColors.editorialOutline,
+    return Theme(
+      data: theme.copyWith(
+        inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+          floatingLabelBehavior: FloatingLabelBehavior.never,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 17,
           ),
-          inputDecorationTheme: theme.inputDecorationTheme.copyWith(
-            fillColor: dark ? palette.canvas : AppColors.editorialField,
-            prefixIconColor: dark ? palette.inkMuted : AppColors.editorialMuted,
-            suffixIconColor: dark ? palette.inkMuted : AppColors.editorialMuted,
-            labelStyle: theme.textTheme.bodyMedium?.copyWith(
-              color: dark ? palette.inkMuted : AppColors.editorialMuted,
-            ),
-            hintStyle: theme.textTheme.bodyMedium?.copyWith(
-              color: dark ? palette.inkMuted : AppColors.editorialMuted,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: AppRadii.mediumBorder,
-              borderSide: BorderSide(
-                color: dark ? palette.outline : AppColors.editorialOutline,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: AppRadii.mediumBorder,
-              borderSide: BorderSide(
-                color: dark ? palette.outline : AppColors.editorialOutline,
-              ),
-            ),
-            focusedBorder: const OutlineInputBorder(
-              borderRadius: AppRadii.mediumBorder,
-              borderSide: BorderSide(color: AppColors.editorialPink, width: 2),
-            ),
-            focusedErrorBorder: const OutlineInputBorder(
-              borderRadius: AppRadii.mediumBorder,
-              borderSide: BorderSide(color: AppColors.error, width: 1.5),
-            ),
-          ),
-          iconButtonTheme: IconButtonThemeData(
-            style: IconButton.styleFrom(
-              backgroundColor: dark
-                  ? const Color(0xFF4A253D)
-                  : AppColors.editorialPinkSoft,
-              foregroundColor: dark
-                  ? AppColors.editorialPink
-                  : AppColors.editorialAubergine,
-            ),
-          ),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(
-              foregroundColor: dark
-                  ? AppColors.editorialPink
-                  : AppColors.editorialAubergine,
-            ),
-          ),
-          outlinedButtonTheme: OutlinedButtonThemeData(
-            style: OutlinedButton.styleFrom(
-              backgroundColor: panelColor,
-              foregroundColor: dark
-                  ? AppColors.editorialPink
-                  : AppColors.editorialAubergine,
-              side: BorderSide(
-                color: dark ? palette.outline : AppColors.editorialOutline,
-              ),
-              minimumSize: const Size(0, 50),
-              shape: const StadiumBorder(),
-            ),
-          ),
-          textSelectionTheme: theme.textSelectionTheme.copyWith(
-            cursorColor: AppColors.editorialPink,
-            selectionColor: AppColors.editorialPink.withValues(alpha: .24),
-            selectionHandleColor: AppColors.editorialPink,
+          labelStyle: theme.textTheme.bodyMedium?.copyWith(
+            color: palette.inkFaint,
           ),
         ),
-        child: child,
+        iconButtonTheme: IconButtonThemeData(
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            foregroundColor: palette.inkMuted,
+          ),
+        ),
       ),
+      child: child,
     );
   }
 }
@@ -262,24 +202,23 @@ class AuthDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final dividerColor = dark
-        ? context.riksa.outline
-        : AppColors.editorialOutline;
+    final palette = context.riksa;
     return Row(
       children: [
-        Expanded(child: Divider(color: dividerColor)),
+        Expanded(child: Divider(color: palette.outline)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: dark ? context.riksa.inkMuted : AppColors.editorialMuted,
-              letterSpacing: 1,
+            style: RiksaTypography.bodyStyleFor(
+              label,
+              Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: palette.inkMuted),
             ),
           ),
         ),
-        Expanded(child: Divider(color: dividerColor)),
+        Expanded(child: Divider(color: palette.outline)),
       ],
     );
   }
@@ -292,32 +231,27 @@ class AuthErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final error = Theme.of(context).colorScheme.error;
     return Semantics(
       liveRegion: true,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.error.withValues(alpha: .08),
+          color: error.withValues(alpha: .08),
           borderRadius: AppRadii.mediumBorder,
-          border: Border.all(
-            color: Theme.of(context).colorScheme.error.withValues(alpha: .22),
-          ),
+          border: Border.all(color: error.withValues(alpha: .22)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 20,
-              color: Theme.of(context).colorScheme.error,
-            ),
+            Icon(Icons.error_outline_rounded, size: 20, color: error),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 message,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
+                  color: error,
                   fontWeight: FontWeight.w600,
                   height: 1.35,
                 ),
@@ -326,19 +260,6 @@ class AuthErrorBanner extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _AuthBackground extends StatelessWidget {
-  const _AuthBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Theme.of(context).brightness == Brightness.dark
-          ? context.riksa.canvas
-          : AppColors.editorialNeutralCanvas,
     );
   }
 }

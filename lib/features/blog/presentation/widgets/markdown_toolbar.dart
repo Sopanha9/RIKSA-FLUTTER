@@ -97,10 +97,7 @@ TextEditingValue _toggleInline(TextEditingValue value, String marker) {
     // type the word the writer was about to emphasise.
     selection: selected.isEmpty
         ? TextSelection.collapsed(offset: start + width)
-        : TextSelection(
-            baseOffset: start + width,
-            extentOffset: end + width,
-          ),
+        : TextSelection(baseOffset: start + width, extentOffset: end + width),
   );
 }
 
@@ -120,14 +117,16 @@ TextEditingValue _toggleLinePrefix(
       written.isNotEmpty && written.every((line) => pattern.hasMatch(line));
 
   var counter = 0;
-  final rebuilt = lines.map((line) {
-    if (alreadyApplied) return line.replaceFirst(pattern, '');
-    if (line.trim().isEmpty) return line;
-    // A line can only carry one block prefix, so drop whatever it has first.
-    final bare = _stripAnyLinePrefix(line);
-    counter++;
-    return '${_prefixFor(action, counter)}$bare';
-  }).join('\n');
+  final rebuilt = lines
+      .map((line) {
+        if (alreadyApplied) return line.replaceFirst(pattern, '');
+        if (line.trim().isEmpty) return line;
+        // A line can only carry one block prefix, so drop whatever it has first.
+        final bare = _stripAnyLinePrefix(line);
+        counter++;
+        return '${_prefixFor(action, counter)}$bare';
+      })
+      .join('\n');
 
   return TextEditingValue(
     text: text.replaceRange(blockStart, blockEnd, rebuilt),

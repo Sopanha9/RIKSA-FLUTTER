@@ -135,9 +135,7 @@ class BlogFeedNotifier extends Notifier<BlogFeedState> {
   /// without a manual pull-to-refresh. Reopening the blog re-asks instead,
   /// while a threshold keeps flipping between tabs from hitting the network
   /// every time.
-  Future<void> refreshIfStale({
-    Duration maxAge = const Duration(seconds: 30),
-  }) {
+  Future<void> refreshIfStale({Duration maxAge = const Duration(seconds: 30)}) {
     final current = state;
     if (current is BlogFeedError) return load();
     if (current is! BlogFeedLoaded) return Future.value();

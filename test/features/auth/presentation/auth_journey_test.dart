@@ -1,9 +1,8 @@
-import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,18 +11,56 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riksa_app/core/network/dio_client.dart';
 import 'package:riksa_app/core/storage/session_store.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/features/auth/data/external_link_opener.dart';
 import 'package:riksa_app/features/auth/presentation/auth_switcher_screen.dart';
-import 'package:riksa_app/features/auth/presentation/telegram_otp_screen.dart';
+import 'package:riksa_app/features/auth/presentation/telegram_auth_screen.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
-// Only external HTTP and platform storage are substituted. Forms, notifier,
-// API serialization, profile hydration, and session handling run unchanged.
+const nonce = '841f6cb4701d56f61cd1b2fea1f133f8';
+const botUrl = 'https://t.me/riksa_bot?start=login_$nonce';
+const botAppUrl = 'tg://resolve?domain=riksa_bot&start=login_$nonce';
+const codeBotUrl = 'https://t.me/riksa_bot?start=code';
+const codeBotAppUrl = 'tg://resolve?domain=riksa_bot&start=code';
+const requestToken = 'request-token-1';
+
+const sessionJson = {
+  'userId': 'user-1',
+  'username': 'sophea',
+  'role': 'USER',
+  'accessToken': 'test-access',
+  'refreshToken': 'test-refresh',
+};
+
+const pending = {'status': 'PENDING'};
+const authenticated = {'status': 'AUTHENTICATED', 'auth': sessionJson};
+const profileRequired = {
+  'status': 'PROFILE_REQUIRED',
+  'signupToken': 'signup-1',
+  'telegram': {'displayName': 'Sok Sophea', 'username': 'sophea_tg'},
+};
+
+// Only external HTTP, the link opener, and platform storage are substituted.
+// Screens, notifier, API serialization, and session handling run unchanged.
 class AuthServer implements HttpClientAdapter {
   final requests = <RequestOptions>[];
-  bool rejectCode = false;
-  bool failSend = false;
-  Completer<void>? sendGate;
+
+  /// Successive `/auth/telegram/status` bodies; the last one repeats. A map
+  /// with `httpStatus` is returned as an error response.
+  List<Map<String, Object?>> statuses = [authenticated];
+  int _statusIndex = 0;
+  int pollIntervalSeconds = 1;
+  int expiresInSeconds = 300;
+  bool failStart = false;
+
+  /// Body returned by `/auth/telegram/code`, or an error when [codeErrorStatus] is set.
+  Map<String, Object?> codeResult = authenticated;
+  int? codeErrorStatus;
+  int? completeErrorStatus;
+  String completeErrorMessage = 'Username is already taken';
+
+  Iterable<RequestOptions> requestsTo(String path) =>
+      requests.where((r) => r.path == path);
 
   @override
   Future<ResponseBody> fetch(
@@ -33,32 +70,56 @@ class AuthServer implements HttpClientAdapter {
   ) async {
     requests.add(options);
     var status = 200;
-    Object body = <String, Object>{};
+    Object? body = <String, Object>{};
     switch (options.path) {
-      case '/auth/otp/send':
-        await sendGate?.future;
-        status = failSend ? 429 : 200;
+      case '/auth/telegram/bot':
         body = {
-          'message': failSend
-              ? 'Too many OTP requests. Try again later.'
-              : 'Code sent',
-          'channel': 'TELEGRAM',
+          'available': true,
+          'botUsername': 'riksa_bot',
+          'botUrl': codeBotUrl,
+          'botAppUrl': codeBotAppUrl,
+          'codeLength': 8,
         };
-      case '/auth/telegram':
-      case '/auth/login':
-      case '/auth/register':
-        if (rejectCode) {
-          status = 400;
-          body = {'message': 'Invalid or expired code'};
+      case '/auth/telegram/start':
+        if (failStart) {
+          status = 503;
+          body = {'message': 'Telegram is unavailable right now.'};
         } else {
           body = {
-            'userId': 'user-1',
-            'username': 'sophea',
-            'role': 'USER',
-            'accessToken': 'test-access',
-            'refreshToken': 'test-refresh',
+            'requestToken': requestToken,
+            'botUrl': botUrl,
+            'botAppUrl': botAppUrl,
+            'botUsername': 'riksa_bot',
+            'expiresInSeconds': expiresInSeconds,
+            'pollIntervalSeconds': pollIntervalSeconds,
           };
         }
+      case '/auth/telegram/code':
+        if (codeErrorStatus case final int code) {
+          status = code;
+          body = {'message': 'This code is invalid or has expired.'};
+        } else {
+          body = codeResult;
+        }
+      case '/auth/telegram/status':
+        final next = statuses[_statusIndex.clamp(0, statuses.length - 1)];
+        _statusIndex++;
+        if (next['httpStatus'] case final int code) {
+          status = code;
+          body = {'message': 'Temporary failure'};
+        } else {
+          body = next;
+        }
+      case '/auth/telegram/complete':
+        if (completeErrorStatus case final int code) {
+          status = code;
+          body = {'message': completeErrorMessage};
+        } else {
+          body = sessionJson;
+        }
+      case '/auth/login':
+      case '/auth/register':
+        body = sessionJson;
       case '/auth/me':
         expectSync(options.headers['Authorization'], 'Bearer test-access');
         body = {
@@ -85,10 +146,51 @@ class AuthServer implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+class LinkRecorder {
+  final opened = <Uri>[];
+
+  /// Whether `tg://` links open (the Telegram app is installed).
+  bool appInstalled = true;
+
+  /// Whether `https://t.me` links open.
+  bool result = true;
+
+  Future<bool> call(Uri uri) async {
+    opened.add(uri);
+    return uri.scheme == 'tg' ? appInstalled : result;
+  }
+}
+
+/// Makes [Clipboard.getData] return [text] and records [Clipboard.setData].
+void mockClipboard(
+  WidgetTester tester, {
+  String? text,
+  void Function(String?)? onCopy,
+}) {
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+    SystemChannels.platform,
+    (call) async {
+      if (call.method == 'Clipboard.setData') {
+        onCopy?.call((call.arguments as Map)['text'] as String?);
+      }
+      if (call.method == 'Clipboard.getData') {
+        return text == null ? null : {'text': text};
+      }
+      return null;
+    },
+  );
+  addTearDown(
+    () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      null,
+    ),
+  );
+}
+
 Future<ProviderContainer> mountAuth(
   WidgetTester tester,
   AuthServer server, {
-  bool registration = false,
+  LinkRecorder? links,
   bool startAtLogin = false,
   Locale locale = const Locale('en'),
   double textScale = 1,
@@ -100,8 +202,12 @@ Future<ProviderContainer> mountAuth(
     baseUrl: 'https://auth.test/api/v1',
     httpClientAdapter: server,
   );
+  final recorder = links ?? LinkRecorder();
   final container = ProviderContainer(
-    overrides: [dioClientProvider.overrideWithValue(client)],
+    overrides: [
+      dioClientProvider.overrideWithValue(client),
+      externalLinkOpenerProvider.overrideWithValue(recorder.call),
+    ],
   );
   container.read(authProvider);
   final router = GoRouter(
@@ -113,7 +219,7 @@ Future<ProviderContainer> mountAuth(
       ),
       GoRoute(
         path: '/auth/telegram',
-        builder: (_, _) => TelegramOtpScreen(isRegistration: registration),
+        builder: (_, _) => const TelegramAuthScreen(),
       ),
       GoRoute(
         path: '/home',
@@ -148,49 +254,72 @@ Future<ProviderContainer> mountAuth(
   return container;
 }
 
+/// Pumps in small steps. The waiting step shows an indeterminate spinner, so
+/// `pumpAndSettle` would never return there.
+Future<void> pumpFor(WidgetTester tester, Duration duration) async {
+  const step = Duration(milliseconds: 100);
+  for (var elapsed = Duration.zero; elapsed < duration; elapsed += step) {
+    await tester.pump(step);
+  }
+}
+
 Future<void> tapKey(WidgetTester tester, String key) async {
   final finder = find.byKey(Key(key));
   await tester.ensureVisible(finder);
-  await tester.pumpAndSettle();
+  await tester.pump();
   await tester.tap(finder);
-  await tester.pumpAndSettle();
+  await pumpFor(tester, const Duration(milliseconds: 300));
 }
 
-Future<void> sendCode(WidgetTester tester) async {
-  await tester.enterText(
-    find.byKey(const Key('telegram_identifier')),
-    '123456789',
-  );
-  await tapKey(tester, 'telegram_send_code');
+/// Taps "Open Telegram" and lets the start request complete.
+Future<void> authorize(WidgetTester tester) =>
+    tapKey(tester, 'telegram_authorize');
+
+/// Opens "Log in with code" and lets the bot details load.
+Future<void> openCodeStep(WidgetTester tester) async {
+  await tapKey(tester, 'telegram_use_code');
+  await tester.pumpAndSettle();
 }
 
 void main() {
-  testWidgets('OTP delivery shows destination and prevents immediate resend', (
+  testWidgets('offers Open Telegram and Log in with code, asking for no ID', (
     tester,
   ) async {
-    await mountAuth(tester, AuthServer());
-    await sendCode(tester);
-    expect(find.textContaining('123456789'), findsOneWidget);
-    final resend = tester.widget<TextButton>(
-      find.byKey(const Key('telegram_resend_code')),
-    );
-    expect(resend.onPressed, isNull);
-    await tester.pumpWidget(const SizedBox());
+    final server = AuthServer();
+    await mountAuth(tester, server);
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('Open Telegram'), findsOneWidget);
+    expect(find.text('Log in with code'), findsOneWidget);
+    expect(server.requests, isEmpty);
   });
+
   testWidgets(
-    'login opens Telegram and verifies a code, restores session, logs out',
+    'existing account: opens the bot, signs in once confirmed, restores, logs out',
     (tester) async {
-      final server = AuthServer();
-      final container = await mountAuth(tester, server, startAtLogin: true);
-      await tapKey(tester, 'telegram_auth_button');
-      await sendCode(tester);
-      await tester.enterText(
-        find.byKey(const Key('telegram_otp_code')),
-        '123456',
+      final server = AuthServer()..statuses = [pending, authenticated];
+      final links = LinkRecorder();
+      final container = await mountAuth(
+        tester,
+        server,
+        links: links,
+        startAtLogin: true,
       );
-      await tapKey(tester, 'telegram_verify_code');
+      await tapKey(tester, 'telegram_auth_button');
+      await tester.pumpAndSettle();
+      await authorize(tester);
+
+      expect(links.opened, [Uri.parse(botAppUrl)]);
+      expect(find.text('Waiting for Telegram'), findsOneWidget);
+
+      await pumpFor(tester, const Duration(seconds: 3));
+      await tester.pumpAndSettle();
       expect(find.text('Signed in destination'), findsOneWidget);
       expect(container.read(authProvider), isA<Authenticated>());
+      expect(server.requestsTo('/auth/telegram/status').first.data, {
+        'requestToken': requestToken,
+      });
+      expect(server.requestsTo('/auth/telegram/complete'), isEmpty);
+
       final restored = container
           .read(authProvider.notifier)
           .bootstrap(force: true);
@@ -200,125 +329,412 @@ void main() {
       final logout = container.read(authProvider.notifier).logout();
       await tester.pumpAndSettle();
       await logout;
-      expect(container.read(authProvider), isA<Unauthenticated>());
       expect(await container.read(dioClientProvider).hasSession(), isFalse);
-      expect(
-        server.requests.where((r) => r.path == '/auth/telegram').single.data,
-        {'identifier': '123456789', 'code': '123456'},
-      );
-      await tester.pumpWidget(const SizedBox());
     },
   );
 
-  testWidgets(
-    'Telegram registration carries the chosen names to verification',
-    (tester) async {
-      final server = AuthServer();
-      await mountAuth(tester, server, registration: true);
-      await tester.enterText(
-        find.byKey(const Key('telegram_register_username')),
-        'sophea',
-      );
-      await tester.enterText(
-        find.byKey(const Key('telegram_register_display_name')),
-        'Sophea',
-      );
-      await sendCode(tester);
-      await tester.enterText(
-        find.byKey(const Key('telegram_otp_code')),
-        '123456',
-      );
-      await tapKey(tester, 'telegram_verify_code');
-      expect(find.text('Signed in destination'), findsOneWidget);
-      expect(
-        server.requests.where((r) => r.path == '/auth/telegram').single.data,
-        {
-          'identifier': '123456789',
-          'code': '123456',
-          'username': 'sophea',
-          'displayName': 'Sophea',
-        },
-      );
-    },
-  );
-
-  testWidgets('wrong code stays on OTP and successful retry signs in', (
+  testWidgets('returning from Telegram checks status immediately', (
     tester,
   ) async {
-    final server = AuthServer()..rejectCode = true;
-    final container = await mountAuth(tester, server);
-    await sendCode(tester);
-    await tester.enterText(
-      find.byKey(const Key('telegram_otp_code')),
-      '123456',
-    );
-    await tapKey(tester, 'telegram_verify_code');
-    expect(find.text('Invalid or expired code'), findsOneWidget);
-    expect(await container.read(dioClientProvider).hasSession(), isFalse);
-    server.rejectCode = false;
-    await tester.enterText(
-      find.byKey(const Key('telegram_otp_code')),
-      '654321',
-    );
-    await tapKey(tester, 'telegram_verify_code');
+    final server = AuthServer()
+      ..pollIntervalSeconds = 10
+      ..statuses = [authenticated];
+    await mountAuth(tester, server);
+    await authorize(tester);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await pumpFor(tester, const Duration(seconds: 1));
+    await tester.pumpAndSettle();
     expect(find.text('Signed in destination'), findsOneWidget);
   });
 
   testWidgets(
-    'resend failure is visible and resend success clears the old code',
+    'new Telegram user chooses username and display name after authorizing',
     (tester) async {
-      final server = AuthServer();
+      final server = AuthServer()..statuses = [profileRequired];
       await mountAuth(tester, server);
-      await sendCode(tester);
-      await tester.enterText(
-        find.byKey(const Key('telegram_otp_code')),
-        '123456',
-      );
-      await tester.pump(const Duration(seconds: 61));
-      server.failSend = true;
-      await tapKey(tester, 'telegram_resend_code');
-      expect(
-        find.text('Too many OTP requests. Try again later.'),
-        findsOneWidget,
-      );
-      server.failSend = false;
-      await tapKey(tester, 'telegram_resend_code');
-      expect(
-        tester
-            .widget<TextFormField>(find.byKey(const Key('telegram_otp_code')))
-            .controller!
-            .text,
-        isEmpty,
+      await authorize(tester);
+      await pumpFor(tester, const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Set up your Riksa profile'), findsOneWidget);
+      expect(find.text('Connected as Sok Sophea'), findsOneWidget);
+      final username = find.byKey(const Key('telegram_profile_username'));
+      final displayName = find.byKey(
+        const Key('telegram_profile_display_name'),
       );
       expect(
-        tester
-            .widget<TextButton>(find.byKey(const Key('telegram_resend_code')))
-            .onPressed,
-        isNull,
+        tester.widget<TextFormField>(username).controller!.text,
+        'sophea_tg',
       );
-      await tester.pumpWidget(const SizedBox());
+      expect(
+        tester.widget<TextFormField>(displayName).controller!.text,
+        'Sok Sophea',
+      );
+
+      await tester.enterText(username, 'sophea');
+      await tapKey(tester, 'telegram_create_account');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Signed in destination'), findsOneWidget);
+      expect(server.requestsTo('/auth/telegram/complete').single.data, {
+        'signupToken': 'signup-1',
+        'username': 'sophea',
+        'displayName': 'Sok Sophea',
+      });
     },
   );
 
-  testWidgets('invalid identifiers and incomplete codes never reach the API', (
+  testWidgets('taken username stays on the form with an inline error', (
+    tester,
+  ) async {
+    final server = AuthServer()
+      ..statuses = [profileRequired]
+      ..completeErrorStatus = 409;
+    await mountAuth(tester, server);
+    await authorize(tester);
+    await pumpFor(tester, const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+
+    await tapKey(tester, 'telegram_create_account');
+    await tester.pumpAndSettle();
+    expect(find.text('Username is already taken'), findsOneWidget);
+    expect(find.byKey(const Key('telegram_profile_username')), findsOneWidget);
+
+    server.completeErrorStatus = null;
+    await tester.enterText(
+      find.byKey(const Key('telegram_profile_username')),
+      'sophea_2',
+    );
+    await tester.pump();
+    expect(find.text('Username is already taken'), findsNothing);
+    await tapKey(tester, 'telegram_create_account');
+    await tester.pumpAndSettle();
+    expect(find.text('Signed in destination'), findsOneWidget);
+  });
+
+  testWidgets('invalid profile values never reach the API', (tester) async {
+    final server = AuthServer()
+      ..statuses = [
+        {
+          'status': 'PROFILE_REQUIRED',
+          'signupToken': 'signup-1',
+          'telegram': {'displayName': 'Sok'},
+        },
+      ];
+    await mountAuth(tester, server);
+    await authorize(tester);
+    await pumpFor(tester, const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('telegram_profile_username')),
+      'ab',
+    );
+    await tapKey(tester, 'telegram_create_account');
+    await tester.pumpAndSettle();
+    expect(server.requestsTo('/auth/telegram/complete'), isEmpty);
+  });
+
+  testWidgets('expired signup token sends the user back to authorize', (
+    tester,
+  ) async {
+    final server = AuthServer()
+      ..statuses = [profileRequired]
+      ..completeErrorStatus = 401;
+    final container = await mountAuth(tester, server);
+    await authorize(tester);
+    await pumpFor(tester, const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    await tapKey(tester, 'telegram_create_account');
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Your Telegram approval expired'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('telegram_authorize')), findsOneWidget);
+    expect(await container.read(dioClientProvider).hasSession(), isFalse);
+  });
+
+  for (final (status, message) in [
+    ('EXPIRED', 'This request expired'),
+    ('DENIED', 'The request was declined'),
+  ]) {
+    testWidgets('$status request returns to start with an explanation', (
+      tester,
+    ) async {
+      final server = AuthServer()
+        ..statuses = [
+          {'status': status},
+        ];
+      await mountAuth(tester, server);
+      await authorize(tester);
+      await pumpFor(tester, const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(find.textContaining(message), findsOneWidget);
+      expect(find.byKey(const Key('telegram_authorize')), findsOneWidget);
+    });
+  }
+
+  testWidgets('request expires locally when the countdown ends', (
+    tester,
+  ) async {
+    final server = AuthServer()
+      ..statuses = [pending]
+      ..expiresInSeconds = 30;
+    await mountAuth(tester, server);
+    await authorize(tester);
+    expect(find.textContaining('0:29'), findsOneWidget);
+    await pumpFor(tester, const Duration(seconds: 31));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('This request expired'), findsOneWidget);
+  });
+
+  testWidgets('temporary server errors while waiting keep polling', (
+    tester,
+  ) async {
+    final server = AuthServer()
+      ..statuses = [
+        {'httpStatus': 503},
+        {'httpStatus': 429},
+        authenticated,
+      ];
+    await mountAuth(tester, server);
+    await authorize(tester);
+    // 1s, then 1s after the 503, then 2s backoff after the 429.
+    await pumpFor(tester, const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(find.text('Signed in destination'), findsOneWidget);
+    expect(server.requestsTo('/auth/telegram/status'), hasLength(3));
+  });
+
+  testWidgets('without the Telegram app the https link is used as a fallback', (
+    tester,
+  ) async {
+    final links = LinkRecorder()..appInstalled = false;
+    await mountAuth(tester, AuthServer()..statuses = [pending], links: links);
+    await authorize(tester);
+    expect(links.opened, [Uri.parse(botAppUrl), Uri.parse(botUrl)]);
+    expect(find.textContaining("Couldn't open Telegram"), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('when no link opens, the link can be copied instead', (
+    tester,
+  ) async {
+    final links = LinkRecorder()
+      ..appInstalled = false
+      ..result = false;
+    String? copied;
+    mockClipboard(tester, onCopy: (text) => copied = text);
+    await mountAuth(tester, AuthServer()..statuses = [pending], links: links);
+    await authorize(tester);
+    expect(find.textContaining("Couldn't open Telegram"), findsOneWidget);
+
+    await tapKey(tester, 'telegram_copy_link');
+    expect(copied, botUrl);
+    expect(find.textContaining('Link copied'), findsOneWidget);
+
+    links.result = true;
+    await tapKey(tester, 'telegram_open_again');
+    expect(find.textContaining("Couldn't open Telegram"), findsNothing);
+    expect(links.opened, hasLength(4));
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('waiting screen can switch to Log in with code', (tester) async {
+    final server = AuthServer()..statuses = [pending];
+    await mountAuth(tester, server);
+    await authorize(tester);
+    await tapKey(tester, 'telegram_switch_to_code');
+    await tester.pumpAndSettle();
+    final polls = server.requestsTo('/auth/telegram/status').length;
+    await tester.pump(const Duration(seconds: 5));
+    expect(server.requestsTo('/auth/telegram/status'), hasLength(polls));
+    expect(find.byKey(const Key('telegram_code_input')), findsOneWidget);
+  });
+
+  // ------------------------------------------------------------ code option
+
+  testWidgets('code option names the bot and opens it for a code', (
+    tester,
+  ) async {
+    final links = LinkRecorder();
+    await mountAuth(tester, AuthServer(), links: links);
+    await openCodeStep(tester);
+
+    expect(
+      find.text('Paste the code from @riksa_bot to sign in.'),
+      findsOneWidget,
+    );
+    await tapKey(tester, 'telegram_open_bot');
+    expect(links.opened, [Uri.parse(codeBotAppUrl)]);
+  });
+
+  testWidgets('typed code is normalized and signs an existing account in', (
     tester,
   ) async {
     final server = AuthServer();
     await mountAuth(tester, server);
+    await openCodeStep(tester);
+
     await tester.enterText(
-      find.byKey(const Key('telegram_identifier')),
-      'invalid',
+      find.byKey(const Key('telegram_code_input')),
+      've9b-lz8j',
     );
-    await tapKey(tester, 'telegram_send_code');
-    expect(server.requests, isEmpty);
-    await sendCode(tester);
-    await tester.enterText(find.byKey(const Key('telegram_otp_code')), '12');
-    await tapKey(tester, 'telegram_verify_code');
-    expect(server.requests.where((r) => r.path == '/auth/telegram'), isEmpty);
-    await tester.pumpWidget(const SizedBox());
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('telegram_code_input')))
+          .controller!
+          .text,
+      'VE9BLZ8J',
+    );
+    await tapKey(tester, 'telegram_code_submit');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Signed in destination'), findsOneWidget);
+    expect(server.requestsTo('/auth/telegram/code').single.data, {
+      'code': 'VE9BLZ8J',
+    });
   });
 
-  testWidgets('direct OTP route can return safely to login', (tester) async {
+  testWidgets('paste button finds the code in a copied bot message', (
+    tester,
+  ) async {
+    final server = AuthServer();
+    mockClipboard(
+      tester,
+      text:
+          '👋 Welcome back, Sok!\n🔑 Your sign-in code\nVE9BLZ8J\n⏱ Expires in 5 minutes',
+    );
+    await mountAuth(tester, server);
+    await openCodeStep(tester);
+
+    await tapKey(tester, 'telegram_paste_code');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Signed in destination'), findsOneWidget);
+    expect(server.requestsTo('/auth/telegram/code').single.data, {
+      'code': 'VE9BLZ8J',
+    });
+  });
+
+  testWidgets('clipboard without a code explains instead of submitting', (
+    tester,
+  ) async {
+    final server = AuthServer();
+    mockClipboard(tester, text: 'hello there');
+    await mountAuth(tester, server);
+    await openCodeStep(tester);
+
+    await tapKey(tester, 'telegram_paste_code');
+    expect(
+      find.text('No sign-in code found in your clipboard.'),
+      findsOneWidget,
+    );
+    expect(server.requestsTo('/auth/telegram/code'), isEmpty);
+  });
+
+  testWidgets('incomplete codes never reach the API', (tester) async {
+    final server = AuthServer();
+    await mountAuth(tester, server);
+    await openCodeStep(tester);
+
+    await tester.enterText(find.byKey(const Key('telegram_code_input')), 'VE9');
+    await tapKey(tester, 'telegram_code_submit');
+    expect(
+      find.text('Enter the 8-character code from the bot'),
+      findsOneWidget,
+    );
+    expect(server.requestsTo('/auth/telegram/code'), isEmpty);
+  });
+
+  testWidgets('rejected code shows guidance and a new code can be tried', (
+    tester,
+  ) async {
+    final server = AuthServer()..codeErrorStatus = 400;
+    await mountAuth(tester, server);
+    await openCodeStep(tester);
+
+    await tester.enterText(
+      find.byKey(const Key('telegram_code_input')),
+      'VE9BLZ8J',
+    );
+    await tapKey(tester, 'telegram_code_submit');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Send /code to the bot'), findsOneWidget);
+
+    server.codeErrorStatus = null;
+    await tester.enterText(
+      find.byKey(const Key('telegram_code_input')),
+      'KQ7MHX2P',
+    );
+    await tapKey(tester, 'telegram_code_submit');
+    await tester.pumpAndSettle();
+    expect(find.text('Signed in destination'), findsOneWidget);
+  });
+
+  testWidgets('code for a new Telegram user continues to the profile step', (
+    tester,
+  ) async {
+    final server = AuthServer()..codeResult = profileRequired;
+    await mountAuth(tester, server);
+    await openCodeStep(tester);
+
+    await tester.enterText(
+      find.byKey(const Key('telegram_code_input')),
+      'VE9BLZ8J',
+    );
+    await tapKey(tester, 'telegram_code_submit');
+    await tester.pumpAndSettle();
+    expect(find.text('Set up your Riksa profile'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const Key('telegram_profile_username')),
+      'sophea',
+    );
+    await tapKey(tester, 'telegram_create_account');
+    await tester.pumpAndSettle();
+    expect(find.text('Signed in destination'), findsOneWidget);
+    expect(server.requestsTo('/auth/telegram/complete').single.data, {
+      'signupToken': 'signup-1',
+      'username': 'sophea',
+      'displayName': 'Sok Sophea',
+    });
+  });
+
+  testWidgets('cancel abandons the request and stops polling', (tester) async {
+    final server = AuthServer()..statuses = [pending];
+    await mountAuth(tester, server);
+    await authorize(tester);
+    await pumpFor(tester, const Duration(milliseconds: 1500));
+    await tapKey(tester, 'telegram_cancel');
+    await tester.pumpAndSettle();
+    final polls = server.requestsTo('/auth/telegram/status').length;
+    await tester.pump(const Duration(seconds: 10));
+    expect(server.requestsTo('/auth/telegram/status'), hasLength(polls));
+    expect(find.byKey(const Key('telegram_authorize')), findsOneWidget);
+  });
+
+  testWidgets('start failure is shown and Telegram is not opened', (
+    tester,
+  ) async {
+    final links = LinkRecorder();
+    await mountAuth(tester, AuthServer()..failStart = true, links: links);
+    await authorize(tester);
+    await tester.pumpAndSettle();
+    expect(find.text('Telegram is unavailable right now.'), findsOneWidget);
+    expect(links.opened, isEmpty);
+  });
+
+  testWidgets('direct Telegram route can return safely to login', (
+    tester,
+  ) async {
     await mountAuth(tester, AuthServer());
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
@@ -326,7 +742,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('OTP remains usable in Khmer at 200 percent text size', (
+  testWidgets('Telegram steps fit in Khmer at 200 percent text size', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 800);
@@ -335,14 +751,25 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await mountAuth(
       tester,
-      AuthServer(),
+      AuthServer()..statuses = [profileRequired],
       locale: const Locale('km'),
       textScale: 2,
     );
-    await sendCode(tester);
-    await tester.ensureVisible(find.byKey(const Key('telegram_otp_code')));
     expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox());
+    await authorize(tester);
+    expect(tester.takeException(), isNull);
+    await pumpFor(tester, const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('telegram_create_account')),
+    );
+    expect(tester.takeException(), isNull);
+
+    await tapKey(tester, 'telegram_use_another_account');
+    await tester.pumpAndSettle();
+    await openCodeStep(tester);
+    await tester.ensureVisible(find.byKey(const Key('telegram_code_submit')));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets(
@@ -359,6 +786,7 @@ void main() {
         'TestPassword123',
       );
       await tapKey(tester, 'login_submit');
+      await tester.pumpAndSettle();
       expect(find.text('Signed in destination'), findsOneWidget);
       expect(container.read(authProvider), isA<Authenticated>());
     },
@@ -370,6 +798,7 @@ void main() {
     final server = AuthServer();
     await mountAuth(tester, server, startAtLogin: true);
     await tapKey(tester, 'register_toggle');
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('register_username')),
       'sophea',
@@ -387,37 +816,8 @@ void main() {
       'TestPassword123',
     );
     await tapKey(tester, 'register_submit');
-    expect(find.text('Signed in destination'), findsOneWidget);
-    expect(server.requests.any((r) => r.path == '/auth/register'), isTrue);
-  });
-
-  testWidgets('verification is disabled while a resend is in flight', (
-    tester,
-  ) async {
-    final server = AuthServer();
-    await mountAuth(tester, server);
-    await sendCode(tester);
-    await tester.enterText(
-      find.byKey(const Key('telegram_otp_code')),
-      '123456',
-    );
-    await tester.pump(const Duration(seconds: 61));
-    server.sendGate = Completer<void>();
-    await tapKey(tester, 'telegram_resend_code');
-    expect(
-      tester
-          .widget<FilledButton>(find.byKey(const Key('telegram_verify_code')))
-          .onPressed,
-      isNull,
-    );
-    server.sendGate!.complete();
     await tester.pumpAndSettle();
-    expect(
-      tester
-          .widget<FilledButton>(find.byKey(const Key('telegram_verify_code')))
-          .onPressed,
-      isNotNull,
-    );
-    await tester.pumpWidget(const SizedBox());
+    expect(find.text('Signed in destination'), findsOneWidget);
+    expect(server.requestsTo('/auth/register'), isNotEmpty);
   });
 }

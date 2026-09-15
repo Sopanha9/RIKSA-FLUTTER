@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/riksa_bottom_navigation_bar.dart';
@@ -79,49 +78,19 @@ class AppShellScope extends InheritedWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  bool _bottomNavigationCollapsed = false;
-
-  bool _handleScrollNotification(ScrollNotification notification) {
-    if (notification.metrics.axis != Axis.vertical) return false;
-
-    if (notification is UserScrollNotification) {
-      switch (notification.direction) {
-        case ScrollDirection.reverse:
-          _setBottomNavigationCollapsed(true);
-          break;
-        case ScrollDirection.forward:
-          _setBottomNavigationCollapsed(false);
-          break;
-        case ScrollDirection.idle:
-          break;
-      }
-    } else if (notification.metrics.pixels <= 0) {
-      _setBottomNavigationCollapsed(false);
-    }
-    return false;
-  }
-
-  void _setBottomNavigationCollapsed(bool collapsed) {
-    if (_bottomNavigationCollapsed == collapsed || !mounted) return;
-    setState(() => _bottomNavigationCollapsed = collapsed);
-  }
-
   @override
   Widget build(BuildContext context) {
     final router = GoRouter.of(context);
     return Scaffold(
       key: const ValueKey('main-app-shell'),
-      extendBody: true,
+      extendBody: false,
       drawer: const RiksaProfileDrawer(),
       // The Builder is what gives the opener a context below this Scaffold, so
       // `Scaffold.of` resolves to the shell rather than to a tab's own.
       body: Builder(
         builder: (context) => AppShellScope(
           openDrawer: Scaffold.of(context).openDrawer,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: _handleScrollNotification,
-            child: widget.navigationShell,
-          ),
+          child: widget.navigationShell,
         ),
       ),
       // The shell builder does not run again for a push inside a branch, so
@@ -137,17 +106,11 @@ class _AppShellState extends State<AppShell> {
           return RiksaBottomNavigationBar(
             key: const ValueKey('persistent-bottom-navigation'),
             currentIndex: widget.navigationShell.currentIndex,
-            collapsed: _bottomNavigationCollapsed,
             onSelected: (index) {
-              _setBottomNavigationCollapsed(false);
               widget.navigationShell.goBranch(
                 index,
                 initialLocation: index == widget.navigationShell.currentIndex,
               );
-            },
-            onCollapsedTap: () {
-              _setBottomNavigationCollapsed(false);
-              widget.navigationShell.goBranch(0);
             },
           );
         },

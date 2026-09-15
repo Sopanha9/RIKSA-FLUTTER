@@ -37,7 +37,8 @@ const studyCoachTopics = <StudyCoachTopic>[
     id: 'science',
     title: 'Science Explainer',
     subtitle: 'Physics laws, chemistry formulas & biology made simple',
-    prompt: 'Can you explain a scientific concept to me with an everyday example?',
+    prompt:
+        'Can you explain a scientific concept to me with an everyday example?',
     context:
         'Subject: General Science (Physics, Chemistry, Biology). Break down complex natural laws, chemical reactions, and biology systems using intuitive everyday analogies and clear step-by-step reasoning in Khmer/English.',
     icon: Icons.science_rounded,
@@ -47,7 +48,8 @@ const studyCoachTopics = <StudyCoachTopic>[
     id: 'khmer',
     title: 'Khmer Language Coach',
     subtitle: 'Spelling, grammar, respectful speech & classical essays',
-    prompt: 'ខ្ញុំចង់រៀនអំពីក្បួនវេយ្យាករណ៍ និងការប្រើប្រាស់ពាក្យខ្មែរឲ្យបានត្រឹមត្រូវ។',
+    prompt:
+        'ខ្ញុំចង់រៀនអំពីក្បួនវេយ្យាករណ៍ និងការប្រើប្រាស់ពាក្យខ្មែរឲ្យបានត្រឹមត្រូវ។',
     context:
         'Subject: Khmer Language and Literature (ភាសាខ្មែរ និងអក្សរសាស្ត្រ). You are a patient Khmer language teacher. Help students understand grammar rules, consonants, vowels, subscript rules (ជើងអក្សរ), respectful vocabulary (ពាក្យគួរសម/សំពះ), and classical essay writing.',
     icon: Icons.menu_book_rounded,
@@ -57,7 +59,8 @@ const studyCoachTopics = <StudyCoachTopic>[
     id: 'english',
     title: 'English Practice',
     subtitle: 'Conversation partner with gentle grammar corrections',
-    prompt: 'Hi! Can we practice conversational English today? Please correct any mistakes I make.',
+    prompt:
+        'Hi! Can we practice conversational English today? Please correct any mistakes I make.',
     context:
         'Subject: English Language Learning. You are an encouraging conversational English coach. Talk with the student in clear English. Whenever they make a grammar or spelling mistake, gently point it out, explain the correct way, and continue the conversation.',
     icon: Icons.translate_rounded,
@@ -67,7 +70,8 @@ const studyCoachTopics = <StudyCoachTopic>[
     id: 'bakii',
     title: 'Grade 12 BakII Prep',
     subtitle: 'Typical national exam questions & revision strategies',
-    prompt: 'Can you quiz me on typical Grade 12 national exam questions and check my answers?',
+    prompt:
+        'Can you quiz me on typical Grade 12 national exam questions and check my answers?',
     context:
         'Subject: Cambodian National High School Exam (បាក់ឌុប / Grade 12 BakII). Help the student prepare for national exams. Provide typical exam questions, quiz them, review their answers, and share effective revision strategies.',
     icon: Icons.school_rounded,
@@ -76,10 +80,7 @@ const studyCoachTopics = <StudyCoachTopic>[
 ];
 
 class AiStudyCoachHub extends StatelessWidget {
-  const AiStudyCoachHub({
-    super.key,
-    required this.onTopicSelected,
-  });
+  const AiStudyCoachHub({super.key, required this.onTopicSelected});
 
   final void Function(StudyCoachTopic topic) onTopicSelected;
 
@@ -96,19 +97,19 @@ class AiStudyCoachHub extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: riksa.jade.withValues(alpha: 0.12),
+                  color: riksa.brand.withValues(alpha: 0.12),
                   borderRadius: AppRadii.mediumBorder,
                 ),
-                child: Icon(Icons.school_outlined, size: 18, color: riksa.jade),
+                child: Icon(Icons.school_outlined, size: 18, color: riksa.brand),
               ),
               const SizedBox(width: RiksaSpacing.xs),
               Text(
                 'STUDY SUBJECT COACHES',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: riksa.inkFaint,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.8,
-                    ),
+                  color: riksa.inkFaint,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.8,
+                ),
               ),
             ],
           ),
@@ -136,10 +137,7 @@ class AiStudyCoachHub extends StatelessWidget {
 }
 
 class _StudyCoachCard extends StatelessWidget {
-  const _StudyCoachCard({
-    required this.topic,
-    required this.onTap,
-  });
+  const _StudyCoachCard({required this.topic, required this.onTap});
 
   final StudyCoachTopic topic;
   final VoidCallback onTap;
@@ -159,9 +157,7 @@ class _StudyCoachCard extends StatelessWidget {
             padding: const EdgeInsets.all(RiksaSpacing.md),
             decoration: BoxDecoration(
               borderRadius: AppRadii.largeBorder,
-              border: Border.all(
-                color: riksa.inkFaint.withValues(alpha: 0.15),
-              ),
+              border: Border.all(color: riksa.inkFaint.withValues(alpha: 0.15)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,8 +194,8 @@ class _StudyCoachCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -207,10 +203,10 @@ class _StudyCoachCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: riksa.inkMuted,
-                            fontSize: 11,
-                            height: 1.25,
-                          ),
+                        color: riksa.inkMuted,
+                        fontSize: 11,
+                        height: 1.25,
+                      ),
                     ),
                   ],
                 ),

@@ -58,10 +58,14 @@ class LeaderboardPodium extends StatelessWidget {
                         row: rank2,
                         ringColor: AppColors.achievementSaffron,
                         pillarColor: isDark
-                            ? AppColors.achievementSaffron.withValues(alpha: 0.22)
+                            ? AppColors.achievementSaffron.withValues(
+                                alpha: 0.22,
+                              )
                             : AppColors.achievementSaffronSoft,
                         pillarTopColor: isDark
-                            ? AppColors.achievementSaffron.withValues(alpha: 0.35)
+                            ? AppColors.achievementSaffron.withValues(
+                                alpha: 0.35,
+                              )
                             : const Color(0xFFFDE8C0),
                         pillarTextColor: isDark
                             ? AppColors.achievementSaffron
@@ -77,16 +81,16 @@ class LeaderboardPodium extends StatelessWidget {
               Expanded(
                 child: _PodiumColumn(
                   row: rank1,
-                  ringColor: context.riksa.jade,
+                  ringColor: context.riksa.brand,
                   pillarColor: isDark
-                      ? context.riksa.jade.withValues(alpha: 0.25)
+                      ? context.riksa.brand.withValues(alpha: 0.25)
                       : context.riksa.jadeSoft,
                   pillarTopColor: isDark
-                      ? context.riksa.jade.withValues(alpha: 0.4)
+                      ? context.riksa.brand.withValues(alpha: 0.4)
                       : const Color(0xFFC7E6D4),
                   pillarTextColor: isDark
-                      ? context.riksa.jade
-                      : context.riksa.jadeStrong,
+                      ? context.riksa.brand
+                      : context.riksa.brandStrong,
                   pillarHeight: 110,
                   avatarSize: 62,
                   isWinner: true,
@@ -272,7 +276,7 @@ class _PodiumColumn extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isWinner
                       ? (isDark
-                            ? context.riksa.jade.withValues(alpha: 0.3)
+                            ? context.riksa.brand.withValues(alpha: 0.3)
                             : context.riksa.jadeSoft)
                       : (isDark
                             ? palette.surfaceRaised
@@ -280,7 +284,7 @@ class _PodiumColumn extends StatelessWidget {
                   borderRadius: AppRadii.fullBorder,
                   border: Border.all(
                     color: isWinner
-                        ? context.riksa.jade.withValues(alpha: 0.5)
+                        ? context.riksa.brand.withValues(alpha: 0.5)
                         : palette.outline.withValues(alpha: 0.4),
                     width: 1,
                   ),
@@ -288,17 +292,16 @@ class _PodiumColumn extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      '💎',
-                      style: TextStyle(fontSize: isWinner ? 11 : 9.5),
-                    ),
+                    Text('💎', style: TextStyle(fontSize: isWinner ? 11 : 9.5)),
                     const SizedBox(width: 3),
                     Text(
                       '${row.score}',
                       maxLines: 1,
-                        style: TextStyle(
-                          color: isWinner
-                            ? (isDark ? context.riksa.jade : context.riksa.jadeStrong)
+                      style: TextStyle(
+                        color: isWinner
+                            ? (isDark
+                                  ? context.riksa.brand
+                                  : context.riksa.brandStrong)
                             : palette.ink,
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -317,10 +320,10 @@ class _PodiumColumn extends StatelessWidget {
                     vertical: 1.5,
                   ),
                   decoration: BoxDecoration(
-                    color: context.riksa.jade.withValues(alpha: 0.15),
+                    color: context.riksa.brand.withValues(alpha: 0.15),
                     borderRadius: AppRadii.fullBorder,
                     border: Border.all(
-                      color: context.riksa.jade.withValues(alpha: 0.5),
+                      color: context.riksa.brand.withValues(alpha: 0.5),
                       width: 0.8,
                     ),
                   ),
@@ -331,7 +334,7 @@ class _PodiumColumn extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w800,
-                      color: context.riksa.jade,
+                      color: context.riksa.brand,
                     ),
                   ),
                 ),
@@ -595,11 +598,17 @@ class _EmptyPodium extends StatelessWidget {
               onPressed: () => context.go('/learn'),
               style: FilledButton.styleFrom(
                 shape: const StadiumBorder(),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 8,
+                ),
               ),
               child: Text(
                 isKhmer ? 'ចាប់ផ្តើមរៀន 🚀' : 'Start a 5-Min Lesson 🚀',
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.5,
+                ),
               ),
             ),
           ),

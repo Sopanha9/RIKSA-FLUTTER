@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'riksa_brand.dart';
 import 'riksa_interactions.dart';
 
 export 'riksa_interactions.dart';
@@ -100,7 +101,7 @@ class RiksaRoundedIconButton extends StatelessWidget {
       tooltip: tooltip,
       style: IconButton.styleFrom(
         minimumSize: const Size.square(48),
-        backgroundColor: backgroundColor ?? context.riksa.surfaceRaised,
+        backgroundColor: backgroundColor ?? context.riksa.surface,
         foregroundColor: foregroundColor ?? context.riksa.ink,
         shape: const CircleBorder(),
       ),
@@ -138,17 +139,17 @@ class RiksaSearchField extends StatelessWidget {
       filled: true,
       fillColor: context.riksa.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.md),
-      border: const OutlineInputBorder(
+      border: OutlineInputBorder(
         borderRadius: AppRadii.fullBorder,
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: context.riksa.outline),
       ),
-      enabledBorder: const OutlineInputBorder(
+      enabledBorder: OutlineInputBorder(
         borderRadius: AppRadii.fullBorder,
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: context.riksa.outline),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: AppRadii.fullBorder,
-        borderSide: BorderSide(color: context.riksa.jade, width: 1.5),
+        borderSide: BorderSide(color: context.riksa.brand, width: 1.5),
       ),
     ),
   );
@@ -283,7 +284,7 @@ class RiksaStateView extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(RiksaSpacing.md),
         child: RiksaPastelCard(
-          tone: RiksaPastelTone.cream,
+          tone: RiksaPastelTone.surface,
           padding: const EdgeInsets.all(RiksaSpacing.md),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -294,7 +295,15 @@ class RiksaStateView extends StatelessWidget {
                   child: CircularProgressIndicator(strokeWidth: 3),
                 )
               else
-                Icon(icon, size: 42, color: context.riksa.jadeStrong),
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: context.riksa.brandSoft,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: 34, color: context.riksa.brand),
+                ),
               const SizedBox(height: RiksaSpacing.md),
               Text(
                 title,
@@ -947,8 +956,8 @@ class AnimatedRiksaProgress extends StatelessWidget {
         child: LinearProgressIndicator(
           value: animated,
           minHeight: height,
-          color: color ?? context.riksa.jade,
-          backgroundColor: (color ?? context.riksa.jade).withValues(alpha: .14),
+          color: color ?? context.riksa.brand,
+          backgroundColor: (color ?? context.riksa.brand).withValues(alpha: .14),
         ),
       ),
     ),
@@ -1523,62 +1532,55 @@ class _RiksaEntranceState extends State<RiksaEntrance>
 
 /// Riksa's empty-state motif: an open book, a tucked-in bookmark and two
 /// small sparkles. Vector shapes stay sharp without an image download.
+/// The mascot on a lavender blob with a couple of sparks: the illustration
+/// for every empty state.
 class RiksaEmptyArtwork extends StatelessWidget {
   const RiksaEmptyArtwork({super.key});
   @override
-  Widget build(BuildContext context) => ExcludeSemantics(
-    child: SizedBox(
-      width: 148,
-      height: 132,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: 124,
-            height: 108,
-            decoration: BoxDecoration(
-              color: context.riksa.creamSoft,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(48),
-                topRight: Radius.circular(32),
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(48),
+  Widget build(BuildContext context) {
+    final palette = context.riksa;
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: 156,
+        height: 132,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 132,
+              height: 112,
+              decoration: BoxDecoration(
+                color: palette.brandSoft,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(56),
+                  topRight: Radius.circular(40),
+                  bottomLeft: Radius.circular(44),
+                  bottomRight: Radius.circular(60),
+                ),
               ),
             ),
-          ),
-          SubjectArtwork(
-            kind: RiksaSubjectKind.general,
-            color: context.riksa.saffron,
-            size: 102,
-          ),
-          Positioned(
-            right: 22,
-            top: 18,
-            child: Transform.rotate(
-              angle: .16,
-              child: Icon(
-                Icons.bookmark_rounded,
-                size: 32,
-                color: Theme.of(context).colorScheme.secondary,
+            const RiksaMascot(size: 104),
+            Positioned(
+              right: 4,
+              top: 6,
+              child: RiksaDoodle(
+                RiksaDoodleKind.star,
+                size: 22,
+                color: palette.brand,
               ),
             ),
-          ),
-          Positioned(
-            left: 3,
-            top: 15,
-            child: Icon(
-              Icons.auto_awesome_rounded,
-              size: 18,
-              color: context.riksa.saffron,
+            const Positioned(
+              left: 0,
+              bottom: 16,
+              child: RiksaDoodle(
+                RiksaDoodleKind.squiggle,
+                size: 24,
+                color: AppColors.lime,
+              ),
             ),
-          ),
-          Positioned(
-            right: 0,
-            bottom: 20,
-            child: Icon(Icons.add_rounded, size: 16, color: context.riksa.jade),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

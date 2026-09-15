@@ -324,65 +324,166 @@ class GoogleAuthRequest {
   };
 }
 
-/// Exchanges a Telegram-delivered one-time code for a Riksa session.
+Uri? _telegramUri(Object? value) {
+  final uri = Uri.tryParse(value as String? ?? '');
+  return uri != null && uri.hasScheme ? uri : null;
+}
+
+/// A pending one-tap "Open Telegram" request.
 ///
-/// Registration details are supplied only from the Telegram registration
-/// route. Returning users need only their Telegram chat ID and OTP.
-class TelegramAuthRequest {
-  TelegramAuthRequest({
-    required this.identifier,
-    required this.code,
-    this.username,
-    this.displayName,
+/// The app opens [botAppUrl] (falling back to [botUrl]), a one-time
+/// `t.me/<bot>?start=login_<nonce>` link, then polls with [requestToken] until
+/// the user taps Confirm in the bot. [requestToken] is a secret: it never
+/// appears in the link and only travels in request bodies.
+class TelegramAuthChallenge {
+  const TelegramAuthChallenge({
+    required this.requestToken,
+    required this.botUrl,
+    this.botAppUrl,
+    required this.expiresIn,
+    required this.pollInterval,
   });
 
-  final String identifier;
-  final String code;
-  final String? username;
-  final String? displayName;
+  final String requestToken;
+  final Uri botUrl;
+  final Uri? botAppUrl;
+  final Duration expiresIn;
+  final Duration pollInterval;
 
-  Map<String, dynamic> toJson() => {
-    'identifier': identifier,
-    'code': code,
-    if (username != null) 'username': username,
-    if (displayName != null) 'displayName': displayName,
-  };
-}
-
-class OtpSendRequest {
-  OtpSendRequest({required this.identifier});
-
-  final String identifier;
-
-  Map<String, dynamic> toJson() => {'identifier': identifier};
-}
-
-class OtpVerifyRequest {
-  OtpVerifyRequest({required this.identifier, required this.code});
-
-  final String identifier;
-  final String code;
-
-  Map<String, dynamic> toJson() => {'identifier': identifier, 'code': code};
-}
-
-/// Result of an OTP send/verify call.
-class OtpResult {
-  OtpResult({required this.success, this.message, this.channel});
-
-  final bool success;
-  final String? message;
-  final String? channel;
-
-  factory OtpResult.fromJson(
-    Map<String, dynamic> json, {
-    bool? successOverride,
-  }) {
-    final verified = json['verified'] as bool?;
-    return OtpResult(
-      success: successOverride ?? verified ?? true,
-      message: json['message'] as String?,
-      channel: json['channel'] as String?,
+  factory TelegramAuthChallenge.fromJson(Map<String, dynamic> json) {
+    final requestToken = json['requestToken'] as String? ?? '';
+    final botUrl = _telegramUri(json['botUrl']);
+    if (requestToken.isEmpty || botUrl == null) {
+      throw const FormatException('Incomplete Telegram authorization request');
+    }
+    final expiresIn = (json['expiresInSeconds'] as num?)?.toInt() ?? 600;
+    final interval = (json['pollIntervalSeconds'] as num?)?.toInt() ?? 3;
+    return TelegramAuthChallenge(
+      requestToken: requestToken,
+      botUrl: botUrl,
+      botAppUrl: _telegramUri(json['botAppUrl']),
+      expiresIn: Duration(seconds: expiresIn.clamp(30, 900)),
+      pollInterval: Duration(seconds: interval.clamp(1, 10)),
     );
   }
+}
+
+/// Public bot details for the "Log in with code" screen.
+class TelegramBotInfo {
+  const TelegramBotInfo({
+    required this.available,
+    this.botUsername,
+    this.botUrl,
+    this.botAppUrl,
+    this.codeLength = 8,
+  });
+
+  final bool available;
+  final String? botUsername;
+  final Uri? botUrl;
+  final Uri? botAppUrl;
+  final int codeLength;
+
+  /// `@riksa_bot`, or null when the server did not provide one.
+  String? get handle =>
+      botUsername == null || botUsername!.isEmpty ? null : '@$botUsername';
+
+  factory TelegramBotInfo.fromJson(Map<String, dynamic> json) =>
+      TelegramBotInfo(
+        available: json['available'] as bool? ?? false,
+        botUsername: json['botUsername'] as String?,
+        botUrl: _telegramUri(json['botUrl']),
+        botAppUrl: _telegramUri(json['botAppUrl']),
+        codeLength: ((json['codeLength'] as num?)?.toInt() ?? 8).clamp(4, 16),
+      );
+}
+
+/// Public Telegram profile fields the bot saw when the user confirmed.
+class TelegramProfile {
+  const TelegramProfile({this.displayName, this.username});
+
+  final String? displayName;
+  final String? username;
+
+  factory TelegramProfile.fromJson(Map<String, dynamic> json) =>
+      TelegramProfile(
+        displayName: (json['displayName'] as String?)?.trim(),
+        username: json['username'] as String?,
+      );
+}
+
+enum TelegramAuthStatus {
+  pending,
+  authenticated,
+  profileRequired,
+  expired,
+  denied,
+}
+
+/// Result of polling a [TelegramAuthChallenge] or redeeming a bot code.
+///
+/// - [TelegramAuthStatus.authenticated]: existing account, [auth] is set.
+/// - [TelegramAuthStatus.profileRequired]: new account, [signupToken] and
+///   [profile] are set; finish with [TelegramCompleteRequest].
+class TelegramAuthPoll {
+  const TelegramAuthPoll({
+    required this.status,
+    this.auth,
+    this.signupToken,
+    this.profile,
+  });
+
+  final TelegramAuthStatus status;
+  final AuthResponse? auth;
+  final String? signupToken;
+  final TelegramProfile? profile;
+
+  factory TelegramAuthPoll.fromJson(Map<String, dynamic> json) {
+    final status = switch (json['status']) {
+      'AUTHENTICATED' => TelegramAuthStatus.authenticated,
+      'PROFILE_REQUIRED' => TelegramAuthStatus.profileRequired,
+      'EXPIRED' => TelegramAuthStatus.expired,
+      'DENIED' => TelegramAuthStatus.denied,
+      'PENDING' => TelegramAuthStatus.pending,
+      _ => throw const FormatException('Unknown Telegram authorization status'),
+    };
+    final auth = json['auth'];
+    final profile = json['telegram'];
+    final poll = TelegramAuthPoll(
+      status: status,
+      auth: auth is Map
+          ? AuthResponse.fromJson(Map<String, dynamic>.from(auth))
+          : null,
+      signupToken: json['signupToken'] as String?,
+      profile: profile is Map
+          ? TelegramProfile.fromJson(Map<String, dynamic>.from(profile))
+          : null,
+    );
+    if (status == TelegramAuthStatus.authenticated && poll.auth == null ||
+        status == TelegramAuthStatus.profileRequired &&
+            (poll.signupToken?.isEmpty ?? true)) {
+      throw const FormatException('Incomplete Telegram authorization result');
+    }
+    return poll;
+  }
+}
+
+/// Creates the Riksa account for a Telegram user who confirmed in the bot but
+/// has no account yet.
+class TelegramCompleteRequest {
+  const TelegramCompleteRequest({
+    required this.signupToken,
+    required this.username,
+    required this.displayName,
+  });
+
+  final String signupToken;
+  final String username;
+  final String displayName;
+
+  Map<String, dynamic> toJson() => {
+    'signupToken': signupToken,
+    'username': username,
+    'displayName': displayName,
+  };
 }

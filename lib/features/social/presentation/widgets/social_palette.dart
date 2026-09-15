@@ -33,7 +33,7 @@ abstract final class SocialPalette {
   static Color pink(BuildContext context) => AppColors.editorialPink;
 
   static Color pinkSoft(BuildContext context) =>
-      _isDark(context) ? const Color(0xFF4A253D) : AppColors.editorialPinkSoft;
+      _isDark(context) ? context.riksa.brandSoft : AppColors.editorialPinkSoft;
 
   static Color onAubergine(BuildContext context) => const Color(0xFFFFF8FC);
 

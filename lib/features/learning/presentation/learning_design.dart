@@ -85,18 +85,19 @@ class LearningTone {
 }
 
 /// Light-mode pastel and its saturated partner, per subject.
+/// The pastel squares from the reference subject grid.
 const _subjectSpec = <StemSubject, (Color, Color)>{
-  StemSubject.mathematics: (Color(0xFFE8E3F8), Color(0xFF76528F)),
-  StemSubject.physics: (Color(0xFFDAE8F8), Color(0xFF3974A8)),
-  StemSubject.chemistry: (Color(0xFFFBEBCD), Color(0xFFB57E14)),
-  StemSubject.biology: (Color(0xFFDDF0DC), Color(0xFF2F7A44)),
-  StemSubject.technology: (Color(0xFFD9F0E8), Color(0xFF1F7D6B)),
-  StemSubject.other: (Color(0xFFECE9E4), Color(0xFF6B6A5C)),
+  StemSubject.mathematics: (AppColors.tilePink, Color(0xFFC8467F)),
+  StemSubject.physics: (AppColors.tileBlue, Color(0xFF2F74B0)),
+  StemSubject.chemistry: (AppColors.tileLavender, AppColors.violet),
+  StemSubject.biology: (AppColors.tileGreen, Color(0xFF3D8238)),
+  StemSubject.technology: (AppColors.tileMint, Color(0xFF1F7D6B)),
+  StemSubject.other: (AppColors.tileYellow, Color(0xFFA9760F)),
 };
 
-/// Pink is reserved for "this is the thing you can do right now".
-const _currentPastel = Color(0xFFFBDCEE);
-const _currentAccent = Color(0xFFD4569E);
+/// Violet is reserved for "this is the thing you can do right now".
+const _currentPastel = AppColors.violetSoft;
+const _currentAccent = AppColors.violet;
 const _donePastel = Color(0xFFDDF0DC);
 const _doneAccent = Color(0xFF2F7A44);
 const _goalPastel = Color(0xFFFBEBCD);

@@ -102,7 +102,7 @@ void main() {
 
     // lesson-1 should be shown
     expect(find.text('Introduction to Calculus'), findsOneWidget);
-    expect(find.text('+40 XP'), findsOneWidget);
+    expect(find.textContaining('+40 XP'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('saved-lesson-card-lesson-1')),
       findsOneWidget,

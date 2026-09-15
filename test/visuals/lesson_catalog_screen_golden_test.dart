@@ -122,13 +122,11 @@ void main() {
           ],
           supportedLocales: const [Locale('en'), Locale('km')],
           home: Scaffold(
-            extendBody: true,
+            extendBody: false,
             body: const LessonCatalogScreen(),
             bottomNavigationBar: RiksaBottomNavigationBar(
               currentIndex: 1,
-              collapsed: false,
               onSelected: (_) {},
-              onCollapsedTap: () {},
             ),
           ),
         ),

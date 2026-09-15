@@ -51,13 +51,17 @@ class SocialPostCard extends StatelessWidget {
       container: true,
       label: '${post.author.displayName}: ${post.title}',
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
         child: Material(
           key: ValueKey('post-${post.id}'),
           color: tinted
               ? (isDark
                     ? SocialPalette.editorialSurface(context)
-                    : SocialPalette.pinkSoft(context).withValues(alpha: .58))
+                    : Color.lerp(
+                        SocialPalette.surface(context),
+                        SocialPalette.pinkSoft(context),
+                        .18,
+                      ))
               : SocialPalette.surface(context),
           elevation: 0,
           shape: const RoundedRectangleBorder(
@@ -67,7 +71,7 @@ class SocialPostCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

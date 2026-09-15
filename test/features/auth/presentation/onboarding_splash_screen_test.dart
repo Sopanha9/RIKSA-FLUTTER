@@ -114,9 +114,9 @@ void main() {
     await tester.pumpWidget(_app(const LanguageSelectScreen()));
     await tester.pump();
 
-    expect(find.text('Select your preferred\nlanguage'), findsOneWidget);
-    expect(find.text('Khmer'), findsOneWidget);
-    expect(find.text('English'), findsNWidgets(2));
+    expect(find.text('Select Language'), findsOneWidget);
+    expect(find.text('ខ្មែរ'), findsOneWidget);
+    expect(find.text('English'), findsOneWidget);
     expect(find.byKey(const Key('language_continue')), findsOneWidget);
   });
 

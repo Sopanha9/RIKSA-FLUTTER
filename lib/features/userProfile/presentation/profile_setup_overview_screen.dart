@@ -143,7 +143,7 @@ class _ProfileStep extends StatelessWidget {
               height: 24,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: context.riksa.jade,
+                color: context.riksa.brand,
                 shape: BoxShape.circle,
               ),
               child: Text(
@@ -165,7 +165,7 @@ class _ProfileStep extends StatelessWidget {
                   width: 64,
                   height: 2,
                   colorFilter: ColorFilter.mode(
-                    context.riksa.jade.withValues(alpha: .55),
+                    context.riksa.brand.withValues(alpha: .55),
                     BlendMode.srcIn,
                   ),
                 ),

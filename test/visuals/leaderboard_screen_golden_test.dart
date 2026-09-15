@@ -138,13 +138,11 @@ void main() {
           ],
           supportedLocales: const [Locale('en'), Locale('km')],
           home: Scaffold(
-            extendBody: true,
+            extendBody: false,
             body: const LeaderboardScreen(),
             bottomNavigationBar: RiksaBottomNavigationBar(
               currentIndex: 3,
-              collapsed: false,
               onSelected: (_) {},
-              onCollapsedTap: () {},
             ),
           ),
         ),

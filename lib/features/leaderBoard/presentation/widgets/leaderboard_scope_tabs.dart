@@ -16,14 +16,14 @@ class LeaderboardScopeTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       key: const ValueKey('leaderboard-scope-control'),
-      height: 52,
+      height: 44,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark ? context.riksa.surfaceRaised : AppColors.editorialField,
+        color: context.riksa.surface,
         borderRadius: AppRadii.fullBorder,
+        border: Border.all(color: context.riksa.outline),
       ),
       child: Row(
         children: [
@@ -62,7 +62,6 @@ class LeaderboardPillTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.riksa;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Material(
       color: Colors.transparent,
@@ -74,19 +73,15 @@ class LeaderboardPillTab extends StatelessWidget {
             duration: RiksaMotion.standard,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: selected
-                  ? (isDark ? AppColors.editorialPink : AppColors.editorialBlack)
-                  : Colors.transparent,
+              color: selected ? palette.brand : Colors.transparent,
               borderRadius: AppRadii.fullBorder,
             ),
             child: Text(
               label,
               style: TextStyle(
-                color: selected
-                    ? (isDark ? AppColors.editorialAubergine : Colors.white)
-                    : palette.ink,
+                color: selected ? palette.onBrand : palette.inkMuted,
                 fontSize: 13,
-                fontWeight: FontWeight.w800,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ),

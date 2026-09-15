@@ -3,363 +3,198 @@ import 'package:flutter/material.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../theme/app_theme.dart';
 
+/// Floating navigation: a white pill holding the four places a learner goes,
+/// and a round AI Tutor button beside it for the one thing we most want them
+/// to do. The selected tab sits in its own soft pill so where you are never
+/// depends on colour alone. Pushed screens hide the bar (see the app shell).
+///
+/// Branch indices are unchanged: 0 Home, 1 Learn, 2 AI Tutor, 3 Ranks,
+/// 4 Profile. Index 2 is the round button rather than a pill item.
 class RiksaBottomNavigationBar extends StatelessWidget {
   const RiksaBottomNavigationBar({
     super.key,
     required this.currentIndex,
-    required this.collapsed,
     required this.onSelected,
-    required this.onCollapsedTap,
   }) : assert(currentIndex >= 0 && currentIndex < 5);
 
   final int currentIndex;
-  final bool collapsed;
   final ValueChanged<int> onSelected;
-  final VoidCallback onCollapsedTap;
+
+  static const int aiTutorIndex = 2;
+  static const double _height = 60;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final items = <_RiksaNavigationItem>[
-      _RiksaNavigationItem(label: l10n.home, icon: Icons.home_outlined),
-      _RiksaNavigationItem(label: l10n.learn, icon: Icons.school_outlined),
-      _RiksaNavigationItem(
-        label: l10n.aiTutor,
-        icon: Icons.chat_bubble_outline_rounded,
+    final palette = context.riksa;
+    final tabs = <(int, _RiksaNavigationItem)>[
+      (
+        0,
+        _RiksaNavigationItem(
+          label: l10n.home,
+          icon: Icons.home_outlined,
+          activeIcon: Icons.home_rounded,
+        ),
       ),
-      _RiksaNavigationItem(
-        label: l10n.leaderboard,
-        icon: Icons.emoji_events_outlined,
+      (
+        1,
+        _RiksaNavigationItem(
+          label: l10n.learn,
+          icon: Icons.menu_book_outlined,
+          activeIcon: Icons.menu_book_rounded,
+        ),
       ),
-      _RiksaNavigationItem(
-        label: l10n.profile,
-        icon: Icons.account_circle_outlined,
+      (
+        3,
+        _RiksaNavigationItem(
+          label: l10n.ranksTab,
+          icon: Icons.emoji_events_outlined,
+          activeIcon: Icons.emoji_events_rounded,
+        ),
+      ),
+      (
+        4,
+        _RiksaNavigationItem(
+          label: l10n.profile,
+          icon: Icons.person_outline_rounded,
+          activeIcon: Icons.person_rounded,
+        ),
       ),
     ];
-    return SafeArea(
-      top: false,
-      minimum: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-      child: SizedBox(
-        height: 66,
-        child: LayoutBuilder(
-          builder: (context, constraints) => Align(
-            alignment: Alignment.bottomLeft,
-            child: AnimatedContainer(
-              key: const ValueKey('bottom-nav-morph'),
-              width: collapsed ? 58 : constraints.maxWidth,
-              height: 66,
-              duration: const Duration(milliseconds: 380),
-              curve: Curves.easeInOutCubic,
-              child: _NavigationSurface(
-                expandedWidth: constraints.maxWidth,
-                items: items,
-                currentIndex: currentIndex,
-                collapsed: collapsed,
-                onSelected: onSelected,
-                onCollapsedTap: onCollapsedTap,
-              ),
-            ),
-          ),
-        ),
-      ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final shadow = BoxShadow(
+      color: Colors.black.withValues(alpha: isDark ? .35 : .08),
+      blurRadius: 20,
+      offset: const Offset(0, 6),
     );
-  }
-}
 
-class _NavigationSurface extends StatelessWidget {
-  const _NavigationSurface({
-    required this.expandedWidth,
-    required this.items,
-    required this.currentIndex,
-    required this.collapsed,
-    required this.onSelected,
-    required this.onCollapsedTap,
-  });
-  final double expandedWidth;
-  final List<_RiksaNavigationItem> items;
-  final int currentIndex;
-  final bool collapsed;
-  final ValueChanged<int> onSelected;
-  final VoidCallback onCollapsedTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final palette = context.riksa;
-    final isDark = theme.brightness == Brightness.dark;
-    final barColor = isDark
-        ? AppColors.editorialAubergineRaised
-        : AppColors.editorialNeutralSurface;
-    final barForeground = isDark
-        ? AppColors.editorialPinkSoft
-        : AppColors.editorialMuted;
-    final activeBackground = isDark
-        ? AppColors.editorialPink
-        : AppColors.editorialBlack;
-    final activeForeground = isDark
-        ? AppColors.editorialAubergine
-        : Colors.white;
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: 58,
-          child: IgnorePointer(
-            ignoring: collapsed,
-            child: _ExpandedNavigationBar(
-              expandedWidth: expandedWidth,
-              items: items,
-              currentIndex: currentIndex,
-              collapsed: collapsed,
-              barColor: barColor,
-              barForeground: barForeground,
-              activeBackground: activeBackground,
-              activeForeground: activeForeground,
-              isDark: isDark,
-              onSelected: onSelected,
-            ),
-          ),
-        ),
-        Positioned(
-          key: const ValueKey('bottom-nav-active-circle'),
-          left: 3,
-          bottom: 0,
-          width: 52,
-          height: 52,
-          child: IgnorePointer(
-            ignoring: !collapsed,
-            child: AnimatedScale(
-              scale: collapsed ? 1 : .78,
-              duration: const Duration(milliseconds: 380),
-              curve: collapsed
-                  ? const Interval(.45, 1, curve: Curves.easeOutBack)
-                  : const Interval(0, .45, curve: Curves.easeInCubic),
-              child: AnimatedOpacity(
-                key: const ValueKey('bottom-nav-collapsed-content'),
-                opacity: collapsed ? 1 : 0,
-                duration: const Duration(milliseconds: 380),
-                curve: collapsed
-                    ? const Interval(.45, 1, curve: Curves.easeOutCubic)
-                    : const Interval(0, .45, curve: Curves.easeInCubic),
-                child: _CollapsedNavigationButton(
-                  item: items.first,
-                  backgroundColor: activeBackground,
-                  foregroundColor: activeForeground,
-                  borderColor: isDark
-                      ? palette.canvas.withValues(alpha: .18)
-                      : Colors.transparent,
-                  isDark: isDark,
-                  onTap: onCollapsedTap,
+    // Labels grow with the learner's text size, but only so far: past that
+    // the fixed-height pill would have to shrink them again anyway.
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.3,
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: AppRadii.fullBorder,
+                  boxShadow: [shadow],
                 ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ExpandedNavigationBar extends StatelessWidget {
-  const _ExpandedNavigationBar({
-    required this.expandedWidth,
-    required this.items,
-    required this.currentIndex,
-    required this.collapsed,
-    required this.barColor,
-    required this.barForeground,
-    required this.activeBackground,
-    required this.activeForeground,
-    required this.isDark,
-    required this.onSelected,
-  });
-
-  final double expandedWidth;
-  final List<_RiksaNavigationItem> items;
-  final int currentIndex;
-  final bool collapsed;
-  final Color barColor;
-  final Color barForeground;
-  final Color activeBackground;
-  final Color activeForeground;
-  final bool isDark;
-  final ValueChanged<int> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      key: const ValueKey('bottom-nav-surface'),
-      duration: const Duration(milliseconds: 380),
-      curve: Curves.easeInOutCubic,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: collapsed ? barColor.withValues(alpha: 0) : barColor,
-        borderRadius: AppRadii.extraLargeBorder,
-        boxShadow: collapsed
-            ? const []
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? .24 : .1),
-                  blurRadius: 24,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-      ),
-      child: OverflowBox(
-        alignment: AlignmentDirectional.centerStart,
-        minWidth: expandedWidth,
-        maxWidth: expandedWidth,
-        child: SizedBox(
-          width: expandedWidth,
-          height: 58,
-          child: AnimatedOpacity(
-            key: const ValueKey('bottom-nav-expanded-content'),
-            opacity: collapsed ? 0 : 1,
-            duration: const Duration(milliseconds: 380),
-            curve: collapsed
-                ? const Interval(0, .65, curve: Curves.easeOutCubic)
-                : const Interval(.35, 1, curve: Curves.easeInCubic),
-            child: Padding(
-              padding: const EdgeInsets.all(5),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final labelStyle =
-                      Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: activeForeground,
-                        fontWeight: FontWeight.w700,
-                      ) ??
-                      TextStyle(
-                        color: activeForeground,
-                        fontWeight: FontWeight.w700,
-                      );
-                  final labelPainter = TextPainter(
-                    text: TextSpan(
-                      text: items[currentIndex].label,
-                      style: labelStyle,
+                child: Material(
+                  key: const ValueKey('bottom-nav-surface'),
+                  color: palette.surface,
+                  shape: StadiumBorder(
+                    side: BorderSide(color: palette.outline),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Row(
+                      children: [
+                        for (final (index, item) in tabs)
+                          Expanded(
+                            child: _PillTab(
+                              index: index,
+                              item: item,
+                              selected: index == currentIndex,
+                              onTap: () => onSelected(index),
+                            ),
+                          ),
+                      ],
                     ),
-                    maxLines: 1,
-                    textDirection: Directionality.of(context),
-                  )..layout();
-                  final calculatedMaximum =
-                      constraints.maxWidth - ((items.length - 1) * 44);
-                  final maximumActiveWidth = calculatedMaximum < 88
-                      ? 88.0
-                      : calculatedMaximum;
-                  final minimumActiveWidth = maximumActiveWidth < 112
-                      ? maximumActiveWidth
-                      : 112.0;
-                  final activeWidth = (labelPainter.width + 59).clamp(
-                    minimumActiveWidth,
-                    maximumActiveWidth,
-                  );
-                  final inactiveWidth =
-                      (constraints.maxWidth - activeWidth) / (items.length - 1);
-
-                  return Row(
-                    children: [
-                      for (var index = 0; index < items.length; index++)
-                        _ExpandedNavigationDestination(
-                          index: index,
-                          item: items[index],
-                          selected: index == currentIndex,
-                          width: index == currentIndex
-                              ? activeWidth
-                              : inactiveWidth,
-                          activeBackground: activeBackground,
-                          activeForeground: activeForeground,
-                          inactiveForeground: barForeground,
-                          labelStyle: labelStyle,
-                          onTap: () => onSelected(index),
-                        ),
-                    ],
-                  );
-                },
+                  ),
+                ),
               ),
             ),
-          ),
+            const SizedBox(width: 10),
+            _AiTutorButton(
+              label: l10n.aiTutor,
+              selected: currentIndex == aiTutorIndex,
+              shadow: shadow,
+              onTap: () => onSelected(aiTutorIndex),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _ExpandedNavigationDestination extends StatelessWidget {
-  const _ExpandedNavigationDestination({
+class _PillTab extends StatelessWidget {
+  const _PillTab({
     required this.index,
     required this.item,
     required this.selected,
-    required this.width,
-    required this.activeBackground,
-    required this.activeForeground,
-    required this.inactiveForeground,
-    required this.labelStyle,
     required this.onTap,
   });
 
   final int index;
   final _RiksaNavigationItem item;
   final bool selected;
-  final double width;
-  final Color activeBackground;
-  final Color activeForeground;
-  final Color inactiveForeground;
-  final TextStyle labelStyle;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
+    final palette = context.riksa;
+    final color = selected ? palette.brand : palette.inkMuted;
+    return Semantics(
       key: ValueKey('bottom-nav-destination-$index'),
-      width: width,
-      height: 48,
-      duration: const Duration(milliseconds: 240),
-      curve: Curves.easeInOutCubic,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: selected ? activeBackground : Colors.transparent,
-        borderRadius: AppRadii.fullBorder,
-      ),
-      child: Semantics(
-        button: true,
-        selected: selected,
-        label: item.label,
-        child: Tooltip(
-          message: item.label,
-          child: InkWell(
-            key: ValueKey('bottom-nav-item-$index'),
-            onTap: onTap,
-            borderRadius: AppRadii.fullBorder,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: selected ? 13 : 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    item.icon,
-                    size: selected ? 25 : 24,
-                    color: selected ? activeForeground : inactiveForeground,
-                  ),
-                  if (selected) ...[
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Text(
-                          item.label,
-                          key: ValueKey('bottom-nav-label-$index'),
-                          maxLines: 1,
-                          style: labelStyle,
-                        ),
+      label: item.label,
+      selected: selected,
+      button: true,
+      onTap: onTap,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: item.label,
+        child: InkWell(
+          key: ValueKey('bottom-nav-item-$index'),
+          onTap: onTap,
+          customBorder: const StadiumBorder(),
+          child: AnimatedContainer(
+            duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+            curve: RiksaMotion.standardCurve,
+            height: RiksaBottomNavigationBar._height - 8,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: ShapeDecoration(
+              color: selected ? palette.brandSoft : Colors.transparent,
+              shape: const StadiumBorder(),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  selected ? item.activeIcon : item.icon,
+                  color: color,
+                  size: 22,
+                ),
+                const SizedBox(height: 2),
+                // The bar has a fixed height, so a long or enlarged label
+                // shrinks to fit rather than wrapping; the icon keeps its size.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    item.label,
+                    key: ValueKey('bottom-nav-label-$index'),
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    style: RiksaTypography.bodyStyleFor(
+                      item.label,
+                      TextStyle(
+                        fontFamily: RiksaTypography.latinFamily,
+                        fontSize: 11,
+                        height: 1.25,
+                        color: color,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                       ),
                     ),
-                  ],
-                ],
-              ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -368,52 +203,66 @@ class _ExpandedNavigationDestination extends StatelessWidget {
   }
 }
 
-class _CollapsedNavigationButton extends StatelessWidget {
-  const _CollapsedNavigationButton({
-    required this.item,
-    required this.backgroundColor,
-    required this.foregroundColor,
-    required this.borderColor,
-    required this.isDark,
+/// Round purple action beside the pill. When the tutor is the open tab it
+/// picks up a lime ring, matching the lime used for "you" elsewhere.
+class _AiTutorButton extends StatelessWidget {
+  const _AiTutorButton({
+    required this.label,
+    required this.selected,
+    required this.shadow,
     required this.onTap,
   });
 
-  final _RiksaNavigationItem item;
-  final Color backgroundColor;
-  final Color foregroundColor;
-  final Color borderColor;
-  final bool isDark;
+  final String label;
+  final bool selected;
+  final BoxShadow shadow;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      key: const ValueKey('bottom-nav-active-indicator'),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        shape: BoxShape.circle,
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.editorialAubergine.withValues(
-              alpha: isDark ? .3 : .2,
-            ),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
-          ),
-        ],
+    final palette = context.riksa;
+    const size = RiksaBottomNavigationBar._height;
+    return Semantics(
+      key: const ValueKey(
+        'bottom-nav-destination-${RiksaBottomNavigationBar.aiTutorIndex}',
       ),
-      child: Semantics(
-        button: true,
-        selected: true,
-        label: item.label,
-        child: Tooltip(
-          message: item.label,
-          child: InkWell(
-            key: const ValueKey('bottom-nav-collapsed-item'),
-            onTap: onTap,
-            customBorder: const CircleBorder(),
-            child: Icon(item.icon, size: 27, color: foregroundColor),
+      label: label,
+      selected: selected,
+      button: true,
+      onTap: onTap,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: label,
+        child: AnimatedContainer(
+          duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+          curve: RiksaMotion.standardCurve,
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [shadow],
+            border: Border.all(
+              color: selected ? AppColors.lime : palette.surface,
+              width: 3,
+            ),
+          ),
+          child: Material(
+            color: palette.brand,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              key: const ValueKey(
+                'bottom-nav-item-${RiksaBottomNavigationBar.aiTutorIndex}',
+              ),
+              onTap: onTap,
+              child: const Center(
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -422,7 +271,12 @@ class _CollapsedNavigationButton extends StatelessWidget {
 }
 
 class _RiksaNavigationItem {
-  const _RiksaNavigationItem({required this.label, required this.icon});
+  const _RiksaNavigationItem({
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+  });
   final String label;
   final IconData icon;
+  final IconData activeIcon;
 }

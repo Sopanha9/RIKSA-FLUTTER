@@ -204,13 +204,37 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> telegramSignIn(TelegramAuthRequest request) async {
+  /// Signs in with the token pair returned once an existing Telegram account
+  /// confirms in the bot.
+  Future<void> acceptTelegramSession(AuthResponse response) async {
     state = const AuthLoading();
     try {
-      final response = await ref.read(authApiProvider).telegramAuth(request);
       await _completeAuthentication(response);
     } catch (error) {
       await _handleAuthenticationFailure(error);
+    }
+  }
+
+  /// Creates the account for a newly confirmed Telegram user.
+  ///
+  /// Returns the failure instead of only moving to [AuthError] so the profile
+  /// form can tell a taken username apart from an expired signup token.
+  Future<AuthFailure?> completeTelegramSignup(
+    TelegramCompleteRequest request,
+  ) async {
+    state = const AuthLoading();
+    try {
+      final response = await ref
+          .read(authApiProvider)
+          .completeTelegramAuth(request);
+      await _completeAuthentication(response);
+      return null;
+    } on AuthFailure catch (failure) {
+      state = const Unauthenticated();
+      return failure;
+    } catch (error) {
+      await _handleAuthenticationFailure(error);
+      return null;
     }
   }
 

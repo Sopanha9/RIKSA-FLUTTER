@@ -16,6 +16,9 @@ import 'package:riksa_app/features/social/data/social_models.dart';
 import 'package:riksa_app/features/social/presentation/social_feed_screen.dart';
 import 'package:riksa_app/features/social/presentation/social_post_detail_screen.dart';
 import 'package:riksa_app/features/social/providers/social_feed_provider.dart';
+import 'package:riksa_app/features/auth/data/auth_models.dart';
+import 'package:riksa_app/features/learning/data/learning_models.dart';
+import 'package:riksa_app/features/learning/providers/learning_home_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 Future<void> _loadFonts() async {
@@ -150,6 +153,41 @@ class _PreviewSocialApi extends SocialApi {
   }) async => SocialCommentPage(comments: [_detailComment], hasNextPage: false);
 }
 
+class _PreviewAuth extends AuthNotifier {
+  @override
+  AuthState build() => const Authenticated(
+    AuthUser(
+      id: 'user-1',
+      username: 'sopheak',
+      displayName: 'Sopheak Phan',
+      emailVerified: true,
+      phoneVerified: false,
+      role: 'STUDENT',
+    ),
+  );
+}
+
+final _biology = SubjectProgress(
+  category: const LearningCategory(id: 'bio', name: 'Biology'),
+  completed: 3,
+  total: 5,
+  lessons: [
+    LessonSummary(
+      id: 'cell-structure',
+      title: 'Cell Structure',
+      description: '',
+      difficulty: null,
+      baseXp: 15,
+      categoryId: 'bio',
+      categoryName: 'Biology',
+      exerciseCount: 4,
+      completed: false,
+      createdAt: null,
+      progress: .6,
+    ),
+  ],
+);
+
 void main() {
   setUpAll(_loadFonts);
 
@@ -164,6 +202,14 @@ void main() {
         overrides: [
           // Signed-out reading view: no owner controls in the golden.
           currentUserIdProvider.overrideWithValue(null),
+          authProvider.overrideWith(_PreviewAuth.new),
+          learningHomeProvider.overrideWith(
+            (ref) async => LearningHomeData(
+              subjects: [_biology],
+              resumeSubject: _biology,
+              resumeLesson: _biology.lessons.first,
+            ),
+          ),
           socialFeedProvider.overrideWith(_PreviewFeedNotifier.new),
           communityStreakProvider.overrideWith(
             (ref) async => const CommunityStreak(current: 20, highest: 24),
@@ -180,13 +226,11 @@ void main() {
           ],
           supportedLocales: const [Locale('en'), Locale('km')],
           home: Scaffold(
-            extendBody: true,
+            extendBody: false,
             body: const SocialFeedScreen(),
             bottomNavigationBar: RiksaBottomNavigationBar(
               currentIndex: 0,
-              collapsed: false,
               onSelected: (_) {},
-              onCollapsedTap: () {},
             ),
           ),
         ),
@@ -203,7 +247,7 @@ void main() {
       0,
     );
     await expectLater(
-      find.byType(SocialFeedScreen),
+      find.byType(MaterialApp),
       matchesGoldenFile('goldens/social_feed_editorial_en_light.png'),
     );
   });

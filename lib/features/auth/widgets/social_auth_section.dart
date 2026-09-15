@@ -15,12 +15,15 @@ import 'google_provider_button.dart';
 class SocialAuthSection extends ConsumerStatefulWidget {
   const SocialAuthSection({
     super.key,
-    required this.isRegistration,
     this.showDivider = true,
+    this.compact = false,
   });
 
-  final bool isRegistration;
   final bool showDivider;
+
+  /// Puts Telegram and Google side by side with just the provider names, as
+  /// under the login form. The full-width buttons read better on sign-up.
+  final bool compact;
 
   @override
   ConsumerState<SocialAuthSection> createState() => _SocialAuthSectionState();
@@ -92,6 +95,36 @@ class _SocialAuthSectionState extends ConsumerState<SocialAuthSection> {
     final loading = ref.watch(authProvider) is AuthLoading;
     final locale = Localizations.localeOf(context).languageCode;
 
+    // One flow for sign-in and sign-up: the server signs existing Telegram
+    // accounts in and asks new ones for a username afterwards.
+    Widget telegram(String label) => OutlinedButton.icon(
+      key: const Key('telegram_auth_button'),
+      onPressed: loading ? null : () => context.push('/auth/telegram'),
+      icon: const TelegramLogo(),
+      label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+    );
+
+    Widget google(String label) => _googleReady
+        ? buildGoogleProviderButton(
+            label: label,
+            locale: locale,
+            loading: loading,
+            onPressed: _authenticateWithGoogle,
+          )
+        : OutlinedButton.icon(
+            key: const Key('google_auth_button'),
+            onPressed: loading || _preparingGoogle
+                ? null
+                : _authenticateWithGoogle,
+            icon: _preparingGoogle
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2.2),
+                  )
+                : const GoogleLogo(),
+            label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -104,8 +137,7 @@ class _SocialAuthSectionState extends ConsumerState<SocialAuthSection> {
                 child: Text(
                   strings.orContinueWith,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.muted,
-                    fontWeight: FontWeight.w600,
+                    color: context.riksa.inkMuted,
                   ),
                 ),
               ),
@@ -114,38 +146,19 @@ class _SocialAuthSectionState extends ConsumerState<SocialAuthSection> {
           ),
           const SizedBox(height: 16),
         ],
-        if (_googleReady)
-          buildGoogleProviderButton(
-            label: strings.signInWithGoogle,
-            locale: locale,
-            loading: loading,
-            onPressed: _authenticateWithGoogle,
+        if (widget.compact)
+          Row(
+            children: [
+              Expanded(child: telegram('Telegram')),
+              const SizedBox(width: 12),
+              Expanded(child: google('Google')),
+            ],
           )
-        else
-          OutlinedButton.icon(
-            key: const Key('google_auth_button'),
-            onPressed: loading || _preparingGoogle
-                ? null
-                : _authenticateWithGoogle,
-            icon: _preparingGoogle
-                ? const SizedBox.square(
-                    dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2.2),
-                  )
-                : const GoogleLogo(),
-            label: Text(strings.signInWithGoogle),
-          ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          key: const Key('telegram_auth_button'),
-          onPressed: loading
-              ? null
-              : () => context.push(
-                  '/auth/telegram?register=${widget.isRegistration}',
-                ),
-          icon: const TelegramLogo(),
-          label: Text(strings.signInWithTelegram),
-        ),
+        else ...[
+          telegram(strings.signInWithTelegram),
+          const SizedBox(height: 12),
+          google(strings.signInWithGoogle),
+        ],
         if (_localError != null) ...[
           const SizedBox(height: 12),
           Semantics(

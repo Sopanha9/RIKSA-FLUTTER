@@ -90,7 +90,7 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
                 height: 48,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: context.riksa.blushSoft,
+                  color: context.riksa.brandSoft,
                   borderRadius: AppRadii.largeBorder,
                 ),
                 child: Icon(
@@ -250,7 +250,7 @@ class _ProvinceTile extends StatelessWidget {
                     Text(
                       primaryName,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 2),

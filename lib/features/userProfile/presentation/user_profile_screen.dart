@@ -90,10 +90,18 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                 SliverToBoxAdapter(
                   child: centeredProfileColumn(
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                       child: user == null
                           ? const _ProfileLoading()
                           : _ProfileHeader(user: user, dashboard: dashboard),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: centeredProfileColumn(
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
+                      child: _ProfileMenu(),
                     ),
                   ),
                 ),
@@ -133,7 +141,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: 112)),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
             ),
           ),
@@ -152,6 +160,83 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           content: Text(AppLocalizations.of(context)!.profileLinkCopied),
         ),
       );
+  }
+}
+
+/// The learner's own places, one row each, as in the reference profile.
+class _ProfileMenu extends StatelessWidget {
+  const _ProfileMenu();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final palette = context.riksa;
+    final items = [
+      (
+        key: 'profile-menu-progress',
+        icon: Icons.insights_rounded,
+        label: l10n.menuMyProgress,
+        path: '/progress',
+      ),
+      (
+        key: 'profile-menu-saved',
+        icon: Icons.bookmark_border_rounded,
+        label: l10n.menuSavedLessons,
+        path: '/learn/saved',
+      ),
+      (
+        key: 'profile-menu-communities',
+        icon: Icons.groups_outlined,
+        label: l10n.menuCommunities,
+        path: '/communities',
+      ),
+      (
+        key: 'profile-menu-settings',
+        icon: Icons.settings_outlined,
+        label: l10n.settings,
+        path: '/profile/settings',
+      ),
+    ];
+    return Container(
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: AppRadii.largeBorder,
+        border: Border.all(color: palette.outline),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (final (index, item) in items.indexed) ...[
+            if (index > 0)
+              Divider(height: 1, indent: 58, color: palette.outline),
+            Material(
+              color: Colors.transparent,
+              child: ListTile(
+                key: ValueKey(item.key),
+                onTap: () => context.push(item.path),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                minLeadingWidth: 26,
+                shape: const RoundedRectangleBorder(),
+                leading: Icon(item.icon, size: 22, color: palette.ink),
+                title: Text(
+                  item.label,
+                  style: RiksaTypography.bodyStyleFor(
+                    item.label,
+                    Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  color: palette.inkFaint,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
@@ -240,92 +325,202 @@ class _ProfileEditButton extends StatelessWidget {
       label,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800),
+      style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
     ),
   );
 }
 
+/// Identity card from the reference profile: a slim cover strip, the avatar
+/// hanging off its leading edge, name and tier, then XP progress through the
+/// current tier. The learning numbers follow in their own row.
 class _ProfileHeader extends ConsumerWidget {
   const _ProfileHeader({required this.user, required this.dashboard});
 
   final AuthUser user;
   final AsyncValue<ProfileDashboardData> dashboard;
 
+  static const double _coverHeight = 64;
+  static const double _avatarRadius = 34;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
+    final theme = Theme.of(context);
     final game = dashboard.asData?.value.gamification;
     final achievements = dashboard.asData?.value.achievements ?? const [];
     final earnedAchievements = achievements.where((item) => item.earned).length;
     final name = user.displayName.trim().isEmpty
         ? user.username
         : user.displayName.trim();
-    final tier = readableProfileName(game?.currentTier ?? l10n.startingTier);
+    final handle = user.username.trim();
     final coverId = ref.watch(profileCoverProvider);
     final localAvatar = ref.watch(profileAvatarProvider);
     final decimal = NumberFormat.decimalPattern(locale);
+    final meta = [
+      ?_provinceLabel(ref, locale),
+      if (user.createdAt != null)
+        '${l10n.joined} ${DateFormat.yMMMM(locale).format(user.createdAt!.toLocal())}',
+    ].join(' • ');
 
-    return ProfileIdentityHeader(
-      cover: ProfileCover(
-        key: const ValueKey('profile-cover'),
-        coverId: coverId,
-        height: ProfileIdentityHeader.coverHeight,
-        borderRadius: AppRadii.largeBorder,
-      ),
-      avatar: RiksaProfileAvatar(
-        key: const ValueKey('profile-hero-avatar'),
-        user: user,
-        radius: 44,
-        avatarPath: localAvatar,
-        frameTier: game?.currentTier,
-        // A ring in the page ground separates the avatar from the banner.
-        borderColor: ProfilePalette.canvas(context),
-        ringColor: ProfilePalette.canvas(context),
-      ),
-      displayName: name,
-      username: user.username,
-      bio: user.bio?.trim().isNotEmpty == true
-          ? user.bio
-          : l10n.learningHeaderSubtitle,
-      isVerified: user.emailVerified,
-      verifiedKey: const ValueKey('profile-verification-badge'),
-      metadata: [
-        ?_provinceMeta(ref, locale),
-        if (user.createdAt != null)
-          ProfileMetaItem(
-            icon: Icons.calendar_today_outlined,
-            label:
-                '${l10n.joined} ${DateFormat.yMMMM(locale).format(user.createdAt!.toLocal())}',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          key: const ValueKey('profile-learning-card'),
+          decoration: BoxDecoration(
+            color: ProfilePalette.panel(context),
+            borderRadius: AppRadii.largeBorder,
+            border: Border.all(color: ProfilePalette.border(context)),
           ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  ProfileCover(
+                    key: const ValueKey('profile-cover'),
+                    coverId: coverId,
+                    height: _coverHeight,
+                    borderRadius: BorderRadius.zero,
+                  ),
+                  PositionedDirectional(
+                    start: 14,
+                    top: _coverHeight - _avatarRadius,
+                    child: RiksaProfileAvatar(
+                      key: const ValueKey('profile-hero-avatar'),
+                      user: user,
+                      radius: _avatarRadius,
+                      avatarPath: localAvatar,
+                      frameTier: game?.currentTier,
+                      borderColor: ProfilePalette.panel(context),
+                      ringColor: ProfilePalette.panel(context),
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                // Clears the half of the avatar that hangs below the cover.
+                padding: EdgeInsetsDirectional.fromSTEB(
+                  14 + _avatarRadius * 2 + 12,
+                  8,
+                  14,
+                  0,
+                ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: _avatarRadius),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: RiksaTypography.titleStyleFor(
+                                name,
+                                theme.textTheme.titleMedium?.copyWith(
+                                  color: ProfilePalette.text(context),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (user.emailVerified) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.verified_rounded,
+                              key: const ValueKey('profile-verification-badge'),
+                              size: 17,
+                              color: ProfilePalette.green(context),
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (handle.isNotEmpty)
+                        Text(
+                          '@$handle',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: ProfilePalette.muted(context),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                child: _ProfileTierProgress(gamification: game),
+              ),
+            ],
+          ),
+        ),
+        if (user.bio?.trim().isNotEmpty == true || meta.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (user.bio?.trim().isNotEmpty == true)
+                  Text(
+                    user.bio!.trim(),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: RiksaTypography.bodyStyleFor(
+                      user.bio!.trim(),
+                      theme.textTheme.bodyMedium?.copyWith(
+                        color: ProfilePalette.text(context),
+                      ),
+                    ),
+                  ),
+                if (meta.isNotEmpty)
+                  Text(
+                    meta,
+                    style: RiksaTypography.bodyStyleFor(
+                      meta,
+                      theme.textTheme.bodySmall?.copyWith(
+                        color: ProfilePalette.muted(context),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: 12),
+        _ProfileStats(
+          items: [
+            (
+              key: null,
+              value: decimal.format(game?.totalXp ?? 0),
+              label: l10n.totalXp,
+            ),
+            (
+              key: const ValueKey('profile-streak'),
+              value: decimal.format(game?.currentStreak ?? 0),
+              label: l10n.currentStreak,
+            ),
+            (
+              key: null,
+              value: decimal.format(earnedAchievements),
+              label: l10n.achievements,
+            ),
+          ],
+        ),
       ],
-      countsKey: const ValueKey('profile-stats'),
-      counts: [
-        ProfileCountItem(
-          value: decimal.format(game?.totalXp ?? 0),
-          label: l10n.totalXp,
-        ),
-        ProfileCountItem(
-          itemKey: const ValueKey('profile-streak'),
-          value: decimal.format(game?.currentStreak ?? 0),
-          label: l10n.currentStreak,
-        ),
-        ProfileCountItem(
-          value: decimal.format(earnedAchievements),
-          label: l10n.achievements,
-        ),
-      ],
-      footer: _ProfileLearningCard(
-        tier: tier,
-        gamification: game,
-        highestRankLabel: l10n.highestRankReached,
-      ),
     );
   }
 
-  /// The user's province, when the options list has already resolved. Absent
-  /// while it loads rather than showing a raw province id.
-  ProfileMetaItem? _provinceMeta(WidgetRef ref, String locale) {
+  /// The user's province, once the options list has resolved. Absent while it
+  /// loads rather than showing a raw province id.
+  String? _provinceLabel(WidgetRef ref, String locale) {
     final provinceId = user.provinceId;
     if (provinceId == null || provinceId.isEmpty) return null;
     final options = ref.watch(provinceOptionsProvider).asData?.value;
@@ -333,51 +528,36 @@ class _ProfileHeader extends ConsumerWidget {
     for (final option in options) {
       if (option.id != provinceId) continue;
       final label = locale == 'km' ? option.nameKhmer : option.nameLatin;
-      if (label.trim().isEmpty) return null;
-      return ProfileMetaItem(
-        icon: Icons.location_on_outlined,
-        label: label.trim(),
-      );
+      return label.trim().isEmpty ? null : label.trim();
     }
     return null;
   }
 }
 
-/// Where the learner sits on the rank ladder, and how far the end is.
-///
-/// It deliberately shows neither total XP nor the streak: the counts line
-/// directly above already carries both, and XP is a consequence of studying,
-/// not the headline.
-class _ProfileLearningCard extends StatelessWidget {
-  const _ProfileLearningCard({
-    required this.tier,
-    required this.gamification,
-    required this.highestRankLabel,
-  });
+/// Tier pill, then how far through the current tier the learner is.
+class _ProfileTierProgress extends StatelessWidget {
+  const _ProfileTierProgress({required this.gamification});
 
-  final String tier;
   final GamificationProfile? gamification;
-  final String highestRankLabel;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
     final decimal = NumberFormat.decimalPattern(locale);
+    final palette = context.riksa;
     final game = gamification;
-
-    final currentTier = game?.currentTier;
-    final ladderIndex = currentTier == null
+    final tier = readableProfileName(game?.currentTier ?? l10n.startingTier);
+    final ladderIndex = game?.currentTier == null
         ? -1
-        : profileTierLadder.indexOf(currentTier.toUpperCase());
+        : profileTierLadder.indexOf(game!.currentTier!.toUpperCase());
     final nextTier = game?.nextTier;
     final isFinalStep =
         nextTier != null &&
         profileTierLadder.indexOf(nextTier.toUpperCase()) ==
             profileTierLadder.length - 1;
-
     final progressLabel = nextTier == null
-        ? highestRankLabel
+        ? l10n.highestRankReached
         : isFinalStep
         ? l10n.xpUntilFinalRank(
             game?.xpToNext ?? 0,
@@ -387,126 +567,153 @@ class _ProfileLearningCard extends StatelessWidget {
             game?.xpToNext ?? 0,
             readableProfileName(nextTier),
           );
-
     final band = game != null && game.tierBandXp > 0
         ? l10n.tierBandProgress(
             decimal.format(game.xpIntoTier),
             decimal.format(game.tierBandXp),
           )
         : null;
+    final small = Theme.of(context).textTheme.labelSmall?.copyWith(
+      color: ProfilePalette.muted(context),
+      fontWeight: FontWeight.w500,
+    );
 
     return Semantics(
       label: ladderIndex < 0
           ? tier
           : '$tier, ${l10n.tierPosition(ladderIndex + 1, profileTierLadder.length)}',
-      child: Container(
-        key: const ValueKey('profile-learning-card'),
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-        decoration: BoxDecoration(
-          color: ProfilePalette.pinkSoft(context),
-          borderRadius: AppRadii.extraLargeBorder,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Absent when the server reports a tier this build does not know,
-            // rather than drawing a rail with nothing marked on it.
-            if (ladderIndex >= 0) ...[
-              ProfileTierRail(
-                key: const ValueKey('profile-tier-rail'),
-                tiers: profileTierLadder,
-                currentIndex: ladderIndex,
-                // The end label is dropped when the learner is standing on
-                // it: the heading below already names that tier.
-                startLabel: ladderIndex == 0
-                    ? ''
-                    : readableProfileName(profileTierLadder.first),
-                endLabel: ladderIndex == profileTierLadder.length - 1
-                    ? ''
-                    : readableProfileName(profileTierLadder.last),
-              ),
-              const SizedBox(height: 18),
-            ],
-            Row(
-              children: [
-                RiksaRankBadge(tier: currentTier, size: 48),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    tier,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: ProfilePalette.text(context),
-                      fontSize: 21,
-                      letterSpacing: -.2,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsetsDirectional.fromSTEB(4, 3, 10, 3),
+                decoration: BoxDecoration(
+                  color: palette.brandSoft,
+                  borderRadius: AppRadii.fullBorder,
                 ),
-                if (band != null) ...[
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      key: const ValueKey('profile-tier-band'),
-                      band,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
-                      style: TextStyle(
-                        color: ProfilePalette.muted(context),
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    RiksaRankBadge(tier: game?.currentTier, size: 20),
+                    const SizedBox(width: 4),
+                    Text(
+                      tier,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: palette.brand,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              if (band != null)
+                Expanded(
+                  child: Text(
+                    band,
+                    key: const ValueKey('profile-tier-band'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: small,
                   ),
-                ],
-              ],
+                ),
+            ],
+          ),
+          // At the top of the ladder there is nothing left to fill, and a
+          // permanently full bar is decoration.
+          if (nextTier != null) ...[
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: AppRadii.fullBorder,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(
+                  begin: 0,
+                  end: (game?.nextTierProgress ?? 0).clamp(0, 1).toDouble(),
+                ),
+                duration: RiksaMotion.resolve(
+                  context,
+                  RiksaMotion.emphasisLong,
+                ),
+                curve: RiksaMotion.standardCurve,
+                builder: (context, animated, _) => LinearProgressIndicator(
+                  key: const ValueKey('profile-level-progress'),
+                  value: animated,
+                  minHeight: 6,
+                  backgroundColor: palette.brandSoft,
+                  valueColor: AlwaysStoppedAnimation(palette.brand),
+                ),
+              ),
             ),
-            // At the top of the ladder there is nothing left to fill, and a
-            // permanently full bar is decoration.
-            if (nextTier != null) ...[
-              const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: AppRadii.fullBorder,
-                child: TweenAnimationBuilder<double>(
-                  // Fills towards the next tier on arrival, so the gap left to
-                  // close is what the learner sees rather than a static bar.
-                  tween: Tween<double>(
-                    begin: 0,
-                    end: (game?.nextTierProgress ?? 0).clamp(0, 1).toDouble(),
-                  ),
-                  duration: RiksaMotion.resolve(
-                    context,
-                    RiksaMotion.emphasisLong,
-                  ),
-                  curve: RiksaMotion.standardCurve,
-                  builder: (context, animated, _) => LinearProgressIndicator(
-                    key: const ValueKey('profile-level-progress'),
-                    value: animated,
-                    minHeight: 8,
-                    backgroundColor: AppColors.editorialAubergine.withValues(
-                      alpha: .14,
+          ],
+          const SizedBox(height: 6),
+          Text(progressLabel, style: small),
+        ],
+      ),
+    );
+  }
+}
+
+/// Three learning numbers side by side, as in the reference stats row.
+class _ProfileStats extends StatelessWidget {
+  const _ProfileStats({required this.items});
+
+  final List<({Key? key, String value, String label})> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      key: const ValueKey('profile-stats'),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: ProfilePalette.panel(context),
+        borderRadius: AppRadii.largeBorder,
+        border: Border.all(color: ProfilePalette.border(context)),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            for (final (index, item) in items.indexed) ...[
+              if (index > 0)
+                VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: ProfilePalette.border(context),
+                ),
+              Expanded(
+                child: Column(
+                  key: item.key,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      item.value,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: ProfilePalette.text(context),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                    valueColor: const AlwaysStoppedAnimation(
-                      AppColors.editorialPink,
+                    const SizedBox(height: 2),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(
+                        item.label,
+                        textAlign: TextAlign.center,
+                        style: RiksaTypography.bodyStyleFor(
+                          item.label,
+                          theme.textTheme.labelSmall?.copyWith(
+                            color: ProfilePalette.muted(context),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ],
-            const SizedBox(height: 9),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                progressLabel,
-                style: TextStyle(
-                  color: ProfilePalette.muted(context),
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -780,7 +987,7 @@ class _RankCard extends StatelessWidget {
             '$score XP',
             style: TextStyle(
               color: ProfilePalette.xp(context),
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w600,
             ),
           ),
           if (tier != null)

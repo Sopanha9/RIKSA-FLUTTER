@@ -137,30 +137,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get signInWithTelegram => 'បន្ត​ជាមួយ Telegram';
 
   @override
-  String get telegramChatId => 'លេខ​សម្គាល់​ផ្ទាល់​ Telegram';
-
-  @override
-  String get telegramChatIdHint =>
-      'ចាប់ផ្ដើម bot របស់​យើង​ហើយ​បិទ​ភ្ជាប់​លេខ​សម្គាល់​ផ្ទាល់​របស់​អ្នក';
-
-  @override
-  String get telegramOtpInstructions =>
-      'យើង​បាន​ផ្ញើ​កូដ​ទៅ​ Telegram របស់​អ្នក។ បញ្ចូល​វា​ខាង​ក្រោម។';
-
-  @override
-  String get otpCode => 'កូដ OTP';
-
-  @override
-  String get otpCodeHint => 'កូដ ៦ ខ្ទង់';
-
-  @override
-  String get sendCode => 'ផ្ញើ​កូដ';
-
-  @override
   String get verify => 'ផ្ទៀង​ផ្ទាត់';
-
-  @override
-  String get resendCode => 'ផ្ញើ​កូដ​ម្ដង​ទៀត';
 
   @override
   String get noAccount => 'មិន​មាន​គណនី​ឬ?';
@@ -230,40 +207,150 @@ class AppLocalizationsKm extends AppLocalizations {
       'ប្រើ​ប៊ូតុង Google ដែល​កម្មវិធី​រុករក​ផ្តល់​ឱ្យ​ដើម្បី​បន្ត។';
 
   @override
-  String get otpSendFailed => 'មិន​អាច​ផ្ញើ​កូដ OTP បាន';
+  String get telegramEyebrow => 'មិនត្រូវការពាក្យសម្ងាត់';
 
   @override
-  String get otpVerifyFailed => 'កូដ​មិន​ត្រឹម​ត្រូវ ឬ​ផុត​កំណត់';
+  String get telegramAuthTitle => 'បន្ត​ជាមួយ Telegram';
 
   @override
-  String get otpSendSuccess => 'កូដ​បាន​ផ្ញើ​ទៅ Telegram របស់​អ្នក';
+  String get telegramAuthSubtitle =>
+      'មិនចាំបាច់ចាំលេខសម្គាល់ Telegram ទេ។ ជ្រើសរើសវិធីចូល។ ថ្មីនៅ Riksa? ជម្រើសទាំងពីរនឹងបង្កើតគណនីឱ្យអ្នក។';
 
   @override
-  String get telegramEyebrow => 'ចូលប្រើរហ័សដោយគ្មានពាក្យសម្ងាត់';
+  String get telegramAuthorize => 'បើក Telegram';
 
   @override
-  String get telegramLoginTitle => 'ចូលជាមួយ Telegram';
+  String get telegramAuthorizeHint =>
+      'លឿនបំផុត៖ ចុច Confirm នៅក្នុងបូត Riksa ហើយត្រឡប់មកវិញភ្លាម។';
 
   @override
-  String get telegramLoginSubtitle =>
-      'បញ្ចូលលេខសម្គាល់ការជជែកពី Riksa bot ហើយយើងនឹងផ្ញើកូដប្រើតែម្តង។';
+  String get telegramUseCode => 'ចូលដោយប្រើកូដ';
 
   @override
-  String get telegramRegisterTitle => 'ចុះឈ្មោះជាមួយ Telegram';
+  String get telegramUseCodeHint =>
+      'Telegram នៅលើឧបករណ៍ផ្សេង? យកកូដពីបូត ហើយបិទភ្ជាប់នៅទីនេះ។';
 
   @override
-  String get telegramRegisterSubtitle =>
-      'ជ្រើសរើសឈ្មោះ Riksa របស់អ្នក រួចផ្ទៀងផ្ទាត់គណនី Telegram ដោយកូដប្រើតែម្តង។';
+  String get telegramTheBot => 'បូត Riksa';
 
   @override
-  String get enterTelegramCode => 'បញ្ចូលកូដ Telegram របស់អ្នក';
+  String get telegramCodeTitle => 'ចូលដោយប្រើកូដ';
 
   @override
-  String get invalidTelegramChatId =>
-      'បញ្ចូលលេខសម្គាល់ការជជែក Telegram ជាលេខត្រឹមត្រូវ';
+  String telegramCodeSubtitle(String bot) {
+    return 'បិទភ្ជាប់កូដពី $bot ដើម្បីចូល។';
+  }
 
   @override
-  String get invalidOtpCode => 'បញ្ចូលកូដ ៦ ខ្ទង់';
+  String telegramCodeStepOpen(String bot) {
+    return 'បើក $bot ហើយចុច Start ឬផ្ញើ /⁠code';
+  }
+
+  @override
+  String get telegramCodeStepCopy => 'ចម្លងកូដ ៨ តួអក្សរដែលវាផ្ញើមក';
+
+  @override
+  String get telegramCodeStepPaste => 'បិទភ្ជាប់វានៅខាងក្រោម';
+
+  @override
+  String telegramOpenBot(String bot) {
+    return 'បើក $bot';
+  }
+
+  @override
+  String get telegramCodeLabel => 'កូដចូល';
+
+  @override
+  String get telegramCodeHint => 'ឧ. VE9BLZ8J';
+
+  @override
+  String get telegramPasteCode => 'បិទភ្ជាប់កូដ';
+
+  @override
+  String get telegramCodeInvalidFormat => 'បញ្ចូលកូដ ៨ តួអក្សរពីបូត';
+
+  @override
+  String get telegramCodeRejected =>
+      'កូដនេះមិនត្រឹមត្រូវ ឬផុតកំណត់។ ផ្ញើ /code ទៅបូតដើម្បីទទួលកូដថ្មី។';
+
+  @override
+  String get telegramNoCodeInClipboard =>
+      'រកមិនឃើញកូដចូលក្នុងក្ដារតម្បៀតខ្ទាស់ទេ។';
+
+  @override
+  String get telegramSignIn => 'ចូល';
+
+  @override
+  String get telegramUseOpenInstead => 'ប្រើ បើក Telegram ជំនួសវិញ';
+
+  @override
+  String get telegramSwitchToCode => 'មានបញ្ហា? ចូលដោយប្រើកូដ';
+
+  @override
+  String get telegramPrivacyNote =>
+      'Riksa ទទួលបានតែឈ្មោះ និងឈ្មោះអ្នកប្រើសាធារណៈ Telegram របស់អ្នកប៉ុណ្ណោះ។ មិនដែលទទួលលេខទូរស័ព្ទ ឬការជជែករបស់អ្នកទេ។';
+
+  @override
+  String get telegramWaitingTitle => 'កំពុងរង់ចាំ Telegram';
+
+  @override
+  String get telegramWaitingSubtitle =>
+      'បញ្ជាក់សំណើនៅក្នុងបូត Riksa រួចត្រឡប់មកអេក្រង់នេះវិញ។';
+
+  @override
+  String telegramExpiresIn(String time) {
+    return 'សំណើផុតកំណត់ក្នុងរយៈពេល $time';
+  }
+
+  @override
+  String get telegramOpenAgain => 'បើក Telegram ម្ដងទៀត';
+
+  @override
+  String get telegramCopyLink => 'ចម្លងតំណ';
+
+  @override
+  String get telegramLinkCopied =>
+      'បានចម្លងតំណ។ បើកវានៅលើឧបករណ៍ណាដែលមាន Telegram។';
+
+  @override
+  String get telegramOpenFailed =>
+      'មិនអាចបើក Telegram បានទេ។ សូមដំឡើង Telegram ឬចម្លងតំណហើយបើកនៅលើឧបករណ៍ផ្សេង។';
+
+  @override
+  String get telegramStartFailed =>
+      'មិនអាចចាប់ផ្ដើមការអនុញ្ញាតតាម Telegram បានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get telegramExpired =>
+      'សំណើនេះបានផុតកំណត់។ សូមចាប់ផ្ដើមម្ដងទៀតដើម្បីទទួលតំណថ្មី។';
+
+  @override
+  String get telegramDenied => 'សំណើត្រូវបានបដិសេធនៅក្នុង Telegram។';
+
+  @override
+  String get telegramSignupExpired =>
+      'ការអនុញ្ញាតតាម Telegram បានផុតកំណត់មុនពេលបង្កើតគណនី។ សូមអនុញ្ញាតម្ដងទៀត។';
+
+  @override
+  String get telegramProfileEyebrow => 'បានភ្ជាប់ Telegram';
+
+  @override
+  String get telegramProfileTitle => 'រៀបចំប្រវត្តិរូប Riksa របស់អ្នក';
+
+  @override
+  String get telegramProfileSubtitle =>
+      'ជ្រើសរើសរបៀបដែលអ្នករៀនផ្សេងទៀតឃើញអ្នក។ អ្នកអាចប្ដូរឈ្មោះបង្ហាញពេលក្រោយបាន។';
+
+  @override
+  String telegramConnectedAs(String name) {
+    return 'បានភ្ជាប់ជា $name';
+  }
+
+  @override
+  String get telegramCreateAccount => 'បង្កើតគណនី';
+
+  @override
+  String get telegramUseAnotherAccount => 'ប្រើគណនី Telegram ផ្សេង';
 
   @override
   String get languageEn => 'English';
@@ -608,6 +695,9 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get leaderboard => 'តារាងចំណាត់ថ្នាក់';
+
+  @override
+  String get ranksTab => 'ចំណាត់ថ្នាក់';
 
   @override
   String get logout => 'ចេញ';
@@ -1225,7 +1315,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get aiChatFallbackTitle => 'ការសន្ទនាសិក្សា';
 
   @override
-  String get aiComposerHint => 'សួរគ្រូ AI របស់អ្នក';
+  String get aiComposerHint => 'វាយសំណួររបស់អ្នក...';
 
   @override
   String get aiSendMessage => 'ផ្ញើសារ';
@@ -1285,23 +1375,6 @@ class AppLocalizationsKm extends AppLocalizations {
   String aiTimeDays(int count) {
     return '$count ថ្ងៃ';
   }
-
-  @override
-  String otpSentTo(String chatId) {
-    return 'បានផ្ញើទៅការជជែក Telegram $chatId';
-  }
-
-  @override
-  String otpResendCountdown(int seconds) {
-    return 'ផ្ញើម្ដងទៀតក្នុង $seconds វិនាទី';
-  }
-
-  @override
-  String get otpChangeAccount => 'ប្ដូរគណនី Telegram';
-
-  @override
-  String get otpDeliveryHelp =>
-      'បើកការសន្ទនាជាមួយបូត Riksa ដើម្បីរកលេខកូដចុងក្រោយ។ ប្រសិនបើលេខកូដផុតកំណត់ សូមស្នើសុំលេខកូដថ្មី។';
 
   @override
   String get lessonRead => 'អាន';
@@ -1474,4 +1547,103 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get savedLessonsEmptyBody =>
       'បានឃើញរូបមន្តដែលគួររំលឹកឡើងវិញ? រក្សាទុកមេរៀនពីម៉ឺនុយរបស់វា។ អ្នកនឹងរកឃើញវានៅទីនេះ។';
+
+  @override
+  String get splashTagline => 'រៀនថ្ងៃនេះ កសាងថ្ងៃស្អែក';
+
+  @override
+  String get splashDescription =>
+      'ដៃគូសិក្សា STEM ថ្នាក់ទី១២ របស់អ្នក ដើម្បីកម្ពុជាដ៏ភ្លឺស្វាង។';
+
+  @override
+  String get skipLabel => 'រំលង';
+
+  @override
+  String get nextLabel => 'បន្ទាប់';
+
+  @override
+  String homeGreeting(String name) {
+    return 'សួស្តី $name! 👋';
+  }
+
+  @override
+  String get homeSubtitle => 'បន្តទៀត! ចំណេះដឹងកសាងអនាគតរបស់អ្នក។';
+
+  @override
+  String get homeSearchHint => 'ស្វែងរកការបង្ហោះ ប្រធានបទ ឬមេរៀន...';
+
+  @override
+  String get homeLessons => 'មេរៀន';
+
+  @override
+  String get homeLessonsCaption => 'បន្តរៀន';
+
+  @override
+  String get homeCommunityCaption => 'ចូលរួម និងចែករំលែក';
+
+  @override
+  String get homeAiCaption => 'សួរអ្វីក៏បាន';
+
+  @override
+  String get homeLeaderboardCaption => 'មើលចំណាត់ថ្នាក់';
+
+  @override
+  String get todaysLearning => 'ការសិក្សាថ្ងៃនេះ';
+
+  @override
+  String get communityFeed => 'ព័ត៌មានសហគមន៍';
+
+  @override
+  String get viewAllShort => 'មើលទាំងអស់';
+
+  @override
+  String get feedFilterAll => 'ទាំងអស់';
+
+  @override
+  String get aiCoachTitle => 'គ្រូជំនួយ AI';
+
+  @override
+  String get aiCoachGreeting =>
+      'សួស្តី! ខ្ញុំជាគ្រូជំនួយ AI របស់អ្នក។ សួរខ្ញុំអំពីមេរៀនអ្វីក៏បាន ខ្ញុំនឹងជួយអ្នករៀនម្តងមួយជំហាន!';
+
+  @override
+  String get aiTryAskingAbout => 'សាកសួរអំពី៖';
+
+  @override
+  String get menuMyProgress => 'វឌ្ឍនភាពរបស់ខ្ញុំ';
+
+  @override
+  String get menuSavedLessons => 'មេរៀនដែលបានរក្សាទុក';
+
+  @override
+  String get menuCommunities => 'សហគមន៍';
+
+  @override
+  String get communitiesDiscover => 'ស្វែងរក';
+
+  @override
+  String get communitiesMine => 'សហគមន៍របស់ខ្ញុំ';
+
+  @override
+  String get communitiesSearchHint => 'ស្វែងរកសហគមន៍...';
+
+  @override
+  String get communityJoin => 'ចូលរួម';
+
+  @override
+  String get communityJoined => 'បានចូលរួម';
+
+  @override
+  String get communitiesUnavailable => 'មិនអាចបង្ហាញសហគមន៍';
+
+  @override
+  String get communitiesLoadFailed => 'មិនអាចផ្ទុកសហគមន៍បានទេ។';
+
+  @override
+  String get communitiesNoneJoined => 'អ្នកមិនទាន់បានចូលរួមសហគមន៍ណាមួយនៅឡើយទេ។';
+
+  @override
+  String communityMembers(String count) {
+    return 'សមាជិក $count នាក់';
+  }
 }

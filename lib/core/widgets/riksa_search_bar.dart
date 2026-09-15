@@ -4,13 +4,13 @@ import '../theme/app_theme.dart';
 
 /// Shared search treatment used by primary discovery screens.
 ///
-/// The field and circular filter control intentionally read as one compact
-/// unit, matching Riksa's quieter editorial direction.
+/// A white pill with a hairline border and a leading search icon. The filter
+/// control is optional and sits inside the pill's trailing edge.
 class RiksaSearchBar extends StatelessWidget {
   const RiksaSearchBar({
     super.key,
     required this.hintText,
-    required this.onFilter,
+    this.onFilter,
     this.onChanged,
     this.onTap,
     this.readOnly = false,
@@ -22,7 +22,7 @@ class RiksaSearchBar extends StatelessWidget {
   final String hintText;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onTap;
-  final VoidCallback onFilter;
+  final VoidCallback? onFilter;
   final bool readOnly;
   final int filterCount;
   final Key? filterKey;
@@ -30,17 +30,15 @@ class RiksaSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final field = isDark
-        ? context.riksa.surfaceRaised
-        : AppColors.editorialField;
-    final control = isDark ? context.riksa.surface : Colors.white;
+    final palette = context.riksa;
+    final textTheme = Theme.of(context).textTheme;
 
     return Container(
-      height: 52,
+      height: 48,
       decoration: BoxDecoration(
-        color: field,
-        borderRadius: AppRadii.fullBorder,
+        color: palette.surface,
+        borderRadius: AppRadii.mediumBorder,
+        border: Border.all(color: palette.outline),
       ),
       child: Row(
         children: [
@@ -50,58 +48,62 @@ class RiksaSearchBar extends StatelessWidget {
               onTap: onTap,
               onChanged: onChanged,
               textInputAction: TextInputAction.search,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: context.riksa.ink,
+              style: textTheme.bodyMedium?.copyWith(
+                color: palette.ink,
                 fontWeight: FontWeight.w500,
               ),
               decoration: InputDecoration(
                 hintText: hintText,
-                hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: context.riksa.inkMuted,
-                  fontWeight: FontWeight.w400,
+                hintStyle: RiksaTypography.bodyStyleFor(
+                  hintText,
+                  textTheme.bodyMedium?.copyWith(
+                    color: palette.inkFaint,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
                 prefixIcon: Icon(
                   Icons.search_rounded,
                   size: 21,
-                  color: context.riksa.ink,
+                  color: palette.inkMuted,
                 ),
                 filled: false,
-                contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(4),
-            child: Material(
-              color: control,
-              shape: const CircleBorder(),
-              child: InkWell(
-                key: filterKey ?? const ValueKey('search-filter-control'),
-                onTap: onFilter,
-                customBorder: const CircleBorder(),
-                child: SizedBox.square(
-                  dimension: 44,
-                  child: Center(
-                    child: Badge(
-                      key: filterBadgeKey,
-                      isLabelVisible: filterCount > 0,
-                      label: Text('$filterCount'),
-                      backgroundColor: AppColors.editorialPink,
-                      textColor: AppColors.editorialAubergine,
-                      child: Icon(
-                        Icons.filter_list_rounded,
-                        size: 21,
-                        color: context.riksa.ink,
+          if (onFilter != null)
+            Padding(
+              padding: const EdgeInsets.all(4),
+              child: Material(
+                color: palette.brandSoft,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  key: filterKey ?? const ValueKey('search-filter-control'),
+                  onTap: onFilter,
+                  customBorder: const CircleBorder(),
+                  child: SizedBox.square(
+                    dimension: 40,
+                    child: Center(
+                      child: Badge(
+                        key: filterBadgeKey,
+                        isLabelVisible: filterCount > 0,
+                        label: Text('$filterCount'),
+                        backgroundColor: palette.brand,
+                        textColor: palette.onBrand,
+                        child: Icon(
+                          Icons.tune_rounded,
+                          size: 19,
+                          color: palette.brand,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

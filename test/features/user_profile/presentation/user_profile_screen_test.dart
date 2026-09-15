@@ -112,7 +112,7 @@ void main() {
       testWidgets(
         'signed-in achievement tab at 360px dark=$dark scale=$scale',
         (tester) async {
-          tester.view.physicalSize = const Size(360, 1200);
+          tester.view.physicalSize = const Size(360, 2200);
           tester.view.devicePixelRatio = 1;
           addTearDown(tester.view.resetPhysicalSize);
           addTearDown(tester.view.resetDevicePixelRatio);
@@ -152,7 +152,7 @@ void main() {
   testWidgets('renders real profile and gamification data without overflow', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(430, 932);
+    tester.view.physicalSize = const Size(430, 1500);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -218,14 +218,13 @@ void main() {
     final coverRect = tester.getRect(
       find.byKey(const ValueKey('profile-cover')),
     );
-    expect(avatarRect.left, closeTo(coverRect.left, 4));
+    expect(avatarRect.left, closeTo(coverRect.left + 14, 4));
     expect(avatarRect.bottom, greaterThan(coverRect.bottom));
     expect(find.byKey(const ValueKey('profile-share')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-settings')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-edit')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-stats')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-learning-card')), findsOneWidget);
-    expect(find.byKey(const ValueKey('profile-tier-rail')), findsOneWidget);
     // Progress is measured through the current tier, not from zero XP:
     // 1,520 sits 1,020 into the 1,500 band from Gold to Platinum.
     expect(find.text('1,020 / 1,500 XP'), findsOneWidget);
@@ -264,7 +263,7 @@ void main() {
   testWidgets('posts tab carries the composer, the count and post actions', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(430, 932);
+    tester.view.physicalSize = const Size(430, 1500);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -294,7 +293,7 @@ void main() {
   });
 
   testWidgets('empty posts tab offers writing a first post', (tester) async {
-    tester.view.physicalSize = const Size(430, 932);
+    tester.view.physicalSize = const Size(430, 1500);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -321,7 +320,7 @@ void main() {
   testWidgets('renders the tier card from a server without tier floors', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(430, 932);
+    tester.view.physicalSize = const Size(430, 1500);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -343,7 +342,6 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byKey(const ValueKey('profile-learning-card')), findsOneWidget);
-    expect(find.byKey(const ValueKey('profile-tier-rail')), findsOneWidget);
     // No floors means no honest band, so the card omits the band figure
     // rather than printing a wrong one.
     expect(find.byKey(const ValueKey('profile-tier-band')), findsNothing);
@@ -353,7 +351,7 @@ void main() {
   testWidgets('renders the top of the ladder without a progress bar', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(430, 932);
+    tester.view.physicalSize = const Size(430, 1500);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -370,7 +368,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.byKey(const ValueKey('profile-tier-rail')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-level-progress')), findsNothing);
   });
 }

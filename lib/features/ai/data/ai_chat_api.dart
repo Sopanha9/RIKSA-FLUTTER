@@ -4,7 +4,7 @@ import 'ai_chat_models.dart';
 
 class AiChatApi {
   AiChatApi(this._client, [AiChatCache? cache])
-      : _cache = cache ?? AiChatCache();
+    : _cache = cache ?? AiChatCache();
 
   final DioClient _client;
   final AiChatCache _cache;

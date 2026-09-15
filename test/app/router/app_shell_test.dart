@@ -59,7 +59,7 @@ void main() {
       tester
           .widget<Scaffold>(find.byKey(const ValueKey('main-app-shell')))
           .extendBody,
-      isTrue,
+      isFalse,
     );
     final navigationElement = tester.element(persistentNavigation);
 
@@ -80,22 +80,16 @@ void main() {
     expect(find.text('Home 1'), findsOneWidget);
     expect(persistentNavigation, findsOneWidget);
 
-    final navigationMorph = find.byKey(const ValueKey('bottom-nav-morph'));
-    expect(tester.getSize(navigationMorph).width, greaterThan(300));
-
+    final barBefore = tester.getRect(persistentNavigation);
     await tester.drag(
       find.byKey(const ValueKey('scroll-Home')),
       const Offset(0, -420),
     );
     await tester.pumpAndSettle();
-    expect(tester.getSize(navigationMorph).width, 58);
-
-    await tester.drag(
-      find.byKey(const ValueKey('scroll-Home')),
-      const Offset(0, 260),
-    );
+    expect(tester.getRect(persistentNavigation), barBefore);
+    await tester.tap(find.byKey(const ValueKey('bottom-nav-item-1')));
     await tester.pumpAndSettle();
-    expect(tester.getSize(navigationMorph).width, greaterThan(300));
+    expect(find.text('Learn 0'), findsOneWidget);
   });
 
   testWidgets('AI primary action stays clear of persistent navigation', (

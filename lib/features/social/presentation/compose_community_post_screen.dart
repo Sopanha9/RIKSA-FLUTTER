@@ -216,7 +216,7 @@ class _ComposeCommunityPostScreenState
             right: -90,
             top: -70,
             child: _AmbientOrb(
-              color: AppColors.brandPrimaryHover.withValues(alpha: .16),
+              color: AppColors.violet.withValues(alpha: .16),
               size: 240,
             ),
           ),

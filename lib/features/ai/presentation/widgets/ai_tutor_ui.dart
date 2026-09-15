@@ -105,12 +105,12 @@ class AiFocalChatCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.auto_awesome, size: 16, color: palette.jadeStrong),
+              Icon(Icons.auto_awesome, size: 16, color: palette.brand),
               const SizedBox(width: RiksaSpacing.xxs),
               Text(
                 l10n.aiContinueChat.toUpperCase(),
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: palette.jadeStrong,
+                  color: palette.brand,
                   letterSpacing: .6,
                 ),
               ),
@@ -312,26 +312,98 @@ List<String> aiStarterPrompts(AppLocalizations l10n) => [
 ];
 
 class AiStarterPrompts extends StatelessWidget {
-  const AiStarterPrompts({super.key, required this.onSelected, this.prompts});
+  const AiStarterPrompts({
+    super.key,
+    required this.onSelected,
+    this.prompts,
+    this.vertical = false,
+  });
 
   final ValueChanged<String> onSelected;
   final List<String>? prompts;
+
+  /// Stacks the prompts as a left-aligned list of pills with icons, as in the
+  /// coach's opener, instead of a centred wrap.
+  final bool vertical;
+
+  static const _icons = [
+    Icons.lightbulb_outline_rounded,
+    Icons.help_outline_rounded,
+    Icons.edit_note_rounded,
+    Icons.tips_and_updates_outlined,
+  ];
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final items = prompts ?? aiStarterPrompts(l10n);
-    return Wrap(
-      spacing: RiksaSpacing.xs,
-      runSpacing: RiksaSpacing.xs,
-      alignment: WrapAlignment.center,
+    final palette = context.riksa;
+    if (!vertical) {
+      return Wrap(
+        spacing: RiksaSpacing.xs,
+        runSpacing: RiksaSpacing.xs,
+        alignment: WrapAlignment.center,
+        children: [
+          for (final prompt in items)
+            RiksaTapFeedback(
+              child: ActionChip(
+                key: ValueKey('ai-starter-$prompt'),
+                label: Text(prompt),
+                onPressed: () => onSelected(prompt),
+              ),
+            ),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final prompt in items)
-          RiksaTapFeedback(
-            child: ActionChip(
-              key: ValueKey('ai-starter-$prompt'),
-              label: Text(prompt),
-              onPressed: () => onSelected(prompt),
+        for (final (index, prompt) in items.indexed)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: RiksaTapFeedback(
+              child: Material(
+                color: palette.surface,
+                shape: StadiumBorder(side: BorderSide(color: palette.outline)),
+                child: InkWell(
+                  key: ValueKey('ai-starter-$prompt'),
+                  customBorder: const StadiumBorder(),
+                  onTap: () => onSelected(prompt),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 8, 18, 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: palette.outline),
+                          ),
+                          child: Icon(
+                            _icons[index % _icons.length],
+                            size: 15,
+                            color: palette.brand,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Text(
+                            prompt,
+                            style: RiksaTypography.bodyStyleFor(
+                              prompt,
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: palette.ink,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
       ],

@@ -107,13 +107,13 @@ abstract class AppLocalizations {
   /// Login screen heading
   ///
   /// In en, this message translates to:
-  /// **'Welcome Back'**
+  /// **'Welcome back!'**
   String get welcomeBack;
 
   /// No description provided for @loginSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Sign in to continue your learning journey'**
+  /// **'Sign in to continue your learning journey.'**
   String get loginSubtitle;
 
   /// No description provided for @loginEyebrow.
@@ -281,7 +281,7 @@ abstract class AppLocalizations {
   /// No description provided for @login.
   ///
   /// In en, this message translates to:
-  /// **'Log In'**
+  /// **'Log in'**
   String get login;
 
   /// No description provided for @register.
@@ -350,53 +350,11 @@ abstract class AppLocalizations {
   /// **'Continue with Telegram'**
   String get signInWithTelegram;
 
-  /// No description provided for @telegramChatId.
-  ///
-  /// In en, this message translates to:
-  /// **'Telegram Chat ID'**
-  String get telegramChatId;
-
-  /// No description provided for @telegramChatIdHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Start our bot and paste your chat ID'**
-  String get telegramChatIdHint;
-
-  /// No description provided for @telegramOtpInstructions.
-  ///
-  /// In en, this message translates to:
-  /// **'We sent a code to your Telegram. Enter it below.'**
-  String get telegramOtpInstructions;
-
-  /// No description provided for @otpCode.
-  ///
-  /// In en, this message translates to:
-  /// **'OTP Code'**
-  String get otpCode;
-
-  /// No description provided for @otpCodeHint.
-  ///
-  /// In en, this message translates to:
-  /// **'6-digit code'**
-  String get otpCodeHint;
-
-  /// No description provided for @sendCode.
-  ///
-  /// In en, this message translates to:
-  /// **'Send Code'**
-  String get sendCode;
-
   /// No description provided for @verify.
   ///
   /// In en, this message translates to:
   /// **'Verify'**
   String get verify;
-
-  /// No description provided for @resendCode.
-  ///
-  /// In en, this message translates to:
-  /// **'Resend code'**
-  String get resendCode;
 
   /// No description provided for @noAccount.
   ///
@@ -518,71 +476,251 @@ abstract class AppLocalizations {
   /// **'Use the Google button provided by your browser to continue.'**
   String get googleUnsupported;
 
-  /// No description provided for @otpSendFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to send OTP code'**
-  String get otpSendFailed;
-
-  /// No description provided for @otpVerifyFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid or expired code'**
-  String get otpVerifyFailed;
-
-  /// No description provided for @otpSendSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Code sent to your Telegram'**
-  String get otpSendSuccess;
-
   /// No description provided for @telegramEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'Fast passwordless access'**
+  /// **'No password needed'**
   String get telegramEyebrow;
 
-  /// No description provided for @telegramLoginTitle.
+  /// No description provided for @telegramAuthTitle.
   ///
   /// In en, this message translates to:
-  /// **'Log in with Telegram'**
-  String get telegramLoginTitle;
+  /// **'Continue with Telegram'**
+  String get telegramAuthTitle;
 
-  /// No description provided for @telegramLoginSubtitle.
+  /// No description provided for @telegramAuthSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Enter the chat ID from the Riksa bot and we’ll send a one-time code.'**
-  String get telegramLoginSubtitle;
+  /// **'No Telegram ID to remember. Pick a way to sign in. New to Riksa? Both options create your account.'**
+  String get telegramAuthSubtitle;
 
-  /// No description provided for @telegramRegisterTitle.
+  /// No description provided for @telegramAuthorize.
   ///
   /// In en, this message translates to:
-  /// **'Register with Telegram'**
-  String get telegramRegisterTitle;
+  /// **'Open Telegram'**
+  String get telegramAuthorize;
 
-  /// No description provided for @telegramRegisterSubtitle.
+  /// No description provided for @telegramAuthorizeHint.
   ///
   /// In en, this message translates to:
-  /// **'Choose your Riksa name, then verify your Telegram account with a one-time code.'**
-  String get telegramRegisterSubtitle;
+  /// **'Fastest: tap Confirm in the Riksa bot and come straight back.'**
+  String get telegramAuthorizeHint;
 
-  /// No description provided for @enterTelegramCode.
+  /// No description provided for @telegramUseCode.
   ///
   /// In en, this message translates to:
-  /// **'Enter your Telegram code'**
-  String get enterTelegramCode;
+  /// **'Log in with code'**
+  String get telegramUseCode;
 
-  /// No description provided for @invalidTelegramChatId.
+  /// No description provided for @telegramUseCodeHint.
   ///
   /// In en, this message translates to:
-  /// **'Enter a valid numeric Telegram chat ID'**
-  String get invalidTelegramChatId;
+  /// **'Telegram on another device? Get a code from the bot and paste it here.'**
+  String get telegramUseCodeHint;
 
-  /// No description provided for @invalidOtpCode.
+  /// No description provided for @telegramTheBot.
   ///
   /// In en, this message translates to:
-  /// **'Enter the 6-digit code'**
-  String get invalidOtpCode;
+  /// **'the Riksa bot'**
+  String get telegramTheBot;
+
+  /// No description provided for @telegramCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in with code'**
+  String get telegramCodeTitle;
+
+  /// No description provided for @telegramCodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the code from {bot} to sign in.'**
+  String telegramCodeSubtitle(String bot);
+
+  /// No description provided for @telegramCodeStepOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {bot} and tap Start, or send /code'**
+  String telegramCodeStepOpen(String bot);
+
+  /// No description provided for @telegramCodeStepCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the 8-character code it sends you'**
+  String get telegramCodeStepCopy;
+
+  /// No description provided for @telegramCodeStepPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste it below'**
+  String get telegramCodeStepPaste;
+
+  /// No description provided for @telegramOpenBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {bot}'**
+  String telegramOpenBot(String bot);
+
+  /// No description provided for @telegramCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in code'**
+  String get telegramCodeLabel;
+
+  /// No description provided for @telegramCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. VE9BLZ8J'**
+  String get telegramCodeHint;
+
+  /// No description provided for @telegramPasteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste code'**
+  String get telegramPasteCode;
+
+  /// No description provided for @telegramCodeInvalidFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 8-character code from the bot'**
+  String get telegramCodeInvalidFormat;
+
+  /// No description provided for @telegramCodeRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'This code is invalid or expired. Send /code to the bot for a new one.'**
+  String get telegramCodeRejected;
+
+  /// No description provided for @telegramNoCodeInClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'No sign-in code found in your clipboard.'**
+  String get telegramNoCodeInClipboard;
+
+  /// No description provided for @telegramSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get telegramSignIn;
+
+  /// No description provided for @telegramUseOpenInstead.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Open Telegram instead'**
+  String get telegramUseOpenInstead;
+
+  /// No description provided for @telegramSwitchToCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Having trouble? Log in with code'**
+  String get telegramSwitchToCode;
+
+  /// No description provided for @telegramPrivacyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Riksa only receives your public Telegram name and username. Never your phone number or chats.'**
+  String get telegramPrivacyNote;
+
+  /// No description provided for @telegramWaitingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Telegram'**
+  String get telegramWaitingTitle;
+
+  /// No description provided for @telegramWaitingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the request in the Riksa bot, then return to this screen.'**
+  String get telegramWaitingSubtitle;
+
+  /// No description provided for @telegramExpiresIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Request expires in {time}'**
+  String telegramExpiresIn(String time);
+
+  /// No description provided for @telegramOpenAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Telegram again'**
+  String get telegramOpenAgain;
+
+  /// No description provided for @telegramCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get telegramCopyLink;
+
+  /// No description provided for @telegramLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied. Open it on any device with Telegram.'**
+  String get telegramLinkCopied;
+
+  /// No description provided for @telegramOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open Telegram. Install Telegram, or copy the link and open it on another device.'**
+  String get telegramOpenFailed;
+
+  /// No description provided for @telegramStartFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start Telegram authorization. Please try again.'**
+  String get telegramStartFailed;
+
+  /// No description provided for @telegramExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This request expired. Start again to get a fresh link.'**
+  String get telegramExpired;
+
+  /// No description provided for @telegramDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'The request was declined in Telegram.'**
+  String get telegramDenied;
+
+  /// No description provided for @telegramSignupExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Telegram approval expired before the account was created. Please authorize again.'**
+  String get telegramSignupExpired;
+
+  /// No description provided for @telegramProfileEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram connected'**
+  String get telegramProfileEyebrow;
+
+  /// No description provided for @telegramProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your Riksa profile'**
+  String get telegramProfileTitle;
+
+  /// No description provided for @telegramProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how other learners will see you. You can change your display name later.'**
+  String get telegramProfileSubtitle;
+
+  /// No description provided for @telegramConnectedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected as {name}'**
+  String telegramConnectedAs(String name);
+
+  /// No description provided for @telegramCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get telegramCreateAccount;
+
+  /// No description provided for @telegramUseAnotherAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a different Telegram account'**
+  String get telegramUseAnotherAccount;
 
   /// No description provided for @languageEn.
   ///
@@ -1213,6 +1351,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leaderboard'**
   String get leaderboard;
+
+  /// Short leaderboard label for the bottom navigation bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranks'**
+  String get ranksTab;
 
   /// No description provided for @logout.
   ///
@@ -2291,7 +2435,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiComposerHint.
   ///
   /// In en, this message translates to:
-  /// **'Ask your tutor'**
+  /// **'Type your question...'**
   String get aiComposerHint;
 
   /// No description provided for @aiSendMessage.
@@ -2395,30 +2539,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count}d'**
   String aiTimeDays(int count);
-
-  /// No description provided for @otpSentTo.
-  ///
-  /// In en, this message translates to:
-  /// **'Sent to Telegram chat {chatId}'**
-  String otpSentTo(String chatId);
-
-  /// No description provided for @otpResendCountdown.
-  ///
-  /// In en, this message translates to:
-  /// **'Resend in {seconds}s'**
-  String otpResendCountdown(int seconds);
-
-  /// No description provided for @otpChangeAccount.
-  ///
-  /// In en, this message translates to:
-  /// **'Change Telegram account'**
-  String get otpChangeAccount;
-
-  /// No description provided for @otpDeliveryHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Open your Riksa bot conversation to find the latest code. If it has expired, request a new one.'**
-  String get otpDeliveryHelp;
 
   /// No description provided for @lessonRead.
   ///
@@ -2731,6 +2851,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Found a formula worth revisiting? Save the lesson from its menu. It will be waiting here.'**
   String get savedLessonsEmptyBody;
+
+  /// No description provided for @splashTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn Today, Build Tomorrow'**
+  String get splashTagline;
+
+  /// No description provided for @splashDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Grade 12 STEM learning companion for a brighter Cambodia.'**
+  String get splashDescription;
+
+  /// No description provided for @skipLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skipLabel;
+
+  /// No description provided for @nextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get nextLabel;
+
+  /// No description provided for @homeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, {name}! 👋'**
+  String homeGreeting(String name);
+
+  /// No description provided for @homeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep going! Knowledge builds your future.'**
+  String get homeSubtitle;
+
+  /// No description provided for @homeSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search posts, topics, or lessons...'**
+  String get homeSearchHint;
+
+  /// No description provided for @homeLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Lessons'**
+  String get homeLessons;
+
+  /// No description provided for @homeLessonsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get homeLessonsCaption;
+
+  /// No description provided for @homeCommunityCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Join & share'**
+  String get homeCommunityCaption;
+
+  /// No description provided for @homeAiCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask anything'**
+  String get homeAiCaption;
+
+  /// No description provided for @homeLeaderboardCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'See rankings'**
+  String get homeLeaderboardCaption;
+
+  /// No description provided for @todaysLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s learning'**
+  String get todaysLearning;
+
+  /// No description provided for @communityFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Community Feed'**
+  String get communityFeed;
+
+  /// No description provided for @viewAllShort.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get viewAllShort;
+
+  /// No description provided for @feedFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get feedFilterAll;
+
+  /// No description provided for @aiCoachTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Study Coach'**
+  String get aiCoachTitle;
+
+  /// No description provided for @aiCoachGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi! I\'m your AI Study Coach. Ask me anything about your lessons, and I\'ll help you learn step by step!'**
+  String get aiCoachGreeting;
+
+  /// No description provided for @aiTryAskingAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'Try asking about:'**
+  String get aiTryAskingAbout;
+
+  /// No description provided for @menuMyProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'My Progress'**
+  String get menuMyProgress;
+
+  /// No description provided for @menuSavedLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Lessons'**
+  String get menuSavedLessons;
+
+  /// No description provided for @menuCommunities.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities'**
+  String get menuCommunities;
+
+  /// No description provided for @communitiesDiscover.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get communitiesDiscover;
+
+  /// No description provided for @communitiesMine.
+  ///
+  /// In en, this message translates to:
+  /// **'My Communities'**
+  String get communitiesMine;
+
+  /// No description provided for @communitiesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search communities...'**
+  String get communitiesSearchHint;
+
+  /// No description provided for @communityJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get communityJoin;
+
+  /// No description provided for @communityJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get communityJoined;
+
+  /// No description provided for @communitiesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities unavailable'**
+  String get communitiesUnavailable;
+
+  /// No description provided for @communitiesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load communities.'**
+  String get communitiesLoadFailed;
+
+  /// No description provided for @communitiesNoneJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t joined a community yet.'**
+  String get communitiesNoneJoined;
+
+  /// No description provided for @communityMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} members'**
+  String communityMembers(String count);
 }
 
 class _AppLocalizationsDelegate

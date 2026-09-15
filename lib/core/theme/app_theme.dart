@@ -1,19 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 
-/// Raw color values for Riksa's warm, Cambodian-inspired visual language.
+/// Raw color values for Riksa's violet, lavender and lime visual language.
 /// Feature code should prefer [RiksaPalette] so dark mode stays semantic.
 class AppColors {
   AppColors._();
 
-  static const appCanvas = Color(0xFFF9F9FB);
-  static const warmCanvas = Color(0xFFFFF8EC);
-  static const warmSurface = Color(0xFFFFFCF6);
-  static const warmSurfaceRaised = Color(0xFFFFF2D9);
-  static const ink = Color(0xFF29251C);
-  static const inkMuted = Color(0xFF70695E);
-  static const inkFaint = Color(0xFFA39A8C);
-  static const warmOutline = Color(0xFFE8DCC7);
+  // Riksa violet system. Violet leads every primary action, lavender carries
+  // the ground and quiet fills, lime is kept for rewards and "you" moments,
+  // and the deep ink anchors dark cards and headings.
+  static const violet = Color(0xFF7657EE);
+  static const violetStrong = Color(0xFF5B3FD6);
+  static const violetSoft = Color(0xFFEDE8FE);
+  static const violetTint = Color(0xFFF7F5FE);
+  static const violetDarkSoft = Color(0xFF2E2550);
+  static const lime = Color(0xFFD5F06A);
+
+  /// The fresh green of a lesson progress bar on the reference board.
+  static const progressGreen = Color(0xFF8BCF4E);
+  static const limeSoft = Color(0xFFEEF8C6);
+  static const limeInk = Color(0xFF3F4A0E);
+  static const deepInk = Color(0xFF1D1533);
+  static const deepInkRaised = Color(0xFF2B2247);
+
+  static const appCanvas = Color(0xFFFCFBFF);
+  static const warmCanvas = appCanvas;
+  static const warmSurface = Color(0xFFFFFFFF);
+  static const warmSurfaceRaised = Color(0xFFF3F0FB);
+  static const ink = Color(0xFF1D1533);
+  static const inkMuted = Color(0xFF6E6886);
+  static const inkFaint = Color(0xFFA7A1BA);
+  static const warmOutline = Color(0xFFE8E4F3);
 
   static const brandJade = Color(0xFF237A5B);
   static const brandJadeStrong = Color(0xFF15543E);
@@ -26,25 +43,33 @@ class AppColors {
   static const supportingBlush = Color(0xFFF7DCE7);
   static const supportingCream = Color(0xFFFFEDCF);
 
-  // Editorial system colors introduced with the community/profile refresh.
-  // These are additive tokens so existing feature semantics can migrate
-  // without repurposing learning-success jade or achievement saffron.
-  static const editorialAubergine = Color(0xFF2A061D);
-  static const editorialAubergineRaised = Color(0xFF3A0A29);
-  static const editorialPink = Color(0xFFEE8FD0);
-  static const editorialPinkSoft = Color(0xFFF7D8EE);
+  // The editorial names predate the violet system; they now resolve to it so
+  // every screen that still uses them follows the new look.
+  static const editorialAubergine = violet;
+  static const editorialAubergineRaised = deepInkRaised;
+  static const editorialPink = Color(0xFF9D86F7);
+  static const editorialPinkSoft = violetSoft;
   static const editorialCanvas = appCanvas;
-  static const editorialSurface = Color(0xFFFFFBF7);
+  static const editorialSurface = Color(0xFFFFFFFF);
   static const editorialNeutralCanvas = appCanvas;
   static const editorialNeutralSurface = Color(0xFFFFFFFF);
-  static const editorialField = Color(0xFFEFEFF2);
-  static const editorialOutline = Color(0xFFE6E6EA);
-  static const editorialInk = Color(0xFF191619);
-  static const editorialMuted = Color(0xFF706C73);
-  static const editorialBlack = Color(0xFF111012);
-  static const editorialMint = Color(0xFFDFF2DC);
-  static const editorialCreamSoft = Color(0xFFF7ECD8);
-  static const editorialLavender = Color(0xFFE8E5F7);
+  static const editorialField = Color(0xFFF4F2FB);
+  static const editorialOutline = warmOutline;
+  static const editorialInk = ink;
+  static const editorialMuted = inkMuted;
+  static const editorialBlack = deepInk;
+  static const editorialMint = limeSoft;
+  static const editorialCreamSoft = Color(0xFFFFF1CF);
+  static const editorialLavender = violetSoft;
+
+  // Pastel subject tiles from the reference sheet.
+  static const tileGreen = Color(0xFFE3F5D5);
+  static const tileLavender = Color(0xFFEAE4FD);
+  static const tilePink = Color(0xFFFCE3EF);
+  static const tileBlue = Color(0xFFDDEFFB);
+  static const tileYellow = Color(0xFFFFF0C9);
+  static const tilePeach = Color(0xFFFFE3DA);
+  static const tileMint = Color(0xFFDDF5EA);
 
   static const subjectMath = Color(0xFF76528F);
   static const subjectScience = Color(0xFF198A82);
@@ -53,17 +78,15 @@ class AppColors {
   static const subjectHumanities = Color(0xFFB87824);
   static const subjectGeneral = Color(0xFF68715A);
 
-  // Dark mode runs on X's "Lights out" palette. The ground is true black, the
-  // one deliberate exception to this system's no-pure-black rule: on the OLED
-  // phones the product targets it costs no backlight, and the panel edge stops
-  // being visible at all. The rule still holds everywhere else, and no text is
+  // Dark mode is the same system at night: a violet-black ground with raised
+  // violet surfaces, so the brand hue survives without glowing. No text is
   // ever pure white.
-  static const darkCanvas = Color(0xFF000000);
-  static const darkSurface = Color(0xFF16181C);
-  static const darkSurfaceRaised = Color(0xFF1D2024);
-  static const darkInk = Color(0xFFE7E9EA);
-  static const darkInkMuted = Color(0xFF71767B);
-  static const darkOutline = Color(0xFF2F3336);
+  static const darkCanvas = Color(0xFF0E0A18);
+  static const darkSurface = Color(0xFF191426);
+  static const darkSurfaceRaised = Color(0xFF231C34);
+  static const darkInk = Color(0xFFEEEAF8);
+  static const darkInkMuted = Color(0xFF9D96B3);
+  static const darkOutline = Color(0xFF2F2843);
   static const error = Color(0xFFB93E3E);
 
   // Compatibility aliases while older screens migrate to semantic tokens.
@@ -122,6 +145,15 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     required this.technology,
     required this.humanities,
     required this.general,
+    required this.brand,
+    required this.brandStrong,
+    required this.brandSoft,
+    required this.onBrand,
+    required this.accent,
+    required this.accentSoft,
+    required this.onAccent,
+    required this.anchor,
+    required this.onAnchor,
   });
 
   final Color canvas;
@@ -148,6 +180,21 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
   final Color humanities;
   final Color general;
 
+  /// Violet: primary actions, selection and links.
+  final Color brand;
+  final Color brandStrong;
+  final Color brandSoft;
+  final Color onBrand;
+
+  /// Lime: rewards, streaks and the learner's own row.
+  final Color accent;
+  final Color accentSoft;
+  final Color onAccent;
+
+  /// Deep ink: stats cards and other dark anchors on the light ground.
+  final Color anchor;
+  final Color onAnchor;
+
   static const light = RiksaPalette(
     canvas: AppColors.editorialNeutralCanvas,
     surface: AppColors.editorialNeutralSurface,
@@ -158,11 +205,11 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     outline: AppColors.editorialOutline,
     jade: AppColors.brandJade,
     jadeStrong: AppColors.brandJadeStrong,
-    jadeSoft: AppColors.brandJadeSoft,
+    jadeSoft: AppColors.tileGreen,
     onJade: AppColors.jadeContrast,
     saffron: AppColors.achievementSaffron,
-    saffronSoft: AppColors.achievementSaffronSoft,
-    blushSoft: AppColors.supportingBlush,
+    saffronSoft: AppColors.tileYellow,
+    blushSoft: AppColors.tilePink,
     creamSoft: AppColors.supportingCream,
     math: AppColors.subjectMath,
     science: AppColors.subjectScience,
@@ -170,6 +217,15 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     technology: AppColors.subjectTechnology,
     humanities: AppColors.subjectHumanities,
     general: AppColors.subjectGeneral,
+    brand: AppColors.violet,
+    brandStrong: AppColors.violetStrong,
+    brandSoft: AppColors.violetSoft,
+    onBrand: Color(0xFFFFFFFF),
+    accent: AppColors.lime,
+    accentSoft: AppColors.limeSoft,
+    onAccent: AppColors.limeInk,
+    anchor: AppColors.deepInk,
+    onAnchor: Color(0xFFF4F1FF),
   );
 
   static const dark = RiksaPalette(
@@ -198,6 +254,15 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     technology: Color(0xFF83B5DF),
     humanities: Color(0xFFE5AE62),
     general: Color(0xFFADB69C),
+    brand: Color(0xFF9D86F7),
+    brandStrong: Color(0xFFBBA9FA),
+    brandSoft: Color(0xFF2E2550),
+    onBrand: Color(0xFF140E24),
+    accent: Color(0xFFD5F06A),
+    accentSoft: Color(0xFF34391C),
+    onAccent: Color(0xFF1F2408),
+    anchor: Color(0xFF231C34),
+    onAnchor: Color(0xFFEEEAF8),
   );
 
   @override
@@ -223,6 +288,15 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     Color? technology,
     Color? humanities,
     Color? general,
+    Color? brand,
+    Color? brandStrong,
+    Color? brandSoft,
+    Color? onBrand,
+    Color? accent,
+    Color? accentSoft,
+    Color? onAccent,
+    Color? anchor,
+    Color? onAnchor,
   }) => RiksaPalette(
     canvas: canvas ?? this.canvas,
     surface: surface ?? this.surface,
@@ -245,6 +319,15 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     technology: technology ?? this.technology,
     humanities: humanities ?? this.humanities,
     general: general ?? this.general,
+    brand: brand ?? this.brand,
+    brandStrong: brandStrong ?? this.brandStrong,
+    brandSoft: brandSoft ?? this.brandSoft,
+    onBrand: onBrand ?? this.onBrand,
+    accent: accent ?? this.accent,
+    accentSoft: accentSoft ?? this.accentSoft,
+    onAccent: onAccent ?? this.onAccent,
+    anchor: anchor ?? this.anchor,
+    onAnchor: onAnchor ?? this.onAnchor,
   );
 
   @override
@@ -272,6 +355,15 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
       technology: Color.lerp(technology, other.technology, t)!,
       humanities: Color.lerp(humanities, other.humanities, t)!,
       general: Color.lerp(general, other.general, t)!,
+      brand: Color.lerp(brand, other.brand, t)!,
+      brandStrong: Color.lerp(brandStrong, other.brandStrong, t)!,
+      brandSoft: Color.lerp(brandSoft, other.brandSoft, t)!,
+      onBrand: Color.lerp(onBrand, other.onBrand, t)!,
+      accent: Color.lerp(accent, other.accent, t)!,
+      accentSoft: Color.lerp(accentSoft, other.accentSoft, t)!,
+      onAccent: Color.lerp(onAccent, other.onAccent, t)!,
+      anchor: Color.lerp(anchor, other.anchor, t)!,
+      onAnchor: Color.lerp(onAnchor, other.onAnchor, t)!,
     );
   }
 }
@@ -303,10 +395,10 @@ class AppRadii {
   static const double badge = 13;
   static const double medium = 14;
   static const double row = 16;
-  static const double large = 20;
-  static const double panel = 24;
+  static const double large = 16;
+  static const double panel = 20;
   static const double extraLarge = 28;
-  static const double feature = 32;
+  static const double feature = 24;
   static const double full = 9999;
   static const smallBorder = BorderRadius.all(Radius.circular(small));
   static const badgeBorder = BorderRadius.all(Radius.circular(badge));
@@ -396,12 +488,12 @@ class RiksaTypography {
   static TextTheme textTheme(Color ink, Color muted) => TextTheme(
     displayLarge: _style(36, FontWeight.w700, ink, 1.12),
     displayMedium: _style(32, FontWeight.w700, ink, 1.15),
-    displaySmall: _style(28, FontWeight.w700, ink, 1.18),
-    headlineLarge: _style(26, FontWeight.w700, ink, 1.22),
-    headlineMedium: _style(23, FontWeight.w700, ink, 1.25),
-    headlineSmall: _style(21, FontWeight.w700, ink, 1.27),
-    titleLarge: _style(19, FontWeight.w700, ink, 1.3),
-    titleMedium: _style(17, FontWeight.w600, ink, 1.35),
+    displaySmall: _style(24, FontWeight.w600, ink, 1.18),
+    headlineLarge: _style(22, FontWeight.w600, ink, 1.22),
+    headlineMedium: _style(20, FontWeight.w600, ink, 1.25),
+    headlineSmall: _style(18, FontWeight.w600, ink, 1.27),
+    titleLarge: _style(16, FontWeight.w600, ink, 1.3),
+    titleMedium: _style(16, FontWeight.w600, ink, 1.35),
     titleSmall: _style(15, FontWeight.w600, ink, 1.38),
     bodyLarge: _style(16, FontWeight.w400, ink, 1.55),
     bodyMedium: _style(14, FontWeight.w400, ink, 1.55),
@@ -431,9 +523,9 @@ class AppTheme {
   static const Color background = AppColors.editorialNeutralCanvas;
   static const Color surface = AppColors.editorialNeutralSurface;
   static const Color primary = AppColors.editorialAubergine;
-  static const Color primaryContainer = AppColors.editorialPinkSoft;
+  static const Color primaryContainer = AppColors.violetSoft;
   static const Color onPrimary = Colors.white;
-  static const Color secondary = AppColors.brandJadeStrong;
+  static const Color secondary = AppColors.lime;
   static const Color onBackground = AppColors.ink;
   static const Color onSurface = AppColors.ink;
   static const Color muted = AppColors.inkMuted;
@@ -448,18 +540,14 @@ class AppTheme {
     final isDark = brightness == Brightness.dark;
     final scheme = ColorScheme(
       brightness: brightness,
-      primary: isDark ? AppColors.editorialPink : AppColors.editorialAubergine,
-      onPrimary: isDark ? AppColors.editorialAubergine : Colors.white,
-      primaryContainer: isDark
-          ? AppColors.editorialAubergineRaised
-          : AppColors.editorialPinkSoft,
-      onPrimaryContainer: isDark ? AppColors.editorialPinkSoft : palette.ink,
-      secondary: isDark ? palette.saffron : AppColors.editorialPink,
-      onSecondary: isDark ? AppColors.darkCanvas : AppColors.editorialAubergine,
-      secondaryContainer: isDark
-          ? palette.saffronSoft
-          : AppColors.editorialPinkSoft,
-      onSecondaryContainer: palette.ink,
+      primary: palette.brand,
+      onPrimary: palette.onBrand,
+      primaryContainer: palette.brandSoft,
+      onPrimaryContainer: isDark ? palette.brandStrong : AppColors.violetStrong,
+      secondary: palette.accent,
+      onSecondary: palette.onAccent,
+      secondaryContainer: palette.accentSoft,
+      onSecondaryContainer: isDark ? palette.accent : palette.onAccent,
       tertiary: palette.language,
       onTertiary: isDark ? AppColors.darkCanvas : Colors.white,
       error: AppColors.error,
@@ -476,14 +564,13 @@ class AppTheme {
       scrim: Colors.black.withValues(alpha: isDark ? .72 : .45),
       inverseSurface: palette.ink,
       onInverseSurface: palette.canvas,
-      inversePrimary: isDark ? AppColors.brandJade : const Color(0xFF75C6A0),
+      inversePrimary: isDark ? AppColors.violet : AppColors.editorialPink,
     );
     final textTheme = RiksaTypography.textTheme(palette.ink, palette.inkMuted);
     const componentShape = RoundedRectangleBorder(
       borderRadius: AppRadii.largeBorder,
     );
     const inputShape = OutlineInputBorder(borderRadius: AppRadii.mediumBorder);
-
     return ThemeData(
       useMaterial3: true,
       pageTransitionsTheme: const PageTransitionsTheme(
@@ -511,11 +598,9 @@ class AppTheme {
       textTheme: textTheme,
       primaryTextTheme: textTheme,
       textSelectionTheme: TextSelectionThemeData(
-        cursorColor: isDark
-            ? AppColors.editorialPink
-            : AppColors.editorialAubergine,
-        selectionColor: AppColors.editorialPink.withValues(alpha: .28),
-        selectionHandleColor: AppColors.editorialPink,
+        cursorColor: palette.brand,
+        selectionColor: palette.brand.withValues(alpha: .24),
+        selectionHandleColor: palette.brand,
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: palette.canvas,
@@ -541,32 +626,38 @@ class AppTheme {
         shape: componentShape,
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: palette.surfaceRaised,
-        selectedColor: palette.jadeSoft,
+        backgroundColor: palette.surface,
+        selectedColor: palette.brand,
         disabledColor: palette.outline,
         side: BorderSide.none,
         shape: const StadiumBorder(),
-        labelStyle: textTheme.labelMedium,
+        labelStyle: textTheme.labelMedium?.copyWith(color: palette.inkMuted),
         secondaryLabelStyle: textTheme.labelMedium?.copyWith(
-          color: palette.jadeStrong,
+          color: palette.onBrand,
         ),
+        checkmarkColor: palette.onBrand,
       ),
+      // Fields sit on white with a hairline, the way the reference draws them.
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: palette.surfaceRaised,
+        fillColor: palette.surface,
+        prefixIconColor: palette.inkMuted,
+        suffixIconColor: palette.inkMuted,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: RiksaSpacing.md,
           vertical: RiksaSpacing.md,
         ),
-        border: inputShape.copyWith(borderSide: BorderSide.none),
-        enabledBorder: inputShape.copyWith(borderSide: BorderSide.none),
+        border: inputShape.copyWith(
+          borderSide: BorderSide(color: palette.outline),
+        ),
+        enabledBorder: inputShape.copyWith(
+          borderSide: BorderSide(color: palette.outline),
+        ),
+        disabledBorder: inputShape.copyWith(
+          borderSide: BorderSide(color: palette.outline.withValues(alpha: .6)),
+        ),
         focusedBorder: inputShape.copyWith(
-          borderSide: BorderSide(
-            color: isDark
-                ? AppColors.editorialPink
-                : AppColors.editorialAubergine,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: palette.brand, width: 1.5),
         ),
         errorBorder: inputShape.copyWith(
           borderSide: const BorderSide(color: AppColors.error),
@@ -579,13 +670,11 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: isDark
-              ? AppColors.editorialPink
-              : AppColors.editorialBlack,
-          foregroundColor: isDark ? AppColors.editorialAubergine : Colors.white,
+          backgroundColor: palette.brand,
+          foregroundColor: palette.onBrand,
           disabledBackgroundColor: palette.outline,
           disabledForegroundColor: palette.inkMuted,
-          minimumSize: const Size(0, 50),
+          minimumSize: const Size(0, 48),
           padding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.lg),
           shape: const StadiumBorder(),
           textStyle: textTheme.labelLarge,
@@ -593,11 +682,9 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: isDark
-              ? AppColors.editorialPink
-              : AppColors.editorialBlack,
-          foregroundColor: isDark ? AppColors.editorialAubergine : Colors.white,
-          minimumSize: const Size(0, 50),
+          backgroundColor: palette.anchor,
+          foregroundColor: palette.onAnchor,
+          minimumSize: const Size(0, 48),
           shape: const StadiumBorder(),
           textStyle: textTheme.labelLarge,
           elevation: 0,
@@ -607,7 +694,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           backgroundColor: palette.surface,
           foregroundColor: palette.ink,
-          minimumSize: const Size(0, 50),
+          minimumSize: const Size(0, 48),
           side: BorderSide(color: palette.outline),
           shape: const StadiumBorder(),
           textStyle: textTheme.labelLarge,
@@ -615,11 +702,86 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: isDark
-              ? AppColors.editorialPink
-              : AppColors.editorialAubergine,
+          foregroundColor: palette.brand,
           textStyle: textTheme.labelLarge,
         ),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: SegmentedButton.styleFrom(
+          backgroundColor: palette.surface,
+          foregroundColor: palette.inkMuted,
+          selectedBackgroundColor: palette.brand,
+          selectedForegroundColor: palette.onBrand,
+          side: BorderSide.none,
+          shape: const StadiumBorder(),
+          textStyle: textTheme.labelMedium,
+        ),
+      ),
+      tabBarTheme: TabBarThemeData(
+        labelColor: palette.onBrand,
+        unselectedLabelColor: palette.inkMuted,
+        labelStyle: textTheme.labelMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: textTheme.labelMedium?.copyWith(
+          fontWeight: FontWeight.w500,
+        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: BoxDecoration(
+          color: palette.brand,
+          borderRadius: AppRadii.fullBorder,
+        ),
+        dividerColor: Colors.transparent,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? palette.onBrand
+              : palette.inkFaint,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? palette.brand
+              : palette.surfaceRaised,
+        ),
+        trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+      ),
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? palette.brand
+              : palette.inkFaint,
+        ),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? palette.brand
+              : Colors.transparent,
+        ),
+        checkColor: WidgetStateProperty.all(palette.onBrand),
+        side: BorderSide(color: palette.inkFaint, width: 1.5),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.smallBorder),
+      ),
+      listTileTheme: ListTileThemeData(
+        iconColor: palette.ink,
+        textColor: palette.ink,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.rowBorder),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: palette.anchor,
+        contentTextStyle: textTheme.bodyMedium?.copyWith(
+          color: palette.onAnchor,
+        ),
+        actionTextColor: palette.accent,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.rowBorder),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: palette.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.panelBorder),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: palette.surface,
@@ -632,20 +794,15 @@ class AppTheme {
         ),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: isDark ? AppColors.editorialPink : AppColors.editorialAubergine,
-        linearTrackColor: isDark
-            ? AppColors.editorialAubergineRaised
-            : AppColors.editorialPinkSoft,
-        circularTrackColor: isDark
-            ? AppColors.editorialAubergineRaised
-            : AppColors.editorialPinkSoft,
+        color: palette.brand,
+        linearTrackColor: palette.brandSoft,
+        circularTrackColor: palette.brandSoft,
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: isDark
-            ? AppColors.editorialPink
-            : AppColors.editorialBlack,
-        foregroundColor: isDark ? AppColors.editorialAubergine : Colors.white,
-        elevation: 2,
+        backgroundColor: palette.brand,
+        foregroundColor: palette.onBrand,
+        elevation: 3,
+        shape: const CircleBorder(),
       ),
     );
   }
