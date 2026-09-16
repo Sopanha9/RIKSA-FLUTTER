@@ -29,6 +29,7 @@ Future<void> loadRiksaGoldenFonts() async {
   await poppins.load();
   for (final entry in {
     'Kantumruy Pro': 'assets/fonts/KantumruyPro-Variable.ttf',
+    'Khmer OS Siemreap': 'assets/fonts/KhmerOS_siemreap.ttf',
     'Noto Sans Khmer': 'assets/fonts/NotoSansKhmer-Variable.ttf',
     'Koulen': 'assets/fonts/Koulen-Regular.ttf',
   }.entries) {

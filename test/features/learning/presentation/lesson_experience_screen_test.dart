@@ -142,9 +142,9 @@ void main() {
     await (FontLoader(
       'Koulen',
     )..addFont(rootBundle.load('assets/fonts/Koulen-Regular.ttf'))).load();
-    await (FontLoader('Kantumruy Pro')
-          ..addFont(rootBundle.load('assets/fonts/KantumruyPro-Variable.ttf')))
-        .load();
+    await (FontLoader(
+      RiksaTypography.khmerBodyFamily,
+    )..addFont(rootBundle.load('assets/fonts/KhmerOS_siemreap.ttf'))).load();
   });
 
   testWidgets('renders Khmer lesson Markdown with the bundled Khmer font', (
@@ -205,7 +205,9 @@ void main() {
     ).where((span) => _hasKhmer(span.text)).toList();
     expect(khmerSpans, isNotEmpty);
     expect(
-      khmerSpans.every((span) => span.style?.fontFamily == 'Kantumruy Pro'),
+      khmerSpans.every(
+        (span) => span.style?.fontFamily == RiksaTypography.khmerBodyFamily,
+      ),
       isTrue,
     );
 

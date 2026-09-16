@@ -129,6 +129,9 @@ flutter:
     - family: Kantumruy Pro
       fonts:
         - asset: assets/fonts/KantumruyPro-Variable.ttf
+    - family: Khmer OS Siemreap
+      fonts:
+        - asset: assets/fonts/KhmerOS_siemreap.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

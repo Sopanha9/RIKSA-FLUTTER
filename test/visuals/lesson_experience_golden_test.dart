@@ -153,7 +153,7 @@ Future<void> _loadFonts() async {
   final khmerTitle = FontLoader(RiksaTypography.khmerTitleFamily)
     ..addFont(rootBundle.load('assets/fonts/Koulen-Regular.ttf'));
   final khmerBody = FontLoader(RiksaTypography.khmerBodyFamily)
-    ..addFont(rootBundle.load('assets/fonts/KantumruyPro-Variable.ttf'));
+    ..addFont(rootBundle.load('assets/fonts/KhmerOS_siemreap.ttf'));
   await Future.wait([
     poppins.load(),
     khmer.load(),

@@ -44,12 +44,13 @@ void main() {
     await tester.pumpWidget(_testApp(currentIndex: 1));
     await tester.pumpAndSettle();
     final surface = find.byKey(const ValueKey('bottom-nav-surface'));
-    // A white pill floating off the screen edges, with the round AI Tutor
-    // button beside it.
-    expect(
-      tester.widget<Material>(surface).color,
-      AppColors.editorialNeutralSurface,
-    );
+    // A translucent glass pill floats off the screen edges, with the round AI
+    // Tutor button beside it.
+    final surfaceColor = tester.widget<Material>(surface).color!;
+    expect(surfaceColor.a, lessThan(1));
+    expect(surfaceColor.r, AppColors.editorialNeutralSurface.r);
+    expect(surfaceColor.g, AppColors.editorialNeutralSurface.g);
+    expect(surfaceColor.b, AppColors.editorialNeutralSurface.b);
     expect(tester.getRect(surface).left, greaterThanOrEqualTo(16));
     expect(
       tester.getRect(find.byKey(const ValueKey('bottom-nav-item-2'))).left,
@@ -81,6 +82,37 @@ void main() {
       await tester.tap(find.byKey(ValueKey('bottom-nav-item-$index')));
       expect(selected, index);
     }
+  });
+
+  testWidgets('selection pill slides between non-AI destinations', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_testApp());
+    await tester.pumpAndSettle();
+
+    final firstLeft = tester
+        .getRect(find.byKey(const ValueKey('bottom-nav-selection-pill')))
+        .left;
+
+    await tester.pumpWidget(_testApp(currentIndex: 3));
+    await tester.pump(const Duration(milliseconds: 160));
+    final midAnimationLeft = tester
+        .getRect(find.byKey(const ValueKey('bottom-nav-selection-pill')))
+        .left;
+    await tester.pumpAndSettle();
+    final settledLeft = tester
+        .getRect(find.byKey(const ValueKey('bottom-nav-selection-pill')))
+        .left;
+
+    expect(midAnimationLeft, greaterThan(firstLeft));
+    expect(midAnimationLeft, lessThan(settledLeft));
+    expect(
+      settledLeft,
+      closeTo(
+        tester.getRect(find.byKey(const ValueKey('bottom-nav-item-3'))).left,
+        1,
+      ),
+    );
   });
 
   for (final locale in const [Locale('en'), Locale('km')]) {

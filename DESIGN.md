@@ -84,8 +84,9 @@ One per STEM subject, used at full strength on marks and numerals, and as a
 
 ## Typography
 
-Latin: **Poppins**. Khmer display: **Koulen**. Khmer body: **Kantumruy Pro**,
-falling back to Noto Sans Khmer. Mixed-script strings must pass through
+Latin: **Poppins**. Khmer display: **Koulen**. Khmer body:
+**Khmer OS Siemreap**, falling back to Kantumruy Pro and Noto Sans Khmer.
+Mixed-script strings must pass through
 `RiksaTypography.titleStyleFor` / `bodyStyleFor`, which swap family, weight and
 line height per script.
 

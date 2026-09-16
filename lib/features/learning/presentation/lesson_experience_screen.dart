@@ -1809,7 +1809,11 @@ MarkdownStyleSheet _lessonMarkdownStyleSheet(
   TextStyle body(TextStyle? style) => (style ?? const TextStyle()).copyWith(
     fontFamily: bodyFont,
     fontFamilyFallback: hasKhmer
-        ? const [RiksaTypography.khmerFamily, RiksaTypography.latinFamily]
+        ? const [
+            RiksaTypography.khmerLegacyBodyFamily,
+            RiksaTypography.khmerFamily,
+            RiksaTypography.latinFamily,
+          ]
         : RiksaTypography.fallback,
   );
   TextStyle heading(TextStyle? style) => (style ?? const TextStyle()).copyWith(

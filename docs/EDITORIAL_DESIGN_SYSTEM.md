@@ -30,8 +30,8 @@ or product name is visible.
 - Card titles use 700–800 only when they are the card's primary content.
 - Metadata, labels, and supporting copy should stay between 400–600 so the
   hierarchy does not flatten.
-- Khmer titles use Koulen; Khmer body copy uses Kantumruy Pro with Noto Sans
-  Khmer as the fallback.
+- Khmer titles use Koulen; Khmer body copy uses Khmer OS Siemreap with
+  Kantumruy Pro and Noto Sans Khmer as fallbacks.
 
 ## Illustration and iconography
 

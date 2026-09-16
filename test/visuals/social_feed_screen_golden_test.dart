@@ -46,8 +46,8 @@ Future<void> _loadFonts() async {
         'MaterialIcons-Regular.otf',
       ).readAsBytes().then(ByteData.sublistView),
     );
-  final khmerBody = FontLoader('Kantumruy Pro')
-    ..addFont(rootBundle.load('assets/fonts/KantumruyPro-Variable.ttf'));
+  final khmerBody = FontLoader(RiksaTypography.khmerBodyFamily)
+    ..addFont(rootBundle.load('assets/fonts/KhmerOS_siemreap.ttf'));
   final khmerDisplay = FontLoader('Koulen')
     ..addFont(rootBundle.load('assets/fonts/Koulen-Regular.ttf'));
   final khmerFallback = FontLoader(RiksaTypography.khmerFamily)

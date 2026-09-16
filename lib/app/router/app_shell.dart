@@ -83,7 +83,7 @@ class _AppShellState extends State<AppShell> {
     final router = GoRouter.of(context);
     return Scaffold(
       key: const ValueKey('main-app-shell'),
-      extendBody: false,
+      extendBody: true,
       drawer: const RiksaProfileDrawer(),
       // The Builder is what gives the opener a context below this Scaffold, so
       // `Scaffold.of` resolves to the shell rather than to a tab's own.

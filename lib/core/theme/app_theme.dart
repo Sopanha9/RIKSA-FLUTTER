@@ -450,10 +450,12 @@ class RiksaTypography {
   static const latinFamily = 'Poppins';
   static const khmerFamily = 'Noto Sans Khmer';
   static const khmerTitleFamily = 'Koulen';
-  static const khmerBodyFamily = 'Kantumruy Pro';
+  static const khmerLegacyBodyFamily = 'Kantumruy Pro';
+  static const khmerBodyFamily = 'Khmer OS Siemreap';
   static const fallback = <String>[khmerFamily];
   static const khmerTitleFallback = <String>[
     khmerBodyFamily,
+    khmerLegacyBodyFamily,
     khmerFamily,
     latinFamily,
   ];
@@ -480,7 +482,11 @@ class RiksaTypography {
     if (style == null || !containsKhmer(text)) return style;
     return style.copyWith(
       fontFamily: khmerBodyFamily,
-      fontFamilyFallback: const [khmerFamily, latinFamily],
+      fontFamilyFallback: const [
+        khmerLegacyBodyFamily,
+        khmerFamily,
+        latinFamily,
+      ],
       letterSpacing: 0,
     );
   }
