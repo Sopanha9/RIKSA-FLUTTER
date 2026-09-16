@@ -8,7 +8,6 @@ import '../../../app/router/app_shell.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../core/widgets/riksa_search_bar.dart';
-import '../../dashboard/presentation/widgets/home_sections.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../blog/data/blog_models.dart';
@@ -73,19 +72,8 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
         : null;
     return Scaffold(
       backgroundColor: SocialPalette.canvas(context),
-      // White and smaller than the purple AI Tutor button in the tab bar just
-      // below, so the two never read as competing main actions.
-      floatingActionButton: FloatingActionButton.small(
-        key: const ValueKey('create-community-button'),
-        tooltip: AppLocalizations.of(context)!.communityComposerPrompt,
-        onPressed: _showCreateMenu,
-        backgroundColor: context.riksa.surface,
-        foregroundColor: context.riksa.brand,
-        shape: CircleBorder(side: BorderSide(color: context.riksa.outline)),
-        child: const Icon(Icons.edit_rounded, size: 20),
-      ),
       body: RefreshIndicator(
-        color: context.riksa.brand,
+        color: SocialPalette.green(context),
         onRefresh: () => _section == _SocialSection.feed
             ? ref.read(socialFeedProvider.notifier).load()
             : ref.read(blogFeedProvider.notifier).load(),
@@ -94,26 +82,19 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            _HomeHeader(
+            _CommunityAppBar(
               onSearchChanged: (value) =>
                   setState(() => _searchQuery = value.trim().toLowerCase()),
               onFilter: _showContentFilter,
-            ),
-            const SliverToBoxAdapter(child: HomeQuickActions()),
-            const SliverToBoxAdapter(child: TodaysLearningSection()),
-            SliverToBoxAdapter(
-              child: HomeSectionHeader(
-                title: AppLocalizations.of(context)!.communityFeed,
-                actionLabel: AppLocalizations.of(context)!.communitiesMenu,
-                onViewAll: () => context.push('/communities'),
-                padding: const EdgeInsets.fromLTRB(16, 12, 12, 4),
-              ),
             ),
             SliverToBoxAdapter(
               child: _FeedSectionTabs(
                 selected: _section,
                 onSelected: _selectSection,
               ),
+            ),
+            SliverToBoxAdapter(
+              child: _CommunityComposerPrompt(onTap: _showCreateMenu),
             ),
             if (_section == _SocialSection.blog)
               SliverToBoxAdapter(child: _YourArticlesLink(onTap: _openMyPosts)),
@@ -432,9 +413,11 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
   }
 }
 
-/// Greeting, streak, account avatar and the search field.
-class _HomeHeader extends ConsumerWidget {
-  const _HomeHeader({required this.onSearchChanged, required this.onFilter});
+class _CommunityAppBar extends ConsumerWidget {
+  const _CommunityAppBar({
+    required this.onSearchChanged,
+    required this.onFilter,
+  });
 
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onFilter;
@@ -442,70 +425,42 @@ class _HomeHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final auth = ref.watch(authProvider);
-    final name = auth is Authenticated
-        ? auth.user.displayName.trim().split(RegExp(r'\s+')).first
-        : '';
-    // Without a name the greeting drops the gap it would have filled.
-    final greeting = name.isEmpty
-        ? l10n.homeGreeting('').replaceFirst(RegExp(r',?\s*!'), '!')
-        : l10n.homeGreeting(name);
 
     return SliverToBoxAdapter(
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 0),
+          padding: const EdgeInsetsDirectional.fromSTEB(20, 16, 20, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 children: [
+                  const _AccountAvatarButton(),
+                  const SizedBox(width: RiksaSpacing.sm),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          greeting,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: RiksaTypography.titleStyleFor(
-                            greeting,
-                            theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -.3,
-                            ),
+                    child: Text(
+                      l10n.community,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            color: SocialPalette.text(context),
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -.6,
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          l10n.homeSubtitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: RiksaTypography.bodyStyleFor(
-                            l10n.homeSubtitle,
-                            theme.textTheme.bodySmall?.copyWith(
-                              color: context.riksa.inkMuted,
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
                   ),
-                  const SizedBox(width: RiksaSpacing.sm),
                   _StreakPill(
                     key: const ValueKey('streak-pill'),
                     streak: ref.watch(communityStreakProvider),
                   ),
-                  const SizedBox(width: RiksaSpacing.xs),
-                  const _AccountAvatarButton(),
                 ],
               ),
               const SizedBox(height: 16),
               RiksaSearchBar(
                 key: const ValueKey('community-search'),
-                hintText: l10n.homeSearchHint,
+                hintText: l10n.searchCommunity,
                 onChanged: onSearchChanged,
                 onFilter: onFilter,
               ),
@@ -517,7 +472,7 @@ class _HomeHeader extends ConsumerWidget {
   }
 }
 
-// The way into the account menu. An avatar, never a hamburger: the learner's
+/// The way into the account menu. An avatar, never a hamburger: the learner's
 /// own face is a clearer promise of "this is your stuff" than three lines, and
 /// it doubles as the signed-in indicator the header otherwise lacked.
 class _AccountAvatarButton extends ConsumerWidget {
@@ -560,6 +515,87 @@ class _AccountAvatarButton extends ConsumerWidget {
   }
 }
 
+class _CommunityComposerPrompt extends StatelessWidget {
+  const _CommunityComposerPrompt({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      child: Semantics(
+        button: true,
+        label: l10n.communityComposerPrompt,
+        child: Material(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? context.riksa.surfaceRaised
+              : AppColors.editorialField,
+          borderRadius: AppRadii.fullBorder,
+          child: InkWell(
+            key: const ValueKey('create-community-button'),
+            onTap: onTap,
+            borderRadius: AppRadii.fullBorder,
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 52),
+              padding: const EdgeInsets.fromLTRB(9, 7, 9, 7),
+              decoration: const BoxDecoration(
+                borderRadius: AppRadii.fullBorder,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: SocialPalette.pinkSoft(
+                        context,
+                      ).withValues(alpha: .55),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.help_outline_rounded,
+                      size: 19,
+                      color: SocialPalette.pink(context).withValues(alpha: .7),
+                    ),
+                  ),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: Text(
+                      l10n.communityComposerPrompt,
+                      style: TextStyle(
+                        color: SocialPalette.muted(
+                          context,
+                        ).withValues(alpha: .72),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: SocialPalette.aubergine(context),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.add_rounded,
+                      size: 20,
+                      color: SocialPalette.onAubergine(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Doorway to the author's own articles, sitting at the top of the blog
 /// list.
 ///
@@ -577,7 +613,7 @@ class _YourArticlesLink extends ConsumerWidget {
     final pending = ref.watch(pendingBlogPostCountProvider).value ?? 0;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
       child: Material(
         color: Colors.transparent,
         borderRadius: AppRadii.fullBorder,
@@ -638,7 +674,6 @@ class _YourArticlesLink extends ConsumerWidget {
   }
 }
 
-/// Filter chips over the feed: everything, or articles only.
 class _FeedSectionTabs extends StatelessWidget {
   const _FeedSectionTabs({required this.selected, required this.onSelected});
 
@@ -648,28 +683,42 @@ class _FeedSectionTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: palette.outline.withValues(alpha: isDark ? 0.35 : 0.6),
+            width: 1,
+          ),
+        ),
+      ),
       child: Row(
         children: [
-          _FeedChip(
-            key: const ValueKey('my-feed-tab'),
-            label: l10n.feedFilterAll,
-            selected: selected == _SocialSection.feed,
-            onTap: () {
-              HapticFeedback.selectionClick();
-              onSelected(_SocialSection.feed);
-            },
+          Expanded(
+            child: _ModernSectionTabItem(
+              key: const ValueKey('my-feed-tab'),
+              label: l10n.forYou,
+              selected: selected == _SocialSection.feed,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                onSelected(_SocialSection.feed);
+              },
+            ),
           ),
-          const SizedBox(width: 8),
-          _FeedChip(
-            key: const ValueKey('blog-tab'),
-            label: l10n.blog,
-            selected: selected == _SocialSection.blog,
-            onTap: () {
-              HapticFeedback.selectionClick();
-              onSelected(_SocialSection.blog);
-            },
+          Expanded(
+            child: _ModernSectionTabItem(
+              key: const ValueKey('blog-tab'),
+              label: l10n.blog,
+              selected: selected == _SocialSection.blog,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                onSelected(_SocialSection.blog);
+              },
+            ),
           ),
         ],
       ),
@@ -677,8 +726,8 @@ class _FeedSectionTabs extends StatelessWidget {
   }
 }
 
-class _FeedChip extends StatelessWidget {
-  const _FeedChip({
+class _ModernSectionTabItem extends StatelessWidget {
+  const _ModernSectionTabItem({
     super.key,
     required this.label,
     required this.selected,
@@ -691,34 +740,47 @@ class _FeedChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark
+        ? AppColors.editorialPink
+        : SocialPalette.aubergine(context);
+    final inactiveColor = SocialPalette.muted(context);
+
     return Semantics(
       button: true,
       selected: selected,
       child: InkWell(
         onTap: onTap,
-        borderRadius: AppRadii.fullBorder,
-        child: AnimatedContainer(
-          duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-          curve: RiksaMotion.standardCurve,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-          decoration: BoxDecoration(
-            color: selected ? AppColors.editorialAubergine : Colors.transparent,
-            borderRadius: AppRadii.fullBorder,
-            border: Border.all(
-              color: selected ? AppColors.editorialAubergine : palette.outline,
-            ),
-          ),
-          child: Text(
-            label,
-            maxLines: 1,
-            style: RiksaTypography.bodyStyleFor(
-              label,
-              Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: selected ? palette.onBrand : palette.inkMuted,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: selected ? activeColor : inactiveColor,
+                  fontSize: 15,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  letterSpacing: -0.2,
+                ),
               ),
-            ),
+              const SizedBox(height: 8),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                height: 3,
+                width: selected ? 48 : 0,
+                decoration: BoxDecoration(
+                  color: selected ? activeColor : Colors.transparent,
+                  borderRadius: AppRadii.fullBorder,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -736,7 +798,9 @@ class _StreakPill extends StatelessWidget {
     final theme = Theme.of(context);
     final value = streak.value;
     return Material(
-      color: context.riksa.accentSoft,
+      color: theme.brightness == Brightness.dark
+          ? AppColors.editorialAubergineRaised
+          : SocialPalette.pinkSoft(context),
       borderRadius: AppRadii.fullBorder,
       child: InkWell(
         borderRadius: AppRadii.fullBorder,
@@ -744,16 +808,16 @@ class _StreakPill extends StatelessWidget {
             ? null
             : () => showStreakDetailsSheet(context, value),
         child: Container(
-          height: 38,
-          constraints: const BoxConstraints(minWidth: 56),
+          height: 40,
+          constraints: const BoxConstraints(minWidth: 60),
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: const BoxDecoration(borderRadius: AppRadii.fullBorder),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.local_fire_department_rounded,
-                color: Color(0xFFFF7A3D),
+                color: SocialPalette.pink(context),
                 size: 20,
               ),
               const SizedBox(width: 4),
@@ -767,10 +831,8 @@ class _StreakPill extends StatelessWidget {
                 Text(
                   '${value?.current ?? 0}',
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.brightness == Brightness.dark
-                        ? context.riksa.accent
-                        : context.riksa.onAccent,
-                    fontWeight: FontWeight.w800,
+                    color: SocialPalette.aubergine(context),
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
             ],

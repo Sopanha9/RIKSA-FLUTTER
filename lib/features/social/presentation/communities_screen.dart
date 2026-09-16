@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/riksa_brand.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../core/widgets/riksa_search_bar.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -248,7 +247,6 @@ class _CommunityRow extends StatelessWidget {
     final palette = context.riksa;
     final locale = Localizations.localeOf(context).languageCode;
     final stem = stemSubjectFor(item.name);
-    final tone = subjectTone(context, stem);
     final members = l10n.communityMembers(
       NumberFormat.compact(locale: locale).format(item.memberCount),
     );
@@ -263,12 +261,7 @@ class _CommunityRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          RiksaIconTile(
-            icon: stemSubjectIcon(stem),
-            background: tone.surface,
-            foreground: tone.accent,
-            size: 48,
-          ),
+          StemSubjectTile(subject: stem, size: 48),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

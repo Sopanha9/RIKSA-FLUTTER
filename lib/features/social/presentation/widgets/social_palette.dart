@@ -26,16 +26,20 @@ abstract final class SocialPalette {
   static Color outline(BuildContext context) =>
       _isDark(context) ? context.riksa.outline : AppColors.editorialOutline;
 
-  static Color aubergine(BuildContext context) => _isDark(context)
-      ? AppColors.editorialAubergineRaised
-      : AppColors.editorialAubergine;
+  /// The strong accent: text, icons and filled buttons. In dark mode it is
+  /// the light violet, because a dark accent vanishes on the dark surfaces.
+  static Color aubergine(BuildContext context) =>
+      _isDark(context) ? AppColors.editorialPink : AppColors.editorialAubergine;
 
   static Color pink(BuildContext context) => AppColors.editorialPink;
 
   static Color pinkSoft(BuildContext context) =>
       _isDark(context) ? context.riksa.brandSoft : AppColors.editorialPinkSoft;
 
-  static Color onAubergine(BuildContext context) => const Color(0xFFFFF8FC);
+  /// Content on an [aubergine] fill: white on violet, deep ink on the light
+  /// violet dark mode uses.
+  static Color onAubergine(BuildContext context) =>
+      _isDark(context) ? AppColors.deepInk : const Color(0xFFFFF8FC);
 
   static Color green(BuildContext context) => pink(context);
   static Color panel(BuildContext context) => surface(context);

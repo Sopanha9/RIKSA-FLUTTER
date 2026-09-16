@@ -58,9 +58,7 @@ class LeaderboardPodium extends StatelessWidget {
                         row: rank2,
                         ringColor: AppColors.achievementSaffron,
                         pillarColor: isDark
-                            ? AppColors.achievementSaffron.withValues(
-                                alpha: 0.22,
-                              )
+                            ? context.riksa.surfaceRaised
                             : AppColors.achievementSaffronSoft,
                         pillarTopColor: isDark
                             ? AppColors.achievementSaffron.withValues(
@@ -83,7 +81,7 @@ class LeaderboardPodium extends StatelessWidget {
                   row: rank1,
                   ringColor: context.riksa.brand,
                   pillarColor: isDark
-                      ? context.riksa.brand.withValues(alpha: 0.25)
+                      ? context.riksa.surfaceRaised
                       : context.riksa.jadeSoft,
                   pillarTopColor: isDark
                       ? context.riksa.brand.withValues(alpha: 0.4)
@@ -107,7 +105,7 @@ class LeaderboardPodium extends StatelessWidget {
                         row: rank3,
                         ringColor: AppColors.editorialPink,
                         pillarColor: isDark
-                            ? AppColors.editorialPink.withValues(alpha: 0.22)
+                            ? context.riksa.surfaceRaised
                             : AppColors.editorialPinkSoft,
                         pillarTopColor: isDark
                             ? AppColors.editorialPink.withValues(alpha: 0.35)

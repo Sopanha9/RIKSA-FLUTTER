@@ -1150,11 +1150,7 @@ class _LessonArtCard extends StatelessWidget {
             Positioned(
               left: 36,
               top: 26,
-              child: Icon(
-                stemSubjectIcon(stem),
-                size: 104,
-                color: tone.accent.withValues(alpha: .85),
-              ),
+              child: StemSubjectTile(subject: stem, size: 108),
             ),
             const Positioned(
               right: 22,

@@ -103,7 +103,6 @@ class LessonSearchDelegate extends SearchDelegate<LessonSummary?> {
       itemBuilder: (context, index) {
         final lesson = results[index];
         final subject = stemSubjectFor(lesson.categoryName);
-        final tone = subjectTone(context, subject);
         return ListTile(
           key: ValueKey('search-result-${lesson.id}'),
           shape: const RoundedRectangleBorder(
@@ -114,19 +113,7 @@ class LessonSearchDelegate extends SearchDelegate<LessonSummary?> {
             horizontal: RiksaSpacing.md,
             vertical: RiksaSpacing.xxs,
           ),
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: tone.surface,
-              borderRadius: AppRadii.badgeBorder,
-            ),
-            child: Icon(
-              stemSubjectIcon(subject),
-              size: 19,
-              color: tone.accent,
-            ),
-          ),
+          leading: StemSubjectTile(subject: subject, size: 40),
           title: Text(
             lesson.title,
             maxLines: 2,

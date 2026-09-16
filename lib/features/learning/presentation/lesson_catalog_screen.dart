@@ -403,11 +403,7 @@ class _ContinueCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        LearningBadge(
-                          icon: stemSubjectIcon(subject.subject),
-                          foreground: tone.accent,
-                          background: context.riksa.surface,
-                        ),
+                        StemSubjectTile(subject: subject.subject, size: 38),
                         const SizedBox(width: RiksaSpacing.sm - 2),
                         Expanded(
                           child: Column(
@@ -596,13 +592,8 @@ class _SubjectTile extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              Container(
-                width: 52,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: tone.surface,
-                  borderRadius: AppRadii.smallBorder,
-                ),
+              SizedBox.square(
+                dimension: 56,
                 child: _SubjectArtwork(
                   subject: subject.subject,
                   accent: tone.accent,
@@ -685,11 +676,10 @@ class _SubjectArtwork extends StatelessWidget {
   final StemSubject subject;
   final Color accent;
   @override
-  Widget build(BuildContext context) => Icon(
-    stemSubjectIcon(subject),
+  Widget build(BuildContext context) => StemSubjectTile(
     key: ValueKey('subject-artwork-${subject.name}'),
-    size: 30,
-    color: accent,
+    subject: subject,
+    size: 56,
   );
 }
 

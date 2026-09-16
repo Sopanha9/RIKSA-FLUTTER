@@ -149,8 +149,8 @@ void main() {
       tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
       AppColors.editorialNeutralCanvas,
     );
-    expect(find.text('Communities'), findsOneWidget);
-    expect(find.byKey(const ValueKey('bottom-nav-surface')), findsNothing);
+    expect(find.text('Community'), findsOneWidget);
+    expect(find.byKey(const ValueKey('bottom-nav-morph')), findsNothing);
     // No hamburger, and no drawer of this screen's own: the account menu hangs
     // off the shell's Scaffold so it covers the floating bottom bar, and it is
     // opened by the avatar in the header.
@@ -170,7 +170,7 @@ void main() {
       find.byKey(const ValueKey('create-community-button')),
       findsOneWidget,
     );
-    expect(find.byTooltip('What are your doubts?'), findsOneWidget);
+    expect(find.text('What are your doubts?'), findsOneWidget);
     expect(find.text('7'), findsOneWidget);
     expect(find.byKey(const ValueKey('my-feed-tab')), findsOneWidget);
     expect(find.text('Blog'), findsOneWidget);

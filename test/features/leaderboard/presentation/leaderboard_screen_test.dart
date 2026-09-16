@@ -229,7 +229,7 @@ void main() {
   });
 
   testWidgets(
-    'marks the top three and the signed-in learner in the rankings',
+    'shows the top three on the podium and marks the signed-in learner',
     (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
@@ -302,13 +302,22 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // The podium became ranked rows: the top three carry a medal colour.
+      // The winners stand on the podium, the champion crowned.
+      expect(find.byKey(const ValueKey('leaderboard-podium')), findsOneWidget);
       for (final rank in [1, 2, 3]) {
-        expect(find.byKey(ValueKey('rank-medal-$rank')), findsOneWidget);
+        expect(find.byKey(ValueKey('podium-place-$rank')), findsOneWidget);
       }
-      // The signed-in learner's own row is marked.
-      expect(find.byKey(const ValueKey('ranking-row-you')), findsOneWidget);
-      expect(find.text('You'), findsOneWidget);
+      expect(find.byKey(const ValueKey('podium-crown-icon')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('podium-current-user-badge')),
+        findsOneWidget,
+      );
+
+      // Searching drops the podium and lists every match as a row.
+      await tester.enterText(find.byType(TextField), 'third');
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('leaderboard-podium')), findsNothing);
+      expect(find.byKey(const ValueKey('rank-medal-3')), findsOneWidget);
     },
   );
 }

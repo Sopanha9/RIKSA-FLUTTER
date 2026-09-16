@@ -14,9 +14,13 @@ class RankingsSheet extends StatelessWidget {
     super.key,
     required this.listRows,
     required this.currentUser,
+    this.totalCount,
   });
 
   final List<LeaderboardRow> listRows;
+
+  /// Everyone on the board, podium included. Defaults to the rows listed.
+  final int? totalCount;
   final AuthUser? currentUser;
 
   @override
@@ -39,9 +43,9 @@ class RankingsSheet extends StatelessWidget {
                 letterSpacing: -.3,
               ),
             ),
-            if (listRows.isNotEmpty)
+            if ((totalCount ?? listRows.length) > 0)
               Text(
-                'Top ${listRows.length}',
+                'Top ${totalCount ?? listRows.length}',
                 style: TextStyle(
                   color: isDark
                       ? context.riksa.inkMuted

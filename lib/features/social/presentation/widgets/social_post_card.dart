@@ -397,7 +397,18 @@ class SocialAuthorAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = socialAvatarPalette(seed);
+    final light = socialAvatarPalette(seed);
+    // Pastel discs glare on a dark feed; there the tint deepens and the
+    // letter takes the pastel instead.
+    final palette = Theme.of(context).brightness == Brightness.dark
+        ? (
+            background: Color.alphaBlend(
+              light.foreground.withValues(alpha: .35),
+              SocialPalette.surface(context),
+            ),
+            foreground: light.background,
+          )
+        : light;
     return Container(
       width: size,
       height: size,

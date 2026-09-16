@@ -96,67 +96,74 @@ LearningHomeData _home() {
 void main() {
   setUpAll(_loadFonts);
 
-  testWidgets('learning home light', (tester) async {
-    tester.view.physicalSize = const Size(393, 852);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  for (final dark in [false, true]) {
+    testWidgets('learning home ${dark ? 'dark' : 'light'}', (tester) async {
+      tester.view.physicalSize = const Size(393, 852);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          authProvider.overrideWith(_SignedInNotifier.new),
-          learningHomeProvider.overrideWith((ref) async => _home()),
-          communityStreakProvider.overrideWith(
-            (ref) async => const CommunityStreak(current: 7, highest: 12),
-          ),
-        ],
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith(_SignedInNotifier.new),
+            learningHomeProvider.overrideWith((ref) async => _home()),
+            communityStreakProvider.overrideWith(
+              (ref) async => const CommunityStreak(current: 7, highest: 12),
+            ),
           ],
-          supportedLocales: const [Locale('en'), Locale('km')],
-          home: Scaffold(
-            extendBody: false,
-            body: const LessonCatalogScreen(),
-            bottomNavigationBar: RiksaBottomNavigationBar(
-              currentIndex: 1,
-              onSelected: (_) {},
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: dark ? AppTheme.dark : AppTheme.light,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('km')],
+            home: Scaffold(
+              extendBody: false,
+              body: const LessonCatalogScreen(),
+              bottomNavigationBar: RiksaBottomNavigationBar(
+                currentIndex: 1,
+                onSelected: (_) {},
+              ),
             ),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    final context = tester.element(find.byType(LessonCatalogScreen));
-    await tester.runAsync(() async {
-      for (final asset in [
-        'assets/images/lessonsCard/issacnewton.png',
-        'assets/images/lessonsCard/enstein.png',
-        'assets/images/lessonsCard/chemistry.png',
-        'assets/images/lessonsCard/bio.png',
-        'assets/images/lessonsCard/computer.png',
-      ]) {
-        await precacheImage(
-          AssetImage(asset),
-          context,
-          onError: (error, stack) =>
-              fail('Subject artwork failed to load: $error'),
-        );
-      }
+      final context = tester.element(find.byType(LessonCatalogScreen));
+      await tester.runAsync(() async {
+        for (final asset in [
+          'assets/images/lessonsCard/issacnewton.png',
+          'assets/images/lessonsCard/enstein.png',
+          'assets/images/lessonsCard/chemistry.png',
+          'assets/images/lessonsCard/bio.png',
+          'assets/images/lessonsCard/computer.png',
+        ]) {
+          await precacheImage(
+            AssetImage(asset),
+            context,
+            onError: (error, stack) =>
+                fail('Subject artwork failed to load: $error'),
+          );
+        }
+      });
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      await expectLater(
+        find.byType(LessonCatalogScreen),
+        matchesGoldenFile(
+          'goldens/learning_home_en_${dark ? 'dark' : 'light'}.png',
+        ),
+      );
+      // Let delayed work from the screen finish before the next variant runs.
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 5));
     });
-    await tester.pumpAndSettle();
-
-    expect(tester.takeException(), isNull);
-    await expectLater(
-      find.byType(LessonCatalogScreen),
-      matchesGoldenFile('goldens/learning_home_en_light.png'),
-    );
-  });
+  }
 }

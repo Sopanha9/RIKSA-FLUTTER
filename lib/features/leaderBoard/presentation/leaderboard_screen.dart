@@ -9,6 +9,7 @@ import 'package:riksa_app/features/userProfile/data/profile_models.dart';
 import 'package:riksa_app/features/userProfile/presentation/widgets/profile_ui.dart';
 import 'package:riksa_app/features/userProfile/providers/profile_provider.dart';
 import 'widgets/leaderboard_header.dart';
+import 'widgets/leaderboard_podium.dart';
 import 'widgets/leaderboard_scope_tabs.dart';
 import 'widgets/leaderboard_states.dart';
 import 'widgets/current_user_rank_card.dart';
@@ -130,11 +131,29 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                           }
 
                           final filtered = _filterRows(rows, _searchQuery);
-                          final listRows = filtered;
+                          // The top three stand on the podium; the list picks
+                          // up at fourth. A search shows every match as rows,
+                          // since a filtered podium would crown the wrong
+                          // people.
+                          final showPodium =
+                              _searchQuery.isEmpty && filtered.isNotEmpty;
+                          final podium = showPodium
+                              ? filtered.where((row) => row.rank <= 3).toList()
+                              : const <LeaderboardRow>[];
+                          final listRows = showPodium
+                              ? filtered.where((row) => row.rank > 3).toList()
+                              : filtered;
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              if (showPodium) ...[
+                                LeaderboardPodium(
+                                  podium: podium,
+                                  currentUserId: currentUser?.id,
+                                ),
+                                const SizedBox(height: RiksaSpacing.md),
+                              ],
                               if (showCurrentUserRank)
                                 CurrentUserRankCard(
                                   rank: userRankNumber,
@@ -162,6 +181,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                               const SizedBox(height: RiksaSpacing.md),
                               RankingsSheet(
                                 listRows: listRows,
+                                totalCount: filtered.length,
                                 currentUser: currentUser,
                               ),
                             ],

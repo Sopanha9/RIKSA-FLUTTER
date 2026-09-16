@@ -34,65 +34,69 @@ void main() {
   setUpAll(loadRiksaGoldenFonts);
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('personal profile', (tester) async {
-    tester.view.physicalSize = const Size(393, 1400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+  for (final dark in [false, true]) {
+    testWidgets('personal profile ${dark ? 'dark' : 'light'}', (tester) async {
+      tester.view.physicalSize = const Size(393, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          authProvider.overrideWith(_Auth.new),
-          profileDashboardProvider.overrideWith(
-            (ref) async => const ProfileDashboardData(
-              gamification: GamificationProfile(
-                totalXp: 720,
-                currentStreak: 7,
-                highestStreak: 12,
-                currentTier: 'SILVER',
-                nextTier: 'GOLD',
-                currentTierMinXp: 0,
-                nextTierMinXp: 1000,
-                xpToNext: 280,
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith(_Auth.new),
+            profileDashboardProvider.overrideWith(
+              (ref) async => const ProfileDashboardData(
+                gamification: GamificationProfile(
+                  totalXp: 720,
+                  currentStreak: 7,
+                  highestStreak: 12,
+                  currentTier: 'SILVER',
+                  nextTier: 'GOLD',
+                  currentTierMinXp: 0,
+                  nextTierMinXp: 1000,
+                  xpToNext: 280,
+                ),
+                achievements: [],
+                activities: [],
               ),
-              achievements: [],
-              activities: [],
             ),
-          ),
-          userPostsProvider.overrideWith(
-            (ref, userId) async =>
-                const SocialFeedPage(posts: [], hasNextPage: false),
-          ),
-          profileRankProvider.overrideWith(
-            (ref) async => const LeaderboardRank(
-              countryRank: 24,
-              countryScore: 720,
-              countryTier: 'SILVER',
+            userPostsProvider.overrideWith(
+              (ref, userId) async =>
+                  const SocialFeedPage(posts: [], hasNextPage: false),
             ),
-          ),
-        ],
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(disableAnimations: true),
-            child: child!,
-          ),
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
+            profileRankProvider.overrideWith(
+              (ref) async => const LeaderboardRank(
+                countryRank: 24,
+                countryScore: 720,
+                countryTier: 'SILVER',
+              ),
+            ),
           ],
-          supportedLocales: const [Locale('en'), Locale('km')],
-          home: const UserProfileScreen(),
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: dark ? AppTheme.dark : AppTheme.light,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: true),
+              child: child!,
+            ),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('km')],
+            home: const UserProfileScreen(),
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    await expectLater(
-      find.byType(UserProfileScreen),
-      matchesGoldenFile('goldens/user_profile_en_light.png'),
-    );
-  });
+      );
+      await tester.pumpAndSettle();
+      await expectLater(
+        find.byType(UserProfileScreen),
+        matchesGoldenFile(
+          'goldens/user_profile_en_${dark ? 'dark' : 'light'}.png',
+        ),
+      );
+    });
+  }
 }

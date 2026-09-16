@@ -13,7 +13,7 @@ class AppColors {
   static const violetStrong = Color(0xFF5B3FD6);
   static const violetSoft = Color(0xFFEDE8FE);
   static const violetTint = Color(0xFFF7F5FE);
-  static const violetDarkSoft = Color(0xFF2E2550);
+  static const violetDarkSoft = Color(0xFF2A273A);
   static const lime = Color(0xFFD5F06A);
 
   /// The fresh green of a lesson progress bar on the reference board.
@@ -46,7 +46,7 @@ class AppColors {
   // The editorial names predate the violet system; they now resolve to it so
   // every screen that still uses them follows the new look.
   static const editorialAubergine = violet;
-  static const editorialAubergineRaised = deepInkRaised;
+  static const editorialAubergineRaised = darkSurfaceRaised;
   static const editorialPink = Color(0xFF9D86F7);
   static const editorialPinkSoft = violetSoft;
   static const editorialCanvas = appCanvas;
@@ -78,15 +78,15 @@ class AppColors {
   static const subjectHumanities = Color(0xFFB87824);
   static const subjectGeneral = Color(0xFF68715A);
 
-  // Dark mode is the same system at night: a violet-black ground with raised
-  // violet surfaces, so the brand hue survives without glowing. No text is
-  // ever pure white.
-  static const darkCanvas = Color(0xFF0E0A18);
-  static const darkSurface = Color(0xFF191426);
-  static const darkSurfaceRaised = Color(0xFF231C34);
-  static const darkInk = Color(0xFFEEEAF8);
-  static const darkInkMuted = Color(0xFF9D96B3);
-  static const darkOutline = Color(0xFF2F2843);
+  // Dark mode is neutral: near-black ground and graphite surfaces, with violet
+  // kept for accents only, so the screen reads as dark rather than purple.
+  // No text is ever pure white.
+  static const darkCanvas = Color(0xFF111113);
+  static const darkSurface = Color(0xFF1B1B1F);
+  static const darkSurfaceRaised = Color(0xFF26262B);
+  static const darkInk = Color(0xFFEDEDF0);
+  static const darkInkMuted = Color(0xFF9B9BA4);
+  static const darkOutline = Color(0xFF2F2F35);
   static const error = Color(0xFFB93E3E);
 
   // Compatibility aliases while older screens migrate to semantic tokens.
@@ -234,7 +234,7 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     surfaceRaised: AppColors.darkSurfaceRaised,
     ink: AppColors.darkInk,
     inkMuted: AppColors.darkInkMuted,
-    inkFaint: Color(0xFF4B4E51),
+    inkFaint: Color(0xFF5C5C64),
     outline: AppColors.darkOutline,
     jade: Color(0xFF69B893),
     jadeStrong: Color(0xFF9AD4B7),
@@ -256,13 +256,13 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     general: Color(0xFFADB69C),
     brand: Color(0xFF9D86F7),
     brandStrong: Color(0xFFBBA9FA),
-    brandSoft: Color(0xFF2E2550),
+    brandSoft: AppColors.violetDarkSoft,
     onBrand: Color(0xFF140E24),
     accent: Color(0xFFD5F06A),
     accentSoft: Color(0xFF34391C),
     onAccent: Color(0xFF1F2408),
-    anchor: Color(0xFF231C34),
-    onAnchor: Color(0xFFEEEAF8),
+    anchor: AppColors.darkSurfaceRaised,
+    onAnchor: AppColors.darkInk,
   );
 
   @override

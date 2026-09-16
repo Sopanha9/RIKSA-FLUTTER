@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/riksa_brand.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../data/learning_models.dart';
@@ -177,7 +176,6 @@ class _SavedLessonRow extends ConsumerWidget {
     final palette = context.riksa;
     final theme = Theme.of(context);
     final subject = stemSubjectFor(lesson.categoryName);
-    final tone = subjectTone(context, subject);
     final meta = [
       if (lesson.categoryName.isNotEmpty) lesson.categoryName,
       '+${lesson.baseXp} XP',
@@ -197,12 +195,7 @@ class _SavedLessonRow extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(10, 10, 4, 10),
           child: Row(
             children: [
-              RiksaIconTile(
-                icon: stemSubjectIcon(subject),
-                background: tone.surface,
-                foreground: tone.accent,
-                size: 56,
-              ),
+              StemSubjectTile(subject: subject, size: 56),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(

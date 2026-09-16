@@ -19,14 +19,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 
-enum StemSubject {
-  mathematics,
-  physics,
-  chemistry,
-  biology,
-  technology,
-  other,
-}
+enum StemSubject { mathematics, physics, chemistry, biology, technology, other }
 
 /// Classifies a category name coming from the learning API.
 ///
@@ -64,6 +57,55 @@ IconData stemSubjectIcon(StemSubject subject) => switch (subject) {
   StemSubject.technology => Icons.code_rounded,
   StemSubject.other => Icons.school_rounded,
 };
+
+/// The pixel-art picture for a subject, or null where there is none.
+String? stemSubjectAsset(StemSubject subject) => switch (subject) {
+  StemSubject.mathematics => 'assets/images/subjects/math.png',
+  StemSubject.physics => 'assets/images/subjects/physics.png',
+  StemSubject.chemistry => 'assets/images/subjects/chemistry.png',
+  StemSubject.biology => 'assets/images/subjects/biology.png',
+  StemSubject.technology => 'assets/images/subjects/computer.png',
+  StemSubject.other => null,
+};
+
+/// A subject's square tile: its pixel-art picture on its own pastel, or the
+/// plain icon on the subject tone for subjects without a picture.
+class StemSubjectTile extends StatelessWidget {
+  const StemSubjectTile({super.key, required this.subject, required this.size});
+
+  final StemSubject subject;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = subjectTone(context, subject);
+    final fallback = Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: tone.surface,
+        borderRadius: BorderRadius.circular(size * .26),
+      ),
+      child: Icon(
+        stemSubjectIcon(subject),
+        size: size * .5,
+        color: tone.accent,
+      ),
+    );
+    final asset = stemSubjectAsset(subject);
+    if (asset == null) return fallback;
+    return Image.asset(
+      asset,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.high,
+      excludeFromSemantics: true,
+      errorBuilder: (_, _, _) => fallback,
+    );
+  }
+}
 
 /// A flat pastel surface plus the ink that stays legible on it.
 @immutable
@@ -108,7 +150,7 @@ const _goalAccent = Color(0xFFB57E14);
 Color _darkSurface(BuildContext context, Color pastel) => Color.alphaBlend(
   // Enough of the hue to separate a done card from a not-started one at a
   // glance, without lifting the surface to the brightness of a light theme.
-  pastel.withValues(alpha: .22),
+  pastel.withValues(alpha: .12),
   context.riksa.surfaceRaised,
 );
 
@@ -152,10 +194,8 @@ LearningTone statusTone(BuildContext context, LearningStatus status) {
     LearningStatus.current => (_currentPastel, _currentAccent),
     LearningStatus.done => (_donePastel, _doneAccent),
     LearningStatus.goal => (_goalPastel, _goalAccent),
-    LearningStatus.todo || LearningStatus.locked => (
-      palette.surface,
-      palette.inkMuted,
-    ),
+    LearningStatus.todo ||
+    LearningStatus.locked => (palette.surface, palette.inkMuted),
   };
 
   if (status == LearningStatus.todo || status == LearningStatus.locked) {
@@ -186,5 +226,5 @@ Color learningAnchor(BuildContext context) =>
 /// Foreground for content sitting on [learningAnchor].
 Color onLearningAnchor(BuildContext context) =>
     Theme.of(context).brightness == Brightness.dark
-    ? AppColors.editorialAubergine
+    ? AppColors.deepInk
     : const Color(0xFFFFF7FB);

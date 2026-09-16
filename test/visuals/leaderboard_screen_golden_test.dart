@@ -60,124 +60,130 @@ class _PreviewAuthNotifier extends AuthNotifier {
 void main() {
   setUpAll(_loadFonts);
 
-  testWidgets('leaderboard redesign light', (tester) async {
-    tester.view.physicalSize = const Size(393, 852);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  for (final dark in [false, true]) {
+    testWidgets('leaderboard redesign ${dark ? 'dark' : 'light'}', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(393, 852);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    const rows = [
-      LeaderboardRow(
-        rank: 1,
-        userId: 'sokha',
-        score: 5630,
-        rankingTier: 'LEGEND',
-        displayName: 'Sokha Chan',
-      ),
-      LeaderboardRow(
-        rank: 2,
-        userId: 'bopha',
-        score: 4320,
-        rankingTier: 'DIAMOND',
-        displayName: 'Bopha Pich',
-      ),
-      LeaderboardRow(
-        rank: 3,
-        userId: 'current-user',
-        score: 4120,
-        rankingTier: 'DIAMOND',
-        displayName: 'Riksa Platform Admin',
-      ),
-      LeaderboardRow(
-        rank: 4,
-        userId: 'sophea',
-        score: 3975,
-        rankingTier: 'DIAMOND',
-        displayName: 'Teacher Sophea',
-      ),
-      LeaderboardRow(
-        rank: 5,
-        userId: 'dara',
-        score: 3355,
-        rankingTier: 'DIAMOND',
-        displayName: 'Dara Seng',
-      ),
-      LeaderboardRow(
-        rank: 6,
-        userId: 'demo',
-        score: 2980,
-        rankingTier: 'DIAMOND',
-        displayName: 'Demo Student',
-      ),
-    ];
+      const rows = [
+        LeaderboardRow(
+          rank: 1,
+          userId: 'sokha',
+          score: 5630,
+          rankingTier: 'LEGEND',
+          displayName: 'Sokha Chan',
+        ),
+        LeaderboardRow(
+          rank: 2,
+          userId: 'bopha',
+          score: 4320,
+          rankingTier: 'DIAMOND',
+          displayName: 'Bopha Pich',
+        ),
+        LeaderboardRow(
+          rank: 3,
+          userId: 'current-user',
+          score: 4120,
+          rankingTier: 'DIAMOND',
+          displayName: 'Riksa Platform Admin',
+        ),
+        LeaderboardRow(
+          rank: 4,
+          userId: 'sophea',
+          score: 3975,
+          rankingTier: 'DIAMOND',
+          displayName: 'Teacher Sophea',
+        ),
+        LeaderboardRow(
+          rank: 5,
+          userId: 'dara',
+          score: 3355,
+          rankingTier: 'DIAMOND',
+          displayName: 'Dara Seng',
+        ),
+        LeaderboardRow(
+          rank: 6,
+          userId: 'demo',
+          score: 2980,
+          rankingTier: 'DIAMOND',
+          displayName: 'Demo Student',
+        ),
+      ];
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          authProvider.overrideWith(_PreviewAuthNotifier.new),
-          profileRankProvider.overrideWith(
-            (ref) async => const LeaderboardRank(
-              countryRank: 3,
-              countryScore: 4120,
-              countryTier: 'DIAMOND',
-              provinceRank: 2,
-              provinceScore: 4120,
-              provinceTier: 'DIAMOND',
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith(_PreviewAuthNotifier.new),
+            profileRankProvider.overrideWith(
+              (ref) async => const LeaderboardRank(
+                countryRank: 3,
+                countryScore: 4120,
+                countryTier: 'DIAMOND',
+                provinceRank: 2,
+                provinceScore: 4120,
+                provinceTier: 'DIAMOND',
+              ),
             ),
-          ),
-          leaderboardProvider.overrideWith((ref, scope) async => rows),
-        ],
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
+            leaderboardProvider.overrideWith((ref, scope) async => rows),
           ],
-          supportedLocales: const [Locale('en'), Locale('km')],
-          home: Scaffold(
-            extendBody: false,
-            body: const LeaderboardScreen(),
-            bottomNavigationBar: RiksaBottomNavigationBar(
-              currentIndex: 3,
-              onSelected: (_) {},
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: dark ? AppTheme.dark : AppTheme.light,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('km')],
+            home: Scaffold(
+              extendBody: false,
+              body: const LeaderboardScreen(),
+              bottomNavigationBar: RiksaBottomNavigationBar(
+                currentIndex: 3,
+                onSelected: (_) {},
+              ),
             ),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    final context = tester.element(find.byType(LeaderboardScreen));
-    await tester.runAsync(() async {
-      for (final tier in profileTierLadder) {
-        await precacheImage(
-          AssetImage('assets/images/ranks/${tier.toLowerCase()}.png'),
-          context,
-          onError: (error, stack) => fail('Badge failed to load: $error'),
-        );
-        await precacheImage(
-          AssetImage('assets/images/avatar_frames/${tier.toLowerCase()}.png'),
-          context,
-          onError: (error, stack) => fail('Frame failed to load: $error'),
-        );
-      }
+      final context = tester.element(find.byType(LeaderboardScreen));
+      await tester.runAsync(() async {
+        for (final tier in profileTierLadder) {
+          await precacheImage(
+            AssetImage('assets/images/ranks/${tier.toLowerCase()}.png'),
+            context,
+            onError: (error, stack) => fail('Badge failed to load: $error'),
+          );
+          await precacheImage(
+            AssetImage('assets/images/avatar_frames/${tier.toLowerCase()}.png'),
+            context,
+            onError: (error, stack) => fail('Frame failed to load: $error'),
+          );
+        }
+      });
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(
+        tester
+            .state<ScrollableState>(find.byType(Scrollable).first)
+            .position
+            .pixels,
+        0,
+      );
+      await expectLater(
+        find.byType(LeaderboardScreen),
+        matchesGoldenFile(
+          'goldens/leaderboard_redesign_en_${dark ? 'dark' : 'light'}.png',
+        ),
+      );
     });
-    await tester.pumpAndSettle();
-
-    expect(tester.takeException(), isNull);
-    expect(
-      tester
-          .state<ScrollableState>(find.byType(Scrollable).first)
-          .position
-          .pixels,
-      0,
-    );
-    await expectLater(
-      find.byType(LeaderboardScreen),
-      matchesGoldenFile('goldens/leaderboard_redesign_en_light.png'),
-    );
-  });
+  }
 }

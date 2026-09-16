@@ -191,106 +191,119 @@ final _biology = SubjectProgress(
 void main() {
   setUpAll(_loadFonts);
 
-  testWidgets('social feed editorial palette light', (tester) async {
-    tester.view.physicalSize = const Size(393, 852);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  for (final dark in [false, true]) {
+    testWidgets('social feed editorial palette ${dark ? 'dark' : 'light'}', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(393, 852);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          // Signed-out reading view: no owner controls in the golden.
-          currentUserIdProvider.overrideWithValue(null),
-          authProvider.overrideWith(_PreviewAuth.new),
-          learningHomeProvider.overrideWith(
-            (ref) async => LearningHomeData(
-              subjects: [_biology],
-              resumeSubject: _biology,
-              resumeLesson: _biology.lessons.first,
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            // Signed-out reading view: no owner controls in the golden.
+            currentUserIdProvider.overrideWithValue(null),
+            authProvider.overrideWith(_PreviewAuth.new),
+            learningHomeProvider.overrideWith(
+              (ref) async => LearningHomeData(
+                subjects: [_biology],
+                resumeSubject: _biology,
+                resumeLesson: _biology.lessons.first,
+              ),
             ),
-          ),
-          socialFeedProvider.overrideWith(_PreviewFeedNotifier.new),
-          communityStreakProvider.overrideWith(
-            (ref) async => const CommunityStreak(current: 20, highest: 24),
-          ),
-        ],
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
+            socialFeedProvider.overrideWith(_PreviewFeedNotifier.new),
+            communityStreakProvider.overrideWith(
+              (ref) async => const CommunityStreak(current: 20, highest: 24),
+            ),
           ],
-          supportedLocales: const [Locale('en'), Locale('km')],
-          home: Scaffold(
-            extendBody: false,
-            body: const SocialFeedScreen(),
-            bottomNavigationBar: RiksaBottomNavigationBar(
-              currentIndex: 0,
-              onSelected: (_) {},
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: dark ? AppTheme.dark : AppTheme.light,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('km')],
+            home: Scaffold(
+              extendBody: false,
+              body: const SocialFeedScreen(),
+              bottomNavigationBar: RiksaBottomNavigationBar(
+                currentIndex: 0,
+                onSelected: (_) {},
+              ),
             ),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    expect(tester.takeException(), isNull);
-    expect(
-      tester
-          .state<ScrollableState>(find.byType(Scrollable).first)
-          .position
-          .pixels,
-      0,
-    );
-    await expectLater(
-      find.byType(MaterialApp),
-      matchesGoldenFile('goldens/social_feed_editorial_en_light.png'),
-    );
-  });
-
-  testWidgets('social post detail editorial palette light', (tester) async {
-    tester.view.physicalSize = const Size(393, 852);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    FlutterSecureStorage.setMockInitialValues({});
-    final client = DioClient(
-      SessionStore(const FlutterSecureStorage()),
-      baseUrl: 'http://riksa.test/api/v1',
-    );
-    addTearDown(client.dispose);
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          currentUserIdProvider.overrideWithValue(null),
-          socialApiProvider.overrideWithValue(_PreviewSocialApi(client)),
-        ],
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [Locale('en'), Locale('km')],
-          home: const SocialPostDetailScreen(postId: 'official-post'),
+      expect(tester.takeException(), isNull);
+      expect(
+        tester
+            .state<ScrollableState>(find.byType(Scrollable).first)
+            .position
+            .pixels,
+        0,
+      );
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile(
+          'goldens/social_feed_editorial_en_${dark ? 'dark' : 'light'}.png',
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+    });
+  }
 
-    expect(tester.takeException(), isNull);
-    await expectLater(
-      find.byType(SocialPostDetailScreen),
-      matchesGoldenFile('goldens/social_post_detail_editorial_en_light.png'),
+  for (final dark in [false, true]) {
+    testWidgets(
+      'social post detail editorial palette ${dark ? 'dark' : 'light'}',
+      (tester) async {
+        tester.view.physicalSize = const Size(393, 852);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        FlutterSecureStorage.setMockInitialValues({});
+        final client = DioClient(
+          SessionStore(const FlutterSecureStorage()),
+          baseUrl: 'http://riksa.test/api/v1',
+        );
+        addTearDown(client.dispose);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              currentUserIdProvider.overrideWithValue(null),
+              socialApiProvider.overrideWithValue(_PreviewSocialApi(client)),
+            ],
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              theme: dark ? AppTheme.dark : AppTheme.light,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('en'), Locale('km')],
+              home: const SocialPostDetailScreen(postId: 'official-post'),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        await expectLater(
+          find.byType(SocialPostDetailScreen),
+          matchesGoldenFile(
+            'goldens/social_post_detail_editorial_en_${dark ? 'dark' : 'light'}.png',
+          ),
+        );
+      },
     );
-  });
+  }
 }
