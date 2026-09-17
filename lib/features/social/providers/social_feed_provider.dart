@@ -209,20 +209,12 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
         .firstOrNull;
     if (category == null) return 'Pick a community for this post.';
 
+    // Posting is for members; the composer only offers joined communities.
+    if (!category.joined) return 'Join ${category.name} before posting.';
+
     try {
-      var categories = current.categories;
-      var latest = current;
-      if (!category.joined) {
-        final joined = await ref
-            .read(socialApiProvider)
-            .setCategoryJoined(categoryId, joined: true);
-        categories = [
-          for (final item in categories)
-            if (item.id == categoryId) joined else item,
-        ];
-        latest = current.copyWith(categories: categories);
-        state = latest;
-      }
+      final categories = current.categories;
+      final latest = current;
       final created = await ref
           .read(socialApiProvider)
           .createPost(
@@ -312,6 +304,21 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
         current.posts.any((item) => item.id == post.id)) {
       state = current.copyWith(posts: _replace(current.posts, post));
     }
+  }
+
+  /// Takes in a membership change or a new community from another screen, so
+  /// the composer's list of joined communities stays current.
+  void syncCategory(SocialCategory category) {
+    final current = state;
+    if (current is! SocialFeedLoaded) return;
+    final known = current.categories.any((item) => item.id == category.id);
+    state = current.copyWith(
+      categories: [
+        for (final item in current.categories)
+          if (item.id == category.id) category else item,
+        if (!known) category,
+      ],
+    );
   }
 
   Future<bool> toggleCategoryMembership(String categoryId) async {

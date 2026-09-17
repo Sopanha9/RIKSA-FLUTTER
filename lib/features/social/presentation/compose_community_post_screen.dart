@@ -1,15 +1,18 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/unsaved_changes_guard.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../data/social_api.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
+import 'widgets/community_avatar.dart';
 import 'widgets/post_image_field.dart';
 import 'widgets/social_palette.dart';
 
@@ -22,9 +25,13 @@ class ComposeCommunityPostScreen extends ConsumerStatefulWidget {
     super.key,
     this.isQuestion = false,
     this.post,
+    this.communityId,
   });
 
   final bool isQuestion;
+
+  /// The community to preselect, when the author starts from its page.
+  final String? communityId;
 
   /// The post being rewritten. Null starts a new one.
   final SocialPost? post;
@@ -58,7 +65,11 @@ class _ComposeCommunityPostScreenState
       _contentController.text = post.markdownContent;
       _categoryId = post.category.id;
       _mediaUrl = post.mediaUrl;
+    } else {
+      _categoryId = widget.communityId;
     }
+    _titleController.addListener(_syncDirty);
+    _contentController.addListener(_syncDirty);
   }
 
   @override
@@ -66,6 +77,26 @@ class _ComposeCommunityPostScreenState
     _titleController.dispose();
     _contentController.dispose();
     super.dispose();
+  }
+
+  /// Whether leaving now would lose something the author wrote or attached.
+  bool get _isDirty {
+    final title = _titleController.text.trim();
+    final content = _contentController.text.trim();
+    final post = _original;
+    if (post == null) {
+      return title.isNotEmpty || content.isNotEmpty || _mediaUrl != null;
+    }
+    return title != post.title.trim() ||
+        content != post.markdownContent.trim() ||
+        _mediaUrl != post.mediaUrl;
+  }
+
+  bool _wasDirty = false;
+
+  void _syncDirty() {
+    final dirty = _isDirty;
+    if (dirty != _wasDirty) setState(() => _wasDirty = dirty);
   }
 
   /// Picks an image and uploads it straight away, so a failure surfaces while
@@ -185,11 +216,20 @@ class _ComposeCommunityPostScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final palette = context.riksa;
     final feed = ref.watch(socialFeedProvider);
+    final loaded = feed is SocialFeedLoaded;
+    // Only members post, so a new post can go to joined communities only.
     final categories = feed is SocialFeedLoaded
-        ? feed.categories
+        ? feed.categories.where((item) => item.joined).toList()
         : const <SocialCategory>[];
-    _categoryId ??= _original?.category.id ?? categories.firstOrNull?.id;
+    // Only a loaded list can overrule the choice; while it loads, keep the
+    // community the author started from.
+    if (loaded &&
+        !_isEditing &&
+        !categories.any((item) => item.id == _categoryId)) {
+      _categoryId = categories.firstOrNull?.id;
+    }
     // An edited post keeps its own community even when the feed's category
     // list has not loaded, or no longer contains it.
     final editCategory = _original?.category;
@@ -199,145 +239,173 @@ class _ComposeCommunityPostScreenState
           !categories.any((item) => item.id == editCategory.id))
         editCategory,
     ];
+    final selected = options
+        .where((item) => item.id == _categoryId)
+        .firstOrNull;
+    // Posting needs a loaded list with at least one joined community.
+    final noCommunity = !_isEditing && (!loaded || categories.isEmpty);
+    final communitiesFailed = !_isEditing && feed is SocialFeedFailure;
+    final busy = _submitting || _uploadingImage;
+    final title = _isEditing
+        ? l10n.editPost
+        : widget.isQuestion
+        ? l10n.askCommunity
+        : l10n.createPost;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _isEditing
-              ? l10n.editPost
-              : widget.isQuestion
-              ? l10n.askCommunity
-              : l10n.createPost,
+    // Borderless fields: the page is the writing surface.
+    InputDecoration bare(String hint, TextStyle? style) => InputDecoration(
+      hintText: hint,
+      hintStyle: style?.copyWith(color: palette.inkFaint),
+      filled: false,
+      border: InputBorder.none,
+      enabledBorder: InputBorder.none,
+      focusedBorder: InputBorder.none,
+      errorBorder: InputBorder.none,
+      focusedErrorBorder: InputBorder.none,
+      disabledBorder: InputBorder.none,
+      contentPadding: EdgeInsets.zero,
+      counterText: '',
+    );
+    final titleStyle = theme.textTheme.headlineSmall?.copyWith(
+      fontWeight: FontWeight.w800,
+      height: 1.25,
+    );
+    final bodyStyle = theme.textTheme.bodyLarge?.copyWith(height: 1.5);
+
+    return UnsavedChangesGuard(
+      dirty: _isDirty,
+      busy: _submitting,
+      child: Scaffold(
+        backgroundColor: palette.canvas,
+        appBar: AppBar(
+          backgroundColor: palette.canvas,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            key: const ValueKey('compose-close'),
+            onPressed: () => Navigator.maybePop(context),
+            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+            style: IconButton.styleFrom(backgroundColor: Colors.transparent),
+            icon: const Icon(Icons.close_rounded),
+          ),
+          titleSpacing: 0,
+          title: Text(
+            title,
+            style: RiksaTypography.titleStyleFor(
+              title,
+              theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: FilledButton(
+                key: const ValueKey('compose-submit'),
+                onPressed: busy || noCommunity ? null : _submit,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(72, 38),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                ),
+                child: _submitting
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(_isEditing ? l10n.saveChanges : l10n.publish),
+              ),
+            ),
+          ],
         ),
-      ),
-      body: Stack(
-        children: [
-          Positioned(
-            right: -90,
-            top: -70,
-            child: _AmbientOrb(
-              color: AppColors.violet.withValues(alpha: .16),
-              size: 240,
-            ),
-          ),
-          Positioned(
-            left: -80,
-            bottom: -70,
-            child: _AmbientOrb(
-              color: AppColors.brandAccent.withValues(alpha: .14),
-              size: 220,
-            ),
-          ),
-          SafeArea(
-            top: false,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
-              child: ClipRRect(
-                borderRadius: AppRadii.largeBorder,
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface.withValues(alpha: .78),
-                      borderRadius: AppRadii.largeBorder,
-                      border: Border.all(
-                        color: theme.colorScheme.outlineVariant.withValues(
-                          alpha: .65,
-                        ),
-                      ),
-                    ),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 52,
-                            height: 52,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF34443A), Color(0xFF5E7164)],
-                              ),
-                              borderRadius: AppRadii.mediumBorder,
-                            ),
-                            child: Icon(
-                              _isEditing
-                                  ? Icons.edit_outlined
-                                  : widget.isQuestion
-                                  ? Icons.help_outline_rounded
-                                  : Icons.edit_note_rounded,
-                              color: Colors.white,
-                              size: 27,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          DropdownButtonFormField<String>(
-                            initialValue: _categoryId,
-                            items: [
-                              for (final category in options)
-                                DropdownMenuItem(
-                                  value: category.id,
-                                  child: Text(category.name),
-                                ),
-                            ],
+        body: Center(
+          child: ConstrainedBox(
+            // Phone-width column, centred when the window is wider.
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Form(
+                    key: _formKey,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: _CommunityChip(
+                            community: selected,
+                            placeholder:
+                                !_isEditing && feed is SocialFeedLoading
+                                ? l10n.composeLoadingCommunities
+                                : l10n.chooseCommunity,
                             // A post keeps the community it was written in.
-                            onChanged: _submitting || _isEditing
+                            onTap: _isEditing || busy || categories.isEmpty
                                 ? null
-                                : (value) =>
-                                      setState(() => _categoryId = value),
-                            decoration: InputDecoration(
-                              labelText: l10n.chooseCommunity,
-                              prefixIcon: const Icon(Icons.groups_2_outlined),
-                            ),
-                            validator: (_) => _categoryId == null
-                                ? l10n.chooseCommunity
-                                : null,
+                                : () => _pickCommunity(categories),
                           ),
-                          if (categories.isEmpty && !_isEditing) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              l10n.noCommunities,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.error,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _titleController,
-                            enabled: !_submitting,
-                            maxLength: 200,
-                            textCapitalization: TextCapitalization.sentences,
-                            decoration: InputDecoration(
-                              labelText: widget.isQuestion
-                                  ? l10n.questionTitleLabel
-                                  : l10n.postTitleLabel,
-                              prefixIcon: const Icon(Icons.title_rounded),
-                            ),
-                            validator: (value) =>
-                                value == null || value.trim().length < 4
-                                ? (widget.isQuestion
-                                      ? l10n.questionTitleLabel
-                                      : l10n.postTitleLabel)
-                                : null,
+                        ),
+                        if (communitiesFailed) ...[
+                          const SizedBox(height: 12),
+                          _ComposeNotice(
+                            key: const ValueKey('compose-communities-failed'),
+                            icon: Icons.cloud_off_rounded,
+                            message: l10n.composeCommunitiesFailed,
+                            actionLabel: l10n.tryAgain,
+                            onAction: () =>
+                                ref.read(socialFeedProvider.notifier).load(),
                           ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _contentController,
-                            enabled: !_submitting,
-                            minLines: 6,
-                            maxLines: 10,
-                            textCapitalization: TextCapitalization.sentences,
-                            decoration: InputDecoration(
-                              labelText: l10n.detailsLabel,
-                              alignLabelWithHint: true,
+                        ] else if (loaded && noCommunity) ...[
+                          const SizedBox(height: 12),
+                          _ComposeNotice(
+                            icon: Icons.info_outline_rounded,
+                            message: l10n.composeJoinFirst,
+                            actionKey: const ValueKey(
+                              'compose-browse-communities',
                             ),
-                            validator: (value) =>
-                                value == null || value.trim().length < 10
-                                ? l10n.detailsLabel
-                                : null,
+                            actionLabel: l10n.composeBrowseCommunities,
+                            onAction: () => context.push('/communities'),
                           ),
+                        ],
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          key: const ValueKey('compose-title'),
+                          controller: _titleController,
+                          enabled: !_submitting,
+                          maxLength: 200,
+                          minLines: 1,
+                          maxLines: 4,
+                          style: titleStyle,
+                          textCapitalization: TextCapitalization.sentences,
+                          textInputAction: TextInputAction.next,
+                          decoration: bare(
+                            widget.isQuestion
+                                ? l10n.questionTitleLabel
+                                : l10n.postTitleLabel,
+                            titleStyle,
+                          ),
+                          validator: (value) =>
+                              value == null || value.trim().length < 4
+                              ? (widget.isQuestion
+                                    ? l10n.questionTitleLabel
+                                    : l10n.postTitleLabel)
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          key: const ValueKey('compose-body'),
+                          controller: _contentController,
+                          enabled: !_submitting,
+                          minLines: 8,
+                          maxLines: null,
+                          style: bodyStyle,
+                          keyboardType: TextInputType.multiline,
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: bare(l10n.detailsLabel, bodyStyle),
+                          validator: (value) =>
+                              value == null || value.trim().length < 10
+                              ? l10n.detailsLabel
+                              : null,
+                        ),
+                        if (_mediaUrl != null || _uploadingImage) ...[
                           const SizedBox(height: 16),
                           PostImageField(
                             imageUrl: _mediaUrl,
@@ -346,26 +414,44 @@ class _ComposeCommunityPostScreenState
                             onPick: _pickImage,
                             onRemove: () => setState(() => _mediaUrl = null),
                           ),
-                          const SizedBox(height: 22),
-                          FilledButton.icon(
-                            onPressed:
-                                _submitting ||
-                                    _uploadingImage ||
-                                    (categories.isEmpty && !_isEditing)
-                                ? null
-                                : _submit,
-                            icon: _submitting
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(Icons.arrow_upward_rounded),
-                            label: Text(
-                              _isEditing ? l10n.saveChanges : l10n.publish,
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                // Sits on top of the keyboard, like a mobile editor toolbar.
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: palette.canvas,
+                    border: Border(top: BorderSide(color: palette.outline)),
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            key: const ValueKey('compose-add-photo'),
+                            onPressed: busy ? null : _pickImage,
+                            tooltip: _mediaUrl == null
+                                ? l10n.addPhoto
+                                : l10n.changePhoto,
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: palette.brand,
+                            ),
+                            icon: const Icon(Icons.image_outlined),
+                          ),
+                          Text(
+                            _mediaUrl == null
+                                ? l10n.addPhoto
+                                : l10n.changePhoto,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: palette.inkMuted,
                             ),
                           ),
                         ],
@@ -373,28 +459,213 @@ class _ComposeCommunityPostScreenState
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickCommunity(List<SocialCategory> communities) async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) =>
+          _CommunitySheet(communities: communities, selectedId: _categoryId),
+    );
+    if (picked != null && mounted) setState(() => _categoryId = picked);
+  }
+}
+
+/// The "post to" selector at the top of the editor.
+class _CommunityChip extends StatelessWidget {
+  const _CommunityChip({
+    required this.community,
+    required this.placeholder,
+    required this.onTap,
+  });
+
+  final SocialCategory? community;
+  final String placeholder;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = context.riksa;
+    final community = this.community;
+    final label = community?.name ?? placeholder;
+    return Material(
+      color: palette.surface,
+      shape: StadiumBorder(side: BorderSide(color: palette.outline)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: const ValueKey('compose-community'),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(6, 6, 12, 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (community != null)
+                ClipOval(child: CommunityAvatar(community: community, size: 28))
+              else
+                CircleAvatar(
+                  radius: 14,
+                  backgroundColor: palette.brandSoft,
+                  child: Icon(
+                    Icons.groups_2_outlined,
+                    size: 16,
+                    color: palette.brand,
+                  ),
+                ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: RiksaTypography.bodyStyleFor(
+                    label,
+                    theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              if (onTap != null) ...[
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 20,
+                  color: palette.inkMuted,
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-class _AmbientOrb extends StatelessWidget {
-  const _AmbientOrb({required this.color, required this.size});
+class _CommunitySheet extends StatelessWidget {
+  const _CommunitySheet({required this.communities, required this.selectedId});
 
-  final Color color;
-  final double size;
+  final List<SocialCategory> communities;
+  final String? selectedId;
 
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final palette = context.riksa;
+    final locale = Localizations.localeOf(context).languageCode;
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * .7,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(
+                l10n.chooseCommunity,
+                style: RiksaTypography.titleStyleFor(
+                  l10n.chooseCommunity,
+                  theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.only(bottom: 12),
+                children: [
+                  for (final item in communities)
+                    ListTile(
+                      key: ValueKey('compose-community-${item.id}'),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                      ),
+                      leading: ClipOval(
+                        child: CommunityAvatar(community: item, size: 40),
+                      ),
+                      title: Text(
+                        item.name,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        l10n.communityMemberCount(
+                          item.memberCount,
+                          NumberFormat.compact(
+                            locale: locale,
+                          ).format(item.memberCount),
+                        ),
+                      ),
+                      trailing: item.id == selectedId
+                          ? Icon(
+                              Icons.check_circle_rounded,
+                              color: palette.brand,
+                            )
+                          : null,
+                      onTap: () => Navigator.of(context).pop(item.id),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// An inline note under the community picker, with one way forward.
+class _ComposeNotice extends StatelessWidget {
+  const _ComposeNotice({
+    super.key,
+    required this.icon,
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+    this.actionKey,
+  });
+
+  final IconData icon;
+  final String message;
+  final String actionLabel;
+  final VoidCallback onAction;
+  final Key? actionKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = context.riksa;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+      decoration: BoxDecoration(
+        color: palette.brandSoft.withValues(alpha: .5),
+        borderRadius: AppRadii.largeBorder,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: palette.brand),
+          const SizedBox(width: 12),
+          Expanded(child: Text(message, style: theme.textTheme.bodyMedium)),
+          TextButton(
+            key: actionKey,
+            onPressed: onAction,
+            child: Text(actionLabel),
+          ),
+        ],
       ),
     );
   }

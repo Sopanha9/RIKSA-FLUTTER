@@ -24,9 +24,21 @@ class _SavedLessonsScreenState extends ConsumerState<SavedLessonsScreen> {
   /// The subject name the list is narrowed to; null shows everything.
   String? _subject;
 
+  void _retry() {
+    ref.invalidate(learningHomeProvider);
+    ref.read(lessonCatalogProvider.notifier).load();
+  }
+
+  /// Drops bookmarks that no longer match any lesson in the syllabus.
+  Future<void> _clearUnavailable(Iterable<String> ids) async {
+    final notifier = ref.read(savedLessonsProvider.notifier);
+    for (final id in ids.toList()) {
+      await notifier.remove(id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
     final l10n = AppLocalizations.of(context)!;
     final savedIds = ref.watch(savedLessonsProvider);
     final catalogState = ref.watch(lessonCatalogProvider);
@@ -53,6 +65,13 @@ class _SavedLessonsScreenState extends ConsumerState<SavedLessonsScreen> {
         ? savedLessons
         : savedLessons.where((l) => l.categoryName == _subject).toList();
     final title = l10n.menuSavedLessons;
+    // The home syllabus holds every lesson, so only once it has loaded can a
+    // bookmark that matches nothing be called unavailable.
+    final unresolved = savedIds.length - savedLessons.length;
+    final stillLoading =
+        homeState.isLoading ||
+        (catalogState.isLoading && catalogState.lessons.isEmpty);
+    final loadFailed = homeState.hasError && !homeState.hasValue;
 
     return Scaffold(
       backgroundColor: palette.canvas,
@@ -67,18 +86,63 @@ class _SavedLessonsScreenState extends ConsumerState<SavedLessonsScreen> {
           ),
         ),
       ),
-      body: catalogState.isLoading && catalogState.lessons.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : savedIds.isEmpty || savedLessons.isEmpty
+      body: savedIds.isEmpty
           ? IllustratedEmptyState(
               title: l10n.savedLessonsEmptyTitle,
               body: l10n.savedLessonsEmptyBody,
-              actionLabel: isKhmer ? 'រុករកមេរៀន' : 'Browse lessons',
+              actionLabel: l10n.browseLessons,
               onAction: () => context.go('/learn'),
+            )
+          : savedLessons.isEmpty && stillLoading
+          ? const Center(child: CircularProgressIndicator())
+          : savedLessons.isEmpty && loadFailed
+          ? IllustratedEmptyState(
+              key: const ValueKey('saved-lessons-load-failed'),
+              title: l10n.savedLessonsLoadFailed,
+              body: l10n.loadFailedCheckConnection,
+              actionLabel: l10n.tryAgain,
+              onAction: _retry,
+            )
+          : savedLessons.isEmpty
+          ? IllustratedEmptyState(
+              key: const ValueKey('saved-lessons-unavailable'),
+              title: l10n.savedLessonsUnavailableTitle,
+              body: l10n.savedLessonsUnavailableBody,
+              actionLabel: l10n.browseLessons,
+              onAction: () => context.go('/learn'),
+              secondaryLabel: l10n.savedLessonsClear,
+              onSecondary: () => _clearUnavailable(savedIds),
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (unresolved > 0 && loadFailed)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 12, 4),
+                    child: Row(
+                      key: const ValueKey('saved-lessons-partial-failure'),
+                      children: [
+                        Icon(
+                          Icons.cloud_off_rounded,
+                          size: 18,
+                          color: palette.inkMuted,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.savedLessonsSomeFailed,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: palette.inkMuted,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _retry,
+                          child: Text(l10n.tryAgain),
+                        ),
+                      ],
+                    ),
+                  ),
                 SizedBox(
                   height: 48,
                   child: ListView(
@@ -106,9 +170,7 @@ class _SavedLessonsScreenState extends ConsumerState<SavedLessonsScreen> {
                     separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (context, index) => _SavedLessonRow(
                       lesson: visible[index],
-                      removeTooltip: isKhmer
-                          ? 'ដកចេញពីមេរៀនរក្សាទុក'
-                          : 'Remove from saved',
+                      removeTooltip: l10n.removeFromSaved,
                     ),
                   ),
                 ),

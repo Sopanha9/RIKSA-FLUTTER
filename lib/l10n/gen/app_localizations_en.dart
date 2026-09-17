@@ -1691,4 +1691,225 @@ class AppLocalizationsEn extends AppLocalizations {
   String communityMembers(String count) {
     return '$count members';
   }
+
+  @override
+  String get communityCreatePost => 'Create post';
+
+  @override
+  String get communityShare => 'Share community';
+
+  @override
+  String get communitySeeMore => 'See more';
+
+  @override
+  String get communitySeeLess => 'See less';
+
+  @override
+  String get communitySortBy => 'Sort posts by';
+
+  @override
+  String get communitySortHot => 'Hot';
+
+  @override
+  String get communitySortNew => 'New';
+
+  @override
+  String get communitySortTop => 'Top';
+
+  @override
+  String get communityNoPostsTitle => 'No posts yet';
+
+  @override
+  String get communityNoPostsBody => 'Be the first to start a discussion here.';
+
+  @override
+  String get communityNotFound => 'This community could not be found.';
+
+  @override
+  String get communityLinkCopied => 'Community link copied';
+
+  @override
+  String communityMemberCount(int count, String label) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$label members',
+      one: '1 member',
+      zero: 'No members yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composeJoinFirst => 'Join a community first to post in it.';
+
+  @override
+  String get composeBrowseCommunities => 'Browse communities';
+
+  @override
+  String get communitiesYours => 'Your communities';
+
+  @override
+  String get communitiesSeeAll => 'See all';
+
+  @override
+  String get communitiesFeatured => 'Featured';
+
+  @override
+  String get communitiesCantFind => 'Can’t find your community?';
+
+  @override
+  String get communitiesCreate => 'Create community';
+
+  @override
+  String get communitiesFilterAll => 'All';
+
+  @override
+  String get communitiesFilterScience => 'Science';
+
+  @override
+  String get communitiesFilterLanguages => 'Languages';
+
+  @override
+  String get communitiesFilterHistory => 'History & Culture';
+
+  @override
+  String get communitiesFilterTech => 'Tech';
+
+  @override
+  String get communitiesFilterGeneral => 'General';
+
+  @override
+  String get createCommunityIcon => 'Community icon';
+
+  @override
+  String get createCommunityIconHint =>
+      'Optional. A square picture works best.';
+
+  @override
+  String get createCommunityName => 'Community name';
+
+  @override
+  String get createCommunityNameHint => 'e.g. Robotics Club';
+
+  @override
+  String get createCommunityNameLength => 'Use 3 to 50 characters.';
+
+  @override
+  String get createCommunityNameChars =>
+      'Use only letters, numbers, spaces and & \' . , ( ) + # -';
+
+  @override
+  String get createCommunityNameLetters =>
+      'The name needs at least one letter.';
+
+  @override
+  String get createCommunityNameReserved =>
+      'This name is reserved. Try another one.';
+
+  @override
+  String get createCommunityDescription => 'What is it about?';
+
+  @override
+  String get createCommunityDescriptionHint =>
+      'Tell people what they will learn or discuss here.';
+
+  @override
+  String get createCommunityRulesTitle => 'Before you create';
+
+  @override
+  String get createCommunityRulePublic =>
+      'Everyone on RIKSA can find, join and post in your community.';
+
+  @override
+  String get createCommunityRuleOwner =>
+      'You become its owner and stay a member while you own it.';
+
+  @override
+  String get createCommunityRuleConduct =>
+      'Keep it kind, safe and on topic. Communities that break the rules are removed.';
+
+  @override
+  String get createCommunityRuleLimit =>
+      'You need a verified account. You can create up to 3 a day and own up to 5.';
+
+  @override
+  String get createCommunityCreated => 'Your community is ready';
+
+  @override
+  String aiAskCoachAbout(String query) {
+    return 'Ask AI Study Coach: \"$query\"';
+  }
+
+  @override
+  String get aiChatLoadFailedBody =>
+      'Check your connection and try again. Nothing in this chat was lost.';
+
+  @override
+  String get discardChangesTitle => 'Discard your changes?';
+
+  @override
+  String get discardChangesBody => 'What you have written here will be lost.';
+
+  @override
+  String get keepEditing => 'Keep editing';
+
+  @override
+  String get discardAction => 'Discard';
+
+  @override
+  String get notNow => 'Not now';
+
+  @override
+  String get lessonDetailLoadFailed => 'We couldn’t open this lesson';
+
+  @override
+  String get loadFailedCheckConnection =>
+      'Check your connection and try again.';
+
+  @override
+  String get backToSubjects => 'Back to subjects';
+
+  @override
+  String get savedLessonsLoadFailed => 'We couldn’t load your saved lessons';
+
+  @override
+  String get savedLessonsSomeFailed => 'Some saved lessons couldn’t load.';
+
+  @override
+  String get savedLessonsUnavailableTitle =>
+      'These lessons are no longer available';
+
+  @override
+  String get savedLessonsUnavailableBody =>
+      'They may have been removed from the course.';
+
+  @override
+  String get savedLessonsClear => 'Clear saved lessons';
+
+  @override
+  String get browseLessons => 'Browse lessons';
+
+  @override
+  String get removeFromSaved => 'Remove from saved';
+
+  @override
+  String get composeLoadingCommunities => 'Loading your communities…';
+
+  @override
+  String get composeCommunitiesFailed =>
+      'We couldn’t load your communities. Your writing is safe.';
+
+  @override
+  String get blogChooseTopicRequired => 'Choose a topic (required)';
+
+  @override
+  String get blogTopicsLoading =>
+      'Topics are still loading. Try again in a moment.';
+
+  @override
+  String get blogTopicsFailed => 'We couldn’t load topics.';
+
+  @override
+  String get blogTopicsEmpty => 'No topics are available yet.';
 }

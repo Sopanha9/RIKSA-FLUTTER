@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/gen/app_localizations.dart';
 import '../../data/learning_models.dart';
 import '../learning_design.dart';
 
@@ -83,11 +84,20 @@ class LessonSearchDelegate extends SearchDelegate<LessonSummary?> {
                 FilledButton.tonalIcon(
                   key: const ValueKey('ask-ai-coach-search-button'),
                   onPressed: () {
+                    final prompt = query.trim();
+                    final router = GoRouter.of(context);
                     close(context, null);
-                    context.push('/ai', extra: query.trim());
+                    router.push(
+                      Uri(
+                        path: '/ai/chat/new',
+                        queryParameters: {'prompt': prompt},
+                      ).toString(),
+                    );
                   },
                   icon: const Icon(Icons.auto_awesome, size: 18),
-                  label: Text('Ask AI Study Coach: "${query.trim()}"'),
+                  label: Text(
+                    AppLocalizations.of(context)!.aiAskCoachAbout(query.trim()),
+                  ),
                 ),
               ],
             ],

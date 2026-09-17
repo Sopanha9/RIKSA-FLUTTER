@@ -3037,6 +3037,396 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} members'**
   String communityMembers(String count);
+
+  /// No description provided for @communityCreatePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Create post'**
+  String get communityCreatePost;
+
+  /// No description provided for @communityShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share community'**
+  String get communityShare;
+
+  /// No description provided for @communitySeeMore.
+  ///
+  /// In en, this message translates to:
+  /// **'See more'**
+  String get communitySeeMore;
+
+  /// No description provided for @communitySeeLess.
+  ///
+  /// In en, this message translates to:
+  /// **'See less'**
+  String get communitySeeLess;
+
+  /// No description provided for @communitySortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort posts by'**
+  String get communitySortBy;
+
+  /// No description provided for @communitySortHot.
+  ///
+  /// In en, this message translates to:
+  /// **'Hot'**
+  String get communitySortHot;
+
+  /// No description provided for @communitySortNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get communitySortNew;
+
+  /// No description provided for @communitySortTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Top'**
+  String get communitySortTop;
+
+  /// No description provided for @communityNoPostsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts yet'**
+  String get communityNoPostsTitle;
+
+  /// No description provided for @communityNoPostsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to start a discussion here.'**
+  String get communityNoPostsBody;
+
+  /// No description provided for @communityNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This community could not be found.'**
+  String get communityNotFound;
+
+  /// No description provided for @communityLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Community link copied'**
+  String get communityLinkCopied;
+
+  /// No description provided for @communityMemberCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No members yet} =1{1 member} other{{label} members}}'**
+  String communityMemberCount(int count, String label);
+
+  /// No description provided for @composeJoinFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a community first to post in it.'**
+  String get composeJoinFirst;
+
+  /// No description provided for @composeBrowseCommunities.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse communities'**
+  String get composeBrowseCommunities;
+
+  /// No description provided for @communitiesYours.
+  ///
+  /// In en, this message translates to:
+  /// **'Your communities'**
+  String get communitiesYours;
+
+  /// No description provided for @communitiesSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get communitiesSeeAll;
+
+  /// No description provided for @communitiesFeatured.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured'**
+  String get communitiesFeatured;
+
+  /// No description provided for @communitiesCantFind.
+  ///
+  /// In en, this message translates to:
+  /// **'Can’t find your community?'**
+  String get communitiesCantFind;
+
+  /// No description provided for @communitiesCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create community'**
+  String get communitiesCreate;
+
+  /// No description provided for @communitiesFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get communitiesFilterAll;
+
+  /// No description provided for @communitiesFilterScience.
+  ///
+  /// In en, this message translates to:
+  /// **'Science'**
+  String get communitiesFilterScience;
+
+  /// No description provided for @communitiesFilterLanguages.
+  ///
+  /// In en, this message translates to:
+  /// **'Languages'**
+  String get communitiesFilterLanguages;
+
+  /// No description provided for @communitiesFilterHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History & Culture'**
+  String get communitiesFilterHistory;
+
+  /// No description provided for @communitiesFilterTech.
+  ///
+  /// In en, this message translates to:
+  /// **'Tech'**
+  String get communitiesFilterTech;
+
+  /// No description provided for @communitiesFilterGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get communitiesFilterGeneral;
+
+  /// No description provided for @createCommunityIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Community icon'**
+  String get createCommunityIcon;
+
+  /// No description provided for @createCommunityIconHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. A square picture works best.'**
+  String get createCommunityIconHint;
+
+  /// No description provided for @createCommunityName.
+  ///
+  /// In en, this message translates to:
+  /// **'Community name'**
+  String get createCommunityName;
+
+  /// No description provided for @createCommunityNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Robotics Club'**
+  String get createCommunityNameHint;
+
+  /// No description provided for @createCommunityNameLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Use 3 to 50 characters.'**
+  String get createCommunityNameLength;
+
+  /// No description provided for @createCommunityNameChars.
+  ///
+  /// In en, this message translates to:
+  /// **'Use only letters, numbers, spaces and & \' . , ( ) + # -'**
+  String get createCommunityNameChars;
+
+  /// No description provided for @createCommunityNameLetters.
+  ///
+  /// In en, this message translates to:
+  /// **'The name needs at least one letter.'**
+  String get createCommunityNameLetters;
+
+  /// No description provided for @createCommunityNameReserved.
+  ///
+  /// In en, this message translates to:
+  /// **'This name is reserved. Try another one.'**
+  String get createCommunityNameReserved;
+
+  /// No description provided for @createCommunityDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'What is it about?'**
+  String get createCommunityDescription;
+
+  /// No description provided for @createCommunityDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell people what they will learn or discuss here.'**
+  String get createCommunityDescriptionHint;
+
+  /// No description provided for @createCommunityRulesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you create'**
+  String get createCommunityRulesTitle;
+
+  /// No description provided for @createCommunityRulePublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone on RIKSA can find, join and post in your community.'**
+  String get createCommunityRulePublic;
+
+  /// No description provided for @createCommunityRuleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'You become its owner and stay a member while you own it.'**
+  String get createCommunityRuleOwner;
+
+  /// No description provided for @createCommunityRuleConduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it kind, safe and on topic. Communities that break the rules are removed.'**
+  String get createCommunityRuleConduct;
+
+  /// No description provided for @createCommunityRuleLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You need a verified account. You can create up to 3 a day and own up to 5.'**
+  String get createCommunityRuleLimit;
+
+  /// No description provided for @createCommunityCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Your community is ready'**
+  String get createCommunityCreated;
+
+  /// No description provided for @aiAskCoachAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AI Study Coach: \"{query}\"'**
+  String aiAskCoachAbout(String query);
+
+  /// No description provided for @aiChatLoadFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again. Nothing in this chat was lost.'**
+  String get aiChatLoadFailedBody;
+
+  /// No description provided for @discardChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard your changes?'**
+  String get discardChangesTitle;
+
+  /// No description provided for @discardChangesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What you have written here will be lost.'**
+  String get discardChangesBody;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditing;
+
+  /// No description provided for @discardAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discardAction;
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
+
+  /// No description provided for @lessonDetailLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t open this lesson'**
+  String get lessonDetailLoadFailed;
+
+  /// No description provided for @loadFailedCheckConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get loadFailedCheckConnection;
+
+  /// No description provided for @backToSubjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to subjects'**
+  String get backToSubjects;
+
+  /// No description provided for @savedLessonsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load your saved lessons'**
+  String get savedLessonsLoadFailed;
+
+  /// No description provided for @savedLessonsSomeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Some saved lessons couldn’t load.'**
+  String get savedLessonsSomeFailed;
+
+  /// No description provided for @savedLessonsUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'These lessons are no longer available'**
+  String get savedLessonsUnavailableTitle;
+
+  /// No description provided for @savedLessonsUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They may have been removed from the course.'**
+  String get savedLessonsUnavailableBody;
+
+  /// No description provided for @savedLessonsClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear saved lessons'**
+  String get savedLessonsClear;
+
+  /// No description provided for @browseLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse lessons'**
+  String get browseLessons;
+
+  /// No description provided for @removeFromSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from saved'**
+  String get removeFromSaved;
+
+  /// No description provided for @composeLoadingCommunities.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your communities…'**
+  String get composeLoadingCommunities;
+
+  /// No description provided for @composeCommunitiesFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load your communities. Your writing is safe.'**
+  String get composeCommunitiesFailed;
+
+  /// No description provided for @blogChooseTopicRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a topic (required)'**
+  String get blogChooseTopicRequired;
+
+  /// No description provided for @blogTopicsLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Topics are still loading. Try again in a moment.'**
+  String get blogTopicsLoading;
+
+  /// No description provided for @blogTopicsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load topics.'**
+  String get blogTopicsFailed;
+
+  /// No description provided for @blogTopicsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No topics are available yet.'**
+  String get blogTopicsEmpty;
 }
 
 class _AppLocalizationsDelegate

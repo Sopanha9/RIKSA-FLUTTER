@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
+import '../../../core/widgets/unsaved_changes_guard.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_models.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -43,6 +44,24 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _bioController = TextEditingController(text: user?.bio);
     _gender = user?.gender;
     _avatarPath = user?.avatarUrl;
+    _nameController.addListener(_syncDirty);
+    _bioController.addListener(_syncDirty);
+  }
+
+  /// Whether the form differs from the profile the server last returned.
+  bool _isDirty(AuthUser? user) {
+    if (user == null) return false;
+    return _nameController.text.trim() != (user.displayName).trim() ||
+        _bioController.text.trim() != (user.bio ?? '').trim() ||
+        _gender != user.gender ||
+        _avatarPath != user.avatarUrl;
+  }
+
+  bool _wasDirty = false;
+
+  void _syncDirty() {
+    final dirty = _isDirty(_user);
+    if (dirty != _wasDirty) setState(() => _wasDirty = dirty);
   }
 
   @override
@@ -60,223 +79,232 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final coverId = ref.watch(profileCoverProvider);
     final localAvatar = ref.watch(profileAvatarProvider);
 
-    return Scaffold(
-      backgroundColor: ProfilePalette.canvas(context),
-      appBar: AppBar(
+    return UnsavedChangesGuard(
+      dirty: _isDirty(user),
+      busy: _saving,
+      child: Scaffold(
         backgroundColor: ProfilePalette.canvas(context),
-        centerTitle: true,
-        title: Text(
-          l10n.editProfile,
-          style: const TextStyle(fontWeight: FontWeight.w900),
+        appBar: AppBar(
+          backgroundColor: ProfilePalette.canvas(context),
+          centerTitle: true,
+          title: Text(
+            l10n.editProfile,
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
         ),
-      ),
-      body: user == null
-          ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              top: false,
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 680),
-                  child: Form(
-                    key: _formKey,
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
-                      children: [
-                        SizedBox(
-                          height: 205,
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              ProfileCover(
-                                key: const ValueKey('edit-profile-cover'),
-                                coverId: coverId,
-                                height: 150,
-                              ),
-                              PositionedDirectional(
-                                top: 10,
-                                end: 10,
-                                child: FilledButton.tonalIcon(
-                                  key: const ValueKey('edit-cover'),
-                                  onPressed: () => _chooseCover(context),
-                                  icon: const Icon(Icons.palette_outlined),
-                                  label: Text(l10n.editCover),
+        body: user == null
+            ? const Center(child: CircularProgressIndicator())
+            : SafeArea(
+                top: false,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 680),
+                    child: Form(
+                      key: _formKey,
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
+                        children: [
+                          SizedBox(
+                            height: 205,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                ProfileCover(
+                                  key: const ValueKey('edit-profile-cover'),
+                                  coverId: coverId,
+                                  height: 150,
                                 ),
-                              ),
-                              PositionedDirectional(
-                                start: 0,
-                                end: 0,
-                                bottom: 0,
-                                child: Center(
-                                  child: Stack(
-                                    clipBehavior: Clip.none,
-                                    children: [
-                                      RiksaProfileAvatar(
-                                        user: user,
-                                        radius: 52,
-                                        avatarPath: localAvatar ?? _avatarPath,
-                                      ),
-                                      PositionedDirectional(
-                                        end: -2,
-                                        bottom: 1,
-                                        child: IconButton.filled(
-                                          key: const ValueKey('edit-avatar'),
-                                          style: IconButton.styleFrom(
-                                            backgroundColor:
-                                                ProfilePalette.green(context),
-                                            foregroundColor: Colors.black,
-                                          ),
-                                          onPressed: () =>
-                                              _chooseAvatar(context),
-                                          icon: const Icon(
-                                            Icons.camera_alt_rounded,
-                                            size: 19,
+                                PositionedDirectional(
+                                  top: 10,
+                                  end: 10,
+                                  child: FilledButton.tonalIcon(
+                                    key: const ValueKey('edit-cover'),
+                                    onPressed: () => _chooseCover(context),
+                                    icon: const Icon(Icons.palette_outlined),
+                                    label: Text(l10n.editCover),
+                                  ),
+                                ),
+                                PositionedDirectional(
+                                  start: 0,
+                                  end: 0,
+                                  bottom: 0,
+                                  child: Center(
+                                    child: Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        RiksaProfileAvatar(
+                                          user: user,
+                                          radius: 52,
+                                          avatarPath:
+                                              localAvatar ?? _avatarPath,
+                                        ),
+                                        PositionedDirectional(
+                                          end: -2,
+                                          bottom: 1,
+                                          child: IconButton.filled(
+                                            key: const ValueKey('edit-avatar'),
+                                            style: IconButton.styleFrom(
+                                              backgroundColor:
+                                                  ProfilePalette.green(context),
+                                              foregroundColor: Colors.black,
+                                            ),
+                                            onPressed: () =>
+                                                _chooseAvatar(context),
+                                            icon: const Icon(
+                                              Icons.camera_alt_rounded,
+                                              size: 19,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 18),
-                        ProfilePanel(
-                          child: Column(
-                            children: [
-                              TextFormField(
-                                key: const ValueKey('edit-display-name'),
-                                controller: _nameController,
-                                maxLength: 100,
-                                decoration: InputDecoration(
-                                  labelText: l10n.fullName,
-                                  prefixIcon: const Icon(Icons.badge_outlined),
+                          const SizedBox(height: 18),
+                          ProfilePanel(
+                            child: Column(
+                              children: [
+                                TextFormField(
+                                  key: const ValueKey('edit-display-name'),
+                                  controller: _nameController,
+                                  maxLength: 100,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.fullName,
+                                    prefixIcon: const Icon(
+                                      Icons.badge_outlined,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return l10n.requiredField;
+                                    }
+                                    return null;
+                                  },
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return l10n.requiredField;
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _bioController,
-                                maxLength: 160,
-                                minLines: 2,
-                                maxLines: 4,
-                                decoration: InputDecoration(
-                                  labelText: l10n.bio,
-                                  prefixIcon: const Icon(Icons.notes_rounded),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: _bioController,
+                                  maxLength: 160,
+                                  minLines: 2,
+                                  maxLines: 4,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.bio,
+                                    prefixIcon: const Icon(Icons.notes_rounded),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 12),
-                              DropdownButtonFormField<String?>(
-                                initialValue: _gender,
-                                isExpanded: true,
-                                decoration: InputDecoration(
-                                  labelText: l10n.gender,
-                                  prefixIcon: const Icon(Icons.person_outline),
+                                const SizedBox(height: 12),
+                                DropdownButtonFormField<String?>(
+                                  initialValue: _gender,
+                                  isExpanded: true,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.gender,
+                                    prefixIcon: const Icon(
+                                      Icons.person_outline,
+                                    ),
+                                  ),
+                                  items: [
+                                    DropdownMenuItem<String?>(
+                                      value: null,
+                                      child: Text(l10n.genderUnspecified),
+                                    ),
+                                    const DropdownMenuItem(
+                                      value: 'FEMALE',
+                                      child: Text('Female'),
+                                    ),
+                                    const DropdownMenuItem(
+                                      value: 'MALE',
+                                      child: Text('Male'),
+                                    ),
+                                    const DropdownMenuItem(
+                                      value: 'OTHER',
+                                      child: Text('Other'),
+                                    ),
+                                  ],
+                                  onChanged: (value) => _gender = value,
                                 ),
-                                items: [
-                                  DropdownMenuItem<String?>(
-                                    value: null,
-                                    child: Text(l10n.genderUnspecified),
-                                  ),
-                                  const DropdownMenuItem(
-                                    value: 'FEMALE',
-                                    child: Text('Female'),
-                                  ),
-                                  const DropdownMenuItem(
-                                    value: 'MALE',
-                                    child: Text('Male'),
-                                  ),
-                                  const DropdownMenuItem(
-                                    value: 'OTHER',
-                                    child: Text('Other'),
-                                  ),
-                                ],
-                                onChanged: (value) => _gender = value,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        ProfilePanel(
-                          padding: EdgeInsets.zero,
-                          child: Column(
-                            children: [
-                              _ReadOnlyAccountRow(
-                                icon: Icons.alternate_email_rounded,
-                                label: l10n.username,
-                                value: '@${user.username}',
-                              ),
-                              Divider(
-                                height: 1,
-                                indent: 58,
-                                color: ProfilePalette.border(context),
-                              ),
-                              _ReadOnlyAccountRow(
-                                icon: Icons.email_outlined,
-                                label: l10n.email,
-                                value: user.email ?? l10n.notProvided,
-                              ),
-                              Divider(
-                                height: 1,
-                                indent: 58,
-                                color: ProfilePalette.border(context),
-                              ),
-                              _ReadOnlyAccountRow(
-                                icon: Icons.phone_outlined,
-                                label: l10n.phoneNumber,
-                                value: user.phoneNumber ?? l10n.notProvided,
-                              ),
-                            ],
+                          const SizedBox(height: 16),
+                          ProfilePanel(
+                            padding: EdgeInsets.zero,
+                            child: Column(
+                              children: [
+                                _ReadOnlyAccountRow(
+                                  icon: Icons.alternate_email_rounded,
+                                  label: l10n.username,
+                                  value: '@${user.username}',
+                                ),
+                                Divider(
+                                  height: 1,
+                                  indent: 58,
+                                  color: ProfilePalette.border(context),
+                                ),
+                                _ReadOnlyAccountRow(
+                                  icon: Icons.email_outlined,
+                                  label: l10n.email,
+                                  value: user.email ?? l10n.notProvided,
+                                ),
+                                Divider(
+                                  height: 1,
+                                  indent: 58,
+                                  color: ProfilePalette.border(context),
+                                ),
+                                _ReadOnlyAccountRow(
+                                  icon: Icons.phone_outlined,
+                                  label: l10n.phoneNumber,
+                                  value: user.phoneNumber ?? l10n.notProvided,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          l10n.accountIdentifiersReadOnly,
-                          style: TextStyle(
-                            color: ProfilePalette.muted(context),
-                            fontSize: 12,
-                            height: 1.4,
+                          const SizedBox(height: 10),
+                          Text(
+                            l10n.accountIdentifiersReadOnly,
+                            style: TextStyle(
+                              color: ProfilePalette.muted(context),
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        FilledButton(
-                          key: const ValueKey('save-profile'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: ProfilePalette.green(context),
-                            foregroundColor: Colors.black,
+                          const SizedBox(height: 24),
+                          FilledButton(
+                            key: const ValueKey('save-profile'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: ProfilePalette.green(context),
+                              foregroundColor: Colors.black,
+                            ),
+                            onPressed: _saving ? null : _save,
+                            child: _saving
+                                ? const SizedBox.square(
+                                    dimension: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(l10n.saveChanges),
                           ),
-                          onPressed: _saving ? null : _save,
-                          child: _saving
-                              ? const SizedBox.square(
-                                  dimension: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(l10n.saveChanges),
-                        ),
-                        const SizedBox(height: 34),
-                        TextButton(
-                          key: const ValueKey('delete-account'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: ProfilePalette.muted(context),
-                            backgroundColor: ProfilePalette.panel(context),
-                            minimumSize: const Size.fromHeight(50),
+                          const SizedBox(height: 34),
+                          TextButton(
+                            key: const ValueKey('delete-account'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: ProfilePalette.muted(context),
+                              backgroundColor: ProfilePalette.panel(context),
+                              minimumSize: const Size.fromHeight(50),
+                            ),
+                            onPressed: () => _confirmDelete(context),
+                            child: Text(l10n.deleteAccount),
                           ),
-                          onPressed: () => _confirmDelete(context),
-                          child: Text(l10n.deleteAccount),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+      ),
     );
   }
 

@@ -185,6 +185,9 @@ void main() {
 
     expect(find.text('We couldn’t load this roadmap'), findsOneWidget);
     expect(find.text('Try again'), findsOneWidget);
+    // A failing retry must never leave the learner without a way out.
+    expect(find.byKey(const ValueKey('learning-status-back')), findsOneWidget);
+    expect(find.text('Back to subjects'), findsOneWidget);
   });
 
   testWidgets('explains an empty subject instead of drawing an empty path', (

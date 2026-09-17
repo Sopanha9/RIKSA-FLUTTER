@@ -129,11 +129,7 @@ class SocialApi {
       }
       ''',
       variables: {
-        'input': {
-          'postId': postId,
-          'content': content,
-          'parentId': ?parentId,
-        },
+        'input': {'postId': postId, 'content': content, 'parentId': ?parentId},
       },
     );
     return SocialComment.fromJson(
@@ -298,6 +294,36 @@ class SocialApi {
     );
     return SocialCategory.fromJson(
       (data[field] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// Founds a community owned by the signed-in member, who joins it at once.
+  ///
+  /// The server cleans every field, generates the slug, and enforces who may
+  /// create and how often; its refusal comes back as a [SocialApiException].
+  Future<SocialCategory> createCommunity({
+    required String name,
+    String? description,
+    String? iconUrl,
+  }) async {
+    final data = await _query(
+      r'''
+      mutation CreateCommunity($input: CreateCommunityInput!) {
+        createCommunity(input: $input) {
+          id name slug description iconUrl memberCount joined
+        }
+      }
+      ''',
+      variables: {
+        'input': {
+          'name': name,
+          'description': ?description,
+          'iconUrl': ?iconUrl,
+        },
+      },
+    );
+    return SocialCategory.fromJson(
+      (data['createCommunity'] as Map).cast<String, dynamic>(),
     );
   }
 

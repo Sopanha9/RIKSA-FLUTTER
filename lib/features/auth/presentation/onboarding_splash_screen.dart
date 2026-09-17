@@ -99,6 +99,16 @@ class _OnboardingSplashScreenState extends ConsumerState<OnboardingSplashScreen>
     context.go('/province-select');
   }
 
+  /// Returning learners skip the rest of first-run setup entirely.
+  Future<void> _logIn() async {
+    if (_finishing) return;
+    setState(() => _finishing = true);
+    final notifier = ref.read(localeProvider.notifier);
+    await notifier.completeIntro();
+    await notifier.completeOnboarding();
+    if (mounted) context.go('/auth/login');
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -190,7 +200,7 @@ class _OnboardingSplashScreenState extends ConsumerState<OnboardingSplashScreen>
                 ),
                 const SizedBox(height: 28),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 24, 16),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 24, 4),
                   child: Row(
                     children: [
                       AnimatedOpacity(
@@ -237,6 +247,34 @@ class _OnboardingSplashScreenState extends ConsumerState<OnboardingSplashScreen>
                     ],
                   ),
                 ),
+                if (widget.onComplete == null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: TextButton(
+                      key: const Key('onboarding_login'),
+                      onPressed: _finishing ? null : _logIn,
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                        foregroundColor: palette.inkMuted,
+                      ),
+                      child: Text.rich(
+                        TextSpan(
+                          text: '${l10n.haveAccount} ',
+                          children: [
+                            TextSpan(
+                              text: l10n.login,
+                              style: TextStyle(
+                                color: palette.brand,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  const SizedBox(height: 12),
               ],
             ),
           ),

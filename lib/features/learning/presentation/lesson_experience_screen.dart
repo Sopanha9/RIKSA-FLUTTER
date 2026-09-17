@@ -21,6 +21,7 @@ import '../providers/lesson_catalog_provider.dart';
 import '../providers/saved_lessons_provider.dart';
 import 'learning_design.dart';
 import 'widgets/learning_atoms.dart';
+import 'widgets/learning_status_bar.dart';
 
 /// Where the learner is inside one lesson.
 ///
@@ -128,9 +129,14 @@ class _LessonExperienceScreenState
       },
       child: Scaffold(
         backgroundColor: context.riksa.canvas,
+        // Content brings its own header; without content, keep a way out.
+        appBar: flow == null
+            ? LearningStatusBar(title: data?.title ?? widget.lesson?.title)
+            : null,
         body: detail.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => SafeArea(
+            top: false,
             child: _LessonLoadFailure(
               onRetry: () =>
                   ref.invalidate(lessonDetailProvider(widget.lessonId)),
@@ -539,13 +545,10 @@ class _LessonExperienceScreenState
   }
 
   Widget _emptyLesson(LessonDetail detail) => SafeArea(
+    top: false,
     child: ListView(
       padding: const EdgeInsets.all(20),
-      children: [
-        Text(detail.title, style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: RiksaSpacing.md),
-        const _NoExercises(),
-      ],
+      children: [const _NoExercises()],
     ),
   );
 
@@ -1753,12 +1756,17 @@ class _LessonLoadFailure extends StatelessWidget {
   const _LessonLoadFailure({required this.onRetry});
   final VoidCallback onRetry;
   @override
-  Widget build(BuildContext context) => IllustratedEmptyState(
-    title: AppLocalizations.of(context)!.lessonLoadFailed,
-    body: 'The lesson detail could not be loaded from the learning service.',
-    actionLabel: AppLocalizations.of(context)!.tryAgain,
-    onAction: onRetry,
-  );
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return IllustratedEmptyState(
+      title: l10n.lessonDetailLoadFailed,
+      body: l10n.loadFailedCheckConnection,
+      actionLabel: l10n.tryAgain,
+      onAction: onRetry,
+      secondaryLabel: l10n.backToSubjects,
+      onSecondary: () => context.go('/learn'),
+    );
+  }
 }
 
 String _friendlyLessonError(Object error) {

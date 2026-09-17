@@ -26,6 +26,8 @@ import '../../features/learning/presentation/saved_lessons_screen.dart';
 import '../../features/learning/data/learning_models.dart';
 import '../../features/social/presentation/social_feed_screen.dart';
 import '../../features/social/presentation/communities_screen.dart';
+import '../../features/social/presentation/community_detail_screen.dart';
+import '../../features/social/presentation/create_community_screen.dart';
 import '../../features/social/data/social_models.dart';
 import '../../features/social/presentation/compose_community_post_screen.dart';
 import '../../features/social/presentation/social_post_detail_screen.dart';
@@ -137,6 +139,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 path: '/communities',
                 builder: (context, state) => const CommunitiesScreen(),
               ),
+              // Listed before '/communities/:id' so "create" is not read as an id.
+              GoRoute(
+                path: '/communities/create',
+                builder: (context, state) => const CreateCommunityScreen(),
+              ),
+              GoRoute(
+                path: '/communities/:id',
+                builder: (context, state) => CommunityDetailScreen(
+                  communityId: state.pathParameters['id']!,
+                  community: state.extra as SocialCategory?,
+                ),
+              ),
               GoRoute(
                 path: '/progress',
                 builder: (context, state) => const ProgressHistoryScreen(),
@@ -145,6 +159,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 path: '/community/create',
                 builder: (context, state) => ComposeCommunityPostScreen(
                   isQuestion: state.uri.queryParameters['type'] == 'question',
+                  communityId: state.uri.queryParameters['community'],
                 ),
               ),
               GoRoute(

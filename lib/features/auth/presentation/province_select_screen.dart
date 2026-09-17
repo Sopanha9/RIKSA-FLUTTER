@@ -69,6 +69,17 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
     }
   }
 
+  /// Province only personalises communities and rankings, so it must not
+  /// stand between a learner and the app.
+  Future<void> _skip() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    await ref.read(localeProvider.notifier).completeOnboarding();
+    if (!mounted) return;
+    final authenticated = ref.read(authProvider) is Authenticated;
+    context.go(authenticated ? '/home' : '/auth/login');
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -85,17 +96,20 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: context.riksa.brandSoft,
-                  borderRadius: AppRadii.largeBorder,
-                ),
-                child: Icon(
-                  Icons.location_on_rounded,
-                  color: colors.onPrimaryContainer,
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: context.riksa.brandSoft,
+                    borderRadius: AppRadii.largeBorder,
+                  ),
+                  child: Icon(
+                    Icons.location_on_rounded,
+                    color: colors.onPrimaryContainer,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -196,6 +210,16 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                 ),
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                key: const Key('province_skip'),
+                onPressed: _saving ? null : _skip,
+                style: TextButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  foregroundColor: context.riksa.inkMuted,
+                ),
+                child: Text(l10n.notNow),
               ),
             ],
           ),

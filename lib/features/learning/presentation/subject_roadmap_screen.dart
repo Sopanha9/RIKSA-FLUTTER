@@ -10,6 +10,7 @@ import '../providers/learning_roadmap_provider.dart';
 import 'learning_design.dart';
 import 'roadmap_stones.dart';
 import 'widgets/learning_atoms.dart';
+import 'widgets/learning_status_bar.dart';
 
 /// A subject's Grade 12 path, drawn as a spine of stones.
 ///
@@ -28,14 +29,19 @@ class LearningRoadmapScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: context.riksa.canvas,
+      // The loaded roadmap draws its own header with a back button.
+      appBar: roadmap.hasValue ? null : const LearningStatusBar(),
       body: roadmap.when(
         loading: () => const _RoadmapSkeleton(),
         error: (_, _) => SafeArea(
+          top: false,
           child: IllustratedEmptyState(
             title: l10n.roadmapLoadFailed,
-            body: l10n.noLessonsForFilters,
+            body: l10n.loadFailedCheckConnection,
             actionLabel: l10n.tryAgain,
             onAction: () => ref.invalidate(learningRoadmapProvider(categoryId)),
+            secondaryLabel: l10n.backToSubjects,
+            onSecondary: () => context.go('/learn'),
           ),
         ),
         data: (data) => RefreshIndicator(
@@ -724,13 +730,12 @@ class _RoadmapSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SafeArea(
+    top: false,
     child: Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const RiksaSkeleton(width: 44, height: 44, radius: AppRadii.full),
-          const SizedBox(height: RiksaSpacing.md),
           const RiksaSkeleton(width: 180, height: 26),
           const SizedBox(height: RiksaSpacing.xs),
           const RiksaSkeleton(width: 120, height: 12),

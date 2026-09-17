@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -14,6 +16,81 @@ import 'package:riksa_app/l10n/gen/app_localizations.dart';
 /// A tutor a student can trust means: nothing they typed disappears, and the
 /// tutor knows which lesson they came from.
 void main() {
+
+  testWidgets('an existing chat loads instead of posing as a new one', (
+    tester,
+  ) async {
+    final api = _MockAiChatApi();
+    final history = Completer<AiChatSession>();
+    when(() => api.session('session-1')).thenAnswer((_) => history.future);
+    await _pump(tester, api: api, sessionId: 'session-1', settle: false);
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('ai-chat-history-loading')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('ai-coach-greeting')), findsNothing);
+    await tester.enterText(
+      find.byKey(const ValueKey('ai-message-input')),
+      'Too early',
+    );
+    await tester.pump();
+    expect(
+      tester
+          .widget<IconButton>(find.byKey(const ValueKey('send-ai-message')))
+          .onPressed,
+      isNull,
+    );
+
+    history.complete(
+      const AiChatSession(
+        id: 'session-1',
+        title: 'Momentum',
+        messages: [
+          AiChatMessage(id: 'm1', role: 'user', content: 'What is momentum?'),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('What is momentum?'), findsOneWidget);
+    expect(
+      tester
+          .widget<IconButton>(find.byKey(const ValueKey('send-ai-message')))
+          .onPressed,
+      isNotNull,
+    );
+  });
+
+  testWidgets('a chat that fails to load says so and can be retried', (
+    tester,
+  ) async {
+    final api = _MockAiChatApi();
+    when(() => api.session('session-1')).thenThrow(Exception('offline'));
+    await _pump(tester, api: api, sessionId: 'session-1');
+
+    expect(find.byKey(const ValueKey('ai-chat-history-error')), findsOneWidget);
+    expect(find.byKey(const ValueKey('ai-coach-greeting')), findsNothing);
+    expect(find.byKey(const ValueKey('ai-message-input')), findsNothing);
+    expect(find.byKey(const ValueKey('ai-chat-history-back')), findsOneWidget);
+
+    when(() => api.session('session-1')).thenAnswer(
+      (_) async => const AiChatSession(
+        id: 'session-1',
+        title: 'Momentum',
+        messages: [
+          AiChatMessage(id: 'm1', role: 'user', content: 'What is momentum?'),
+        ],
+      ),
+    );
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('ai-chat-history-error')), findsNothing);
+    expect(find.text('What is momentum?'), findsOneWidget);
+  });
+
   testWidgets('a question cannot be sent until something is typed', (
     tester,
   ) async {
@@ -265,6 +342,8 @@ Future<void> _pump(
   required AiChatApi api,
   String? lessonTitle,
   String? learningContext,
+  String? sessionId,
+  bool settle = true,
 }) async {
   tester.view.physicalSize = const Size(430, 932);
   tester.view.devicePixelRatio = 1;
@@ -284,13 +363,14 @@ Future<void> _pump(
         ],
         supportedLocales: const [Locale('en'), Locale('km')],
         home: AiChatScreen(
+          sessionId: sessionId,
           lessonTitle: lessonTitle,
           learningContext: learningContext,
         ),
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  if (settle) await tester.pumpAndSettle();
 }
 
 class _MockAiChatApi extends Mock implements AiChatApi {}

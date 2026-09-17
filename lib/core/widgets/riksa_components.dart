@@ -957,7 +957,9 @@ class AnimatedRiksaProgress extends StatelessWidget {
           value: animated,
           minHeight: height,
           color: color ?? context.riksa.brand,
-          backgroundColor: (color ?? context.riksa.brand).withValues(alpha: .14),
+          backgroundColor: (color ?? context.riksa.brand).withValues(
+            alpha: .14,
+          ),
         ),
       ),
     ),
@@ -1062,11 +1064,15 @@ class IllustratedEmptyState extends StatelessWidget {
     required this.body,
     this.actionLabel,
     this.onAction,
+    this.secondaryLabel,
+    this.onSecondary,
   });
   final String title;
   final String body;
   final String? actionLabel;
   final VoidCallback? onAction;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
 
   @override
   Widget build(BuildContext context) => Center(
@@ -1115,6 +1121,14 @@ class IllustratedEmptyState extends StatelessWidget {
                   ),
                   child: Text(actionLabel!),
                 ),
+              ),
+            ],
+            if (secondaryLabel != null && onSecondary != null) ...[
+              const SizedBox(height: RiksaSpacing.xs),
+              TextButton(
+                onPressed: onSecondary,
+                style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
+                child: Text(secondaryLabel!),
               ),
             ],
           ],

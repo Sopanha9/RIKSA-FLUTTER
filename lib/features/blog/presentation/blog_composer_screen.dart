@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
+import '../../../core/widgets/unsaved_changes_guard.dart';
+import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_api.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../data/blog_api.dart';
@@ -164,9 +166,26 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
   }
 
   Future<void> _pickCategory() async {
-    final categories = ref.read(blogCategoriesProvider).value;
+    final l10n = AppLocalizations.of(context)!;
+    final topics = ref.read(blogCategoriesProvider);
+    final categories = topics.value;
     if (categories == null || categories.isEmpty) {
-      _showMessage('Topics are still loading. Try again in a moment.');
+      if (topics.isLoading) {
+        _showMessage(l10n.blogTopicsLoading);
+      } else if (topics.hasError) {
+        // The draft stays put; retrying only refetches the topic list.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.blogTopicsFailed),
+            action: SnackBarAction(
+              label: l10n.tryAgain,
+              onPressed: () => ref.invalidate(blogCategoriesProvider),
+            ),
+          ),
+        );
+      } else {
+        _showMessage(l10n.blogTopicsEmpty);
+      }
       return;
     }
     final picked = await showModalBottomSheet<String>(
@@ -180,10 +199,14 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: blogSheetColor(context),
-      body: SafeArea(
-        child: _submitted ? _buildPendingReview() : _buildComposer(),
+    return UnsavedChangesGuard(
+      dirty: !_submitted && _isDirty,
+      busy: _submitting,
+      child: Scaffold(
+        backgroundColor: blogSheetColor(context),
+        body: SafeArea(
+          child: _submitted ? _buildPendingReview() : _buildComposer(),
+        ),
       ),
     );
   }
@@ -206,38 +229,10 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
     },
   );
 
-  /// Guards the back gesture: leaving with unsaved words should be a choice.
-  Future<void> _cancel() async {
+  /// Close goes through the same guard as the system back gesture.
+  void _cancel() {
     if (_submitting) return;
-    if (!_isDirty) {
-      context.pop(false);
-      return;
-    }
-    final discard = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(_isEditing ? 'Discard changes?' : 'Discard draft?'),
-        content: Text(
-          _isEditing
-              ? 'Your edits to this post will be lost.'
-              : 'This draft will not be saved.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Keep writing'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: const Text('Discard'),
-          ),
-        ],
-      ),
-    );
-    if (discard == true && mounted) context.pop(false);
+    Navigator.maybePop(context, false);
   }
 
   Widget _buildComposer() {
@@ -613,7 +608,8 @@ class _ComposerFooter extends StatelessWidget {
                       color: theme.colorScheme.primary,
                     ),
                     label: Text(
-                      categoryLabel ?? 'Choose a topic',
+                      categoryLabel ??
+                          AppLocalizations.of(context)!.blogChooseTopicRequired,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

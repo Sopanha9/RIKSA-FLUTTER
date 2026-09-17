@@ -1646,4 +1646,224 @@ class AppLocalizationsKm extends AppLocalizations {
   String communityMembers(String count) {
     return 'សមាជិក $count នាក់';
   }
+
+  @override
+  String get communityCreatePost => 'បង្កើតការបង្ហោះ';
+
+  @override
+  String get communityShare => 'ចែករំលែកសហគមន៍';
+
+  @override
+  String get communitySeeMore => 'មើលបន្ថែម';
+
+  @override
+  String get communitySeeLess => 'មើលតិច';
+
+  @override
+  String get communitySortBy => 'តម្រៀបការបង្ហោះតាម';
+
+  @override
+  String get communitySortHot => 'ពេញនិយម';
+
+  @override
+  String get communitySortNew => 'ថ្មីៗ';
+
+  @override
+  String get communitySortTop => 'កំពូល';
+
+  @override
+  String get communityNoPostsTitle => 'មិនទាន់មានការបង្ហោះ';
+
+  @override
+  String get communityNoPostsBody =>
+      'ក្លាយជាអ្នកដំបូងដែលចាប់ផ្តើមការពិភាក្សានៅទីនេះ។';
+
+  @override
+  String get communityNotFound => 'រកមិនឃើញសហគមន៍នេះទេ។';
+
+  @override
+  String get communityLinkCopied => 'បានចម្លងតំណសហគមន៍';
+
+  @override
+  String communityMemberCount(int count, String label) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'សមាជិក $label នាក់',
+      zero: 'មិនទាន់មានសមាជិក',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composeJoinFirst => 'សូមចូលរួមសហគមន៍ជាមុនសិន ដើម្បីបង្ហោះ។';
+
+  @override
+  String get composeBrowseCommunities => 'ស្វែងរកសហគមន៍';
+
+  @override
+  String get communitiesYours => 'សហគមន៍របស់អ្នក';
+
+  @override
+  String get communitiesSeeAll => 'មើលទាំងអស់';
+
+  @override
+  String get communitiesFeatured => 'ពិសេស';
+
+  @override
+  String get communitiesCantFind => 'រកមិនឃើញសហគមន៍របស់អ្នក?';
+
+  @override
+  String get communitiesCreate => 'បង្កើតសហគមន៍';
+
+  @override
+  String get communitiesFilterAll => 'ទាំងអស់';
+
+  @override
+  String get communitiesFilterScience => 'វិទ្យាសាស្ត្រ';
+
+  @override
+  String get communitiesFilterLanguages => 'ភាសា';
+
+  @override
+  String get communitiesFilterHistory => 'ប្រវត្តិសាស្ត្រ និងវប្បធម៌';
+
+  @override
+  String get communitiesFilterTech => 'បច្ចេកវិទ្យា';
+
+  @override
+  String get communitiesFilterGeneral => 'ទូទៅ';
+
+  @override
+  String get createCommunityIcon => 'រូបតំណាងសហគមន៍';
+
+  @override
+  String get createCommunityIconHint => 'ស្រេចចិត្ត។ រូបភាពរាងការ៉េល្អបំផុត។';
+
+  @override
+  String get createCommunityName => 'ឈ្មោះសហគមន៍';
+
+  @override
+  String get createCommunityNameHint => 'ឧ. ក្លឹបរ៉ូបូត';
+
+  @override
+  String get createCommunityNameLength => 'ប្រើពី ៣ ដល់ ៥០ តួអក្សរ។';
+
+  @override
+  String get createCommunityNameChars =>
+      'ប្រើតែអក្សរ លេខ ដកឃ្លា និង & \' . , ( ) + # -';
+
+  @override
+  String get createCommunityNameLetters => 'ឈ្មោះត្រូវមានអក្សរយ៉ាងហោចណាស់មួយ។';
+
+  @override
+  String get createCommunityNameReserved =>
+      'ឈ្មោះនេះត្រូវបានបម្រុងទុក។ សូមសាកល្បងឈ្មោះផ្សេង។';
+
+  @override
+  String get createCommunityDescription => 'តើវានិយាយអំពីអ្វី?';
+
+  @override
+  String get createCommunityDescriptionHint =>
+      'ប្រាប់អ្នកដទៃពីអ្វីដែលពួកគេនឹងរៀន ឬពិភាក្សានៅទីនេះ។';
+
+  @override
+  String get createCommunityRulesTitle => 'មុនពេលបង្កើត';
+
+  @override
+  String get createCommunityRulePublic =>
+      'អ្នកប្រើ RIKSA ទាំងអស់អាចស្វែងរក ចូលរួម និងបង្ហោះក្នុងសហគមន៍របស់អ្នក។';
+
+  @override
+  String get createCommunityRuleOwner =>
+      'អ្នកក្លាយជាម្ចាស់ ហើយនៅជាសមាជិកដរាបណាអ្នកជាម្ចាស់។';
+
+  @override
+  String get createCommunityRuleConduct =>
+      'សូមរក្សាភាពសុភាព សុវត្ថិភាព និងនិយាយតាមប្រធានបទ។ សហគមន៍ដែលបំពានច្បាប់នឹងត្រូវលុប។';
+
+  @override
+  String get createCommunityRuleLimit =>
+      'អ្នកត្រូវមានគណនីដែលបានផ្ទៀងផ្ទាត់។ អាចបង្កើតបាន ៣ ក្នុងមួយថ្ងៃ និងជាម្ចាស់បានរហូតដល់ ៥។';
+
+  @override
+  String get createCommunityCreated => 'សហគមន៍របស់អ្នករួចរាល់ហើយ';
+
+  @override
+  String aiAskCoachAbout(String query) {
+    return 'សួរគ្រូជំនួយ AI៖ «$query»';
+  }
+
+  @override
+  String get aiChatLoadFailedBody =>
+      'សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្ដងទៀត។ គ្មានអ្វីក្នុងការសន្ទនានេះបាត់បង់ទេ។';
+
+  @override
+  String get discardChangesTitle => 'បោះបង់ការកែប្រែរបស់អ្នក?';
+
+  @override
+  String get discardChangesBody => 'អ្វីដែលអ្នកបានសរសេរនៅទីនេះនឹងបាត់បង់។';
+
+  @override
+  String get keepEditing => 'បន្តកែសម្រួល';
+
+  @override
+  String get discardAction => 'បោះបង់';
+
+  @override
+  String get notNow => 'ពេលក្រោយ';
+
+  @override
+  String get lessonDetailLoadFailed => 'យើងមិនអាចបើកមេរៀននេះបានទេ';
+
+  @override
+  String get loadFailedCheckConnection =>
+      'សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get backToSubjects => 'ត្រឡប់ទៅមុខវិជ្ជា';
+
+  @override
+  String get savedLessonsLoadFailed =>
+      'យើងមិនអាចផ្ទុកមេរៀនដែលអ្នករក្សាទុកបានទេ';
+
+  @override
+  String get savedLessonsSomeFailed =>
+      'មេរៀនដែលរក្សាទុកមួយចំនួនមិនអាចផ្ទុកបានទេ។';
+
+  @override
+  String get savedLessonsUnavailableTitle => 'មេរៀនទាំងនេះលែងមានទៀតហើយ';
+
+  @override
+  String get savedLessonsUnavailableBody =>
+      'ពួកវាប្រហែលជាត្រូវបានដកចេញពីវគ្គសិក្សា។';
+
+  @override
+  String get savedLessonsClear => 'សម្អាតមេរៀនដែលរក្សាទុក';
+
+  @override
+  String get browseLessons => 'រុករកមេរៀន';
+
+  @override
+  String get removeFromSaved => 'ដកចេញពីមេរៀនរក្សាទុក';
+
+  @override
+  String get composeLoadingCommunities => 'កំពុងផ្ទុកសហគមន៍របស់អ្នក…';
+
+  @override
+  String get composeCommunitiesFailed =>
+      'យើងមិនអាចផ្ទុកសហគមន៍របស់អ្នកបានទេ។ អត្ថបទរបស់អ្នកនៅដដែល។';
+
+  @override
+  String get blogChooseTopicRequired => 'ជ្រើសរើសប្រធានបទ (ចាំបាច់)';
+
+  @override
+  String get blogTopicsLoading =>
+      'ប្រធានបទកំពុងផ្ទុក។ សូមព្យាយាមម្ដងទៀតបន្តិចទៀត។';
+
+  @override
+  String get blogTopicsFailed => 'យើងមិនអាចផ្ទុកប្រធានបទបានទេ។';
+
+  @override
+  String get blogTopicsEmpty => 'មិនទាន់មានប្រធានបទនៅឡើយទេ។';
 }

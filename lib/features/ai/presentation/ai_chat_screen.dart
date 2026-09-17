@@ -49,6 +49,11 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   bool _loading = false;
   bool _canSend = false;
 
+  /// Fetching the transcript of an existing chat. Until it arrives the screen
+  /// must not look like a brand-new conversation, and nothing can be sent.
+  bool _historyLoading = false;
+  bool _historyFailed = false;
+
   @override
   void initState() {
     super.initState();
@@ -59,7 +64,10 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       _controller.text = prompt;
       _controller.selection = TextSelection.collapsed(offset: prompt.length);
     }
-    if (_sessionId != null) _load();
+    if (_sessionId != null) {
+      _historyLoading = true;
+      _load();
+    }
   }
 
   @override
@@ -78,16 +86,31 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   }
 
   Future<void> _load() async {
+    final sessionId = _sessionId!;
+    setState(() {
+      _historyLoading = true;
+      _historyFailed = false;
+    });
     try {
-      final chat = await ref.read(aiChatApiProvider).session(_sessionId!);
-      if (!mounted) return;
-      setState(() => _entries = [for (final m in chat.messages) _ChatEntry(m)]);
+      final chat = await ref.read(aiChatApiProvider).session(sessionId);
+      if (!mounted || _sessionId != sessionId) return;
+      setState(() {
+        // Keep any turn added meanwhile instead of letting the older
+        // transcript overwrite it.
+        final known = {for (final m in chat.messages) m.id};
+        _entries = [
+          for (final m in chat.messages) _ChatEntry(m),
+          ..._entries.where((entry) => !known.contains(entry.message.id)),
+        ];
+        _historyLoading = false;
+      });
       _scrollToEnd();
     } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.aiChatLoadFailed)),
-      );
+      if (!mounted || _sessionId != sessionId) return;
+      setState(() {
+        _historyLoading = false;
+        _historyFailed = true;
+      });
     }
   }
 
@@ -104,7 +127,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
   Future<void> _send([String? retryText]) async {
     final text = (retryText ?? _controller.text).trim();
-    if (text.isEmpty || _loading) return;
+    if (text.isEmpty || _loading || _historyLoading || _historyFailed) return;
     if (retryText == null) _controller.clear();
     setState(() {
       _loading = true;
@@ -265,7 +288,18 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 ),
               ),
             Expanded(
-              child: _entries.isEmpty && !_loading
+              child: _historyFailed
+                  ? RiksaStateView(
+                      key: const ValueKey('ai-chat-history-error'),
+                      icon: Icons.cloud_off_rounded,
+                      title: l10n.aiChatLoadFailed,
+                      body: l10n.aiChatLoadFailedBody,
+                      actionLabel: l10n.tryAgain,
+                      onAction: _load,
+                    )
+                  : _historyLoading
+                  ? const _TranscriptSkeleton()
+                  : _entries.isEmpty && !_loading
                   ? _Opener(lesson: lesson, onSelected: _useStarter)
                   : ListView.separated(
                       controller: _scroll,
@@ -298,14 +332,26 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       },
                     ),
             ),
-            if (_entries.isNotEmpty && !_loading)
-              _QuickPromptsBar(onSelected: _useStarter),
-            _Composer(
-              controller: _controller,
-              focusNode: _focus,
-              enabled: _canSend && !_loading,
-              onSend: _send,
-            ),
+            if (_historyFailed)
+              Padding(
+                padding: const EdgeInsets.only(bottom: RiksaSpacing.md),
+                child: TextButton.icon(
+                  key: const ValueKey('ai-chat-history-back'),
+                  onPressed: context.pop,
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: Text(l10n.back),
+                ),
+              )
+            else ...[
+              if (_entries.isNotEmpty && !_loading && !_historyLoading)
+                _QuickPromptsBar(onSelected: _useStarter),
+              _Composer(
+                controller: _controller,
+                focusNode: _focus,
+                enabled: _canSend && !_loading && !_historyLoading,
+                onSend: _send,
+              ),
+            ],
           ],
         ),
       ),
@@ -313,7 +359,46 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   }
 }
 
-//// First screen of a new conversation: the coach says hello, then offers
+/// Placeholder bubbles shown while an existing chat's transcript loads.
+class _TranscriptSkeleton extends StatelessWidget {
+  const _TranscriptSkeleton();
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      Widget bubble(double fraction, {required bool user}) => Align(
+        alignment: user
+            ? AlignmentDirectional.centerEnd
+            : AlignmentDirectional.centerStart,
+        child: RiksaSkeleton(
+          width: width * fraction,
+          height: user ? 44 : 72,
+          radius: AppRadii.large,
+        ),
+      );
+      return Semantics(
+        key: const ValueKey('ai-chat-history-loading'),
+        label: AppLocalizations.of(context)!.loading,
+        child: ListView(
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(RiksaSpacing.md),
+          children: [
+            bubble(.55, user: true),
+            const SizedBox(height: RiksaSpacing.sm),
+            bubble(.8, user: false),
+            const SizedBox(height: RiksaSpacing.sm),
+            bubble(.45, user: true),
+            const SizedBox(height: RiksaSpacing.sm),
+            bubble(.75, user: false),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+/// First screen of a new conversation: the coach says hello, then offers
 /// a few ways in.
 class _Opener extends StatelessWidget {
   const _Opener({required this.onSelected, this.lesson});
