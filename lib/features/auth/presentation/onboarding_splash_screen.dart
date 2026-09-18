@@ -96,7 +96,7 @@ class _OnboardingSplashScreenState extends ConsumerState<OnboardingSplashScreen>
       callback();
       return;
     }
-    context.go('/province-select');
+    context.go('/onboarding/setup');
   }
 
   /// Returning learners skip the rest of first-run setup entirely.

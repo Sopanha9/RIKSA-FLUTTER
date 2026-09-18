@@ -10,6 +10,7 @@ import '../../features/auth/presentation/account_recovery_screen.dart';
 import '../../features/auth/presentation/splash_animation_screen.dart';
 import '../../features/auth/presentation/language_select_screen.dart';
 import '../../features/auth/presentation/onboarding_splash_screen.dart';
+import '../../features/auth/presentation/interactive_onboarding_screen.dart';
 import '../../features/auth/presentation/province_select_screen.dart';
 import '../../features/auth/presentation/telegram_auth_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
@@ -60,7 +61,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isSplash = state.matchedLocation == '/splash';
       final isLanguage = state.matchedLocation == '/language-select';
-      final isOnboarding = state.matchedLocation == '/onboarding';
+      final isOnboarding = state.matchedLocation.startsWith('/onboarding');
       final isProvince = state.matchedLocation == '/province-select';
       final isPublicRoute =
           isSplash || isLanguage || isOnboarding || isProvince || isAuthRoute;
@@ -87,6 +88,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingSplashScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/setup',
+        builder: (context, state) => const InteractiveOnboardingScreen(),
       ),
       GoRoute(
         path: '/province-select',
