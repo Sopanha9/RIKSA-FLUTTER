@@ -29,7 +29,9 @@ class AppColors {
   static const warmSurfaceRaised = Color(0xFFF3F0FB);
   static const ink = Color(0xFF1D1533);
   static const inkMuted = Color(0xFF6E6886);
-  static const inkFaint = Color(0xFFA7A1BA);
+  // Readable-text minimum: 4.8:1 on the light canvas. A fainter tone would
+  // fail WCAG AA for the hints, timestamps and locked labels drawn with it.
+  static const inkFaint = Color(0xFF706A88);
   static const warmOutline = Color(0xFFE8E4F3);
 
   static const brandJade = Color(0xFF237A5B);
@@ -201,7 +203,7 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     surfaceRaised: AppColors.editorialField,
     ink: AppColors.editorialInk,
     inkMuted: AppColors.editorialMuted,
-    inkFaint: Color(0xFFA6A2AA),
+    inkFaint: Color(0xFF706A88),
     outline: AppColors.editorialOutline,
     jade: AppColors.brandJade,
     jadeStrong: AppColors.brandJadeStrong,
@@ -234,7 +236,7 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     surfaceRaised: AppColors.darkSurfaceRaised,
     ink: AppColors.darkInk,
     inkMuted: AppColors.darkInkMuted,
-    inkFaint: Color(0xFF5C5C64),
+    inkFaint: Color(0xFF90909A),
     outline: AppColors.darkOutline,
     jade: Color(0xFF69B893),
     jadeStrong: Color(0xFF9AD4B7),

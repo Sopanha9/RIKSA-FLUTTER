@@ -1912,4 +1912,542 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blogTopicsEmpty => 'No topics are available yet.';
+
+  @override
+  String get recoveryErrorNetwork =>
+      'We couldn’t reach Riksa. Check your internet and try again.';
+
+  @override
+  String get recoveryErrorRateLimited =>
+      'That’s a lot of tries! Take a short break, then try again.';
+
+  @override
+  String get recoveryErrorServer =>
+      'Something went wrong on our side. Please try again in a moment.';
+
+  @override
+  String get recoveryErrorPassword =>
+      'Almost there! Your password needs at least 8 characters, with an uppercase letter, a lowercase letter and a number.';
+
+  @override
+  String get recoveryErrorCode =>
+      'That code didn’t work. It may have expired, so ask for a new one and try again.';
+
+  @override
+  String get recoveryErrorAccount =>
+      'We couldn’t find that account. Check the spelling and try again.';
+
+  @override
+  String get recoveryErrorDetails =>
+      'That didn’t work. Please check your details and try again.';
+
+  @override
+  String get recoveryErrorGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String get recoveryNeedIdentifier =>
+      'Tell us your username, email or Telegram ID so we know whose account to help with.';
+
+  @override
+  String get recoveryCodeLength =>
+      'The code has 6 digits. Check your message and try again.';
+
+  @override
+  String get recoveryChecklistIncomplete =>
+      'Almost there! Your password just needs everything in the checklist ticked.';
+
+  @override
+  String get recoveryPasswordsDiffer =>
+      'The two passwords don’t match yet. Try typing them again.';
+
+  @override
+  String get recoveryPasswordSaved =>
+      'All set! Sign in with your new password.';
+
+  @override
+  String get recoveryStepIdentifierTitle => 'Forgot your password?';
+
+  @override
+  String get recoveryStepIdentifierSubtitle =>
+      'No worries, it happens to everyone. Tell us who you are and we’ll send you a code.';
+
+  @override
+  String get recoveryStepCodeTitle => 'Check your messages';
+
+  @override
+  String get recoveryStepCodeSubtitle =>
+      'We sent a 6-digit code to your email or Telegram. Enter it below.';
+
+  @override
+  String get recoveryStepPasswordTitle => 'Create a new password';
+
+  @override
+  String get recoveryStepPasswordSubtitle =>
+      'Pick something you will remember but others can’t guess.';
+
+  @override
+  String get recoveryIdentifierLabel => 'Username, email or Telegram ID';
+
+  @override
+  String get recoveryNewPasswordLabel => 'New password';
+
+  @override
+  String get recoveryConfirmPasswordLabel => 'Type it again';
+
+  @override
+  String get recoverySendCode => 'Send me a code';
+
+  @override
+  String get recoveryVerifyCode => 'Verify code';
+
+  @override
+  String get recoverySavePassword => 'Save new password';
+
+  @override
+  String get recoveryResend => 'Didn’t get it? Send a new code';
+
+  @override
+  String get recoveryResendSent => 'A fresh code is on its way.';
+
+  @override
+  String get recoveryBackToSignIn => 'I remember it — back to sign in';
+
+  @override
+  String recoveryIllustrationLabel(int step) {
+    return 'Account recovery, step $step';
+  }
+
+  @override
+  String recoveryStepProgress(int step, int total) {
+    return 'Step $step of $total';
+  }
+
+  @override
+  String get passwordRuleLength => 'At least 8 characters';
+
+  @override
+  String get passwordRuleUppercase => 'An uppercase letter (A–Z)';
+
+  @override
+  String get passwordRuleLowercase => 'A lowercase letter (a–z)';
+
+  @override
+  String get passwordRuleDigit => 'A number (0–9)';
+
+  @override
+  String get passwordRuleMatch => 'Both passwords match';
+
+  @override
+  String checklistItemDone(String item) {
+    return '$item, done';
+  }
+
+  @override
+  String checklistItemPending(String item) {
+    return '$item, not yet';
+  }
+
+  @override
+  String get emailVerifiedTitle => 'Email verified';
+
+  @override
+  String get emailVerifiedBody => 'Your Riksa account email is now verified.';
+
+  @override
+  String get emailVerifyFailedTitle => 'Verification failed';
+
+  @override
+  String get emailVerifyFailedBody =>
+      'This verification link is invalid or expired.';
+
+  @override
+  String socialLikeLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Like this post, $count likes',
+      one: 'Like this post, 1 like',
+      zero: 'Like this post',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String socialCommentLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'View $count comments',
+      one: 'View 1 comment',
+      zero: 'Comment on this post',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String socialShareLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Share this post, shared $count times',
+      zero: 'Share this post',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String socialOpenProfile(String name) {
+    return 'Open $name’s profile';
+  }
+
+  @override
+  String socialReplyTo(String name) {
+    return 'Reply to $name';
+  }
+
+  @override
+  String get socialDeleteComment => 'Delete this comment';
+
+  @override
+  String get socialCancelReply => 'Cancel reply';
+
+  @override
+  String get genderFemale => 'Female';
+
+  @override
+  String get genderMale => 'Male';
+
+  @override
+  String get genderOther => 'Other';
+
+  @override
+  String get loadingProvincesTitle => 'Loading provinces';
+
+  @override
+  String get loadingProvincesBody => 'Preparing local learning options.';
+
+  @override
+  String get leaderboardNational => 'National';
+
+  @override
+  String get leaderboardProvince => 'Province';
+
+  @override
+  String get leaderboardRankings => 'Rankings';
+
+  @override
+  String get leaderboardYourRank => 'Your rank';
+
+  @override
+  String leaderboardRowLabel(int rank, String name, int xp) {
+    return 'Rank $rank, $name, $xp XP';
+  }
+
+  @override
+  String leaderboardYourRankLabel(
+    int rank,
+    String name,
+    String scope,
+    String tier,
+    int xp,
+  ) {
+    return 'Your rank is $rank. $name, $scope, $tier, $xp XP.';
+  }
+
+  @override
+  String get progressHistoryTitle => 'Progress history';
+
+  @override
+  String get progressHistoryXpTab => 'XP activity';
+
+  @override
+  String get progressHistoryRankTab => 'Rank changes';
+
+  @override
+  String get progressHistoryXpFailed => 'We couldn’t load your XP history';
+
+  @override
+  String get progressHistoryRankFailed => 'We couldn’t load your rank history';
+
+  @override
+  String get progressHistoryXpEmptyTitle => 'No XP yet';
+
+  @override
+  String get progressHistoryXpEmptyBody =>
+      'Complete a lesson to start your history.';
+
+  @override
+  String get progressHistoryRankEmptyTitle => 'No rank changes yet';
+
+  @override
+  String get progressHistoryRankEmptyBody =>
+      'Keep earning XP to move up the leaderboard.';
+
+  @override
+  String progressHistoryRankRow(String scope) {
+    return '$scope rank';
+  }
+
+  @override
+  String xpAmount(int amount) {
+    return '+$amount XP';
+  }
+
+  @override
+  String get xpSourceLesson => 'Lesson completed';
+
+  @override
+  String get xpSourceExercise => 'Exercise answered';
+
+  @override
+  String get xpSourceAchievement => 'Achievement earned';
+
+  @override
+  String get xpSourceStreak => 'Streak bonus';
+
+  @override
+  String get xpSourceReward => 'Reward';
+
+  @override
+  String get profileSetupTitle => 'Set up your profile';
+
+  @override
+  String get profileSetupSubtitle =>
+      'A few details help classmates recognise you and keep your progress yours.';
+
+  @override
+  String get profileSetupCta => 'Set up profile';
+
+  @override
+  String get profileSetupStepPhotoTitle => 'Add a photo';
+
+  @override
+  String get profileSetupStepPhotoBody =>
+      'Pick an avatar or upload your own picture.';
+
+  @override
+  String get profileSetupStepNameTitle => 'Your name';
+
+  @override
+  String get profileSetupStepNameBody =>
+      'The name classmates see on posts and rankings.';
+
+  @override
+  String get profileSetupStepBioTitle => 'A short bio';
+
+  @override
+  String get profileSetupStepBioBody =>
+      'Say what you are studying for in a line or two.';
+
+  @override
+  String get profileSetupStepProvinceTitle => 'Your province';
+
+  @override
+  String get profileSetupStepProvinceBody =>
+      'Used for provincial rankings and local communities.';
+
+  @override
+  String get supportDocumentComingSoon => 'Coming soon';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get blogTitle => 'Blog';
+
+  @override
+  String get blogWritePost => 'Write a post';
+
+  @override
+  String get blogYourPosts => 'Your posts';
+
+  @override
+  String get blogFeedFailedTitle => 'Posts are taking a break';
+
+  @override
+  String get blogFeedEmptyTitle => 'Nothing posted yet';
+
+  @override
+  String get blogFeedEmptyBody =>
+      'Be the first learner to share something useful with the Riksa community.';
+
+  @override
+  String get blogPostDeleted => 'Post deleted';
+
+  @override
+  String blogLikeLabel(int count) {
+    return 'Like, $count likes';
+  }
+
+  @override
+  String blogUnlikeLabel(int count) {
+    return 'Unlike, $count likes';
+  }
+
+  @override
+  String get blogMyPostsFailed => 'Could not load your posts';
+
+  @override
+  String get blogMyPostsEmptyTitle => 'No posts yet';
+
+  @override
+  String get blogMyPostsEmptyBody =>
+      'Everything you write shows up here, with its review status.';
+
+  @override
+  String get blogMyPostsFilteredTitle => 'Nothing here';
+
+  @override
+  String get blogMyPostsFilteredBody =>
+      'You have no posts with this status right now.';
+
+  @override
+  String get blogStatusPending => 'In review';
+
+  @override
+  String get blogStatusApproved => 'Published';
+
+  @override
+  String get blogStatusRejected => 'Rejected';
+
+  @override
+  String get blogEditPost => 'Edit post';
+
+  @override
+  String get blogDeletePost => 'Delete post';
+
+  @override
+  String get blogDeleteConfirmTitle => 'Delete this post?';
+
+  @override
+  String get blogDeleteConfirmBody =>
+      'The post and its likes and views are removed for everyone. This cannot be undone.';
+
+  @override
+  String get blogKeepPost => 'Keep post';
+
+  @override
+  String get blogPostOptions => 'Post options';
+
+  @override
+  String get blogVerified => 'Verified';
+
+  @override
+  String get blogUnknownAuthor => 'Riksa writer';
+
+  @override
+  String get blogOwnerEditFailed => 'You can only edit your own posts';
+
+  @override
+  String get blogOwnerDeleteFailed => 'You can only delete your own posts';
+
+  @override
+  String get blogPostGone => 'This post no longer exists';
+
+  @override
+  String get blogReviewPendingTitle => 'In review';
+
+  @override
+  String get blogReviewBackTitle => 'Back in review';
+
+  @override
+  String get blogReviewBackBody =>
+      'Your changes were saved. The post returns to the blog once a moderator approves this version.';
+
+  @override
+  String get blogReviewSubmittedBody =>
+      'Your post was submitted. It appears in the blog once a moderator approves it, and you can follow its status under Your posts.';
+
+  @override
+  String get blogDone => 'Done';
+
+  @override
+  String get blogSave => 'Save';
+
+  @override
+  String get blogPublish => 'Post';
+
+  @override
+  String get blogNothingToPreview => 'Nothing to preview yet.';
+
+  @override
+  String get blogTitleHint => 'Title';
+
+  @override
+  String get blogBodyHint => 'Share what you learned. Markdown works here.';
+
+  @override
+  String get blogCoverUrlLabel => 'Cover image URL (optional)';
+
+  @override
+  String get blogRemoveCover => 'Remove cover';
+
+  @override
+  String get blogCoverImage => 'Cover image';
+
+  @override
+  String get blogPreview => 'Preview';
+
+  @override
+  String get blogBackToWriting => 'Back to writing';
+
+  @override
+  String get blogOpenForEditFailed => 'Could not open this post for editing';
+
+  @override
+  String get blogPostUnavailableTitle => 'Post unavailable';
+
+  @override
+  String get blogPostUnavailableBody => 'This post could not be loaded.';
+
+  @override
+  String get blogLoadPostFailed => 'Could not load this post';
+
+  @override
+  String get blogLikeFailed => 'Could not update like';
+
+  @override
+  String get blogOpenPostFailedTitle => 'This post would not open';
+
+  @override
+  String get blogTextSizeTooltip => 'Adjust text size';
+
+  @override
+  String get blogTextSizeDefault => 'Text size: Default (1.0x)';
+
+  @override
+  String get blogTextSizeLarge => 'Text size: Large (1.18x)';
+
+  @override
+  String get blogTextSizeExtraLarge => 'Text size: Extra Large (1.35x)';
+
+  @override
+  String get blogProfile => 'Profile';
+
+  @override
+  String get blogSomethingWentWrong => 'Something went wrong';
+
+  @override
+  String get markdownBold => 'Bold';
+
+  @override
+  String get markdownItalic => 'Italic';
+
+  @override
+  String get markdownHeading => 'Heading';
+
+  @override
+  String get markdownQuote => 'Quote';
+
+  @override
+  String get markdownBulletList => 'Bulleted list';
+
+  @override
+  String get markdownNumberedList => 'Numbered list';
+
+  @override
+  String get markdownCode => 'Code';
+
+  @override
+  String get markdownLink => 'Link';
 }

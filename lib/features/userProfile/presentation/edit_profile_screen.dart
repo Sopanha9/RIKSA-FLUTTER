@@ -210,17 +210,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       value: null,
                                       child: Text(l10n.genderUnspecified),
                                     ),
-                                    const DropdownMenuItem(
+                                    DropdownMenuItem(
                                       value: 'FEMALE',
-                                      child: Text('Female'),
+                                      child: Text(l10n.genderFemale),
                                     ),
-                                    const DropdownMenuItem(
+                                    DropdownMenuItem(
                                       value: 'MALE',
-                                      child: Text('Male'),
+                                      child: Text(l10n.genderMale),
                                     ),
-                                    const DropdownMenuItem(
+                                    DropdownMenuItem(
                                       value: 'OTHER',
-                                      child: Text('Other'),
+                                      child: Text(l10n.genderOther),
                                     ),
                                   ],
                                   onChanged: (value) => _gender = value,

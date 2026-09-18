@@ -147,9 +147,9 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
               const SizedBox(height: 14),
               Expanded(
                 child: provinces.when(
-                  loading: () => const RiksaStateView(
-                    title: 'Loading provinces',
-                    body: 'Preparing local learning options.',
+                  loading: () => RiksaStateView(
+                    title: l10n.loadingProvincesTitle,
+                    body: l10n.loadingProvincesBody,
                     loading: true,
                   ),
                   error: (error, stackTrace) => _ProvinceError(

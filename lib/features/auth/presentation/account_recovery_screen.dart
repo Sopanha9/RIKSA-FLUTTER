@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../l10n/gen/app_localizations.dart';
 import '../data/auth_api.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_scaffold.dart';
@@ -24,38 +25,52 @@ class PasswordRules {
   bool get strongEnough => longEnough && hasUpper && hasLower && hasDigit;
 }
 
-/// Turns what went wrong into something a learner can act on. Server text is
-/// never shown raw: it can carry field names and status codes.
-String friendlyRecoveryError(Object error, {required int step}) {
-  if (error is FormatException) return error.message;
+/// Something the learner typed that the screen itself can catch, kept as a
+/// code so the wording is chosen in their language at display time.
+enum RecoveryIssue { missingIdentifier, codeLength, weakPassword, mismatch }
+
+class RecoveryValidationException implements Exception {
+  const RecoveryValidationException(this.issue);
+  final RecoveryIssue issue;
+}
+
+/// Turns what went wrong into something a learner can act on, in their own
+/// language. Server text is never shown raw: it can carry field names and
+/// status codes, and it is always English.
+String friendlyRecoveryError(
+  Object error, {
+  required int step,
+  required AppLocalizations l10n,
+}) {
+  if (error is RecoveryValidationException) {
+    return switch (error.issue) {
+      RecoveryIssue.missingIdentifier => l10n.recoveryNeedIdentifier,
+      RecoveryIssue.codeLength => l10n.recoveryCodeLength,
+      RecoveryIssue.weakPassword => l10n.recoveryChecklistIncomplete,
+      RecoveryIssue.mismatch => l10n.recoveryPasswordsDiffer,
+    };
+  }
   if (error is AuthFailure) {
     final text = error.message.toLowerCase();
     switch (error.kind) {
       case AuthFailureKind.network:
-        return "We couldn't reach Riksa. Check your internet and try again.";
+        return l10n.recoveryErrorNetwork;
       case AuthFailureKind.rateLimited:
-        return "That's a lot of tries! Take a short break, then try again.";
+        return l10n.recoveryErrorRateLimited;
       case AuthFailureKind.server:
-        return 'Something went wrong on our side. Please try again in a moment.';
+        return l10n.recoveryErrorServer;
       case AuthFailureKind.validation ||
           AuthFailureKind.unauthorized ||
           AuthFailureKind.forbidden:
-        if (text.contains('password')) {
-          return 'Almost there! Your password needs at least 8 characters, '
-              'with an uppercase letter, a lowercase letter and a number.';
-        }
+        if (text.contains('password')) return l10n.recoveryErrorPassword;
         if (text.contains('code') || text.contains('expired')) {
-          return "That code didn't work. It may have expired, so ask for a "
-              'new one and try again.';
+          return l10n.recoveryErrorCode;
         }
-        if (step == 0) {
-          return "We couldn't find that account. Check the spelling and try "
-              'again.';
-        }
-        return "That didn't work. Please check your details and try again.";
+        if (step == 0) return l10n.recoveryErrorAccount;
+        return l10n.recoveryErrorDetails;
     }
   }
-  return 'Something went wrong. Please try again.';
+  return l10n.recoveryErrorGeneric;
 }
 
 class AccountRecoveryScreen extends ConsumerStatefulWidget {
@@ -93,32 +108,24 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
       final api = ref.read(authApiProvider);
       if (_step == 0) {
         if (_identifier.text.trim().isEmpty) {
-          throw const FormatException(
-            'Tell us your username, email or Telegram ID so we know whose '
-            'account to help with.',
+          throw const RecoveryValidationException(
+            RecoveryIssue.missingIdentifier,
           );
         }
         await api.forgotPassword(_identifier.text.trim());
         if (mounted) setState(() => _step = 1);
       } else if (_step == 1) {
         if (_code.text.trim().length != 6) {
-          throw const FormatException(
-            'The code has 6 digits. Check your message and try again.',
-          );
+          throw const RecoveryValidationException(RecoveryIssue.codeLength);
         }
         setState(() => _step = 2);
       } else {
         final rules = PasswordRules(_password.text, _confirm.text);
         if (!rules.strongEnough) {
-          throw const FormatException(
-            'Almost there! Your password just needs everything in the '
-            'checklist ticked.',
-          );
+          throw const RecoveryValidationException(RecoveryIssue.weakPassword);
         }
         if (!rules.matches) {
-          throw const FormatException(
-            "The two passwords don't match yet. Try typing them again.",
-          );
+          throw const RecoveryValidationException(RecoveryIssue.mismatch);
         }
         await api.resetPassword(
           identifier: _identifier.text.trim(),
@@ -127,8 +134,10 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('All set! Sign in with your new password.'),
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.recoveryPasswordSaved,
+              ),
             ),
           );
           context.go('/auth/login');
@@ -136,7 +145,10 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
       }
     } catch (error) {
       if (mounted) {
-        setState(() => _error = friendlyRecoveryError(error, step: _step));
+        final l10n = AppLocalizations.of(context)!;
+        setState(
+          () => _error = friendlyRecoveryError(error, step: _step, l10n: l10n),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -168,21 +180,15 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
   @override
   Widget build(BuildContext context) {
     final palette = context.riksa;
+    final l10n = AppLocalizations.of(context)!;
     final textTheme = Theme.of(context).textTheme;
     final (title, subtitle) = switch (_step) {
       0 => (
-        'Forgot your password?',
-        "No worries, it happens to everyone. Tell us who you are and we'll "
-            'send you a code.',
+        l10n.recoveryStepIdentifierTitle,
+        l10n.recoveryStepIdentifierSubtitle,
       ),
-      1 => (
-        'Check your messages',
-        'We sent a 6-digit code to your email or Telegram. Enter it below.',
-      ),
-      _ => (
-        'Create a new password',
-        'Pick something you will remember but others can’t guess.',
-      ),
+      1 => (l10n.recoveryStepCodeTitle, l10n.recoveryStepCodeSubtitle),
+      _ => (l10n.recoveryStepPasswordTitle, l10n.recoveryStepPasswordSubtitle),
     };
     final rules = PasswordRules(_password.text, _confirm.text);
 
@@ -216,9 +222,9 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
                   controller: _identifier,
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) => _loading ? null : _continue(),
-                  decoration: const InputDecoration(
-                    labelText: 'Username, email or Telegram ID',
-                    prefixIcon: Icon(Icons.person_outline_rounded),
+                  decoration: InputDecoration(
+                    labelText: l10n.recoveryIdentifierLabel,
+                    prefixIcon: const Icon(Icons.person_outline_rounded),
                   ),
                 ),
               if (_step == 1)
@@ -246,10 +252,10 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
                   obscureText: _obscure,
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
-                    labelText: 'New password',
+                    labelText: l10n.recoveryNewPasswordLabel,
                     prefixIcon: const Icon(Icons.lock_outline_rounded),
                     suffixIcon: IconButton(
-                      tooltip: _obscure ? 'Show password' : 'Hide password',
+                      tooltip: _obscure ? l10n.showPassword : l10n.hidePassword,
                       onPressed: () => setState(() => _obscure = !_obscure),
                       icon: Icon(
                         _obscure
@@ -265,9 +271,9 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
                   controller: _confirm,
                   obscureText: _obscure,
                   onSubmitted: (_) => _loading ? null : _continue(),
-                  decoration: const InputDecoration(
-                    labelText: 'Type it again',
-                    prefixIcon: Icon(Icons.lock_reset_rounded),
+                  decoration: InputDecoration(
+                    labelText: l10n.recoveryConfirmPasswordLabel,
+                    prefixIcon: const Icon(Icons.lock_reset_rounded),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -293,9 +299,9 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
                         ),
                       )
                     : Text(switch (_step) {
-                        0 => 'Send me a code',
-                        1 => 'Verify code',
-                        _ => 'Save new password',
+                        0 => l10n.recoverySendCode,
+                        1 => l10n.recoveryVerifyCode,
+                        _ => l10n.recoverySavePassword,
                       }),
               ),
               if (_step == 1) ...[
@@ -310,9 +316,7 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
                                 .read(authApiProvider)
                                 .forgotPassword(_identifier.text.trim());
                             messenger.showSnackBar(
-                              const SnackBar(
-                                content: Text('A fresh code is on its way.'),
-                              ),
+                              SnackBar(content: Text(l10n.recoveryResendSent)),
                             );
                           } catch (error) {
                             if (mounted) {
@@ -320,19 +324,20 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
                                 () => _error = friendlyRecoveryError(
                                   error,
                                   step: _step,
+                                  l10n: l10n,
                                 ),
                               );
                             }
                           }
                         },
-                  child: const Text("Didn't get it? Send a new code"),
+                  child: Text(l10n.recoveryResend),
                 ),
               ],
               if (_step == 0) ...[
                 const SizedBox(height: 6),
                 TextButton(
                   onPressed: () => context.go('/auth/login'),
-                  child: const Text('I remember it — back to sign in'),
+                  child: Text(l10n.recoveryBackToSignIn),
                 ),
               ],
             ],
@@ -361,7 +366,7 @@ class _RecoveryIllustration extends StatelessWidget {
     };
     return Semantics(
       image: true,
-      label: 'Account recovery, step ${step + 1}',
+      label: AppLocalizations.of(context)!.recoveryIllustrationLabel(step + 1),
       child: ExcludeSemantics(
         child: SizedBox(
           height: 150,
@@ -475,7 +480,7 @@ class _StepProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.riksa;
     return Semantics(
-      label: 'Step ${step + 1} of 3',
+      label: AppLocalizations.of(context)!.recoveryStepProgress(step + 1, 3),
       child: Row(
         children: [
           for (var index = 0; index < 3; index++) ...[
@@ -515,12 +520,13 @@ class _PasswordChecklist extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final items = [
-      ('At least 8 characters', rules.longEnough),
-      ('An uppercase letter (A–Z)', rules.hasUpper),
-      ('A lowercase letter (a–z)', rules.hasLower),
-      ('A number (0–9)', rules.hasDigit),
-      ('Both passwords match', rules.matches),
+      (l10n.passwordRuleLength, rules.longEnough),
+      (l10n.passwordRuleUppercase, rules.hasUpper),
+      (l10n.passwordRuleLowercase, rules.hasLower),
+      (l10n.passwordRuleDigit, rules.hasDigit),
+      (l10n.passwordRuleMatch, rules.matches),
     ];
     return Container(
       key: const ValueKey('recovery-password-checklist'),
@@ -556,7 +562,9 @@ class _ChecklistRow extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final doneColor = isDark ? AppColors.lime : const Color(0xFF2E9E5B);
     return Semantics(
-      label: '$label, ${done ? 'done' : 'not yet'}',
+      label: done
+          ? AppLocalizations.of(context)!.checklistItemDone(label)
+          : AppLocalizations.of(context)!.checklistItemPending(label),
       excludeSemantics: true,
       child: Row(
         children: [
@@ -666,8 +674,12 @@ class _EmailVerificationScreenState
         child: FutureBuilder<bool>(
           future: _result,
           builder: (context, snapshot) {
+            final l10n = AppLocalizations.of(context)!;
             if (snapshot.connectionState != ConnectionState.done) {
-              return const CircularProgressIndicator();
+              return Semantics(
+                label: l10n.loading,
+                child: const CircularProgressIndicator(),
+              );
             }
             final success = snapshot.data == true;
             return Padding(
@@ -684,20 +696,22 @@ class _EmailVerificationScreenState
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    success ? 'Email verified' : 'Verification failed',
+                    success
+                        ? l10n.emailVerifiedTitle
+                        : l10n.emailVerifyFailedTitle,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     success
-                        ? 'Your Riksa account email is now verified.'
-                        : 'This verification link is invalid or expired.',
+                        ? l10n.emailVerifiedBody
+                        : l10n.emailVerifyFailedBody,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 22),
                   FilledButton(
                     onPressed: () => context.go('/auth/login'),
-                    child: const Text('Continue'),
+                    child: Text(l10n.continueLabel),
                   ),
                 ],
               ),

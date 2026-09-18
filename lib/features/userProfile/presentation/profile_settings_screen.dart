@@ -3,6 +3,7 @@ import '../../../core/sound/sound_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/notifications/streak_reminder_provider.dart';
 import '../../../core/providers/locale_provider.dart';
@@ -181,20 +182,19 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                       _DocumentRow(
                         icon: Icons.help_outline_rounded,
                         label: l10n.faq,
-                        onTap: () => _showDocument(context, l10n.faq),
+                        url: _supportDocuments.faq,
                       ),
                       const _SettingsDivider(),
                       _DocumentRow(
                         icon: Icons.description_outlined,
                         label: l10n.termsOfService,
-                        onTap: () =>
-                            _showDocument(context, l10n.termsOfService),
+                        url: _supportDocuments.terms,
                       ),
                       const _SettingsDivider(),
                       _DocumentRow(
                         icon: Icons.privacy_tip_outlined,
                         label: l10n.privacyPolicy,
-                        onTap: () => _showDocument(context, l10n.privacyPolicy),
+                        url: _supportDocuments.privacy,
                       ),
                     ],
                   ),
@@ -221,24 +221,13 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
       ),
     );
   }
-
-  Future<void> _showDocument(BuildContext context, String title) async {
-    final l10n = AppLocalizations.of(context)!;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(title),
-        content: Text(l10n.supportDocumentUnavailable),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
 }
+
+/// Where the published documents live. A row without an address here is shown
+/// as not yet available instead of pretending to be a link: tapping one only
+/// to be told the document does not exist is worse than seeing that up front.
+/// Fill these in and the rows become ordinary links.
+const _supportDocuments = (faq: null, terms: null, privacy: null);
 
 class _SettingsSwitchRow extends StatelessWidget {
   const _SettingsSwitchRow({
@@ -276,20 +265,49 @@ class _DocumentRow extends StatelessWidget {
   const _DocumentRow({
     required this.icon,
     required this.label,
-    required this.onTap,
+    required this.url,
   });
 
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+
+  /// Null while the document has no published address.
+  final String? url;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    leading: Icon(icon, color: ProfilePalette.muted(context)),
-    title: Text(label),
-    trailing: const Icon(Icons.chevron_right_rounded),
-    onTap: onTap,
-  );
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final address = url;
+    final muted = ProfilePalette.muted(context);
+    if (address == null) {
+      return ListTile(
+        enabled: false,
+        leading: Icon(icon, color: muted),
+        title: Text(label),
+        trailing: Text(
+          l10n.supportDocumentComingSoon,
+          style: TextStyle(color: muted, fontWeight: FontWeight.w600),
+        ),
+      );
+    }
+    return ListTile(
+      leading: Icon(icon, color: muted),
+      title: Text(label),
+      trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+      onTap: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        final opened = await launchUrl(
+          Uri.parse(address),
+          mode: LaunchMode.externalApplication,
+        );
+        if (!opened) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.supportDocumentUnavailable)),
+          );
+        }
+      },
+    );
+  }
 }
 
 class _SettingsDivider extends StatelessWidget {

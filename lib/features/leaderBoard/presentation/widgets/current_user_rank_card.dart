@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_components.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../core/widgets/riksa_rank_badge.dart';
+import '../../../../l10n/gen/app_localizations.dart';
 
 /// The learner's own standing, on lime as on the reference board: the rank
 /// leads, XP follows, and the framed avatar carries the tier badge.
@@ -37,7 +38,9 @@ class CurrentUserRankCard extends StatelessWidget {
 
     return Semantics(
       button: onTap != null,
-      label: 'Your rank is $rank. $name, $scopeLabel, $tier, $xp XP.',
+      label: AppLocalizations.of(
+        context,
+      )!.leaderboardYourRankLabel(rank, name, scopeLabel, tier, xp),
       child: Material(
         color: isDark ? context.riksa.accentSoft : AppColors.limeSoft,
         borderRadius: AppRadii.largeBorder,
@@ -54,7 +57,7 @@ class CurrentUserRankCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Your rank',
+                        AppLocalizations.of(context)!.leaderboardYourRank,
                         style: textTheme.labelMedium?.copyWith(
                           color: ink.withValues(alpha: .75),
                           fontWeight: FontWeight.w500,

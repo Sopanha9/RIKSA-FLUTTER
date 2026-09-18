@@ -12,6 +12,7 @@ import '../data/blog_api.dart';
 import '../data/blog_models.dart';
 import '../providers/blog_provider.dart';
 import 'widgets/blog_ui.dart';
+import '../../../l10n/gen/app_localizations.dart';
 
 /// Timeline of approved community articles.
 ///
@@ -54,6 +55,7 @@ class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final feedState = ref.watch(blogFeedProvider);
     final selectedCategoryId = feedState is BlogFeedLoaded
         ? feedState.categoryId
@@ -63,17 +65,17 @@ class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
       backgroundColor: blogSheetColor(context),
       floatingActionButton: FloatingActionButton(
         onPressed: _createPost,
-        tooltip: 'Write a post',
+        tooltip: l10n.blogWritePost,
         child: const Icon(Icons.edit_outlined),
       ),
       body: Column(
         children: [
           BlogTopBar(
-            title: 'Blog',
+            title: l10n.blogTitle,
             onBack: () => context.pop(),
             trailing: IconButton(
               onPressed: () => context.push('/blog/my-posts'),
-              tooltip: 'Your posts',
+              tooltip: l10n.blogYourPosts,
               style: IconButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 foregroundColor: context.riksa.ink,
@@ -88,62 +90,63 @@ class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
     );
   }
 
-  Widget _buildBody(BlogFeedState state) => switch (state) {
-    BlogFeedLoading() => ListView.separated(
-      padding: EdgeInsets.zero,
-      itemCount: 5,
-      separatorBuilder: (_, _) => const BlogDivider(),
-      itemBuilder: (_, _) => const BlogRowSkeleton(),
-    ),
-    BlogFeedError(:final message) => BlogNotice(
-      title: 'Posts are taking a break',
-      body: message,
-      icon: Icons.cloud_off_outlined,
-      actionLabel: 'Try again',
-      onAction: () => ref.read(blogFeedProvider.notifier).load(),
-    ),
-    BlogFeedLoaded(:final posts, :final hasMore, :final isLoadingMore) =>
-      posts.isEmpty
-          ? BlogNotice(
-              title: 'Nothing posted yet',
-              body:
-                  'Be the first learner to share something useful with the '
-                  'Riksa community.',
-              icon: Icons.menu_book_outlined,
-              actionLabel: 'Write a post',
-              onAction: _createPost,
-            )
-          : RefreshIndicator(
-              onRefresh: () => ref.read(blogFeedProvider.notifier).load(),
-              child: ListView.separated(
-                key: const PageStorageKey('blog-feed-scroll'),
-                controller: _scrollController,
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-                itemCount: posts.length + (hasMore ? 1 : 0),
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  if (index == posts.length) {
-                    return Padding(
-                      padding: const EdgeInsets.all(RiksaSpacing.lg),
-                      child: Center(
-                        child: isLoadingMore
-                            ? const SizedBox.square(
-                                dimension: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                ),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    );
-                  }
-                  return BlogTimelineRow(post: posts[index]);
-                },
+  Widget _buildBody(BlogFeedState state) {
+    final l10n = AppLocalizations.of(context)!;
+    return switch (state) {
+      BlogFeedLoading() => ListView.separated(
+        padding: EdgeInsets.zero,
+        itemCount: 5,
+        separatorBuilder: (_, _) => const BlogDivider(),
+        itemBuilder: (_, _) => const BlogRowSkeleton(),
+      ),
+      BlogFeedError(:final message) => BlogNotice(
+        title: l10n.blogFeedFailedTitle,
+        body: message,
+        icon: Icons.cloud_off_outlined,
+        actionLabel: l10n.tryAgain,
+        onAction: () => ref.read(blogFeedProvider.notifier).load(),
+      ),
+      BlogFeedLoaded(:final posts, :final hasMore, :final isLoadingMore) =>
+        posts.isEmpty
+            ? BlogNotice(
+                title: l10n.blogFeedEmptyTitle,
+                body: l10n.blogFeedEmptyBody,
+                icon: Icons.menu_book_outlined,
+                actionLabel: l10n.blogWritePost,
+                onAction: _createPost,
+              )
+            : RefreshIndicator(
+                onRefresh: () => ref.read(blogFeedProvider.notifier).load(),
+                child: ListView.separated(
+                  key: const PageStorageKey('blog-feed-scroll'),
+                  controller: _scrollController,
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                  itemCount: posts.length + (hasMore ? 1 : 0),
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    if (index == posts.length) {
+                      return Padding(
+                        padding: const EdgeInsets.all(RiksaSpacing.lg),
+                        child: Center(
+                          child: isLoadingMore
+                              ? const SizedBox.square(
+                                  dimension: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      );
+                    }
+                    return BlogTimelineRow(post: posts[index]);
+                  },
+                ),
               ),
-            ),
-  };
+    };
+  }
 }
 
 /// Horizontal tab strip. `All` plus one tab per category, with the underline
@@ -201,6 +204,7 @@ class BlogTimelineRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final palette = context.riksa;
     final profile = ref.watch(blogAuthorProvider(post.authorId)).value;
     final isOwner = ref.watch(currentUserIdProvider) == post.authorId;
@@ -287,8 +291,8 @@ class BlogTimelineRow extends ConsumerWidget {
                           activeIcon: Icons.favorite_rounded,
                           label: blogCountLabel(post.likeCount),
                           semanticLabel: post.liked
-                              ? 'Unlike, ${post.likeCount} likes'
-                              : 'Like, ${post.likeCount} likes',
+                              ? l10n.blogUnlikeLabel(post.likeCount)
+                              : l10n.blogLikeLabel(post.likeCount),
                           selected: post.liked,
                           selectedColor: theme.colorScheme.error,
                           onTap: () => ref
@@ -331,14 +335,17 @@ class BlogTimelineRow extends ConsumerWidget {
     if (!await confirmBlogPostDeletion(context)) return;
     if (!context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context)!;
     try {
       await ref.read(blogApiProvider).deletePost(post.id);
       ref.read(blogFeedProvider.notifier).removePost(post.id);
-      messenger.showSnackBar(const SnackBar(content: Text('Post deleted')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.blogPostDeleted)));
     } on DioException catch (e) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text(blogOwnerActionError(e, BlogOwnerAction.delete)),
+          content: Text(
+            blogOwnerActionError(e, BlogOwnerAction.delete, l10n: l10n),
+          ),
         ),
       );
     }

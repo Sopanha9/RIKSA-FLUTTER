@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/gen/app_localizations.dart';
 
 /// One formatting control offered by [BlogMarkdownToolbar].
 ///
@@ -185,30 +186,38 @@ class BlogMarkdownToolbar extends StatelessWidget {
 
   final ValueChanged<BlogMarkdownAction> onAction;
 
-  static const _controls = <(BlogMarkdownAction, IconData, String)>[
-    (BlogMarkdownAction.bold, Icons.format_bold_rounded, 'Bold'),
-    (BlogMarkdownAction.italic, Icons.format_italic_rounded, 'Italic'),
-    (BlogMarkdownAction.heading, Icons.title_rounded, 'Heading'),
-    (BlogMarkdownAction.quote, Icons.format_quote_rounded, 'Quote'),
+  static List<(BlogMarkdownAction, IconData, String)> _controls(
+    AppLocalizations l10n,
+  ) => [
+    (BlogMarkdownAction.bold, Icons.format_bold_rounded, l10n.markdownBold),
+    (
+      BlogMarkdownAction.italic,
+      Icons.format_italic_rounded,
+      l10n.markdownItalic,
+    ),
+    (BlogMarkdownAction.heading, Icons.title_rounded, l10n.markdownHeading),
+    (BlogMarkdownAction.quote, Icons.format_quote_rounded, l10n.markdownQuote),
     (
       BlogMarkdownAction.bulletList,
       Icons.format_list_bulleted_rounded,
-      'Bulleted list',
+      l10n.markdownBulletList,
     ),
     (
       BlogMarkdownAction.numberedList,
       Icons.format_list_numbered_rounded,
-      'Numbered list',
+      l10n.markdownNumberedList,
     ),
-    (BlogMarkdownAction.code, Icons.code_rounded, 'Code'),
-    (BlogMarkdownAction.link, Icons.link_rounded, 'Link'),
+    (BlogMarkdownAction.code, Icons.code_rounded, l10n.markdownCode),
+    (BlogMarkdownAction.link, Icons.link_rounded, l10n.markdownLink),
   ];
 
   @override
   Widget build(BuildContext context) {
     final palette = context.riksa;
+    final controls = _controls(AppLocalizations.of(context)!);
     return SizedBox(
-      height: 44,
+      // Icons stay 21px; the strip is tall enough for a 48px tap target.
+      height: 48,
       // Buttons must not take focus, or the keyboard closes and the
       // selection the action needs is gone before it runs.
       child: ExcludeFocus(
@@ -216,9 +225,9 @@ class BlogMarkdownToolbar extends StatelessWidget {
           key: const ValueKey('blog-markdown-toolbar'),
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.xs),
-          itemCount: _controls.length,
+          itemCount: controls.length,
           itemBuilder: (context, index) {
-            final (action, icon, label) = _controls[index];
+            final (action, icon, label) = controls[index];
             return IconButton(
               key: ValueKey('blog-markdown-${action.name}'),
               onPressed: () => onAction(action),
@@ -226,6 +235,7 @@ class BlogMarkdownToolbar extends StatelessWidget {
               style: IconButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 foregroundColor: palette.inkMuted,
+                minimumSize: const Size(48, 48),
               ),
               icon: Icon(icon, size: 21),
             );

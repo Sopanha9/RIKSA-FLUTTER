@@ -8,6 +8,7 @@ import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../core/widgets/riksa_components.dart';
 import '../../../userProfile/data/public_profile.dart';
 import '../../providers/blog_provider.dart';
+import '../../../../l10n/gen/app_localizations.dart';
 
 /// Shared metrics for the timeline-style blog surfaces.
 ///
@@ -30,12 +31,10 @@ Color blogAvatarForeground(BuildContext context) =>
     Theme.of(context).colorScheme.primary;
 
 /// Name shown for an author whose public profile could not be resolved.
-const String blogUnknownAuthor = 'Riksa writer';
-
-String blogAuthorName(PublicProfile? profile) =>
+String blogAuthorName(BuildContext context, PublicProfile? profile) =>
     profile?.preferredName.isNotEmpty ?? false
     ? profile!.preferredName
-    : blogUnknownAuthor;
+    : AppLocalizations.of(context)!.blogUnknownAuthor;
 
 /// Short relative stamp in the shape X uses: `4m`, `7h`, `12 Jan`.
 String blogTimeLabel(BuildContext context, DateTime date) {
@@ -86,7 +85,7 @@ class BlogAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final avatar = RiksaAvatarImage(
       value: profile?.avatarUrl,
-      label: blogAuthorName(profile),
+      label: blogAuthorName(context, profile),
       size: size,
       backgroundColor: blogAvatarBackground(context),
       foregroundColor: blogAvatarForeground(context),
@@ -116,7 +115,7 @@ class BlogAuthorMetaLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = context.riksa;
-    final name = blogAuthorName(profile);
+    final name = blogAuthorName(context, profile);
     final handle = profile?.username.trim() ?? '';
     final trailing = handle.isEmpty
         ? blogTimeLabel(context, createdAt)
@@ -163,7 +162,7 @@ class BlogVerifiedBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: 'Verified',
+    label: AppLocalizations.of(context)!.blogVerified,
     child: Icon(
       Icons.verified_rounded,
       size: size,
@@ -419,7 +418,7 @@ class BlogOwnerMenu extends StatelessWidget {
         shape: const CircleBorder(),
       ),
       child: PopupMenuButton<_OwnerAction>(
-        tooltip: 'Post options',
+        tooltip: AppLocalizations.of(context)!.blogPostOptions,
         icon: Icon(
           Icons.more_horiz_rounded,
           size: 22,
@@ -434,13 +433,13 @@ class BlogOwnerMenu extends StatelessWidget {
           _OwnerAction.delete => onDelete(),
         },
         itemBuilder: (context) => [
-          const PopupMenuItem(
+          PopupMenuItem(
             value: _OwnerAction.edit,
             child: ListTile(
               dense: true,
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.edit_outlined, size: 20),
-              title: Text('Edit post'),
+              leading: const Icon(Icons.edit_outlined, size: 20),
+              title: Text(AppLocalizations.of(context)!.blogEditPost),
             ),
           ),
           PopupMenuItem(
@@ -454,7 +453,7 @@ class BlogOwnerMenu extends StatelessWidget {
                 color: theme.colorScheme.error,
               ),
               title: Text(
-                'Delete post',
+                AppLocalizations.of(context)!.blogDeletePost,
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ),
@@ -469,25 +468,23 @@ enum _OwnerAction { edit, delete }
 
 /// Deleting is permanent on the server, so it always goes through here.
 Future<bool> confirmBlogPostDeletion(BuildContext context) async {
+  final l10n = AppLocalizations.of(context)!;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Delete this post?'),
-      content: const Text(
-        'The post and its likes and views are removed for everyone. This '
-        'cannot be undone.',
-      ),
+      title: Text(l10n.blogDeleteConfirmTitle),
+      content: Text(l10n.blogDeleteConfirmBody),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Keep post'),
+          child: Text(l10n.blogKeepPost),
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(true),
           style: TextButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.error,
           ),
-          child: const Text('Delete'),
+          child: Text(l10n.discardAction),
         ),
       ],
     ),

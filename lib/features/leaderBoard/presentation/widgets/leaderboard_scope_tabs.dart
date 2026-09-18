@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_interactions.dart';
 import '../../../userProfile/data/profile_models.dart';
+import '../../../../l10n/gen/app_localizations.dart';
 
 class LeaderboardScopeTabs extends StatelessWidget {
   const LeaderboardScopeTabs({
@@ -16,9 +17,11 @@ class LeaderboardScopeTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       key: const ValueKey('leaderboard-scope-control'),
-      height: 44,
+      // 40px pill inside a 48px target: the visual stays, the thumb wins.
+      height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: context.riksa.surface,
@@ -29,14 +32,14 @@ class LeaderboardScopeTabs extends StatelessWidget {
         children: [
           Expanded(
             child: LeaderboardPillTab(
-              label: 'National',
+              label: l10n.leaderboardNational,
               selected: selected == LeaderboardScope.country,
               onTap: () => onChanged(LeaderboardScope.country),
             ),
           ),
           Expanded(
             child: LeaderboardPillTab(
-              label: 'Province',
+              label: l10n.leaderboardProvince,
               selected: selected == LeaderboardScope.province,
               onTap: () => onChanged(LeaderboardScope.province),
             ),

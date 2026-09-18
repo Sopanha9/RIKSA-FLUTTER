@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -8,6 +9,7 @@ import 'package:riksa_app/core/network/dio_client.dart';
 import 'package:riksa_app/core/storage/session_store.dart';
 import 'package:riksa_app/features/blog/data/blog_api.dart';
 import 'package:riksa_app/features/blog/data/blog_models.dart';
+import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 /// Contract for the author-owned writes. The moderation lifecycle means an
 /// edit can come back as PENDING, and the UI reads that off the response.
@@ -79,7 +81,8 @@ void main() {
     expect(adapter.path, '/blog/post-1');
   });
 
-  test('a rejected write surfaces an actionable message', () {
+  test('a rejected write surfaces an actionable message', () async {
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
     DioException failure(int status) => DioException(
       requestOptions: RequestOptions(path: '/blog/post-1'),
       response: Response(
@@ -89,16 +92,16 @@ void main() {
     );
 
     expect(
-      blogOwnerActionError(failure(403), BlogOwnerAction.delete),
+      blogOwnerActionError(failure(403), BlogOwnerAction.delete, l10n: l10n),
       'You can only delete your own posts',
     );
     expect(
-      blogOwnerActionError(failure(404), BlogOwnerAction.edit),
+      blogOwnerActionError(failure(404), BlogOwnerAction.edit, l10n: l10n),
       'This post no longer exists',
     );
     expect(
-      blogOwnerActionError(failure(405), BlogOwnerAction.edit),
-      'Editing is not available on this server yet',
+      blogOwnerActionError(failure(405), BlogOwnerAction.edit, l10n: l10n),
+      'Something went wrong',
     );
   });
 }

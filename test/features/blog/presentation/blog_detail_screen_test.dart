@@ -34,7 +34,8 @@ void main() {
     id: 'post-1',
     authorId: 'author-1',
     title: 'How to Solve Complex Limits in Calculus',
-    content: 'Long form content explaining the fundamentals of epsilon-delta definition and practical tricks.',
+    content:
+        'Long form content explaining the fundamentals of epsilon-delta definition and practical tricks.',
     status: BlogStatus.approved,
     viewCount: 150,
     likeCount: 24,

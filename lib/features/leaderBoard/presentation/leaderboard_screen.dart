@@ -164,8 +164,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                   tier: readableProfileName(userTierName),
                                   scopeLabel:
                                       _scope == LeaderboardScope.province
-                                      ? 'Province'
-                                      : 'National',
+                                      ? l10n.leaderboardProvince
+                                      : l10n.leaderboardNational,
                                   xp: userScore,
                                   avatarUrl: currentUser.avatarUrl,
                                   avatarLabel:

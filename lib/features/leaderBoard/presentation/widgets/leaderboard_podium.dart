@@ -7,6 +7,7 @@ import '../../../../core/widgets/riksa_interactions.dart';
 import '../../../../core/widgets/riksa_rank_badge.dart';
 import '../../../userProfile/data/profile_models.dart';
 import '../../../userProfile/presentation/public_profile_navigation.dart';
+import '../../../../l10n/gen/app_localizations.dart';
 
 class LeaderboardPodium extends StatelessWidget {
   const LeaderboardPodium({
@@ -173,7 +174,9 @@ class _PodiumColumn extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: 'Rank ${row.rank}, $displayName, ${row.score} XP',
+      label: AppLocalizations.of(
+        context,
+      )!.leaderboardRowLabel(row.rank, displayName, row.score),
       child: RiksaTapFeedback(
         child: InkWell(
           key: ValueKey('podium-place-${row.rank}'),

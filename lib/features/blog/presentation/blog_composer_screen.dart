@@ -140,10 +140,14 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
       _showError(
         editing == null
             ? dioErrorMessage(e)
-            : blogOwnerActionError(e, BlogOwnerAction.edit),
+            : blogOwnerActionError(
+                e,
+                BlogOwnerAction.edit,
+                l10n: AppLocalizations.of(context)!,
+              ),
       );
     } catch (_) {
-      _showError('Something went wrong');
+      _showError(AppLocalizations.of(context)!.blogSomethingWentWrong);
     }
   }
 
@@ -211,23 +215,24 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
     );
   }
 
-  Widget _buildPendingReview() => BlogNotice(
-    title: _isEditing ? 'Back in review' : 'In review',
-    body: _isEditing
-        ? 'Your changes were saved. The post returns to the blog once a '
-              'moderator approves this version.'
-        : 'Your post was submitted. It appears in the blog once a moderator '
-              'approves it, and you can follow its status under Your posts.',
-    icon: Icons.hourglass_top_rounded,
-    actionLabel: 'Done',
-    onAction: () => context.pop(true),
-    // The copy above points at Your posts, so give it somewhere to point.
-    secondaryLabel: 'Your posts',
-    onSecondary: () {
-      context.pop(true);
-      context.push('/blog/my-posts');
-    },
-  );
+  Widget _buildPendingReview() {
+    final l10n = AppLocalizations.of(context)!;
+    return BlogNotice(
+      title: _isEditing
+          ? l10n.blogReviewBackTitle
+          : l10n.blogReviewPendingTitle,
+      body: _isEditing ? l10n.blogReviewBackBody : l10n.blogReviewSubmittedBody,
+      icon: Icons.hourglass_top_rounded,
+      actionLabel: l10n.blogDone,
+      onAction: () => context.pop(true),
+      // The copy above points at Your posts, so give it somewhere to point.
+      secondaryLabel: l10n.blogYourPosts,
+      onSecondary: () {
+        context.pop(true);
+        context.push('/blog/my-posts');
+      },
+    );
+  }
 
   /// Close goes through the same guard as the system back gesture.
   void _cancel() {
@@ -236,6 +241,7 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
   }
 
   Widget _buildComposer() {
+    final l10n = AppLocalizations.of(context)!;
     final auth = ref.watch(authProvider);
     final user = auth is Authenticated ? auth.user : null;
     // Watched here so the topic list is already in flight by the time the
@@ -246,7 +252,7 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
     return Column(
       children: [
         _ComposerBar(
-          label: _isEditing ? 'Save' : 'Post',
+          label: _isEditing ? l10n.blogSave : l10n.blogPublish,
           canSubmit: _canSubmit,
           submitting: _submitting,
           previewing: _previewing,
@@ -313,6 +319,7 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
   /// The draft as readers will meet it, rendered by the same markdown
   /// pipeline the detail screen uses.
   Widget _buildPreview() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final palette = context.riksa;
     final content = normalizeBlogMarkdown(_contentCtrl.text);
@@ -341,7 +348,7 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
         ],
         if (content.trim().isEmpty)
           Text(
-            'Nothing to preview yet.',
+            l10n.blogNothingToPreview,
             style: theme.textTheme.bodyLarge?.copyWith(color: palette.inkFaint),
           )
         else
@@ -356,6 +363,7 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
   }
 
   Widget _buildFields() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final palette = context.riksa;
     final showCover = _showCoverField || _cover.isNotEmpty;
@@ -381,7 +389,7 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
           ),
           decoration: _bareField(
             context,
-            'Title',
+            l10n.blogTitleHint,
             hintStyle: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w800,
               height: 1.25,
@@ -404,7 +412,7 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
           ),
           decoration: _bareField(
             context,
-            'Share what you learned. Markdown works here.',
+            l10n.blogBodyHint,
             hintStyle: theme.textTheme.bodyLarge?.copyWith(
               fontSize: 17,
               height: 1.7,
@@ -425,7 +433,7 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
                   style: theme.textTheme.bodyMedium,
                   decoration: _bareField(
                     context,
-                    'Cover image URL (optional)',
+                    AppLocalizations.of(context)!.blogCoverUrlLabel,
                     hintStyle: theme.textTheme.bodyMedium?.copyWith(
                       color: palette.inkFaint,
                     ),
@@ -438,7 +446,7 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
                     _coverCtrl.clear();
                     _showCoverField = false;
                   }),
-                  tooltip: 'Remove cover',
+                  tooltip: AppLocalizations.of(context)!.blogRemoveCover,
                   style: IconButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     foregroundColor: palette.inkMuted,
@@ -507,13 +515,15 @@ class _ComposerBar extends StatelessWidget {
             TextButton(
               onPressed: submitting ? null : onCancel,
               style: TextButton.styleFrom(foregroundColor: context.riksa.ink),
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             const Spacer(),
             IconButton(
               key: const ValueKey('blog-preview-toggle'),
               onPressed: canPreview && !submitting ? onTogglePreview : null,
-              tooltip: previewing ? 'Back to writing' : 'Preview',
+              tooltip: previewing
+                  ? AppLocalizations.of(context)!.blogBackToWriting
+                  : AppLocalizations.of(context)!.blogPreview,
               style: IconButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 foregroundColor: previewing
@@ -529,7 +539,7 @@ class _ComposerBar extends StatelessWidget {
             FilledButton(
               onPressed: canSubmit ? onSubmit : null,
               style: FilledButton.styleFrom(
-                minimumSize: const Size(0, 38),
+                minimumSize: const Size(0, 48),
                 padding: const EdgeInsets.symmetric(
                   horizontal: RiksaSpacing.lg,
                 ),
@@ -624,7 +634,7 @@ class _ComposerFooter extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: onToggleCover,
-                  tooltip: 'Cover image',
+                  tooltip: AppLocalizations.of(context)!.blogCoverImage,
                   style: IconButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     foregroundColor: coverActive
@@ -768,7 +778,7 @@ class _BlogPostEditScreenState extends ConsumerState<BlogPostEditScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'Could not open this post for editing';
+        _error = AppLocalizations.of(context)!.blogOpenForEditFailed;
         _loading = false;
       });
     }
@@ -783,15 +793,22 @@ class _BlogPostEditScreenState extends ConsumerState<BlogPostEditScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            BlogTopBar(title: 'Edit post', onBack: () => context.pop(false)),
+            BlogTopBar(
+              title: AppLocalizations.of(context)!.blogEditPost,
+              onBack: () => context.pop(false),
+            ),
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : BlogNotice(
-                      title: 'Post unavailable',
-                      body: _error ?? 'This post could not be loaded.',
+                      title: AppLocalizations.of(
+                        context,
+                      )!.blogPostUnavailableTitle,
+                      body:
+                          _error ??
+                          AppLocalizations.of(context)!.blogPostUnavailableBody,
                       icon: Icons.cloud_off_outlined,
-                      actionLabel: 'Try again',
+                      actionLabel: AppLocalizations.of(context)!.tryAgain,
                       onAction: _load,
                     ),
             ),

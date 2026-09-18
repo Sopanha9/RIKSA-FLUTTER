@@ -41,6 +41,7 @@ class SocialPostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final isReacted = post.myReaction != null;
@@ -139,6 +140,7 @@ class SocialPostCard extends StatelessWidget {
                         key: ValueKey('react-${post.id}'),
                         count: post.reactionCount,
                         selected: isReacted,
+                        semanticLabel: l10n.socialLikeLabel(post.reactionCount),
                         onPressed: onReact,
                       ),
                       const SizedBox(width: 10),
@@ -146,6 +148,9 @@ class SocialPostCard extends StatelessWidget {
                         key: ValueKey('comment-${post.id}'),
                         icon: Icons.mode_comment_outlined,
                         count: post.commentCount,
+                        semanticLabel: l10n.socialCommentLabel(
+                          post.commentCount,
+                        ),
                         onPressed: onTap,
                       ),
                       const Spacer(),
@@ -153,6 +158,7 @@ class SocialPostCard extends StatelessWidget {
                         key: ValueKey('share-${post.id}'),
                         icon: Icons.ios_share_rounded,
                         count: post.shareCount,
+                        semanticLabel: l10n.socialShareLabel(post.shareCount),
                         onPressed: onShare,
                       ),
                     ],
@@ -451,11 +457,15 @@ class _PrimaryReactionButton extends StatelessWidget {
     super.key,
     required this.count,
     required this.selected,
+    required this.semanticLabel,
     required this.onPressed,
   });
 
   final int count;
   final bool selected;
+
+  /// What a screen reader says: the count alone never explains the action.
+  final String semanticLabel;
   final VoidCallback onPressed;
 
   @override
@@ -463,7 +473,9 @@ class _PrimaryReactionButton extends StatelessWidget {
     final isSelected = selected;
     return Semantics(
       button: true,
-      selected: isSelected,
+      toggled: isSelected,
+      label: semanticLabel,
+      excludeSemantics: true,
       child: Material(
         color: isSelected
             ? SocialPalette.pinkSoft(context)
@@ -472,8 +484,11 @@ class _PrimaryReactionButton extends StatelessWidget {
         child: InkWell(
           borderRadius: AppRadii.fullBorder,
           onTap: onPressed,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Container(
+            // The icon stays small; the target a thumb has to hit does not.
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -509,11 +524,13 @@ class _LightAction extends StatelessWidget {
     super.key,
     required this.icon,
     required this.count,
+    required this.semanticLabel,
     this.onPressed,
   });
 
   final IconData icon;
   final int count;
+  final String semanticLabel;
   final VoidCallback? onPressed;
 
   @override
@@ -525,8 +542,10 @@ class _LightAction extends StatelessWidget {
       child: InkWell(
         borderRadius: AppRadii.fullBorder,
         onTap: onPressed,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -545,8 +564,13 @@ class _LightAction extends StatelessWidget {
         ),
       ),
     );
-    if (onPressed == null) return content;
-    return Semantics(button: true, child: content);
+    if (onPressed == null) return ExcludeSemantics(child: content);
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      excludeSemantics: true,
+      child: content,
+    );
   }
 }
 

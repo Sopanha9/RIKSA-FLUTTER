@@ -163,7 +163,9 @@ class _SocialPostDetailScreenState
     setState(() => _submitting = true);
     final targetParent = _replyingTo;
     try {
-      final created = await ref.read(socialApiProvider).createComment(
+      final created = await ref
+          .read(socialApiProvider)
+          .createComment(
             postId: widget.postId,
             content: content,
             parentId: targetParent?.id,
@@ -255,9 +257,7 @@ class _SocialPostDetailScreenState
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
-            content: Text(
-              isKhmer ? 'បានលុបមតិដោយជោគជ័យ' : 'Comment deleted',
-            ),
+            content: Text(isKhmer ? 'បានលុបមតិដោយជោគជ័យ' : 'Comment deleted'),
           ),
         );
     } catch (_) {
@@ -390,13 +390,16 @@ class _SocialPostDetailScreenState
                         const SizedBox(height: 6),
                         for (final reply in thread.replies) ...[
                           () {
-                            final currentUserId =
-                                ref.watch(currentUserIdProvider);
+                            final currentUserId = ref.watch(
+                              currentUserIdProvider,
+                            );
                             final canDeleteReply =
                                 reply.author.id == currentUserId;
                             return Padding(
-                              padding:
-                                  const EdgeInsets.only(left: 24, bottom: 6),
+                              padding: const EdgeInsets.only(
+                                left: 24,
+                                bottom: 6,
+                              ),
                               child: _CommentCard(
                                 comment: reply,
                                 isReply: true,
@@ -444,9 +447,7 @@ class _SocialPostDetailScreenState
               submitting: _submitting,
               replyingTo: _replyingTo,
               onCancelReply: _cancelReply,
-              hint: _replyingTo != null
-                  ? '${l10n.reply}...'
-                  : l10n.addComment,
+              hint: _replyingTo != null ? '${l10n.reply}...' : l10n.addComment,
               sendLabel: l10n.sendComment,
               onSend: _submitComment,
             ),
@@ -477,6 +478,7 @@ class _PostBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       key: const ValueKey('post-detail-body'),
       padding: const EdgeInsets.all(18),
@@ -572,6 +574,7 @@ class _PostBody extends StatelessWidget {
                     : Icons.arrow_upward_rounded,
                 count: post.reactionCount,
                 selected: post.myReaction != null,
+                semanticLabel: l10n.socialLikeLabel(post.reactionCount),
                 onTap: onReact,
               ),
               const SizedBox(width: 10),
@@ -579,12 +582,14 @@ class _PostBody extends StatelessWidget {
                 key: const ValueKey('post-detail-comment-button'),
                 icon: Icons.mode_comment_outlined,
                 count: post.commentCount,
+                semanticLabel: l10n.socialCommentLabel(post.commentCount),
                 onTap: onCommentTap,
               ),
               const Spacer(),
               _DetailAction(
                 icon: Icons.ios_share_rounded,
                 count: post.shareCount,
+                semanticLabel: l10n.socialShareLabel(post.shareCount),
                 onTap: onShare,
               ),
             ],
@@ -648,10 +653,7 @@ class _AuthorLine extends StatelessWidget {
 }
 
 class _CommentThread {
-  const _CommentThread({
-    required this.root,
-    required this.replies,
-  });
+  const _CommentThread({required this.root, required this.replies});
 
   final SocialComment root;
   final List<SocialComment> replies;
@@ -682,10 +684,7 @@ List<_CommentThread> _buildCommentThreads(List<SocialComment> comments) {
   }
 
   return roots.map((root) {
-    return _CommentThread(
-      root: root,
-      replies: collectReplies(root.id),
-    );
+    return _CommentThread(root: root, replies: collectReplies(root.id));
   }).toList();
 }
 
@@ -747,13 +746,14 @@ class _CommentCard extends StatelessWidget {
                           name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: (isReply
-                                  ? theme.textTheme.labelMedium
-                                  : theme.textTheme.labelLarge)
-                              ?.copyWith(
-                            color: SocialPalette.ink(context),
-                            fontWeight: FontWeight.w800,
-                          ),
+                          style:
+                              (isReply
+                                      ? theme.textTheme.labelMedium
+                                      : theme.textTheme.labelLarge)
+                                  ?.copyWith(
+                                    color: SocialPalette.ink(context),
+                                    fontWeight: FontWeight.w800,
+                                  ),
                         ),
                       ),
                     ),
@@ -785,63 +785,87 @@ class _CommentCard extends StatelessWidget {
                   Row(
                     children: [
                       if (onReply != null)
-                        InkWell(
-                          key: ValueKey('comment-reply-button-${comment.id}'),
-                          onTap: onReply,
-                          borderRadius: AppRadii.smallBorder,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 2,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.reply_rounded,
-                                  size: 14,
-                                  color: SocialPalette.aubergine(context),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  AppLocalizations.of(context)!.reply,
-                                  style: theme.textTheme.labelSmall?.copyWith(
+                        Semantics(
+                          button: true,
+                          label: AppLocalizations.of(
+                            context,
+                          )!.socialReplyTo(name),
+                          excludeSemantics: true,
+                          child: InkWell(
+                            key: ValueKey('comment-reply-button-${comment.id}'),
+                            onTap: onReply,
+                            borderRadius: AppRadii.smallBorder,
+                            child: Container(
+                              constraints: const BoxConstraints(
+                                minWidth: 48,
+                                minHeight: 48,
+                              ),
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.reply_rounded,
+                                    size: 14,
                                     color: SocialPalette.aubergine(context),
-                                    fontWeight: FontWeight.w700,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    AppLocalizations.of(context)!.reply,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: SocialPalette.aubergine(context),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       if (onDelete != null) ...[
                         const SizedBox(width: 12),
-                        InkWell(
-                          key: ValueKey('comment-delete-button-${comment.id}'),
-                          onTap: onDelete,
-                          borderRadius: AppRadii.smallBorder,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 2,
+                        Semantics(
+                          button: true,
+                          label: AppLocalizations.of(
+                            context,
+                          )!.socialDeleteComment,
+                          excludeSemantics: true,
+                          child: InkWell(
+                            key: ValueKey(
+                              'comment-delete-button-${comment.id}',
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.delete_outline_rounded,
-                                  size: 14,
-                                  color: theme.colorScheme.error,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  isKhmer ? 'លុប' : 'Delete',
-                                  style: theme.textTheme.labelSmall?.copyWith(
+                            onTap: onDelete,
+                            borderRadius: AppRadii.smallBorder,
+                            child: Container(
+                              constraints: const BoxConstraints(
+                                minWidth: 48,
+                                minHeight: 48,
+                              ),
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.delete_outline_rounded,
+                                    size: 14,
                                     color: theme.colorScheme.error,
-                                    fontWeight: FontWeight.w700,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    isKhmer ? 'លុប' : 'Delete',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.error,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -927,16 +951,29 @@ class _Avatar extends StatelessWidget {
     final label = author.displayName.isEmpty
         ? author.username
         : author.displayName;
-    return GestureDetector(
-      key: ValueKey('detail-author-avatar-${author.id}'),
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: RiksaAvatarImage(
-        value: author.avatarUrl,
-        label: label,
-        size: radius * 2,
-        backgroundColor: SocialPalette.pinkSoft(context),
-        foregroundColor: SocialPalette.aubergine(context),
+    final avatar = RiksaAvatarImage(
+      value: author.avatarUrl,
+      label: label,
+      size: radius * 2,
+      backgroundColor: SocialPalette.pinkSoft(context),
+      foregroundColor: SocialPalette.aubergine(context),
+    );
+    if (onTap == null) return avatar;
+    return Semantics(
+      button: true,
+      label: AppLocalizations.of(context)!.socialOpenProfile(label),
+      excludeSemantics: true,
+      child: GestureDetector(
+        key: ValueKey('detail-author-avatar-${author.id}'),
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: SizedBox(
+          // The portrait keeps its size; the tappable square does not shrink
+          // below a thumb's width.
+          width: radius * 2 < 48 ? 48 : radius * 2,
+          height: radius * 2 < 48 ? 48 : radius * 2,
+          child: Center(child: avatar),
+        ),
       ),
     );
   }
@@ -947,12 +984,17 @@ class _DetailAction extends StatelessWidget {
     super.key,
     required this.icon,
     required this.count,
+    required this.semanticLabel,
     this.selected = false,
     this.onTap,
   });
 
   final IconData icon;
   final int count;
+
+  /// A count on its own does not say whether it means likes, comments or
+  /// shares, so every action carries its own sentence.
+  final String semanticLabel;
   final bool selected;
   final VoidCallback? onTap;
 
@@ -961,29 +1003,37 @@ class _DetailAction extends StatelessWidget {
     final color = selected
         ? SocialPalette.pink(context)
         : SocialPalette.muted(context);
-    return InkWell(
-      borderRadius: AppRadii.fullBorder,
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected
-              ? SocialPalette.pinkSoft(context)
-              : SocialPalette.surfaceRaised(context),
-          borderRadius: AppRadii.fullBorder,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 19, color: color),
-            if (count > 0) ...[
-              const SizedBox(width: 5),
-              Text(
-                '$count',
-                style: TextStyle(color: color, fontWeight: FontWeight.w700),
-              ),
+    return Semantics(
+      button: true,
+      toggled: selected,
+      label: semanticLabel,
+      excludeSemantics: true,
+      child: InkWell(
+        borderRadius: AppRadii.fullBorder,
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected
+                ? SocialPalette.pinkSoft(context)
+                : SocialPalette.surfaceRaised(context),
+            borderRadius: AppRadii.fullBorder,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 19, color: color),
+              if (count > 0) ...[
+                const SizedBox(width: 5),
+                Text(
+                  '$count',
+                  style: TextStyle(color: color, fontWeight: FontWeight.w700),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -1118,8 +1168,8 @@ class _CommentComposer extends StatelessWidget {
     final theme = Theme.of(context);
     final replyingName = replyingTo != null
         ? (replyingTo!.author.displayName.isEmpty
-            ? replyingTo!.author.username
-            : replyingTo!.author.displayName)
+              ? replyingTo!.author.username
+              : replyingTo!.author.displayName)
         : null;
 
     return Material(
@@ -1140,9 +1190,7 @@ class _CommentComposer extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: SocialPalette.pinkSoft(context),
                   border: Border(
-                    bottom: BorderSide(
-                      color: SocialPalette.outline(context),
-                    ),
+                    bottom: BorderSide(color: SocialPalette.outline(context)),
                   ),
                 ),
                 child: Row(
@@ -1164,16 +1212,25 @@ class _CommentComposer extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    InkWell(
-                      key: const ValueKey('cancel-reply-button'),
-                      onTap: onCancelReply,
-                      borderRadius: AppRadii.smallBorder,
-                      child: Padding(
-                        padding: const EdgeInsets.all(4),
-                        child: Icon(
-                          Icons.close_rounded,
-                          size: 18,
-                          color: SocialPalette.aubergine(context),
+                    Semantics(
+                      button: true,
+                      label: AppLocalizations.of(context)!.socialCancelReply,
+                      excludeSemantics: true,
+                      child: InkWell(
+                        key: const ValueKey('cancel-reply-button'),
+                        onTap: onCancelReply,
+                        borderRadius: AppRadii.smallBorder,
+                        child: Container(
+                          constraints: const BoxConstraints(
+                            minWidth: 48,
+                            minHeight: 48,
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 18,
+                            color: SocialPalette.aubergine(context),
+                          ),
                         ),
                       ),
                     ),
@@ -1196,8 +1253,9 @@ class _CommentComposer extends StatelessWidget {
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
                         hintText: hint,
-                        hintStyle:
-                            TextStyle(color: SocialPalette.muted(context)),
+                        hintStyle: TextStyle(
+                          color: SocialPalette.muted(context),
+                        ),
                         counterText: '',
                         filled: true,
                         fillColor: SocialPalette.surfaceRaised(context),

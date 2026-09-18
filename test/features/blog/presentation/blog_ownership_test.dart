@@ -64,7 +64,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete post'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete'));
+    await tester.tap(find.text('Discard'));
     await tester.pumpAndSettle();
 
     verify(() => api.deletePost('mine')).called(1);

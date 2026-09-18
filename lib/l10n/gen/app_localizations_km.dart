@@ -1866,4 +1866,543 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get blogTopicsEmpty => 'មិនទាន់មានប្រធានបទនៅឡើយទេ។';
+
+  @override
+  String get recoveryErrorNetwork =>
+      'យើងមិនអាចតភ្ជាប់ទៅ Riksa បានទេ។ សូមពិនិត្យអ៊ីនធឺណិត ហើយព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get recoveryErrorRateLimited =>
+      'អ្នកបានព្យាយាមច្រើនដងហើយ! សូមសម្រាកបន្តិច រួចព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get recoveryErrorServer =>
+      'មានបញ្ហាខាងយើង។ សូមព្យាយាមម្ដងទៀតបន្តិចទៀត។';
+
+  @override
+  String get recoveryErrorPassword =>
+      'ជិតរួចហើយ! ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួ រួមមានអក្សរធំ អក្សរតូច និងលេខ។';
+
+  @override
+  String get recoveryErrorCode =>
+      'លេខកូដនេះមិនដំណើរការទេ។ វាប្រហែលជាផុតកំណត់ សូមស្នើលេខកូដថ្មី ហើយព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get recoveryErrorAccount =>
+      'យើងរកគណនីនេះមិនឃើញទេ។ សូមពិនិត្យអក្ខរាវិរុទ្ធ ហើយព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get recoveryErrorDetails =>
+      'មិនបានសម្រេចទេ។ សូមពិនិត្យព័ត៌មានរបស់អ្នក ហើយព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get recoveryErrorGeneric => 'មានបញ្ហាកើតឡើង។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get recoveryNeedIdentifier =>
+      'សូមប្រាប់ឈ្មោះអ្នកប្រើ អ៊ីមែល ឬ Telegram ID របស់អ្នក ដើម្បីយើងដឹងថាជួយគណនីណា។';
+
+  @override
+  String get recoveryCodeLength =>
+      'លេខកូដមាន ៦ ខ្ទង់។ សូមពិនិត្យសាររបស់អ្នក ហើយព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get recoveryChecklistIncomplete =>
+      'ជិតរួចហើយ! ពាក្យសម្ងាត់ត្រូវបំពេញគ្រប់លក្ខខណ្ឌក្នុងបញ្ជី។';
+
+  @override
+  String get recoveryPasswordsDiffer =>
+      'ពាក្យសម្ងាត់ទាំងពីរមិនដូចគ្នាទេ។ សូមវាយបញ្ចូលម្ដងទៀត។';
+
+  @override
+  String get recoveryPasswordSaved =>
+      'រួចរាល់! សូមចូលដោយប្រើពាក្យសម្ងាត់ថ្មីរបស់អ្នក។';
+
+  @override
+  String get recoveryStepIdentifierTitle => 'ភ្លេចពាក្យសម្ងាត់មែនទេ?';
+
+  @override
+  String get recoveryStepIdentifierSubtitle =>
+      'កុំបារម្ភ វាកើតឡើងចំពោះគ្រប់គ្នា។ ប្រាប់យើងថាអ្នកជានរណា យើងនឹងផ្ញើលេខកូដទៅ។';
+
+  @override
+  String get recoveryStepCodeTitle => 'ពិនិត្យសាររបស់អ្នក';
+
+  @override
+  String get recoveryStepCodeSubtitle =>
+      'យើងបានផ្ញើលេខកូដ ៦ ខ្ទង់ទៅអ៊ីមែល ឬ Telegram របស់អ្នក។ សូមបញ្ចូលវាខាងក្រោម។';
+
+  @override
+  String get recoveryStepPasswordTitle => 'បង្កើតពាក្យសម្ងាត់ថ្មី';
+
+  @override
+  String get recoveryStepPasswordSubtitle =>
+      'ជ្រើសរើសអ្វីដែលអ្នកចាំបាន តែអ្នកដទៃទាយមិនឃើញ។';
+
+  @override
+  String get recoveryIdentifierLabel => 'ឈ្មោះអ្នកប្រើ អ៊ីមែល ឬ Telegram ID';
+
+  @override
+  String get recoveryNewPasswordLabel => 'ពាក្យសម្ងាត់ថ្មី';
+
+  @override
+  String get recoveryConfirmPasswordLabel => 'វាយម្ដងទៀត';
+
+  @override
+  String get recoverySendCode => 'ផ្ញើលេខកូដមកខ្ញុំ';
+
+  @override
+  String get recoveryVerifyCode => 'ផ្ទៀងផ្ទាត់លេខកូដ';
+
+  @override
+  String get recoverySavePassword => 'រក្សាទុកពាក្យសម្ងាត់ថ្មី';
+
+  @override
+  String get recoveryResend => 'មិនបានទទួលមែនទេ? ផ្ញើលេខកូដថ្មី';
+
+  @override
+  String get recoveryResendSent => 'លេខកូដថ្មីកំពុងផ្ញើទៅ។';
+
+  @override
+  String get recoveryBackToSignIn => 'ខ្ញុំចាំហើយ — ត្រឡប់ទៅចូលគណនី';
+
+  @override
+  String recoveryIllustrationLabel(int step) {
+    return 'ការសង្គ្រោះគណនី ជំហានទី $step';
+  }
+
+  @override
+  String recoveryStepProgress(int step, int total) {
+    return 'ជំហានទី $step ក្នុងចំណោម $total';
+  }
+
+  @override
+  String get passwordRuleLength => 'យ៉ាងតិច ៨ តួ';
+
+  @override
+  String get passwordRuleUppercase => 'អក្សរធំមួយ (A–Z)';
+
+  @override
+  String get passwordRuleLowercase => 'អក្សរតូចមួយ (a–z)';
+
+  @override
+  String get passwordRuleDigit => 'លេខមួយ (0–9)';
+
+  @override
+  String get passwordRuleMatch => 'ពាក្យសម្ងាត់ទាំងពីរដូចគ្នា';
+
+  @override
+  String checklistItemDone(String item) {
+    return '$item រួចរាល់';
+  }
+
+  @override
+  String checklistItemPending(String item) {
+    return '$item មិនទាន់';
+  }
+
+  @override
+  String get emailVerifiedTitle => 'អ៊ីមែលបានផ្ទៀងផ្ទាត់';
+
+  @override
+  String get emailVerifiedBody => 'អ៊ីមែលគណនី Riksa របស់អ្នកបានផ្ទៀងផ្ទាត់ហើយ។';
+
+  @override
+  String get emailVerifyFailedTitle => 'ការផ្ទៀងផ្ទាត់បរាជ័យ';
+
+  @override
+  String get emailVerifyFailedBody =>
+      'តំណផ្ទៀងផ្ទាត់នេះមិនត្រឹមត្រូវ ឬផុតកំណត់។';
+
+  @override
+  String socialLikeLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ចូលចិត្តការបង្ហោះនេះ មាន $count ចូលចិត្ត',
+      zero: 'ចូលចិត្តការបង្ហោះនេះ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String socialCommentLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'មើលមតិ $count',
+      zero: 'ផ្ដល់មតិលើការបង្ហោះនេះ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String socialShareLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ចែករំលែកការបង្ហោះនេះ បានចែករំលែក $count ដង',
+      zero: 'ចែករំលែកការបង្ហោះនេះ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String socialOpenProfile(String name) {
+    return 'បើកប្រវត្តិរូបរបស់ $name';
+  }
+
+  @override
+  String socialReplyTo(String name) {
+    return 'ឆ្លើយតបទៅ $name';
+  }
+
+  @override
+  String get socialDeleteComment => 'លុបមតិនេះ';
+
+  @override
+  String get socialCancelReply => 'បោះបង់ការឆ្លើយតប';
+
+  @override
+  String get genderFemale => 'ស្រី';
+
+  @override
+  String get genderMale => 'ប្រុស';
+
+  @override
+  String get genderOther => 'ផ្សេងទៀត';
+
+  @override
+  String get loadingProvincesTitle => 'កំពុងផ្ទុកខេត្ត';
+
+  @override
+  String get loadingProvincesBody => 'កំពុងរៀបចំជម្រើសសិក្សាក្នុងតំបន់។';
+
+  @override
+  String get leaderboardNational => 'ទូទាំងប្រទេស';
+
+  @override
+  String get leaderboardProvince => 'ខេត្ត';
+
+  @override
+  String get leaderboardRankings => 'ចំណាត់ថ្នាក់';
+
+  @override
+  String get leaderboardYourRank => 'ចំណាត់ថ្នាក់របស់អ្នក';
+
+  @override
+  String leaderboardRowLabel(int rank, String name, int xp) {
+    return 'ចំណាត់ថ្នាក់ទី $rank, $name, $xp XP';
+  }
+
+  @override
+  String leaderboardYourRankLabel(
+    int rank,
+    String name,
+    String scope,
+    String tier,
+    int xp,
+  ) {
+    return 'ចំណាត់ថ្នាក់របស់អ្នកគឺទី $rank។ $name, $scope, $tier, $xp XP។';
+  }
+
+  @override
+  String get progressHistoryTitle => 'ប្រវត្តិវឌ្ឍនភាព';
+
+  @override
+  String get progressHistoryXpTab => 'សកម្មភាព XP';
+
+  @override
+  String get progressHistoryRankTab => 'ការប្ដូរចំណាត់ថ្នាក់';
+
+  @override
+  String get progressHistoryXpFailed =>
+      'យើងមិនអាចផ្ទុកប្រវត្តិ XP របស់អ្នកបានទេ';
+
+  @override
+  String get progressHistoryRankFailed =>
+      'យើងមិនអាចផ្ទុកប្រវត្តិចំណាត់ថ្នាក់របស់អ្នកបានទេ';
+
+  @override
+  String get progressHistoryXpEmptyTitle => 'មិនទាន់មាន XP ទេ';
+
+  @override
+  String get progressHistoryXpEmptyBody =>
+      'បញ្ចប់មេរៀនមួយ ដើម្បីចាប់ផ្ដើមប្រវត្តិរបស់អ្នក។';
+
+  @override
+  String get progressHistoryRankEmptyTitle =>
+      'មិនទាន់មានការប្ដូរចំណាត់ថ្នាក់ទេ';
+
+  @override
+  String get progressHistoryRankEmptyBody =>
+      'បន្តរកបាន XP ដើម្បីឡើងចំណាត់ថ្នាក់។';
+
+  @override
+  String progressHistoryRankRow(String scope) {
+    return 'ចំណាត់ថ្នាក់$scope';
+  }
+
+  @override
+  String xpAmount(int amount) {
+    return '+$amount XP';
+  }
+
+  @override
+  String get xpSourceLesson => 'បានបញ្ចប់មេរៀន';
+
+  @override
+  String get xpSourceExercise => 'បានឆ្លើយលំហាត់';
+
+  @override
+  String get xpSourceAchievement => 'បានទទួលសមិទ្ធផល';
+
+  @override
+  String get xpSourceStreak => 'ប្រាក់រង្វាន់ជាប់ៗគ្នា';
+
+  @override
+  String get xpSourceReward => 'រង្វាន់';
+
+  @override
+  String get profileSetupTitle => 'រៀបចំប្រវត្តិរូបរបស់អ្នក';
+
+  @override
+  String get profileSetupSubtitle =>
+      'ព័ត៌មានខ្លីៗជួយឱ្យមិត្តរួមថ្នាក់ស្គាល់អ្នក និងរក្សាវឌ្ឍនភាពជារបស់អ្នក។';
+
+  @override
+  String get profileSetupCta => 'រៀបចំប្រវត្តិរូប';
+
+  @override
+  String get profileSetupStepPhotoTitle => 'បន្ថែមរូបភាព';
+
+  @override
+  String get profileSetupStepPhotoBody =>
+      'ជ្រើសរើសរូបតំណាង ឬបញ្ចូលរូបភាពផ្ទាល់ខ្លួន។';
+
+  @override
+  String get profileSetupStepNameTitle => 'ឈ្មោះរបស់អ្នក';
+
+  @override
+  String get profileSetupStepNameBody =>
+      'ឈ្មោះដែលមិត្តរួមថ្នាក់ឃើញលើការបង្ហោះ និងចំណាត់ថ្នាក់។';
+
+  @override
+  String get profileSetupStepBioTitle => 'ប្រវត្តិរូបខ្លី';
+
+  @override
+  String get profileSetupStepBioBody =>
+      'និយាយពីអ្វីដែលអ្នកកំពុងរៀន ក្នុងមួយ ឬពីរបន្ទាត់។';
+
+  @override
+  String get profileSetupStepProvinceTitle => 'ខេត្តរបស់អ្នក';
+
+  @override
+  String get profileSetupStepProvinceBody =>
+      'ប្រើសម្រាប់ចំណាត់ថ្នាក់ខេត្ត និងសហគមន៍ក្នុងតំបន់។';
+
+  @override
+  String get supportDocumentComingSoon => 'នឹងមានឆាប់ៗ';
+
+  @override
+  String get ok => 'យល់ព្រម';
+
+  @override
+  String get blogTitle => 'ប្លុក';
+
+  @override
+  String get blogWritePost => 'សរសេរអត្ថបទ';
+
+  @override
+  String get blogYourPosts => 'អត្ថបទរបស់អ្នក';
+
+  @override
+  String get blogFeedFailedTitle => 'អត្ថបទកំពុងសម្រាក';
+
+  @override
+  String get blogFeedEmptyTitle => 'មិនទាន់មានអត្ថបទទេ';
+
+  @override
+  String get blogFeedEmptyBody =>
+      'ក្លាយជាសិស្សដំបូងដែលចែករំលែកអ្វីមានប្រយោជន៍ជាមួយសហគមន៍ Riksa។';
+
+  @override
+  String get blogPostDeleted => 'បានលុបអត្ថបទ';
+
+  @override
+  String blogLikeLabel(int count) {
+    return 'ចូលចិត្ត, $count ចូលចិត្ត';
+  }
+
+  @override
+  String blogUnlikeLabel(int count) {
+    return 'ឈប់ចូលចិត្ត, $count ចូលចិត្ត';
+  }
+
+  @override
+  String get blogMyPostsFailed => 'មិនអាចផ្ទុកអត្ថបទរបស់អ្នកបានទេ';
+
+  @override
+  String get blogMyPostsEmptyTitle => 'មិនទាន់មានអត្ថបទទេ';
+
+  @override
+  String get blogMyPostsEmptyBody =>
+      'អ្វីគ្រប់យ៉ាងដែលអ្នកសរសេរនឹងបង្ហាញនៅទីនេះ ជាមួយស្ថានភាពត្រួតពិនិត្យ។';
+
+  @override
+  String get blogMyPostsFilteredTitle => 'គ្មានអ្វីនៅទីនេះ';
+
+  @override
+  String get blogMyPostsFilteredBody => 'អ្នកមិនមានអត្ថបទដែលមានស្ថានភាពនេះទេ។';
+
+  @override
+  String get blogStatusPending => 'កំពុងត្រួតពិនិត្យ';
+
+  @override
+  String get blogStatusApproved => 'បានផ្សាយ';
+
+  @override
+  String get blogStatusRejected => 'ត្រូវបានបដិសេធ';
+
+  @override
+  String get blogEditPost => 'កែអត្ថបទ';
+
+  @override
+  String get blogDeletePost => 'លុបអត្ថបទ';
+
+  @override
+  String get blogDeleteConfirmTitle => 'លុបអត្ថបទនេះ?';
+
+  @override
+  String get blogDeleteConfirmBody =>
+      'អត្ថបទ រួមទាំងចំនួនចូលចិត្ត និងចំនួនមើល នឹងត្រូវលុបចោលសម្រាប់គ្រប់គ្នា។ មិនអាចត្រឡប់វិញបានទេ។';
+
+  @override
+  String get blogKeepPost => 'រក្សាអត្ថបទ';
+
+  @override
+  String get blogPostOptions => 'ជម្រើសអត្ថបទ';
+
+  @override
+  String get blogVerified => 'បានផ្ទៀងផ្ទាត់';
+
+  @override
+  String get blogUnknownAuthor => 'អ្នកសរសេរ Riksa';
+
+  @override
+  String get blogOwnerEditFailed => 'អ្នកអាចកែបានតែអត្ថបទរបស់អ្នកប៉ុណ្ណោះ';
+
+  @override
+  String get blogOwnerDeleteFailed => 'អ្នកអាចលុបបានតែអត្ថបទរបស់អ្នកប៉ុណ្ណោះ';
+
+  @override
+  String get blogPostGone => 'អត្ថបទនេះលែងមានទៀតហើយ';
+
+  @override
+  String get blogReviewPendingTitle => 'កំពុងត្រួតពិនិត្យ';
+
+  @override
+  String get blogReviewBackTitle => 'ត្រឡប់ទៅត្រួតពិនិត្យវិញ';
+
+  @override
+  String get blogReviewBackBody =>
+      'ការកែប្រែរបស់អ្នកបានរក្សាទុក។ អត្ថបទនឹងត្រឡប់ទៅប្លុកវិញ នៅពេលអ្នកត្រួតពិនិត្យអនុម័តកំណែនេះ។';
+
+  @override
+  String get blogReviewSubmittedBody =>
+      'អត្ថបទរបស់អ្នកបានដាក់ស្នើ។ វានឹងបង្ហាញក្នុងប្លុក នៅពេលអ្នកត្រួតពិនិត្យអនុម័ត ហើយអ្នកអាចតាមដានស្ថានភាពនៅក្នុង អត្ថបទរបស់អ្នក។';
+
+  @override
+  String get blogDone => 'រួចរាល់';
+
+  @override
+  String get blogSave => 'រក្សាទុក';
+
+  @override
+  String get blogPublish => 'បង្ហោះ';
+
+  @override
+  String get blogNothingToPreview => 'មិនទាន់មានអ្វីសម្រាប់មើលជាមុនទេ។';
+
+  @override
+  String get blogTitleHint => 'ចំណងជើង';
+
+  @override
+  String get blogBodyHint =>
+      'ចែករំលែកអ្វីដែលអ្នករៀនបាន។ Markdown ប្រើបាននៅទីនេះ។';
+
+  @override
+  String get blogCoverUrlLabel => 'តំណរូបភាពគម្រប (ជាជម្រើស)';
+
+  @override
+  String get blogRemoveCover => 'ដករូបភាពគម្រប';
+
+  @override
+  String get blogCoverImage => 'រូបភាពគម្រប';
+
+  @override
+  String get blogPreview => 'មើលជាមុន';
+
+  @override
+  String get blogBackToWriting => 'ត្រឡប់ទៅសរសេរវិញ';
+
+  @override
+  String get blogOpenForEditFailed => 'មិនអាចបើកអត្ថបទនេះដើម្បីកែបានទេ';
+
+  @override
+  String get blogPostUnavailableTitle => 'អត្ថបទមិនអាចប្រើបាន';
+
+  @override
+  String get blogPostUnavailableBody => 'អត្ថបទនេះមិនអាចផ្ទុកបានទេ។';
+
+  @override
+  String get blogLoadPostFailed => 'មិនអាចផ្ទុកអត្ថបទនេះបានទេ';
+
+  @override
+  String get blogLikeFailed => 'មិនអាចធ្វើបច្ចុប្បន្នភាពការចូលចិត្តបានទេ';
+
+  @override
+  String get blogOpenPostFailedTitle => 'អត្ថបទនេះមិនអាចបើកបានទេ';
+
+  @override
+  String get blogTextSizeTooltip => 'កែទំហំអក្សរ';
+
+  @override
+  String get blogTextSizeDefault => 'ទំហំអក្សរ៖ ធម្មតា (1.0x)';
+
+  @override
+  String get blogTextSizeLarge => 'ទំហំអក្សរ៖ ធំ (1.18x)';
+
+  @override
+  String get blogTextSizeExtraLarge => 'ទំហំអក្សរ៖ ធំបំផុត (1.35x)';
+
+  @override
+  String get blogProfile => 'ប្រវត្តិរូប';
+
+  @override
+  String get blogSomethingWentWrong => 'មានបញ្ហាកើតឡើង';
+
+  @override
+  String get markdownBold => 'អក្សរដិត';
+
+  @override
+  String get markdownItalic => 'អក្សរទ្រេត';
+
+  @override
+  String get markdownHeading => 'ចំណងជើងរង';
+
+  @override
+  String get markdownQuote => 'សម្រង់';
+
+  @override
+  String get markdownBulletList => 'បញ្ជីចំណុច';
+
+  @override
+  String get markdownNumberedList => 'បញ្ជីលេខរៀង';
+
+  @override
+  String get markdownCode => 'កូដ';
+
+  @override
+  String get markdownLink => 'តំណ';
 }
