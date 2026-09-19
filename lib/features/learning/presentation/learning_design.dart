@@ -1,0 +1,439 @@
+/// Colour vocabulary for the learning feature.
+///
+/// Two independent axes decide what a surface looks like, and mixing them on
+/// one surface is what made the old catalog unreadable:
+///
+/// * [StemSubject] is *identity*. It colours a subject's own tile and the
+///   header of that subject's roadmap, so a learner recognises the subject
+///   before reading its name.
+/// * [LearningStatus] is *state*. It colours everything inside a roadmap, so
+///   progress can be read at a glance without parsing any text.
+///
+/// The core [RiksaSubjectKind] deliberately collapses physics, chemistry and
+/// biology into one "science" bucket because community and blog only need that
+/// much resolution. Learning needs each Grade 12 STEM subject to be distinct,
+/// so it keeps its own classification here rather than widening the shared one.
+library;
+
+import 'package:flutter/material.dart';
+
+import '../../../core/theme/app_theme.dart';
+
+enum StemSubject { mathematics, physics, chemistry, biology, technology, other }
+
+/// Classifies a category name coming from the learning API.
+///
+/// Matches Khmer as well as English because category names are authored in
+/// either script by admins in `riksa_admin`.
+StemSubject stemSubjectFor(String categoryName) {
+  final value = categoryName.toLowerCase();
+  if (value.contains('math') || value.contains('គណិត')) {
+    return StemSubject.mathematics;
+  }
+  if (value.contains('phys') || value.contains('រូបវិទ្យា')) {
+    return StemSubject.physics;
+  }
+  if (value.contains('chem') || value.contains('គីមី')) {
+    return StemSubject.chemistry;
+  }
+  if (value.contains('bio') || value.contains('ជីវ')) {
+    return StemSubject.biology;
+  }
+  if (value.contains('computer') ||
+      value.contains('tech') ||
+      value.contains('engineer') ||
+      value.contains('កុំព្យូទ័រ') ||
+      value.contains('បច្ចេក')) {
+    return StemSubject.technology;
+  }
+  return StemSubject.other;
+}
+
+IconData stemSubjectIcon(StemSubject subject) => switch (subject) {
+  StemSubject.mathematics => Icons.functions_rounded,
+  StemSubject.physics => Icons.bolt_rounded,
+  StemSubject.chemistry => Icons.science_rounded,
+  StemSubject.biology => Icons.eco_rounded,
+  StemSubject.technology => Icons.code_rounded,
+  StemSubject.other => Icons.school_rounded,
+};
+
+class SubjectPixelArtwork extends StatelessWidget {
+  const SubjectPixelArtwork({super.key, required this.subject, this.size = 60});
+
+  final StemSubject subject;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    key: ValueKey('subject-artwork-${subject.name}'),
+    dimension: size,
+    child: CustomPaint(painter: _SubjectPixelArtworkPainter(subject)),
+  );
+}
+
+class _SubjectPixelArtworkPainter extends CustomPainter {
+  const _SubjectPixelArtworkPainter(this.subject);
+
+  final StemSubject subject;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.scale(size.width / 128, size.height / 128);
+    final background = switch (subject) {
+      StemSubject.biology => const Color(0xFFE0F4CF),
+      StemSubject.chemistry => const Color(0xFFE9DEFF),
+      StemSubject.technology => const Color(0xFFD6F2E9),
+      StemSubject.mathematics => const Color(0xFFF9DCEA),
+      StemSubject.physics => const Color(0xFFD7ECF9),
+      StemSubject.other => AppColors.tileYellow,
+    };
+
+    canvas.drawRRect(_rr(9, 8, 110, 110, 15), _fill(background));
+    canvas.drawRect(
+      const Rect.fromLTWH(16, 16, 7, 7),
+      _fill(Colors.white.withValues(alpha: .92)),
+    );
+    canvas.drawRect(
+      const Rect.fromLTWH(25, 10, 8, 8),
+      _fill(Colors.white.withValues(alpha: .84)),
+    );
+
+    switch (subject) {
+      case StemSubject.biology:
+        _paintBiology(canvas);
+      case StemSubject.chemistry:
+        _paintChemistry(canvas);
+      case StemSubject.technology:
+        _paintComputer(canvas);
+      case StemSubject.mathematics:
+        _paintMath(canvas);
+      case StemSubject.physics:
+        _paintPhysics(canvas);
+      case StemSubject.other:
+        _paintOther(canvas);
+    }
+  }
+
+  void _paintBiology(Canvas c) {
+    const edge = Color(0xFF2F5629);
+    c.drawRRect(_rr(34, 33, 59, 62, 9), _fill(const Color(0xFFECFFF0)));
+    c.drawRRect(_rr(34, 33, 59, 62, 9), _stroke(edge, 4));
+    c.drawRect(
+      const Rect.fromLTWH(42, 88, 43, 11),
+      _fill(const Color(0xFF76502A)),
+    );
+    c.drawRect(const Rect.fromLTWH(42, 88, 43, 11), _stroke(edge, 3));
+    c.drawRect(
+      const Rect.fromLTWH(45, 82, 37, 8),
+      _fill(const Color(0xFFB17D45)),
+    );
+    c.drawLine(const Offset(64, 82), const Offset(64, 51), _stroke(edge, 4));
+    c.drawOval(
+      const Rect.fromLTWH(42, 51, 23, 21),
+      _fill(const Color(0xFF469140)),
+    );
+    c.drawOval(const Rect.fromLTWH(42, 51, 23, 21), _stroke(edge, 3));
+    c.drawOval(
+      const Rect.fromLTWH(63, 43, 27, 23),
+      _fill(const Color(0xFF469140)),
+    );
+    c.drawOval(const Rect.fromLTWH(63, 43, 27, 23), _stroke(edge, 3));
+    c.drawLine(
+      const Offset(47, 66),
+      const Offset(60, 57),
+      _stroke(const Color(0xFF8BC55E), 3),
+    );
+    c.drawLine(
+      const Offset(69, 59),
+      const Offset(83, 49),
+      _stroke(const Color(0xFF8BC55E), 3),
+    );
+  }
+
+  void _paintChemistry(Canvas c) {
+    const edge = Color(0xFF4A2B8E);
+    c.drawRect(
+      const Rect.fromLTWH(55, 29, 18, 10),
+      _fill(const Color(0xFF8456EE)),
+    );
+    c.drawRect(const Rect.fromLTWH(55, 29, 18, 10), _stroke(edge, 4));
+    c.drawRect(
+      const Rect.fromLTWH(59, 39, 10, 23),
+      _fill(const Color(0xFFF5EEFF)),
+    );
+    c.drawRect(const Rect.fromLTWH(59, 39, 10, 23), _stroke(edge, 3));
+    final flask = Path()
+      ..moveTo(47, 61)
+      ..lineTo(81, 61)
+      ..lineTo(97, 96)
+      ..lineTo(31, 96)
+      ..close();
+    c.drawPath(flask, _fill(const Color(0xFF8456EE)));
+    c.drawPath(flask, _stroke(edge, 4));
+    c.drawRect(
+      const Rect.fromLTWH(42, 79, 44, 9),
+      _fill(const Color(0xFFBEA4FF)),
+    );
+    c.drawRect(
+      const Rect.fromLTWH(36, 88, 56, 8),
+      _fill(const Color(0xFF5D39C2)),
+    );
+    for (final bubble in const [
+      Rect.fromLTWH(36, 43, 8, 8),
+      Rect.fromLTWH(86, 34, 7, 7),
+      Rect.fromLTWH(78, 23, 5, 5),
+    ]) {
+      c.drawOval(bubble, _fill(const Color(0xFFBEA4FF)));
+      c.drawOval(bubble, _stroke(edge, 2));
+    }
+  }
+
+  void _paintComputer(Canvas c) {
+    const edge = Color(0xFF19564D);
+    c.drawRRect(_rr(26, 34, 76, 47, 6), _fill(const Color(0xFFEFFFFA)));
+    c.drawRRect(_rr(26, 34, 76, 47, 6), _stroke(edge, 4));
+    c.drawRect(
+      const Rect.fromLTWH(32, 40, 64, 35),
+      _fill(const Color(0xFFE6FCF6)),
+    );
+    final base = Path()
+      ..moveTo(20, 84)
+      ..lineTo(108, 84)
+      ..lineTo(99, 98)
+      ..lineTo(29, 98)
+      ..close();
+    c.drawPath(base, _fill(const Color(0xFF238F7A)));
+    c.drawPath(base, _stroke(edge, 3));
+    c.drawLine(
+      const Offset(50, 51),
+      const Offset(39, 60),
+      _stroke(const Color(0xFF238F7A), 5),
+    );
+    c.drawLine(
+      const Offset(39, 60),
+      const Offset(50, 69),
+      _stroke(const Color(0xFF238F7A), 5),
+    );
+    c.drawLine(
+      const Offset(78, 51),
+      const Offset(89, 60),
+      _stroke(const Color(0xFF238F7A), 5),
+    );
+    c.drawLine(
+      const Offset(89, 60),
+      const Offset(78, 69),
+      _stroke(const Color(0xFF238F7A), 5),
+    );
+    c.drawLine(const Offset(68, 49), const Offset(59, 72), _stroke(edge, 4));
+  }
+
+  void _paintMath(Canvas c) {
+    const edge = Color(0xFF862D53);
+    c.drawRRect(_rr(33, 30, 56, 64, 4), _fill(const Color(0xFFFFF6FA)));
+    c.drawRRect(_rr(33, 30, 56, 64, 4), _stroke(edge, 4));
+    c.drawRect(
+      const Rect.fromLTWH(33, 30, 10, 64),
+      _fill(const Color(0xFFF4A6C5)),
+    );
+    for (final y in const [45.0, 56.0, 68.0, 80.0]) {
+      c.drawLine(
+        Offset(49, y),
+        Offset(82, y),
+        _stroke(const Color(0xFFE8C4D3), 2),
+      );
+    }
+    final sigma = Path()
+      ..moveTo(59, 42)
+      ..lineTo(88, 42)
+      ..lineTo(73, 60)
+      ..lineTo(89, 81)
+      ..lineTo(60, 81)
+      ..lineTo(73, 62)
+      ..close();
+    c.drawPath(sigma, _fill(const Color(0xFFCC467D)));
+    c.drawPath(sigma, _stroke(edge, 3));
+    final ruler = Path()
+      ..moveTo(83, 31)
+      ..lineTo(93, 36)
+      ..lineTo(59, 104)
+      ..lineTo(49, 100)
+      ..close();
+    c.drawPath(ruler, _fill(const Color(0xFFECB153)));
+    c.drawPath(ruler, _stroke(edge, 3));
+  }
+
+  void _paintPhysics(Canvas c) {
+    const edge = Color(0xFF24538B);
+    c.drawOval(const Rect.fromLTWH(29, 51, 71, 31), _stroke(edge, 3));
+    c.drawOval(const Rect.fromLTWH(37, 35, 55, 65), _stroke(edge, 3));
+    c.drawOval(const Rect.fromLTWH(41, 35, 47, 65), _stroke(edge, 3));
+    c.drawOval(
+      const Rect.fromLTWH(57, 57, 14, 14),
+      _fill(const Color(0xFF70BEEA)),
+    );
+    c.drawOval(const Rect.fromLTWH(57, 57, 14, 14), _stroke(edge, 3));
+    final bolt = Path()
+      ..moveTo(66, 25)
+      ..lineTo(47, 66)
+      ..lineTo(62, 65)
+      ..lineTo(55, 100)
+      ..lineTo(86, 53)
+      ..lineTo(70, 55)
+      ..close();
+    c.drawPath(bolt, _fill(const Color(0xFF3082CA)));
+    c.drawPath(bolt, _stroke(edge, 3));
+  }
+
+  void _paintOther(Canvas c) {
+    const edge = Color(0xFF6E470E);
+    c.drawRect(
+      const Rect.fromLTWH(35, 43, 58, 45),
+      _fill(const Color(0xFFECA83A)),
+    );
+    c.drawRect(const Rect.fromLTWH(35, 43, 58, 45), _stroke(edge, 4));
+    c.drawLine(const Offset(64, 43), const Offset(64, 88), _stroke(edge, 3));
+  }
+
+  static Paint _fill(Color color) => Paint()
+    ..isAntiAlias = false
+    ..style = PaintingStyle.fill
+    ..color = color;
+
+  static Paint _stroke(Color color, double width) => Paint()
+    ..isAntiAlias = false
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = width
+    ..strokeJoin = StrokeJoin.round
+    ..strokeCap = StrokeCap.round
+    ..color = color;
+
+  static RRect _rr(double x, double y, double w, double h, double r) =>
+      RRect.fromRectAndRadius(Rect.fromLTWH(x, y, w, h), Radius.circular(r));
+
+  @override
+  bool shouldRepaint(covariant _SubjectPixelArtworkPainter oldDelegate) =>
+      oldDelegate.subject != subject;
+}
+
+/// A flat pastel surface plus the ink that stays legible on it.
+@immutable
+class LearningTone {
+  const LearningTone({
+    required this.surface,
+    required this.ink,
+    required this.accent,
+  });
+
+  /// The flat pastel fill. Never a gradient.
+  final Color surface;
+
+  /// Body and title colour on top of [surface].
+  final Color ink;
+
+  /// The saturated form of the same hue, for icons, numerals and progress.
+  final Color accent;
+}
+
+/// Light-mode pastel and its saturated partner, per subject.
+/// The pastel squares from the reference subject grid.
+const _subjectSpec = <StemSubject, (Color, Color)>{
+  StemSubject.mathematics: (AppColors.tilePink, Color(0xFFC8467F)),
+  StemSubject.physics: (AppColors.tileBlue, Color(0xFF2F74B0)),
+  StemSubject.chemistry: (AppColors.tileLavender, AppColors.violet),
+  StemSubject.biology: (AppColors.tileGreen, Color(0xFF3D8238)),
+  StemSubject.technology: (AppColors.tileMint, Color(0xFF1F7D6B)),
+  StemSubject.other: (AppColors.tileYellow, Color(0xFFA9760F)),
+};
+
+/// Violet is reserved for "this is the thing you can do right now".
+const _currentPastel = AppColors.violetSoft;
+const _currentAccent = AppColors.violet;
+const _donePastel = Color(0xFFDDF0DC);
+const _doneAccent = Color(0xFF2F7A44);
+const _goalPastel = Color(0xFFFBEBCD);
+const _goalAccent = Color(0xFFB57E14);
+
+/// Dark mode keeps the same hues but composites them onto the raised surface
+/// instead of inverting, so a pastel stays recognisably itself.
+Color _darkSurface(BuildContext context, Color pastel) => Color.alphaBlend(
+  // Enough of the hue to separate a done card from a not-started one at a
+  // glance, without lifting the surface to the brightness of a light theme.
+  pastel.withValues(alpha: .22),
+  context.riksa.surfaceRaised,
+);
+
+Color _darkAccent(Color accent) => Color.lerp(accent, Colors.white, .38)!;
+
+/// Identity tone. Use on a subject's own tile and on its roadmap header.
+LearningTone subjectTone(BuildContext context, StemSubject subject) {
+  final (pastel, accent) = _subjectSpec[subject]!;
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  return LearningTone(
+    surface: isDark ? _darkSurface(context, pastel) : pastel,
+    ink: context.riksa.ink,
+    accent: isDark ? _darkAccent(accent) : accent,
+  );
+}
+
+/// Where a lesson or unit sits in the learner's path.
+enum LearningStatus {
+  /// The single thing the learner can resume right now.
+  current,
+
+  /// Finished.
+  done,
+
+  /// Reachable but not started.
+  todo,
+
+  /// Gated behind earlier work.
+  locked,
+
+  /// The end of a roadmap. Not a lesson, a destination.
+  goal,
+}
+
+/// State tone. Use for everything inside a roadmap, and for nothing outside it.
+LearningTone statusTone(BuildContext context, LearningStatus status) {
+  final palette = context.riksa;
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+
+  (Color, Color) spec = switch (status) {
+    LearningStatus.current => (_currentPastel, _currentAccent),
+    LearningStatus.done => (_donePastel, _doneAccent),
+    LearningStatus.goal => (_goalPastel, _goalAccent),
+    LearningStatus.todo ||
+    LearningStatus.locked => (palette.surface, palette.inkMuted),
+  };
+
+  if (status == LearningStatus.todo || status == LearningStatus.locked) {
+    return LearningTone(
+      surface: palette.surface,
+      // Locked content is quieted with a muted ink, never with opacity, so it
+      // keeps its contrast ratio at large text scales.
+      ink: status == LearningStatus.locked ? palette.inkFaint : palette.ink,
+      accent: status == LearningStatus.locked
+          ? palette.inkFaint
+          : palette.inkMuted,
+    );
+  }
+
+  return LearningTone(
+    surface: isDark ? _darkSurface(context, spec.$1) : spec.$1,
+    ink: palette.ink,
+    accent: isDark ? _darkAccent(spec.$2) : spec.$2,
+  );
+}
+
+/// The one near-black used for every primary action. Warm, never `#000000`.
+Color learningAnchor(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark
+    ? AppColors.editorialPink
+    : AppColors.editorialAubergine;
+
+/// Foreground for content sitting on [learningAnchor].
+Color onLearningAnchor(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark
+    ? AppColors.editorialAubergine
+    : const Color(0xFFFFF7FB);

@@ -1,0 +1,3074 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_en.dart';
+import 'app_localizations_km.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'gen/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('km'),
+  ];
+
+  /// No description provided for @appName.
+  ///
+  /// In en, this message translates to:
+  /// **'Riksa'**
+  String get appName;
+
+  /// Login screen heading
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back!'**
+  String get welcomeBack;
+
+  /// No description provided for @loginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to continue your learning journey.'**
+  String get loginSubtitle;
+
+  /// No description provided for @loginEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Your learning space'**
+  String get loginEyebrow;
+
+  /// No description provided for @registerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get registerTitle;
+
+  /// No description provided for @registerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your account and start learning today'**
+  String get registerSubtitle;
+
+  /// No description provided for @registerEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Start your streak'**
+  String get registerEyebrow;
+
+  /// No description provided for @accountBasics.
+  ///
+  /// In en, this message translates to:
+  /// **'Account basics'**
+  String get accountBasics;
+
+  /// No description provided for @secureYourAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure your account'**
+  String get secureYourAccount;
+
+  /// No description provided for @stepOfTwo.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of 2'**
+  String stepOfTwo(int step);
+
+  /// No description provided for @username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get username;
+
+  /// No description provided for @usernameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your username'**
+  String get usernameHint;
+
+  /// No description provided for @emailOrUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Email or username'**
+  String get emailOrUsername;
+
+  /// No description provided for @emailOrUsernameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email or username'**
+  String get emailOrUsernameHint;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @passwordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password'**
+  String get passwordHint;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get confirmPassword;
+
+  /// No description provided for @confirmPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password again'**
+  String get confirmPasswordHint;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
+
+  /// No description provided for @passwordEightCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'8+ characters'**
+  String get passwordEightCharacters;
+
+  /// No description provided for @passwordUppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'Uppercase'**
+  String get passwordUppercase;
+
+  /// No description provided for @passwordLowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowercase'**
+  String get passwordLowercase;
+
+  /// No description provided for @passwordNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get passwordNumber;
+
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @emailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'you@example.com'**
+  String get emailHint;
+
+  /// No description provided for @displayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display Name'**
+  String get displayName;
+
+  /// No description provided for @displayNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name as shown to others'**
+  String get displayNameHint;
+
+  /// No description provided for @phoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number'**
+  String get phoneNumber;
+
+  /// No description provided for @phoneNumberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get phoneNumberHint;
+
+  /// No description provided for @login.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in'**
+  String get login;
+
+  /// No description provided for @register.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get register;
+
+  /// No description provided for @continueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueLabel;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// No description provided for @useAnotherAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Use another account'**
+  String get useAnotherAccount;
+
+  /// No description provided for @readyToLearn.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to learn'**
+  String get readyToLearn;
+
+  /// No description provided for @preparingYourSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your space'**
+  String get preparingYourSpace;
+
+  /// No description provided for @orContinueWith.
+  ///
+  /// In en, this message translates to:
+  /// **'or continue with'**
+  String get orContinueWith;
+
+  /// No description provided for @orLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get orLabel;
+
+  /// No description provided for @signInWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get signInWithGoogle;
+
+  /// No description provided for @signInWithTelegram.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Telegram'**
+  String get signInWithTelegram;
+
+  /// No description provided for @verify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get verify;
+
+  /// No description provided for @noAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account?'**
+  String get noAccount;
+
+  /// No description provided for @haveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get haveAccount;
+
+  /// No description provided for @signUpNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up'**
+  String get signUpNow;
+
+  /// No description provided for @signInNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signInNow;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @passwordRecoveryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Password recovery is not available yet.'**
+  String get passwordRecoveryUnavailable;
+
+  /// No description provided for @requiredField.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get requiredField;
+
+  /// No description provided for @invalidUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be at least 3 characters'**
+  String get invalidUsername;
+
+  /// No description provided for @invalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address'**
+  String get invalidEmail;
+
+  /// No description provided for @weakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be 8+ chars with upper, lower, and digit'**
+  String get weakPassword;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @displayNameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name must be 100 characters or fewer'**
+  String get displayNameTooLong;
+
+  /// No description provided for @usernameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be between 3 and 50 characters'**
+  String get usernameTooLong;
+
+  /// No description provided for @signInSecureNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session stays protected and refreshes automatically.'**
+  String get signInSecureNote;
+
+  /// No description provided for @registerEmailNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can verify your email later from your profile.'**
+  String get registerEmailNote;
+
+  /// No description provided for @loginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Login failed. Check your credentials.'**
+  String get loginFailed;
+
+  /// No description provided for @registerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration failed. Please try again.'**
+  String get registerFailed;
+
+  /// No description provided for @googleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in failed'**
+  String get googleFailed;
+
+  /// No description provided for @googleNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in is not configured for this build yet.'**
+  String get googleNotConfigured;
+
+  /// No description provided for @googleUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the Google button provided by your browser to continue.'**
+  String get googleUnsupported;
+
+  /// No description provided for @telegramEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'No password needed'**
+  String get telegramEyebrow;
+
+  /// No description provided for @telegramAuthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Telegram'**
+  String get telegramAuthTitle;
+
+  /// No description provided for @telegramAuthSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Telegram ID to remember. Pick a way to sign in. New to Riksa? Both options create your account.'**
+  String get telegramAuthSubtitle;
+
+  /// No description provided for @telegramAuthorize.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Telegram'**
+  String get telegramAuthorize;
+
+  /// No description provided for @telegramAuthorizeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fastest: tap Confirm in the Riksa bot and come straight back.'**
+  String get telegramAuthorizeHint;
+
+  /// No description provided for @telegramUseCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in with code'**
+  String get telegramUseCode;
+
+  /// No description provided for @telegramUseCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram on another device? Get a code from the bot and paste it here.'**
+  String get telegramUseCodeHint;
+
+  /// No description provided for @telegramTheBot.
+  ///
+  /// In en, this message translates to:
+  /// **'the Riksa bot'**
+  String get telegramTheBot;
+
+  /// No description provided for @telegramCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in with code'**
+  String get telegramCodeTitle;
+
+  /// No description provided for @telegramCodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the code from {bot} to sign in.'**
+  String telegramCodeSubtitle(String bot);
+
+  /// No description provided for @telegramCodeStepOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {bot} and tap Start, or send /code'**
+  String telegramCodeStepOpen(String bot);
+
+  /// No description provided for @telegramCodeStepCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the 8-character code it sends you'**
+  String get telegramCodeStepCopy;
+
+  /// No description provided for @telegramCodeStepPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste it below'**
+  String get telegramCodeStepPaste;
+
+  /// No description provided for @telegramOpenBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {bot}'**
+  String telegramOpenBot(String bot);
+
+  /// No description provided for @telegramCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in code'**
+  String get telegramCodeLabel;
+
+  /// No description provided for @telegramCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. VE9BLZ8J'**
+  String get telegramCodeHint;
+
+  /// No description provided for @telegramPasteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste code'**
+  String get telegramPasteCode;
+
+  /// No description provided for @telegramCodeInvalidFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 8-character code from the bot'**
+  String get telegramCodeInvalidFormat;
+
+  /// No description provided for @telegramCodeRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'This code is invalid or expired. Send /code to the bot for a new one.'**
+  String get telegramCodeRejected;
+
+  /// No description provided for @telegramNoCodeInClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'No sign-in code found in your clipboard.'**
+  String get telegramNoCodeInClipboard;
+
+  /// No description provided for @telegramSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get telegramSignIn;
+
+  /// No description provided for @telegramUseOpenInstead.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Open Telegram instead'**
+  String get telegramUseOpenInstead;
+
+  /// No description provided for @telegramSwitchToCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Having trouble? Log in with code'**
+  String get telegramSwitchToCode;
+
+  /// No description provided for @telegramPrivacyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Riksa only receives your public Telegram name and username. Never your phone number or chats.'**
+  String get telegramPrivacyNote;
+
+  /// No description provided for @telegramWaitingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Telegram'**
+  String get telegramWaitingTitle;
+
+  /// No description provided for @telegramWaitingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the request in the Riksa bot, then return to this screen.'**
+  String get telegramWaitingSubtitle;
+
+  /// No description provided for @telegramExpiresIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Request expires in {time}'**
+  String telegramExpiresIn(String time);
+
+  /// No description provided for @telegramOpenAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Telegram again'**
+  String get telegramOpenAgain;
+
+  /// No description provided for @telegramCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get telegramCopyLink;
+
+  /// No description provided for @telegramLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied. Open it on any device with Telegram.'**
+  String get telegramLinkCopied;
+
+  /// No description provided for @telegramOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open Telegram. Install Telegram, or copy the link and open it on another device.'**
+  String get telegramOpenFailed;
+
+  /// No description provided for @telegramStartFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start Telegram authorization. Please try again.'**
+  String get telegramStartFailed;
+
+  /// No description provided for @telegramExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This request expired. Start again to get a fresh link.'**
+  String get telegramExpired;
+
+  /// No description provided for @telegramDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'The request was declined in Telegram.'**
+  String get telegramDenied;
+
+  /// No description provided for @telegramSignupExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Telegram approval expired before the account was created. Please authorize again.'**
+  String get telegramSignupExpired;
+
+  /// No description provided for @telegramProfileEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram connected'**
+  String get telegramProfileEyebrow;
+
+  /// No description provided for @telegramProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your Riksa profile'**
+  String get telegramProfileTitle;
+
+  /// No description provided for @telegramProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how other learners will see you. You can change your display name later.'**
+  String get telegramProfileSubtitle;
+
+  /// No description provided for @telegramConnectedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected as {name}'**
+  String telegramConnectedAs(String name);
+
+  /// No description provided for @telegramCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get telegramCreateAccount;
+
+  /// No description provided for @telegramUseAnotherAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a different Telegram account'**
+  String get telegramUseAnotherAccount;
+
+  /// No description provided for @languageEn.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageEn;
+
+  /// No description provided for @languageKm.
+  ///
+  /// In en, this message translates to:
+  /// **'ខ្មែរ'**
+  String get languageKm;
+
+  /// No description provided for @community.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get community;
+
+  /// No description provided for @myFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'My Feed'**
+  String get myFeed;
+
+  /// No description provided for @streakDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {0 days} =1 {1 day} other {{count} days}}'**
+  String streakDays(int count);
+
+  /// No description provided for @streakTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get streakTitle;
+
+  /// No description provided for @streakSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn every day to keep your streak growing.'**
+  String get streakSubtitle;
+
+  /// No description provided for @bestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Best streak'**
+  String get bestStreak;
+
+  /// No description provided for @lastTracked.
+  ///
+  /// In en, this message translates to:
+  /// **'Last tracked'**
+  String get lastTracked;
+
+  /// No description provided for @noTrackedDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No learning activity has been recorded yet.'**
+  String get noTrackedDate;
+
+  /// No description provided for @activityCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity calendar'**
+  String get activityCalendar;
+
+  /// No description provided for @createCommunityContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Create in Community'**
+  String get createCommunityContent;
+
+  /// No description provided for @startConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a conversation'**
+  String get startConversation;
+
+  /// No description provided for @startConversationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Share something with RIKSA...'**
+  String get startConversationHint;
+
+  /// No description provided for @createPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a post'**
+  String get createPost;
+
+  /// No description provided for @createPostSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share an idea, lesson, or useful resource.'**
+  String get createPostSubtitle;
+
+  /// No description provided for @askCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the community'**
+  String get askCommunity;
+
+  /// No description provided for @askCommunitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get help from learners who have been there.'**
+  String get askCommunitySubtitle;
+
+  /// No description provided for @writeArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'Write an article'**
+  String get writeArticle;
+
+  /// No description provided for @writeArticleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A longer piece for the blog, reviewed before it appears.'**
+  String get writeArticleSubtitle;
+
+  /// No description provided for @yourArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'Your articles'**
+  String get yourArticles;
+
+  /// No description provided for @articlesInReview.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 in review} other{{count} in review}}'**
+  String articlesInReview(int count);
+
+  /// No description provided for @communityComposerPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'What are your doubts?'**
+  String get communityComposerPrompt;
+
+  /// No description provided for @chooseCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a community'**
+  String get chooseCommunity;
+
+  /// No description provided for @postTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Post title'**
+  String get postTitleLabel;
+
+  /// No description provided for @questionTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'What do you want to ask?'**
+  String get questionTitleLabel;
+
+  /// No description provided for @detailsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add details'**
+  String get detailsLabel;
+
+  /// No description provided for @addPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo'**
+  String get addPhoto;
+
+  /// No description provided for @changePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get changePhoto;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get removePhoto;
+
+  /// No description provided for @photoUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading photo…'**
+  String get photoUploading;
+
+  /// No description provided for @photoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That photo couldn’t be uploaded. Try another one.'**
+  String get photoFailed;
+
+  /// No description provided for @photoTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'That photo is too large. Pick one under 2MB.'**
+  String get photoTooLarge;
+
+  /// No description provided for @photoFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get photoFromGallery;
+
+  /// No description provided for @photoFromCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get photoFromCamera;
+
+  /// No description provided for @publish.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get publish;
+
+  /// No description provided for @publishFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t publish this yet. Check your content and try again.'**
+  String get publishFailed;
+
+  /// No description provided for @noCommunities.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities are not available yet.'**
+  String get noCommunities;
+
+  /// No description provided for @blogEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh stories from the RIKSA community will appear here.'**
+  String get blogEmptyMessage;
+
+  /// No description provided for @communityHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn together. Share what clicks.'**
+  String get communityHeadline;
+
+  /// No description provided for @communitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask questions, swap useful ideas, and celebrate progress with learners across RIKSA.'**
+  String get communitySubtitle;
+
+  /// No description provided for @forYou.
+  ///
+  /// In en, this message translates to:
+  /// **'For you'**
+  String get forYou;
+
+  /// No description provided for @official.
+  ///
+  /// In en, this message translates to:
+  /// **'Official'**
+  String get official;
+
+  /// No description provided for @topLearnersThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Learners This Week'**
+  String get topLearnersThisWeek;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View All'**
+  String get viewAll;
+
+  /// No description provided for @upvotesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {0 upvotes} =1 {1 upvote} other {{count} upvotes}}'**
+  String upvotesCount(int count);
+
+  /// No description provided for @popularCommunities.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular communities'**
+  String get popularCommunities;
+
+  /// No description provided for @membersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {No members} =1 {1 member} other {{count} members}}'**
+  String membersLabel(int count);
+
+  /// No description provided for @join.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get join;
+
+  /// No description provided for @joined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get joined;
+
+  /// No description provided for @feedEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your community feed is ready'**
+  String get feedEmptyTitle;
+
+  /// No description provided for @feedEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts from this community will appear here as learners start sharing.'**
+  String get feedEmptyMessage;
+
+  /// No description provided for @feedErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load the community'**
+  String get feedErrorTitle;
+
+  /// No description provided for @loadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get loadMore;
+
+  /// No description provided for @copiedLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Post link copied'**
+  String get copiedLink;
+
+  /// No description provided for @actionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That action didn’t go through. Try again.'**
+  String get actionFailed;
+
+  /// No description provided for @postDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Post detail'**
+  String get postDetail;
+
+  /// No description provided for @editPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit post'**
+  String get editPost;
+
+  /// No description provided for @deletePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete post'**
+  String get deletePost;
+
+  /// No description provided for @postOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Post options'**
+  String get postOptions;
+
+  /// No description provided for @deletePostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this post?'**
+  String get deletePostTitle;
+
+  /// No description provided for @deletePostMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The post and its replies are removed for everyone. This cannot be undone.'**
+  String get deletePostMessage;
+
+  /// No description provided for @keepPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep post'**
+  String get keepPost;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @postUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes saved'**
+  String get postUpdated;
+
+  /// No description provided for @postDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Post deleted'**
+  String get postDeleted;
+
+  /// No description provided for @saveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t save your changes. Try again.'**
+  String get saveFailed;
+
+  /// No description provided for @deleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t delete this post. Try again.'**
+  String get deleteFailed;
+
+  /// No description provided for @editPostSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update what you shared with the community.'**
+  String get editPostSubtitle;
+
+  /// No description provided for @discussion.
+  ///
+  /// In en, this message translates to:
+  /// **'Discussion'**
+  String get discussion;
+
+  /// No description provided for @addComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to the discussion'**
+  String get addComment;
+
+  /// No description provided for @sendComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Send comment'**
+  String get sendComment;
+
+  /// No description provided for @reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get reply;
+
+  /// No description provided for @replyingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Replying to'**
+  String get replyingTo;
+
+  /// No description provided for @commentFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t add your comment. Please try again.'**
+  String get commentFailed;
+
+  /// No description provided for @noComments.
+  ///
+  /// In en, this message translates to:
+  /// **'No comments yet. Start the conversation.'**
+  String get noComments;
+
+  /// No description provided for @postUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Post unavailable'**
+  String get postUnavailable;
+
+  /// No description provided for @postUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This post may have been removed or is no longer visible.'**
+  String get postUnavailableMessage;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @shareProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Share profile'**
+  String get shareProfile;
+
+  /// No description provided for @profileLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile link copied'**
+  String get profileLinkCopied;
+
+  /// No description provided for @blog.
+  ///
+  /// In en, this message translates to:
+  /// **'Blog'**
+  String get blog;
+
+  /// No description provided for @setUpProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up profile'**
+  String get setUpProfile;
+
+  /// No description provided for @onboardingLearningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover quality education, modern learning experiences, and knowledge that grows with you.'**
+  String get onboardingLearningBody;
+
+  /// No description provided for @onboardingAchievementBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your streak alive, celebrate progress, and turn every small win into momentum.'**
+  String get onboardingAchievementBody;
+
+  /// No description provided for @onboardingCommunityBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn with a supportive community that shares ideas, answers questions, and grows together.'**
+  String get onboardingCommunityBody;
+
+  /// Onboarding page 1 headline. Two short lines when wrapped.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn Without Limits'**
+  String get onboardingLearningTitle;
+
+  /// Onboarding page 2 headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress You Can See'**
+  String get onboardingAchievementTitle;
+
+  /// Onboarding page 3 headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Never Study Alone'**
+  String get onboardingCommunityTitle;
+
+  /// Primary action on the last onboarding page.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get onboardingGetStarted;
+
+  /// No description provided for @selectProvinceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your province'**
+  String get selectProvinceTitle;
+
+  /// No description provided for @selectProvinceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your province personalizes local communities and provincial rankings. It will be saved securely to your profile after you sign in.'**
+  String get selectProvinceSubtitle;
+
+  /// No description provided for @searchProvince.
+  ///
+  /// In en, this message translates to:
+  /// **'Search provinces'**
+  String get searchProvince;
+
+  /// No description provided for @searchCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get searchCommunity;
+
+  /// No description provided for @searchCommunityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different keyword.'**
+  String get searchCommunityHint;
+
+  /// No description provided for @noSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching results'**
+  String get noSearchResults;
+
+  /// No description provided for @noProvinceResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No provinces match your search.'**
+  String get noProvinceResults;
+
+  /// No description provided for @provinceLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load the provinces.'**
+  String get provinceLoadFailed;
+
+  /// No description provided for @provinceSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t save your province. Please try again.'**
+  String get provinceSaveFailed;
+
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @learn.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get learn;
+
+  /// No description provided for @learningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning'**
+  String get learningTitle;
+
+  /// No description provided for @continueLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue learning'**
+  String get continueLearning;
+
+  /// No description provided for @searchLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Search lessons'**
+  String get searchLessons;
+
+  /// No description provided for @leaderboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaderboard'**
+  String get leaderboard;
+
+  /// Short leaderboard label for the bottom navigation bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranks'**
+  String get ranksTab;
+
+  /// No description provided for @logout.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out'**
+  String get logout;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loading;
+
+  /// No description provided for @learningHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Find your next lesson'**
+  String get learningHeadline;
+
+  /// No description provided for @learningSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your grade, subject, and level to learn at your pace.'**
+  String get learningSubtitle;
+
+  /// No description provided for @learningHeaderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A little progress, every day'**
+  String get learningHeaderSubtitle;
+
+  /// No description provided for @dailyMissionEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s mission'**
+  String get dailyMissionEyebrow;
+
+  /// No description provided for @dailyMissionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A focused lesson picked for your pace.'**
+  String get dailyMissionBody;
+
+  /// No description provided for @startDailyMission.
+  ///
+  /// In en, this message translates to:
+  /// **'Start lesson'**
+  String get startDailyMission;
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @filterLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter lessons'**
+  String get filterLessons;
+
+  /// No description provided for @applyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Show lessons'**
+  String get applyFilters;
+
+  /// No description provided for @resetFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get resetFilters;
+
+  /// No description provided for @removeFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {filter} filter'**
+  String removeFilter(String filter);
+
+  /// No description provided for @minutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String minutesShort(int minutes);
+
+  /// No description provided for @gradeFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade'**
+  String get gradeFilter;
+
+  /// No description provided for @subjectFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get subjectFilter;
+
+  /// No description provided for @difficultyFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Difficulty'**
+  String get difficultyFilter;
+
+  /// No description provided for @allGrades.
+  ///
+  /// In en, this message translates to:
+  /// **'All grades'**
+  String get allGrades;
+
+  /// No description provided for @gradeNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade {grade}'**
+  String gradeNumber(int grade);
+
+  /// No description provided for @gradeDataPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade {grade} is selected. Until lessons receive grade tags from the API, ungraded lessons remain visible.'**
+  String gradeDataPending(int grade);
+
+  /// No description provided for @allSubjects.
+  ///
+  /// In en, this message translates to:
+  /// **'All subjects'**
+  String get allSubjects;
+
+  /// No description provided for @allLevels.
+  ///
+  /// In en, this message translates to:
+  /// **'All levels'**
+  String get allLevels;
+
+  /// No description provided for @recommendedLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended lessons'**
+  String get recommendedLessons;
+
+  /// No description provided for @doneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'done'**
+  String get doneLabel;
+
+  /// No description provided for @completedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completedLabel;
+
+  /// No description provided for @generalSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get generalSubject;
+
+  /// No description provided for @difficultyEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy'**
+  String get difficultyEasy;
+
+  /// No description provided for @difficultyMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get difficultyMedium;
+
+  /// No description provided for @difficultyHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard'**
+  String get difficultyHard;
+
+  /// No description provided for @difficultyDifficult.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get difficultyDifficult;
+
+  /// No description provided for @contentTypeLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson'**
+  String get contentTypeLesson;
+
+  /// No description provided for @contentTypeChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge'**
+  String get contentTypeChallenge;
+
+  /// No description provided for @contentTypeRoadmap.
+  ///
+  /// In en, this message translates to:
+  /// **'Roadmap'**
+  String get contentTypeRoadmap;
+
+  /// No description provided for @exerciseCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {No exercises} =1 {1 exercise} other {{count} exercises}}'**
+  String exerciseCount(int count);
+
+  /// No description provided for @baseXpLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Base {xp} XP'**
+  String baseXpLabel(int xp);
+
+  /// Learning home greeting
+  ///
+  /// In en, this message translates to:
+  /// **'Hi, {name}'**
+  String greetingNamed(String name);
+
+  /// No description provided for @gradeStemLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade 12 · STEM'**
+  String get gradeStemLabel;
+
+  /// No description provided for @yourSubjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Your subjects'**
+  String get yourSubjects;
+
+  /// No description provided for @mathematicsSubjectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Build confidence with numbers and problem solving'**
+  String get mathematicsSubjectDescription;
+
+  /// No description provided for @physicsSubjectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Understand motion, forces, and the universe'**
+  String get physicsSubjectDescription;
+
+  /// No description provided for @chemistrySubjectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover matter, reactions, and change'**
+  String get chemistrySubjectDescription;
+
+  /// No description provided for @biologySubjectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore living systems and life science'**
+  String get biologySubjectDescription;
+
+  /// No description provided for @technologySubjectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice computing and digital technology'**
+  String get technologySubjectDescription;
+
+  /// No description provided for @generalSubjectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore this subject and its lessons'**
+  String get generalSubjectDescription;
+
+  /// No description provided for @continueReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue reading'**
+  String get continueReading;
+
+  /// XP a lesson awards, shown on a pill
+  ///
+  /// In en, this message translates to:
+  /// **'+{xp} XP'**
+  String xpRewardAmount(int xp);
+
+  /// No description provided for @lessonsDoneOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} lessons'**
+  String lessonsDoneOfTotal(int done, int total);
+
+  /// Compact progress on a subject tile
+  ///
+  /// In en, this message translates to:
+  /// **'{done} / {total}'**
+  String subjectCountShort(int done, int total);
+
+  /// No description provided for @examDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Bac II · Grade 12'**
+  String get examDestination;
+
+  /// Compact days-until-exam badge
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d'**
+  String daysRemaining(int days);
+
+  /// No description provided for @subjectUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load'**
+  String get subjectUnavailable;
+
+  /// No description provided for @noSubjectsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No STEM subjects yet'**
+  String get noSubjectsYet;
+
+  /// No description provided for @noSubjectsYetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade 12 subjects appear here as soon as they are published.'**
+  String get noSubjectsYetBody;
+
+  /// No description provided for @everySubjectFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Every subject is finished'**
+  String get everySubjectFinished;
+
+  /// No description provided for @everySubjectFinishedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have worked through the whole Grade 12 STEM syllabus.'**
+  String get everySubjectFinishedBody;
+
+  /// No description provided for @unitOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit {current} of {total}'**
+  String unitOfTotal(int current, int total);
+
+  /// No description provided for @wholeSyllabusSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{units, plural, =1 {1 unit} other {{units} units}}, {lessons, plural, =1 {1 lesson} other {{lessons} lessons}}'**
+  String wholeSyllabusSummary(int units, int lessons);
+
+  /// No description provided for @unitProgressShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done'**
+  String unitProgressShort(int done, int total);
+
+  /// No description provided for @youAreHere.
+  ///
+  /// In en, this message translates to:
+  /// **'You are here'**
+  String get youAreHere;
+
+  /// No description provided for @opensAfterUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens after Unit {number}'**
+  String opensAfterUnit(int number);
+
+  /// No description provided for @lessonLockedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get lessonLockedShort;
+
+  /// No description provided for @lessonCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 lesson} other {{count} lessons}}'**
+  String lessonCountLabel(int count);
+
+  /// No description provided for @readyForExam.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for Bac II'**
+  String get readyForExam;
+
+  /// No description provided for @roadmapLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load this roadmap'**
+  String get roadmapLoadFailed;
+
+  /// No description provided for @roadmapEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'This subject has no lessons yet'**
+  String get roadmapEmpty;
+
+  /// No description provided for @roadmapEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Lessons appear here as soon as they are published.'**
+  String get roadmapEmptyBody;
+
+  /// No description provided for @lessonLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish the lessons before this one to unlock it'**
+  String get lessonLocked;
+
+  /// No description provided for @lessonLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load lessons'**
+  String get lessonLoadFailed;
+
+  /// No description provided for @noLessonsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No lessons found'**
+  String get noLessonsFound;
+
+  /// No description provided for @noLessonsForFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another grade, subject, or difficulty.'**
+  String get noLessonsForFilters;
+
+  /// No description provided for @lessonPreviewHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready when you are'**
+  String get lessonPreviewHeading;
+
+  /// No description provided for @lessonPreviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Take it one step at a time. Your progress is saved along the way.'**
+  String get lessonPreviewBody;
+
+  /// No description provided for @beginLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Begin lesson'**
+  String get beginLesson;
+
+  /// No description provided for @lessonContentUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson activities will appear when the learning service provides the lesson detail.'**
+  String get lessonContentUnavailable;
+
+  /// No description provided for @backToLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to lessons'**
+  String get backToLessons;
+
+  /// No description provided for @accountSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Account settings'**
+  String get accountSettings;
+
+  /// No description provided for @riksaLearner.
+  ///
+  /// In en, this message translates to:
+  /// **'RIKSA Learner'**
+  String get riksaLearner;
+
+  /// No description provided for @memberSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Member since {date}'**
+  String memberSince(String date);
+
+  /// No description provided for @verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get verified;
+
+  /// No description provided for @notVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get notVerified;
+
+  /// No description provided for @accountRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Account role'**
+  String get accountRole;
+
+  /// No description provided for @totalXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Total XP'**
+  String get totalXp;
+
+  /// No description provided for @currentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak'**
+  String get currentStreak;
+
+  /// No description provided for @achievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get achievements;
+
+  /// No description provided for @currentRank.
+  ///
+  /// In en, this message translates to:
+  /// **'Current rank'**
+  String get currentRank;
+
+  /// No description provided for @startingTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting tier'**
+  String get startingTier;
+
+  /// No description provided for @highestRankReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You’ve reached the highest available rank.'**
+  String get highestRankReached;
+
+  /// No description provided for @xpUntilNextRank.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP until {tier}'**
+  String xpUntilNextRank(int xp, String tier);
+
+  /// No description provided for @tierBandProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{earned} / {total} XP'**
+  String tierBandProgress(String earned, String total);
+
+  /// No description provided for @xpUntilFinalRank.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP to {tier}, the final rank'**
+  String xpUntilFinalRank(int xp, String tier);
+
+  /// No description provided for @tierPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank {position} of {total}'**
+  String tierPosition(int position, int total);
+
+  /// No description provided for @earned.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned'**
+  String get earned;
+
+  /// No description provided for @recentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get recentActivity;
+
+  /// No description provided for @noAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements and their progress will appear here.'**
+  String get noAchievements;
+
+  /// No description provided for @noRecentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Your XP activity will appear here as you learn.'**
+  String get noRecentActivity;
+
+  /// No description provided for @profileLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load your learning profile.'**
+  String get profileLoadFailed;
+
+  /// No description provided for @lessonCompletionReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson completed'**
+  String get lessonCompletionReward;
+
+  /// No description provided for @achievementReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievement reward'**
+  String get achievementReward;
+
+  /// No description provided for @streakReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak reward'**
+  String get streakReward;
+
+  /// No description provided for @rankReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank reward'**
+  String get rankReward;
+
+  /// No description provided for @welcomeBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome bonus'**
+  String get welcomeBonus;
+
+  /// No description provided for @xpReward.
+  ///
+  /// In en, this message translates to:
+  /// **'XP reward'**
+  String get xpReward;
+
+  /// No description provided for @myPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'My Posts'**
+  String get myPosts;
+
+  /// No description provided for @leaderboardRank.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaderboard Rank'**
+  String get leaderboardRank;
+
+  /// No description provided for @noPostsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your community posts will appear here.'**
+  String get noPostsYet;
+
+  /// No description provided for @profileComposerPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Share what you are learning'**
+  String get profileComposerPrompt;
+
+  /// No description provided for @profilePostCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {No posts yet} =1 {1 post} other {{count} posts}}'**
+  String profilePostCount(int count);
+
+  /// No description provided for @writeFirstPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your first post'**
+  String get writeFirstPost;
+
+  /// No description provided for @managePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage post'**
+  String get managePost;
+
+  /// No description provided for @countryRank.
+  ///
+  /// In en, this message translates to:
+  /// **'Cambodia rank'**
+  String get countryRank;
+
+  /// No description provided for @provinceRank.
+  ///
+  /// In en, this message translates to:
+  /// **'Province rank'**
+  String get provinceRank;
+
+  /// No description provided for @unranked.
+  ///
+  /// In en, this message translates to:
+  /// **'Not ranked yet'**
+  String get unranked;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// Tooltip and semantics label on the avatar that opens the app drawer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open profile menu'**
+  String get openProfileMenu;
+
+  /// Drawer item leading to the list of communities.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities'**
+  String get communitiesMenu;
+
+  /// Drawer item leading to the XP activity history.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get progressHistory;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// No description provided for @notificationPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification preferences'**
+  String get notificationPreferences;
+
+  /// No description provided for @notificationPreferencesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning and community reminders'**
+  String get notificationPreferencesHint;
+
+  /// No description provided for @learningSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning sounds'**
+  String get learningSounds;
+
+  /// No description provided for @learningSoundsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a sound for correct answers, mistakes and finished lessons.'**
+  String get learningSoundsHint;
+
+  /// No description provided for @darkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark mode'**
+  String get darkMode;
+
+  /// No description provided for @darkModeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use RIKSA\'s dark appearance'**
+  String get darkModeHint;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @helpAndLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & legal'**
+  String get helpAndLegal;
+
+  /// No description provided for @faq.
+  ///
+  /// In en, this message translates to:
+  /// **'FAQ'**
+  String get faq;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @fullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get fullName;
+
+  /// No description provided for @bio.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get bio;
+
+  /// No description provided for @gender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get gender;
+
+  /// No description provided for @genderUnspecified.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer not to say'**
+  String get genderUnspecified;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
+
+  /// No description provided for @changesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile was updated.'**
+  String get changesSaved;
+
+  /// No description provided for @profileSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t save your profile. Please try again.'**
+  String get profileSaveFailed;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your RIKSA account?'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'This would permanently remove your learning history, XP, achievements, and posts. Continue?'**
+  String get deleteAccountConfirmation;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @deleteUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion is not available from the API yet. Contact RIKSA support for help.'**
+  String get deleteUnavailable;
+
+  /// No description provided for @accountIdentifiersReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Email, phone, and username are secured account identifiers and cannot currently be changed here.'**
+  String get accountIdentifiersReadOnly;
+
+  /// No description provided for @chooseAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an avatar'**
+  String get chooseAvatar;
+
+  /// No description provided for @humationAvatarSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a hand-drawn character for your RIKSA profile.'**
+  String get humationAvatarSubtitle;
+
+  /// No description provided for @editCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit cover'**
+  String get editCover;
+
+  /// No description provided for @chooseProfileCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a profile cover'**
+  String get chooseProfileCover;
+
+  /// No description provided for @profileCoverSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a color and pattern that feels like you.'**
+  String get profileCoverSubtitle;
+
+  /// No description provided for @chooseFromPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from photos'**
+  String get chooseFromPhotos;
+
+  /// No description provided for @imageSelectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t use that image. Please try another one.'**
+  String get imageSelectionFailed;
+
+  /// No description provided for @notProvided.
+  ///
+  /// In en, this message translates to:
+  /// **'Not provided'**
+  String get notProvided;
+
+  /// No description provided for @supportDocumentUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This document will be available here after the RIKSA support content is published.'**
+  String get supportDocumentUnavailable;
+
+  /// No description provided for @aiTutor.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Tutor'**
+  String get aiTutor;
+
+  /// No description provided for @aiTutorComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'RIKSA AI Tutor is coming soon.'**
+  String get aiTutorComingSoon;
+
+  /// No description provided for @publicProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Public profile'**
+  String get publicProfile;
+
+  /// No description provided for @posts.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts'**
+  String get posts;
+
+  /// No description provided for @publicProfileUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile unavailable'**
+  String get publicProfileUnavailable;
+
+  /// No description provided for @publicProfileUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This person may have deleted their account, been suspended, or limited access to their profile.'**
+  String get publicProfileUnavailableMessage;
+
+  /// No description provided for @publicProfileLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load this public profile. Please try again.'**
+  String get publicProfileLoadFailed;
+
+  /// No description provided for @publicPostsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load this person’s posts.'**
+  String get publicPostsLoadFailed;
+
+  /// No description provided for @noPublicPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'This person hasn’t shared any community posts yet.'**
+  String get noPublicPosts;
+
+  /// No description provided for @noPublicAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'No earned achievements are available yet.'**
+  String get noPublicAchievements;
+
+  /// No description provided for @noPublicRank.
+  ///
+  /// In en, this message translates to:
+  /// **'No public ranking is available yet.'**
+  String get noPublicRank;
+
+  /// No description provided for @aiTutorSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask anything from your lessons'**
+  String get aiTutorSubtitle;
+
+  /// No description provided for @aiAskNewQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a new question'**
+  String get aiAskNewQuestion;
+
+  /// No description provided for @aiChatsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get aiChatsToday;
+
+  /// No description provided for @aiChatsThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get aiChatsThisWeek;
+
+  /// No description provided for @aiChatsEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get aiChatsEarlier;
+
+  /// No description provided for @aiChatOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat options'**
+  String get aiChatOptions;
+
+  /// No description provided for @aiDeleteChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete chat'**
+  String get aiDeleteChat;
+
+  /// No description provided for @aiChatDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat deleted'**
+  String get aiChatDeleted;
+
+  /// No description provided for @aiUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get aiUndo;
+
+  /// No description provided for @aiChatDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That chat could not be deleted.'**
+  String get aiChatDeleteFailed;
+
+  /// No description provided for @aiChatsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask anything you are learning'**
+  String get aiChatsEmptyTitle;
+
+  /// No description provided for @aiChatsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a private conversation in Khmer or English about any lesson.'**
+  String get aiChatsEmptyBody;
+
+  /// No description provided for @aiStartChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a chat'**
+  String get aiStartChat;
+
+  /// No description provided for @aiTutorUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tutor unavailable'**
+  String get aiTutorUnavailableTitle;
+
+  /// No description provided for @aiTutorUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get aiTutorUnavailableBody;
+
+  /// No description provided for @aiSearchChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Search your chats'**
+  String get aiSearchChats;
+
+  /// No description provided for @aiNoChatMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No chat matches that.'**
+  String get aiNoChatMatches;
+
+  /// No description provided for @aiChatFallbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning chat'**
+  String get aiChatFallbackTitle;
+
+  /// No description provided for @aiComposerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type your question...'**
+  String get aiComposerHint;
+
+  /// No description provided for @aiSendMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Send message'**
+  String get aiSendMessage;
+
+  /// No description provided for @aiThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Riksa is thinking'**
+  String get aiThinking;
+
+  /// No description provided for @aiMessageNotSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent'**
+  String get aiMessageNotSent;
+
+  /// No description provided for @aiRetryMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Send again'**
+  String get aiRetryMessage;
+
+  /// No description provided for @aiChatOpener.
+  ///
+  /// In en, this message translates to:
+  /// **'What would you like to understand today?'**
+  String get aiChatOpener;
+
+  /// No description provided for @aiAskAboutLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask about this lesson'**
+  String get aiAskAboutLesson;
+
+  /// No description provided for @aiLessonContext.
+  ///
+  /// In en, this message translates to:
+  /// **'About {lesson}'**
+  String aiLessonContext(String lesson);
+
+  /// No description provided for @aiStarterExplainAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain this again, more slowly'**
+  String get aiStarterExplainAgain;
+
+  /// No description provided for @aiStarterStillUnsure.
+  ///
+  /// In en, this message translates to:
+  /// **'I am still unsure about one part'**
+  String get aiStarterStillUnsure;
+
+  /// No description provided for @aiStarterWorkedExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Give me a worked example'**
+  String get aiStarterWorkedExample;
+
+  /// No description provided for @aiChatLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this chat.'**
+  String get aiChatLoadFailed;
+
+  /// No description provided for @aiReplyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The tutor could not answer. Please try again.'**
+  String get aiReplyFailed;
+
+  /// No description provided for @aiContinueChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get aiContinueChat;
+
+  /// No description provided for @aiTimeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get aiTimeNow;
+
+  /// No description provided for @aiTimeMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m'**
+  String aiTimeMinutes(int count);
+
+  /// No description provided for @aiTimeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h'**
+  String aiTimeHours(int count);
+
+  /// No description provided for @aiTimeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d'**
+  String aiTimeDays(int count);
+
+  /// No description provided for @lessonRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get lessonRead;
+
+  /// No description provided for @lessonRespond.
+  ///
+  /// In en, this message translates to:
+  /// **'Respond'**
+  String get lessonRespond;
+
+  /// No description provided for @lessonReflect.
+  ///
+  /// In en, this message translates to:
+  /// **'Reflect'**
+  String get lessonReflect;
+
+  /// No description provided for @lessonSectionCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Section {current} of {total}'**
+  String lessonSectionCounter(int current, int total);
+
+  /// No description provided for @lessonTrySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Try it yourself'**
+  String get lessonTrySection;
+
+  /// No description provided for @lessonReflectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Reflect on this lesson'**
+  String get lessonReflectAction;
+
+  /// No description provided for @lessonCheckAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Check answer'**
+  String get lessonCheckAnswer;
+
+  /// No description provided for @lessonCompareAnswers.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare answers'**
+  String get lessonCompareAnswers;
+
+  /// No description provided for @lessonWorkFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Work it out first'**
+  String get lessonWorkFirst;
+
+  /// No description provided for @lessonWorkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your answer and how you got there. Then compare it with the choices.'**
+  String get lessonWorkHint;
+
+  /// No description provided for @lessonAnswerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your answer'**
+  String get lessonAnswerHint;
+
+  /// No description provided for @lessonYourWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Your working'**
+  String get lessonYourWork;
+
+  /// No description provided for @lessonChooseAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare your working and choose an answer.'**
+  String get lessonChooseAnswer;
+
+  /// No description provided for @lessonExerciseNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise {number}'**
+  String lessonExerciseNumber(int number);
+
+  /// No description provided for @lessonResponseProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} responses checked'**
+  String lessonResponseProgress(int done, int total);
+
+  /// No description provided for @lessonSectionComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Section complete'**
+  String get lessonSectionComplete;
+
+  /// No description provided for @lessonUpNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Up next'**
+  String get lessonUpNext;
+
+  /// No description provided for @lessonReflectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What will you take away?'**
+  String get lessonReflectionTitle;
+
+  /// No description provided for @lessonReflectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Put one idea into your own words. Note anything you want to revisit.'**
+  String get lessonReflectionBody;
+
+  /// No description provided for @lessonReflectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'I understood… I still want to work on…'**
+  String get lessonReflectionHint;
+
+  /// No description provided for @lessonConfidencePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you feel about this lesson?'**
+  String get lessonConfidencePrompt;
+
+  /// No description provided for @lessonConfident.
+  ///
+  /// In en, this message translates to:
+  /// **'I can explain it'**
+  String get lessonConfident;
+
+  /// No description provided for @lessonNeedsReview.
+  ///
+  /// In en, this message translates to:
+  /// **'I want to revisit it'**
+  String get lessonNeedsReview;
+
+  /// No description provided for @lessonSaveReflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and finish'**
+  String get lessonSaveReflection;
+
+  /// No description provided for @lessonReflectionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a short reflection to finish this lesson.'**
+  String get lessonReflectionRequired;
+
+  /// No description provided for @lessonSavedReflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Your reflection'**
+  String get lessonSavedReflection;
+
+  /// No description provided for @lessonCompletedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'One more step through your syllabus. Take a break or continue when you are ready.'**
+  String get lessonCompletedBody;
+
+  /// No description provided for @lessonRevisitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Worth another look'**
+  String get lessonRevisitTitle;
+
+  /// No description provided for @lessonRevisitBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You marked this lesson for another look. You can reopen it from your roadmap.'**
+  String get lessonRevisitBody;
+
+  /// No description provided for @lessonNextAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start next lesson'**
+  String get lessonNextAction;
+
+  /// No description provided for @lessonRoadmapAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to roadmap'**
+  String get lessonRoadmapAction;
+
+  /// No description provided for @lessonFinishSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish for now'**
+  String get lessonFinishSession;
+
+  /// No description provided for @lessonResumeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume lesson'**
+  String get lessonResumeAction;
+
+  /// No description provided for @lessonStartAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start lesson'**
+  String get lessonStartAction;
+
+  /// No description provided for @lessonOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson options'**
+  String get lessonOptions;
+
+  /// No description provided for @lessonSections.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson sections'**
+  String get lessonSections;
+
+  /// No description provided for @lessonSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save lesson'**
+  String get lessonSave;
+
+  /// No description provided for @lessonUnsave.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from saved'**
+  String get lessonUnsave;
+
+  /// No description provided for @lessonMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute sound'**
+  String get lessonMute;
+
+  /// No description provided for @lessonUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute sound'**
+  String get lessonUnmute;
+
+  /// No description provided for @lessonExitBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked answers are saved. Your unfinished writing will be lost if you leave.'**
+  String get lessonExitBody;
+
+  /// No description provided for @lessonAiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a hint'**
+  String get lessonAiHint;
+
+  /// No description provided for @lessonExplainAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain with AI'**
+  String get lessonExplainAnswer;
+
+  /// No description provided for @lessonWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Explanation'**
+  String get lessonWhy;
+
+  /// No description provided for @lessonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hint'**
+  String get lessonHint;
+
+  /// No description provided for @lessonEditWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit working'**
+  String get lessonEditWorking;
+
+  /// No description provided for @lessonWorkingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'One moment…'**
+  String get lessonWorkingStatus;
+
+  /// No description provided for @lessonAnswerSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'That’s it. Keep going when you’re ready.'**
+  String get lessonAnswerSuccess;
+
+  /// No description provided for @lessonAnswerRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite yet. Try another approach.'**
+  String get lessonAnswerRetry;
+
+  /// No description provided for @learningLoadErrorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your lessons couldn’t load this time. Give it another try.'**
+  String get learningLoadErrorBody;
+
+  /// No description provided for @savedLessonsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep a good idea for later'**
+  String get savedLessonsEmptyTitle;
+
+  /// No description provided for @savedLessonsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Found a formula worth revisiting? Save the lesson from its menu. It will be waiting here.'**
+  String get savedLessonsEmptyBody;
+
+  /// No description provided for @splashTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn Today, Build Tomorrow'**
+  String get splashTagline;
+
+  /// No description provided for @splashDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Grade 12 STEM learning companion for a brighter Cambodia.'**
+  String get splashDescription;
+
+  /// No description provided for @skipLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skipLabel;
+
+  /// No description provided for @nextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get nextLabel;
+
+  /// No description provided for @homeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, {name}!'**
+  String homeGreeting(String name);
+
+  /// No description provided for @homeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep going! Knowledge builds your future.'**
+  String get homeSubtitle;
+
+  /// No description provided for @homeSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search posts, topics, or lessons...'**
+  String get homeSearchHint;
+
+  /// No description provided for @homeLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Lessons'**
+  String get homeLessons;
+
+  /// No description provided for @homeLessonsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get homeLessonsCaption;
+
+  /// No description provided for @homeCommunityCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Join & share'**
+  String get homeCommunityCaption;
+
+  /// No description provided for @homeAiCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask anything'**
+  String get homeAiCaption;
+
+  /// No description provided for @homeLeaderboardCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'See rankings'**
+  String get homeLeaderboardCaption;
+
+  /// No description provided for @todaysLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s learning'**
+  String get todaysLearning;
+
+  /// No description provided for @communityFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Community Feed'**
+  String get communityFeed;
+
+  /// No description provided for @viewAllShort.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get viewAllShort;
+
+  /// No description provided for @feedFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get feedFilterAll;
+
+  /// No description provided for @aiCoachTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Study Coach'**
+  String get aiCoachTitle;
+
+  /// No description provided for @aiCoachGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi! I\'m your AI Study Coach. Ask me anything about your lessons, and I\'ll help you learn step by step!'**
+  String get aiCoachGreeting;
+
+  /// No description provided for @aiTryAskingAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'Try asking about:'**
+  String get aiTryAskingAbout;
+
+  /// No description provided for @menuMyProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'My Progress'**
+  String get menuMyProgress;
+
+  /// No description provided for @menuSavedLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Lessons'**
+  String get menuSavedLessons;
+
+  /// No description provided for @menuCommunities.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities'**
+  String get menuCommunities;
+
+  /// No description provided for @communitiesDiscover.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get communitiesDiscover;
+
+  /// No description provided for @communitiesMine.
+  ///
+  /// In en, this message translates to:
+  /// **'My Communities'**
+  String get communitiesMine;
+
+  /// No description provided for @communitiesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search communities...'**
+  String get communitiesSearchHint;
+
+  /// No description provided for @communityJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get communityJoin;
+
+  /// No description provided for @communityJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get communityJoined;
+
+  /// No description provided for @communitiesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities unavailable'**
+  String get communitiesUnavailable;
+
+  /// No description provided for @communitiesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load communities.'**
+  String get communitiesLoadFailed;
+
+  /// No description provided for @communitiesNoneJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t joined a community yet.'**
+  String get communitiesNoneJoined;
+
+  /// No description provided for @communityMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} members'**
+  String communityMembers(String count);
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['en', 'km'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en':
+      return AppLocalizationsEn();
+    case 'km':
+      return AppLocalizationsKm();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}
