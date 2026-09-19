@@ -6,8 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/locale_provider.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/riksa_logo.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../providers/auth_provider.dart';
 
@@ -92,7 +90,7 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
     final unavailable = auth is AuthUnavailable ? auth : null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9FB),
+      backgroundColor: const Color(0xFFFCFCFE),
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -108,16 +106,19 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
                   ),
                   Expanded(
                     child: Center(
-                      child: AnimatedBuilder(
-                        animation: _controller,
-                        builder: (context, child) => Transform.scale(
-                          scale: _scaleAnimation.value,
-                          child: Opacity(
-                            opacity: _fadeAnimation.value,
-                            child: child,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: AnimatedBuilder(
+                          animation: _controller,
+                          builder: (context, child) => Transform.scale(
+                            scale: _scaleAnimation.value,
+                            child: Opacity(
+                              opacity: _fadeAnimation.value,
+                              child: child,
+                            ),
                           ),
+                          child: const _SplashMark(),
                         ),
-                        child: const _SplashMark(),
                       ),
                     ),
                   ),
@@ -157,43 +158,45 @@ class _SplashAtmosphere extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned(
-          top: -120,
-          right: -90,
-          child: _BlurOrb(color: AppTheme.secondary.withValues(alpha: .2)),
-        ),
-        Positioned(
-          bottom: -150,
-          left: -110,
-          child: _BlurOrb(
-            color: AppTheme.primary.withValues(alpha: .13),
-            size: 330,
-          ),
-        ),
-      ],
+    return const IgnorePointer(
+      child: RepaintBoundary(
+        child: ClipRect(child: CustomPaint(painter: _SplashSmokePainter())),
+      ),
     );
   }
 }
 
-class _BlurOrb extends StatelessWidget {
-  const _BlurOrb({required this.color, this.size = 280});
-
-  final Color color;
-  final double size;
+class _SplashSmokePainter extends CustomPainter {
+  const _SplashSmokePainter();
 
   @override
-  Widget build(BuildContext context) {
-    return ImageFiltered(
-      imageFilter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+  void paint(Canvas canvas, Size size) {
+    final radius = (size.width * .62).clamp(200.0, 440.0);
+    final haze = Paint()
+      ..color = const Color(0x99FFDA9C)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60);
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(size.width / 2, 18),
+        width: radius * 2,
+        height: 230,
       ),
+      haze,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(size.width / 2 - radius * .35, 62),
+        width: radius,
+        height: 160,
+      ),
+      Paint()
+        ..color = const Color(0x33FFE8BD)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 48),
     );
   }
+
+  @override
+  bool shouldRepaint(_SplashSmokePainter oldDelegate) => false;
 }
 
 class _EditionBadge extends StatelessWidget {
@@ -215,7 +218,8 @@ class _EditionBadge extends StatelessWidget {
           child: const Text(
             'MADE FOR CAMBODIA  •  2026',
             style: TextStyle(
-              color: AppTheme.primary,
+              color: Color(0xFF242433),
+              fontFamily: 'Poppins',
               fontSize: 10,
               fontWeight: FontWeight.w800,
               letterSpacing: 1.1,
@@ -236,35 +240,42 @@ class _SplashMark extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 104,
-          height: 104,
+          width: 80,
+          height: 80,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: .9),
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.primary.withValues(alpha: .12),
-                blurRadius: 40,
-                offset: const Offset(0, 16),
-              ),
-            ],
+            color: const Color(0xFF4548FF),
+            borderRadius: BorderRadius.circular(24),
           ),
-          child: const Icon(
-            Icons.auto_stories_rounded,
-            color: AppTheme.primary,
-            size: 42,
+          child: const Text(
+            'R',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 48,
+              fontWeight: FontWeight.w600,
+              fontStyle: FontStyle.italic,
+              color: Colors.white,
+            ),
           ),
         ),
-        const SizedBox(height: 28),
-        const RiksaLogo(fontSize: 64),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
+        const Text(
+          'Riksa',
+          style: TextStyle(
+            color: Color(0xFF242433),
+            fontSize: 28,
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
+            letterSpacing: -.6,
+          ),
+        ),
+        const SizedBox(height: 8),
         const Text(
           'រៀន. គិត. អភិវឌ្ឍន៍.',
           style: TextStyle(
-            fontSize: 16,
-            color: AppTheme.muted,
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            color: Color(0xFF858591),
             fontWeight: FontWeight.w500,
             letterSpacing: 1.1,
           ),
@@ -288,6 +299,7 @@ class _BootstrapIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const accent = Color(0xFF4548FF);
     return SizedBox(
       height: 54,
       child: Column(
@@ -297,15 +309,16 @@ class _BootstrapIndicator extends StatelessWidget {
             child: LinearProgressIndicator(
               minHeight: 3,
               borderRadius: BorderRadius.circular(99),
-              backgroundColor: AppTheme.primary.withValues(alpha: .08),
-              color: ready ? AppTheme.secondary : AppTheme.primary,
+              backgroundColor: accent.withValues(alpha: .08),
+              color: ready ? const Color(0xFF4CAF50) : accent,
             ),
           ),
           const SizedBox(height: 12),
           Text(
             (ready ? readyLabel : loadingLabel).toUpperCase(),
             style: const TextStyle(
-              color: AppTheme.muted,
+              fontFamily: 'Poppins',
+              color: Color(0xFF858591),
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.2,
@@ -335,23 +348,32 @@ class _OfflineActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const accent = Color(0xFF4548FF);
     return Container(
       constraints: const BoxConstraints(maxWidth: 440),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: .9),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.outline),
+        border: Border.all(color: const Color(0xFFE9E9F0)),
       ),
       child: Column(
         children: [
-          Text(message, textAlign: TextAlign.center),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontFamily: 'Poppins', color: Color(0xFF242433)),
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: TextButton(
                   onPressed: onUseAnotherAccount,
+                  style: TextButton.styleFrom(
+                    foregroundColor: accent,
+                    textStyle: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500),
+                  ),
                   child: Text(anotherAccountLabel),
                 ),
               ),
@@ -359,6 +381,11 @@ class _OfflineActions extends StatelessWidget {
               Expanded(
                 child: FilledButton(
                   onPressed: onRetry,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: accent,
+                    foregroundColor: Colors.white,
+                    textStyle: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500),
+                  ),
                   child: Text(retryLabel),
                 ),
               ),

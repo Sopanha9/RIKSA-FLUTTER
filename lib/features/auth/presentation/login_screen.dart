@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_theme.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_scaffold.dart';
@@ -55,6 +54,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     return AuthScaffold(
+      footer: AuthAccountPrompt(
+        prompt: strings.noAccount,
+        label: strings.signUpNow,
+        onTap: loading ? null : () => context.push('/auth/register'),
+      ),
       child: AutofillGroup(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -66,28 +70,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Text(
                     strings.welcomeBack,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: AppTheme.onBackground,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -.4,
-                    ),
+                    style: AuthTextStyles.heading,
                   ),
-                  const SizedBox(height: 22),
-                  const SocialAuthSection(
-                    isRegistration: false,
-                    showDivider: false,
+                  const SizedBox(height: 8),
+                  Text(
+                    strings.loginSubtitle,
+                    textAlign: TextAlign.center,
+                    style: AuthTextStyles.supporting,
                   ),
-                  const SizedBox(height: 18),
-                  AuthDivider(label: strings.orLabel),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
                   Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (error != null) ...[
-                          AuthErrorBanner(message: error),
-                          const SizedBox(height: 16),
+                          AuthErrorText(message: error),
+                          const SizedBox(height: 10),
                         ],
                         TextFormField(
                           key: const Key('login_username'),
@@ -100,9 +99,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           decoration: InputDecoration(
                             labelText: strings.username,
                             hintText: strings.usernameHint,
-                            prefixIcon: const Icon(
-                              Icons.alternate_email_rounded,
-                            ),
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
@@ -111,7 +107,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 16),
                         TextFormField(
                           key: const Key('login_password'),
                           controller: _passwordController,
@@ -123,7 +119,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           decoration: InputDecoration(
                             labelText: strings.password,
                             hintText: strings.passwordHint,
-                            prefixIcon: const Icon(Icons.lock_outline_rounded),
                             suffixIcon: IconButton(
                               onPressed: () => setState(
                                 () => _obscurePassword = !_obscurePassword,
@@ -169,26 +164,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  AuthDivider(label: strings.orLabel),
+                  const SizedBox(height: 12),
+                  const SocialAuthSection(
+                    isRegistration: false,
+                    showDivider: false,
+                  ),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Flexible(
-                  child: Text(
-                    strings.noAccount,
-                    style: const TextStyle(color: AppTheme.muted),
-                  ),
-                ),
-                TextButton(
-                  onPressed: loading
-                      ? null
-                      : () => context.push('/auth/register'),
-                  child: Text(strings.signUpNow),
-                ),
-              ],
             ),
           ],
         ),

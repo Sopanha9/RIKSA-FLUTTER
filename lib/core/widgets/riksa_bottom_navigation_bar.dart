@@ -37,10 +37,12 @@ class RiksaBottomNavigationBar extends StatelessWidget {
       ),
     ];
 
-    return SafeArea(
-      top: false,
-      minimum: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-      child: SizedBox(
+    return Theme(
+      data: Theme.of(context).copyWith(canvasColor: Colors.transparent),
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+        child: SizedBox(
         height: 74,
         child: LayoutBuilder(
           builder: (context, constraints) => Align(
@@ -63,7 +65,7 @@ class RiksaBottomNavigationBar extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

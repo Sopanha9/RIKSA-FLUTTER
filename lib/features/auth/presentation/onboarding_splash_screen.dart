@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/locale_provider.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../l10n/gen/app_localizations.dart';
 
 class OnboardingSplashScreen extends ConsumerStatefulWidget {
@@ -78,7 +77,7 @@ class _OnboardingSplashScreenState
     ];
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: const Color(0xFFFCFCFE),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
@@ -110,6 +109,7 @@ class _OnboardingSplashScreenState
                 textAlign: TextAlign.start,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontFamily: 'Poppins',
+                  color: const Color(0xFF20212C),
                   fontWeight: FontWeight.w600,
                   letterSpacing: -.35,
                   height: 1.28,
@@ -118,14 +118,17 @@ class _OnboardingSplashScreenState
               const SizedBox(height: 10),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 180),
-                child: Text(
-                  bodies[_currentPage],
-                  key: ValueKey(_currentPage),
-                  textAlign: TextAlign.start,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontFamily: 'Poppins',
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.5,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    bodies[_currentPage],
+                    key: ValueKey(_currentPage),
+                    textAlign: TextAlign.start,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: 'Poppins',
+                      color: const Color(0xFF858591),
+                      height: 1.5,
+                    ),
                   ),
                 ),
               ),
@@ -136,11 +139,13 @@ class _OnboardingSplashScreenState
                   key: const Key('onboarding_continue'),
                   onPressed: _finishing ? null : _continue,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.lightTextPrimary,
+                    backgroundColor: const Color(0xFF4548FF),
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.lightTextPrimary,
+                    disabledBackgroundColor: const Color(0xFF4548FF).withValues(alpha: .5),
                     disabledForegroundColor: Colors.white70,
-                    shape: const StadiumBorder(),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   child: _finishing
                       ? const SizedBox.square(
@@ -175,7 +180,6 @@ class _PageIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return Semantics(
       label: 'Page ${currentPage + 1} of $count',
       child: Row(
@@ -189,8 +193,8 @@ class _PageIndicator extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 4),
             decoration: BoxDecoration(
               color: index == currentPage
-                  ? colors.onSurface
-                  : colors.outlineVariant,
+                  ? const Color(0xFF4548FF)
+                  : const Color(0xFFE9E9F0),
               shape: BoxShape.circle,
             ),
           ),

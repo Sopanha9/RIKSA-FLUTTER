@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -467,40 +469,50 @@ class _StatCard extends StatelessWidget {
   final Color foreground;
 
   @override
-  Widget build(BuildContext context) => Container(
-    height: 116,
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: background,
-      borderRadius: BorderRadius.circular(22),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: foreground, size: 22),
-        const Spacer(),
-        Text(
-          value,
-          maxLines: 1,
-          style: TextStyle(
-            color: foreground,
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(22),
+    child: BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+      child: Container(
+        height: 116,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: background.withValues(alpha: .6),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: .5),
+            width: 1.2,
           ),
         ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: foreground.withValues(alpha: .72),
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            height: 1.15,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: foreground, size: 22),
+            const Spacer(),
+            Text(
+              value,
+              maxLines: 1,
+              style: TextStyle(
+                color: foreground,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: foreground.withValues(alpha: .72),
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                height: 1.15,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     ),
   );
 }

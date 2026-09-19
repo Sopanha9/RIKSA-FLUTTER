@@ -146,8 +146,8 @@ class _TelegramOtpScreenState extends ConsumerState<TelegramOtpScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (error != null) ...[
-                    AuthErrorBanner(message: error),
-                    const SizedBox(height: 16),
+                    AuthErrorText(message: error),
+                    const SizedBox(height: 10),
                   ],
                   if (_step == _OtpStep.account) ...[
                     if (widget.isRegistration) ...[

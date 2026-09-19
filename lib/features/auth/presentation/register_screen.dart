@@ -66,8 +66,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (_step == 1) {
       ref.read(authProvider.notifier).clearError();
       setState(() => _step = 0);
-    } else {
-      context.pop();
     }
   }
 
@@ -86,7 +84,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
 
     return AuthScaffold(
-      onBack: loading ? null : _back,
+      expandedHeaderMinHeight: 780,
+      onBack: _step == 1 && !loading ? _back : null,
+      footer: AuthAccountPrompt(
+        prompt: strings.haveAccount,
+        label: strings.signInNow,
+        onTap: loading ? null : () => context.pop(),
+      ),
       child: AutofillGroup(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -98,25 +102,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   Text(
                     strings.registerTitle,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: AppTheme.onBackground,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -.4,
-                    ),
+                    style: AuthTextStyles.heading,
                   ),
-                  const SizedBox(height: 22),
-                  const SocialAuthSection(
-                    isRegistration: true,
-                    showDivider: false,
+                  const SizedBox(height: 8),
+                  Text(
+                    strings.registerSubtitle,
+                    textAlign: TextAlign.center,
+                    style: AuthTextStyles.supporting,
                   ),
-                  const SizedBox(height: 18),
-                  AuthDivider(label: strings.orLabel),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 10),
                   _StepIndicator(
                     step: _step,
                     label: strings.stepOfTwo(_step + 1),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 8),
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 260),
                     transitionBuilder: (child, animation) => FadeTransition(
@@ -158,24 +157,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             onSubmit: _submit,
                           ),
                   ),
+                  const SizedBox(height: 12),
+                  AuthDivider(label: strings.orLabel),
+                  const SizedBox(height: 10),
+                  const SocialAuthSection(
+                    isRegistration: true,
+                    showDivider: false,
+                  ),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Flexible(
-                  child: Text(
-                    strings.haveAccount,
-                    style: const TextStyle(color: AppTheme.muted),
-                  ),
-                ),
-                TextButton(
-                  onPressed: loading ? null : () => context.pop(),
-                  child: Text(strings.signInNow),
-                ),
-              ],
             ),
           ],
         ),
@@ -199,8 +189,10 @@ class _StepIndicator extends StatelessWidget {
             borderRadius: BorderRadius.circular(99),
             child: LinearProgressIndicator(
               value: step == 0 ? .5 : 1,
-              minHeight: 6,
-              backgroundColor: AppTheme.primary.withValues(alpha: .08),
+              minHeight: 3,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: .08),
             ),
           ),
         ),
@@ -253,7 +245,6 @@ class _BasicsStep extends StatelessWidget {
             decoration: InputDecoration(
               labelText: strings.username,
               hintText: strings.usernameHint,
-              prefixIcon: const Icon(Icons.alternate_email_rounded),
               counterText: '',
             ),
             validator: (value) {
@@ -266,7 +257,7 @@ class _BasicsStep extends StatelessWidget {
               return null;
             },
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           TextFormField(
             key: const Key('register_display_name'),
             controller: displayNameController,
@@ -277,7 +268,6 @@ class _BasicsStep extends StatelessWidget {
             decoration: InputDecoration(
               labelText: strings.displayName,
               hintText: strings.displayNameHint,
-              prefixIcon: const Icon(Icons.badge_outlined),
               counterText: '',
             ),
             validator: (value) {
@@ -290,7 +280,7 @@ class _BasicsStep extends StatelessWidget {
               return null;
             },
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           TextFormField(
             key: const Key('register_email'),
             controller: emailController,
@@ -302,7 +292,6 @@ class _BasicsStep extends StatelessWidget {
             decoration: InputDecoration(
               labelText: strings.email,
               hintText: strings.emailHint,
-              prefixIcon: const Icon(Icons.mail_outline_rounded),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -312,11 +301,10 @@ class _BasicsStep extends StatelessWidget {
               return null;
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
           FilledButton.icon(
             key: const Key('register_continue'),
             onPressed: onContinue,
-            icon: const Icon(Icons.arrow_forward_rounded),
             label: Text(strings.continueLabel),
           ),
         ],
@@ -362,8 +350,8 @@ class _SecurityStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (error != null) ...[
-            AuthErrorBanner(message: error!),
-            const SizedBox(height: 16),
+            AuthErrorText(message: error!),
+            const SizedBox(height: 10),
           ],
           TextFormField(
             key: const Key('register_password'),
@@ -376,7 +364,6 @@ class _SecurityStep extends StatelessWidget {
             decoration: InputDecoration(
               labelText: strings.password,
               hintText: strings.passwordHint,
-              prefixIcon: const Icon(Icons.lock_outline_rounded),
               suffixIcon: IconButton(
                 onPressed: onTogglePassword,
                 icon: Icon(
@@ -399,9 +386,9 @@ class _SecurityStep extends StatelessWidget {
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           PasswordRequirements(password: passwordController.text),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           TextFormField(
             key: const Key('register_confirm_password'),
             controller: confirmationController,
@@ -413,7 +400,6 @@ class _SecurityStep extends StatelessWidget {
             decoration: InputDecoration(
               labelText: strings.confirmPassword,
               hintText: strings.confirmPasswordHint,
-              prefixIcon: const Icon(Icons.verified_user_outlined),
               suffixIcon: IconButton(
                 onPressed: onToggleConfirmation,
                 icon: Icon(
@@ -436,7 +422,7 @@ class _SecurityStep extends StatelessWidget {
               return null;
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
           FilledButton(
             key: const Key('register_submit'),
             onPressed: loading ? null : onSubmit,

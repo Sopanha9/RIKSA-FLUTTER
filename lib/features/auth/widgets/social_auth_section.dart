@@ -132,7 +132,7 @@ class _SocialAuthSectionState extends ConsumerState<SocialAuthSection> {
                     dimension: 20,
                     child: CircularProgressIndicator(strokeWidth: 2.2),
                   )
-                : const GoogleLogo(),
+                : const GoogleLogo(size: 20),
             label: Text(strings.signInWithGoogle),
           ),
         const SizedBox(height: 12),
@@ -143,7 +143,7 @@ class _SocialAuthSectionState extends ConsumerState<SocialAuthSection> {
               : () => context.push(
                   '/auth/telegram?register=${widget.isRegistration}',
                 ),
-          icon: const TelegramLogo(),
+          icon: const TelegramLogo(size: 20),
           label: Text(strings.signInWithTelegram),
         ),
         if (_localError != null) ...[

@@ -16,7 +16,7 @@ Widget buildGoogleProviderButton({
             dimension: 20,
             child: CircularProgressIndicator(strokeWidth: 2.2),
           )
-        : const GoogleLogo(),
+        : const GoogleLogo(size: 20),
     label: Text(label),
   );
 }
