@@ -378,6 +378,42 @@ extension RiksaThemeContext on BuildContext {
             ? RiksaPalette.dark
             : RiksaPalette.light);
   }
+
+  RiksaGlass get riksaGlass => RiksaGlass.resolve(this);
+}
+
+@immutable
+class RiksaGlass {
+  const RiksaGlass({
+    required this.fill,
+    required this.border,
+    required this.selectedFill,
+    required this.selectedBorder,
+    this.blurSigma = 14,
+  });
+
+  factory RiksaGlass.resolve(BuildContext context) {
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return RiksaGlass(
+      fill: isDark
+          ? palette.surface.withValues(alpha: 0.46)
+          : Colors.white.withValues(alpha: 0.58),
+      border: isDark
+          ? Colors.white.withValues(alpha: 0.12)
+          : Colors.white.withValues(alpha: 0.72),
+      selectedFill: isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.white.withValues(alpha: 0.54),
+      selectedBorder: Colors.white.withValues(alpha: 0.36),
+    );
+  }
+
+  final Color fill;
+  final Color border;
+  final Color selectedFill;
+  final Color selectedBorder;
+  final double blurSigma;
 }
 
 class RiksaSpacing {
@@ -386,6 +422,7 @@ class RiksaSpacing {
   static const double xs = 8;
   static const double sm = 12;
   static const double md = 16;
+  static const double gutter = 20;
   static const double lg = 24;
   static const double xl = 32;
   static const double xxl = 48;
@@ -396,7 +433,11 @@ class AppRadii {
   static const double small = 8;
   static const double badge = 13;
   static const double medium = 14;
+
+  /// Intentional 16px row alias; prefer this for new row-shaped surfaces.
   static const double row = 16;
+
+  /// Intentional 16px general alias; prefer this for other new surfaces.
   static const double large = 16;
   static const double panel = 20;
   static const double extraLarge = 28;
@@ -422,6 +463,30 @@ class RiksaElevation {
       ),
       blurRadius: 10,
       offset: const Offset(0, 3),
+    ),
+  ];
+
+  static List<BoxShadow> raised(Brightness brightness) => [
+    BoxShadow(
+      color: (brightness == Brightness.dark
+              ? RiksaPalette.dark.ink
+              : RiksaPalette.light.ink)
+          .withValues(alpha: 0.06),
+      blurRadius: 10,
+      offset: const Offset(0, 4),
+    ),
+  ];
+
+  static List<BoxShadow> overlay(Brightness brightness) => [
+    BoxShadow(
+      color: (brightness == Brightness.dark
+              ? RiksaPalette.dark.ink
+              : RiksaPalette.light.ink)
+          .withValues(
+            alpha: brightness == Brightness.dark ? 0.18 : 0.08,
+          ),
+      blurRadius: 18,
+      offset: const Offset(0, 8),
     ),
   ];
 }
@@ -494,6 +559,9 @@ class RiksaTypography {
     );
   }
 
+  /// [TextTheme.displaySmall] intentionally aliases
+  /// [TextTheme.headlineLarge] at 21px/w600; prefer `headlineLarge` for new
+  /// headings and reserve `displaySmall` for display semantics.
   static TextTheme textTheme(Color ink, Color muted) => TextTheme(
     displayLarge: _style(26, FontWeight.w600, ink, 32 / 26),
     displayMedium: _style(24, FontWeight.w600, ink, 30 / 24),
@@ -525,6 +593,36 @@ class RiksaTypography {
     color: color,
     height: height,
     letterSpacing: 0,
+  );
+}
+
+extension RiksaTextThemeRoles on TextTheme {
+  TextStyle? get labelLargeBold => labelLarge?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get labelMediumBold => labelMedium?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get labelSmallBold => labelSmall?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get titleLargeBold => titleLarge?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get titleMediumBold => titleMedium?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get titleSmallBold => titleSmall?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get bodyLargeBold => bodyLarge?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get bodyMediumBold => bodyMedium?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get bodySmallBold => bodySmall?.copyWith(
+    fontWeight: FontWeight.w700,
   );
 }
 
