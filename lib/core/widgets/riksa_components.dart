@@ -1114,11 +1114,7 @@ class IllustratedEmptyState extends StatelessWidget {
               RiksaTapFeedback(
                 child: FilledButton(
                   onPressed: onAction,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    minimumSize: const Size(0, 54),
-                  ),
+                  style: FilledButton.styleFrom(minimumSize: const Size(0, 54)),
                   child: Text(actionLabel!),
                 ),
               ),

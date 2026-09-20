@@ -1,11 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/riksa_brand.dart';
 import '../../../../l10n/gen/app_localizations.dart';
-import '../../../learning/presentation/learning_design.dart';
 import '../../../learning/providers/learning_home_provider.dart';
 
 /// A section title with an optional "View all" link on the right.
@@ -71,13 +70,12 @@ class HomeQuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final palette = context.riksa;
     final actions = [
       (
         'lessons',
         l10n.homeLessons,
         l10n.homeLessonsCaption,
-        Icons.menu_book_outlined,
+        'assets/images/lessonsCard/home-lessons-3d.png',
         AppColors.limeSoft,
         '/learn',
       ),
@@ -85,23 +83,16 @@ class HomeQuickActions extends StatelessWidget {
         'community',
         l10n.community,
         l10n.homeCommunityCaption,
-        Icons.groups_outlined,
+        'assets/images/lessonsCard/home-community-3d.png',
         AppColors.violetSoft,
         '/communities',
       ),
-      (
-        'ai',
-        l10n.aiTutor,
-        l10n.homeAiCaption,
-        Icons.smart_toy_outlined,
-        AppColors.tileMint,
-        '/ai',
-      ),
+
       (
         'leaderboard',
         l10n.leaderboard,
         l10n.homeLeaderboardCaption,
-        Icons.emoji_events_outlined,
+        'assets/images/lessonsCard/home-leaderboard-3d.png',
         AppColors.tileYellow,
         '/leaderboard',
       ),
@@ -115,9 +106,7 @@ class HomeQuickActions extends StatelessWidget {
             if (index > 0) const SizedBox(width: 8),
             Expanded(
               child: Material(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Color.lerp(action.$5, palette.surface, .86)
-                    : action.$5,
+                color: Colors.transparent,
                 borderRadius: AppRadii.mediumBorder,
                 child: InkWell(
                   key: ValueKey('home-action-${action.$1}'),
@@ -132,8 +121,8 @@ class HomeQuickActions extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        Icon(action.$4, size: 25, color: palette.ink),
-                        const SizedBox(height: 8),
+                        _HomeActionLogo(assetPath: action.$4),
+                        const SizedBox(height: 4),
                         Text(
                           action.$2,
                           textAlign: TextAlign.center,
@@ -142,18 +131,6 @@ class HomeQuickActions extends StatelessWidget {
                             Theme.of(context).textTheme.labelSmall?.copyWith(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          action.$3,
-                          textAlign: TextAlign.center,
-                          style: RiksaTypography.bodyStyleFor(
-                            action.$3,
-                            Theme.of(context).textTheme.labelSmall?.copyWith(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ),
@@ -166,6 +143,33 @@ class HomeQuickActions extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _HomeActionLogo extends StatelessWidget {
+  const _HomeActionLogo({required this.assetPath});
+
+  final String assetPath;
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 64.0;
+    if (kIsWeb) {
+      final cacheBustedUrl = 'assets/$assetPath?v=riksa-home-3d-2';
+      return Image.network(
+        cacheBustedUrl,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+      );
+    }
+
+    return Image.asset(
+      assetPath,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
     );
   }
 }
@@ -186,10 +190,6 @@ class TodaysLearningSection extends ConsumerWidget {
     if (subject == null || lesson == null) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
-    final palette = context.riksa;
-    final tone = subjectTone(context, subject.subject);
-    final total = subject.total;
-    final done = subject.completed;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -198,132 +198,157 @@ class TodaysLearningSection extends ConsumerWidget {
           title: l10n.todaysLearning,
           onViewAll: () => context.go('/learn'),
         ),
+        const SizedBox(height: 8),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Material(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? palette.surfaceRaised
-                : AppColors.limeSoft,
-            borderRadius: AppRadii.largeBorder,
+            color: Colors.transparent,
             child: InkWell(
               key: const ValueKey('todays-learning-card'),
-              borderRadius: AppRadii.largeBorder,
+              borderRadius: BorderRadius.circular(22),
               onTap: () => context.push('/learn/resume'),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(borderRadius: AppRadii.largeBorder),
-                child: Column(
-                  children: [
-                    Row(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    left: 12,
+                    right: 12,
+                    bottom: -8,
+                    child: Container(
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE64E55),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFFEF5862,
+                            ).withValues(alpha: 0.22),
+                            blurRadius: 18,
+                            offset: const Offset(0, 9),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: double.infinity,
+                    constraints: const BoxConstraints(minHeight: 118),
+                    padding: const EdgeInsets.fromLTRB(18, 18, 128, 20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFFF767D), Color(0xFFF4535E)],
+                      ),
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(
+                            0xFFEF5862,
+                          ).withValues(alpha: 0.26),
+                          blurRadius: 20,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            RiksaIconTile(
-                              icon: stemSubjectIcon(subject.subject),
-                              background: tone.surface,
-                              foreground: tone.accent,
-                              size: 40,
+                        Text(
+                          lesson.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: RiksaTypography.bodyStyleFor(
+                            lesson.title,
+                            theme.textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              height: 1.12,
                             ),
-                            Positioned(
-                              right: -4,
-                              top: -4,
-                              child: RiksaDoodle(
-                                RiksaDoodleKind.sparkle,
-                                size: 14,
-                                color: AppColors.lime,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.notifications_none_rounded,
+                              color: Color(0xFFFFEFF0),
+                              size: 15,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: DefaultTextStyle.merge(
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                child: Text(
+                                  lesson.durationMinutes != null
+                                      ? '${lesson.durationMinutes} minutes'
+                                      : lesson.categoryName,
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: const Color(0xFFFFF7F7),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                lesson.title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: RiksaTypography.bodyStyleFor(
-                                  lesson.title,
-                                  theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                lesson.categoryName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: RiksaTypography.bodyStyleFor(
-                                  lesson.categoryName,
-                                  theme.textTheme.bodySmall?.copyWith(
-                                    color: palette.inkMuted,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: palette.brandSoft,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 18,
-                            color: palette.brand,
-                          ),
-                        ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: AppRadii.fullBorder,
-                            child: LinearProgressIndicator(
-                              value: subject.fraction,
-                              minHeight: 5,
-                              color: AppColors.progressGreen,
-                              backgroundColor: palette.surfaceRaised,
-                            ),
-                          ),
-                        ),
-                        if (total > 0) ...[
-                          const SizedBox(width: 10),
-                          Text(
-                            '$done/$total',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: palette.inkMuted,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(width: 12),
-                        FilledButton(
-                          onPressed: () => context.push('/learn/resume'),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size(0, 36),
-                            padding: const EdgeInsets.symmetric(horizontal: 18),
-                            textStyle: theme.textTheme.labelMedium,
-                          ),
-                          child: Text(l10n.continueLabel),
-                        ),
-                      ],
+                  ),
+                  Positioned(
+                    right: 10,
+                    bottom: -3,
+                    child: IgnorePointer(
+                      child: _TodaysLearningBooksImage(
+                        width: 112,
+                        fit: BoxFit.contain,
+                        alignment: Alignment.bottomRight,
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _TodaysLearningBooksImage extends StatelessWidget {
+  const _TodaysLearningBooksImage({
+    this.width,
+    this.fit,
+    this.alignment = Alignment.center,
+  });
+
+  static const _assetPath =
+      'assets/images/lessonsCard/todays-learning-books-3d.png';
+
+  final double? width;
+  final BoxFit? fit;
+  final AlignmentGeometry alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    if (kIsWeb) {
+      return Image.network(
+        '$_assetPath?v=riksa-todays-learning-books-1',
+        width: width,
+        fit: fit,
+        alignment: alignment,
+      );
+    }
+
+    return Image.asset(
+      _assetPath,
+      width: width,
+      fit: fit,
+      alignment: alignment,
     );
   }
 }

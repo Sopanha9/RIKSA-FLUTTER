@@ -328,6 +328,82 @@ void main() {
     expect(find.text('community-composer'), findsNothing);
   });
 
+  testWidgets(
+    'the scroll pencil opens the community create sheet in the shell',
+    (tester) async {
+      tester.view.physicalSize = const Size(430, 932);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final router = GoRouter(
+        initialLocation: '/home',
+        routes: [
+          StatefulShellRoute.indexedStack(
+            builder: (context, state, navigationShell) =>
+                AppShell(navigationShell: navigationShell),
+            branches: [
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: '/home',
+                    builder: (_, _) => const SocialFeedScreen(),
+                  ),
+                  GoRoute(
+                    path: '/community/create',
+                    builder: (_, _) =>
+                        const Scaffold(body: Text('community-composer')),
+                  ),
+                  GoRoute(
+                    path: '/blog/create',
+                    builder: (_, _) =>
+                        const Scaffold(body: Text('blog-composer')),
+                  ),
+                ],
+              ),
+              _stubBranch('/learn', 'learn'),
+              _stubBranch('/ai', 'ai'),
+              _stubBranch('/leaderboard', 'leaderboard'),
+              _stubBranch('/profile', 'profile'),
+            ],
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith(_SignedInAuth.new),
+            socialFeedProvider.overrideWith(_FeedNotifier.new),
+            blogFeedProvider.overrideWith(_BlogNotifier.new),
+            communityStreakProvider.overrideWith(
+              (ref) async => const CommunityStreak(current: 7, highest: 12),
+            ),
+          ],
+          child: MaterialApp.router(
+            theme: AppTheme.light,
+            routerConfig: router,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('km')],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -260));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('create-community-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Create in Community'), findsOneWidget);
+    },
+  );
+
   testWidgets('the blog tab points authors at their own articles', (
     tester,
   ) async {
@@ -477,5 +553,15 @@ void main() {
     expect(find.byKey(const ValueKey('profile-drawer')), findsOneWidget);
     expect(find.text('Sokha Chan'), findsOneWidget);
   });
+}
 
+StatefulShellBranch _stubBranch(String path, String label) {
+  return StatefulShellBranch(
+    routes: [
+      GoRoute(
+        path: path,
+        builder: (_, _) => Scaffold(body: Text(label)),
+      ),
+    ],
+  );
 }

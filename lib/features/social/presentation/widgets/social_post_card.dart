@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -65,8 +66,9 @@ class SocialPostCard extends StatelessWidget {
                       ))
               : SocialPalette.surface(context),
           elevation: 0,
-          shape: const RoundedRectangleBorder(
+          shape: RoundedRectangleBorder(
             borderRadius: AppRadii.largeBorder,
+            side: BorderSide(color: context.riksa.outline),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
@@ -88,10 +90,10 @@ class SocialPostCard extends StatelessWidget {
                     style: RiksaTypography.bodyStyleFor(
                       post.title,
                       theme.textTheme.titleLarge?.copyWith(
-                        fontSize: 20,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        height: 1.28,
-                        letterSpacing: -.35,
+                        height: 1.35,
+                        letterSpacing: 0,
                         color: SocialPalette.text(context),
                       ),
                     ),
@@ -105,8 +107,9 @@ class SocialPostCard extends StatelessWidget {
                       style: RiksaTypography.bodyStyleFor(
                         post.plainTextPreview,
                         theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: 15,
                           color: SocialPalette.muted(context),
-                          height: 1.65,
+                          height: 1.42,
                         ),
                       ),
                     ),
@@ -146,7 +149,7 @@ class SocialPostCard extends StatelessWidget {
                       const SizedBox(width: 10),
                       _LightAction(
                         key: ValueKey('comment-${post.id}'),
-                        icon: Icons.mode_comment_outlined,
+                        icon: CupertinoIcons.chat_bubble,
                         count: post.commentCount,
                         semanticLabel: l10n.socialCommentLabel(
                           post.commentCount,
@@ -156,7 +159,7 @@ class SocialPostCard extends StatelessWidget {
                       const Spacer(),
                       _LightAction(
                         key: ValueKey('share-${post.id}'),
-                        icon: Icons.ios_share_rounded,
+                        icon: Icons.share_rounded,
                         count: post.shareCount,
                         semanticLabel: l10n.socialShareLabel(post.shareCount),
                         onPressed: onShare,
@@ -232,7 +235,7 @@ class _PostMetadata extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.labelLarge?.copyWith(
                             color: SocialPalette.text(context),
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -251,9 +254,9 @@ class _PostMetadata extends StatelessWidget {
                     TextSpan(
                       text: categoryPrefix(post.category),
                       style: TextStyle(
-                        color: SocialPalette.pink(context),
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -.2,
+                        color: SocialPalette.text(context),
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0,
                       ),
                     ),
                     TextSpan(
@@ -310,7 +313,7 @@ class _OfficialBadge extends StatelessWidget {
             style: theme.textTheme.labelSmall?.copyWith(
               color: SocialPalette.aubergine(context),
               fontSize: 10,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
               height: 1,
             ),
           ),
@@ -477,9 +480,7 @@ class _PrimaryReactionButton extends StatelessWidget {
       label: semanticLabel,
       excludeSemantics: true,
       child: Material(
-        color: isSelected
-            ? SocialPalette.pinkSoft(context)
-            : Colors.transparent,
+        color: Colors.transparent,
         borderRadius: AppRadii.fullBorder,
         child: InkWell(
           borderRadius: AppRadii.fullBorder,
@@ -493,21 +494,21 @@ class _PrimaryReactionButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  isSelected ? Icons.thumb_up_rounded : Icons.thumb_up_outlined,
+                  isSelected
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
                   size: 17,
-                  color: isSelected
-                      ? SocialPalette.pink(context)
-                      : SocialPalette.muted(context),
+                  color: isSelected ? Colors.red : SocialPalette.muted(context),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   _compactCount(count),
                   style: TextStyle(
                     color: isSelected
-                        ? SocialPalette.aubergine(context)
+                        ? Colors.red
                         : SocialPalette.muted(context),
                     fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w600,
                   ),
                 ),
               ],

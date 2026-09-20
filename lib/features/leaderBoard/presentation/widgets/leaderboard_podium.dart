@@ -261,8 +261,8 @@ class _PodiumColumn extends StatelessWidget {
                   style: TextStyle(
                     color: palette.ink,
                     fontSize: isWinner ? 13 : 12,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -.2,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0,
                   ),
                 ),
               ),
@@ -305,7 +305,7 @@ class _PodiumColumn extends StatelessWidget {
                                   : context.riksa.brandStrong)
                             : palette.ink,
                         fontSize: 11,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -334,7 +334,7 @@ class _PodiumColumn extends StatelessWidget {
                         : 'You',
                     style: TextStyle(
                       fontSize: 9.5,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                       color: context.riksa.brand,
                     ),
                   ),
@@ -374,7 +374,7 @@ class _PodiumColumn extends StatelessWidget {
                           '${row.rank}',
                           style: TextStyle(
                             fontSize: isWinner ? 46 : 34,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             color: pillarTextColor.withValues(alpha: 0.35),
                             fontFamily: RiksaTypography.latinFamily,
                             height: 1.0,
@@ -475,7 +475,7 @@ class _RankMedalBadge extends StatelessWidget {
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 11.5,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   fontFamily: RiksaTypography.latinFamily,
                   height: 1.0,
                 ),
@@ -577,8 +577,8 @@ class _EmptyPodium extends StatelessWidget {
             style: TextStyle(
               color: isDark ? context.riksa.ink : AppColors.editorialAubergine,
               fontSize: 16,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -.2,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 6),

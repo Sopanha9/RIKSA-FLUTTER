@@ -253,7 +253,7 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
                 style: RiksaTypography.bodyStyleFor(
                   post.title,
                   theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -333,10 +333,10 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
                         style: RiksaTypography.titleStyleFor(
                           post.title,
                           theme.textTheme.displaySmall?.copyWith(
-                            fontSize: 30 * _textScale,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 26 * _textScale,
+                            fontWeight: FontWeight.w600,
                             height: 1.18,
-                            letterSpacing: -.6,
+                            letterSpacing: 0,
                             color: palette.ink,
                           ),
                         ),
@@ -529,7 +529,7 @@ class _AuthorHeader extends StatelessWidget {
                         style: RiksaTypography.bodyStyleFor(
                           name,
                           theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),

@@ -357,18 +357,8 @@ void main() {
 }
 
 Future<void> _loadFonts() async {
-  final poppins = FontLoader(RiksaTypography.latinFamily);
-  for (final name in [
-    'Light',
-    'Regular',
-    'Medium',
-    'SemiBold',
-    'Bold',
-    'ExtraBold',
-    'Black',
-  ]) {
-    poppins.addFont(rootBundle.load('assets/fonts/Poppins-$name.ttf'));
-  }
+  final redditSans = FontLoader(RiksaTypography.latinFamily)
+    ..addFont(rootBundle.load('assets/fonts/RedditSans-Variable.ttf'));
   final khmer = FontLoader(RiksaTypography.khmerFamily)
     ..addFont(rootBundle.load('assets/fonts/NotoSansKhmer-Variable.ttf'));
   final configuredRoot = Platform.environment['FLUTTER_ROOT'];
@@ -382,7 +372,7 @@ Future<void> _loadFonts() async {
         'MaterialIcons-Regular.otf',
       ).readAsBytes().then(ByteData.sublistView),
     );
-  await Future.wait([poppins.load(), khmer.load(), materialIcons.load()]);
+  await Future.wait([redditSans.load(), khmer.load(), materialIcons.load()]);
 }
 
 SocialFeedPage _page(List<SocialPost> posts) =>

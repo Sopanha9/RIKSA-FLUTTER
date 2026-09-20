@@ -490,7 +490,7 @@
   "splashDescription": "ដៃគូសិក្សា STEM ថ្នាក់ទី១២ របស់អ្នក ដើម្បីកម្ពុជាដ៏ភ្លឺស្វាង។",
   "skipLabel": "រំលង",
   "nextLabel": "បន្ទាប់",
-  "homeGreeting": "សួស្តី {name}! 👋",
+  "homeGreeting": "សួស្តី {name}!",
   "homeSubtitle": "បន្តទៀត! ចំណេះដឹងកសាងអនាគតរបស់អ្នក។",
   "homeSearchHint": "ស្វែងរកការបង្ហោះ ប្រធានបទ ឬមេរៀន...",
   "homeLessons": "មេរៀន",

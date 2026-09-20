@@ -131,7 +131,7 @@ class BlogAuthorMetaLine extends StatelessWidget {
             style: RiksaTypography.bodyStyleFor(
               name,
               theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
                 color: palette.ink,
               ),
             ),
@@ -324,8 +324,8 @@ class BlogTopBar extends StatelessWidget {
                 style: RiksaTypography.bodyStyleFor(
                   title,
                   Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -.3,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0,
                   ),
                 ),
               ),
@@ -579,8 +579,8 @@ class BlogNotice extends StatelessWidget {
                 style: RiksaTypography.titleStyleFor(
                   title,
                   theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -.4,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0,
                   ),
                 ),
               ),
@@ -678,25 +678,25 @@ MarkdownStyleSheet blogMarkdownStyleSheet(
   final paragraph = blogStyle(
     theme.textTheme.bodyLarge?.copyWith(
       color: palette.ink,
-      fontSize: 17 * textScale,
+      fontSize: 15 * textScale,
       height: 1.75,
     ),
   );
   final heading = blogStyle(
     theme.textTheme.titleLarge?.copyWith(
       color: palette.ink,
-      fontWeight: FontWeight.w800,
+      fontWeight: FontWeight.w600,
       height: hasKhmer ? 1.5 : 1.35,
-      letterSpacing: -.3,
+      letterSpacing: 0,
     ),
   );
 
   return MarkdownStyleSheet.fromTheme(theme).copyWith(
     p: paragraph,
     pPadding: const EdgeInsets.only(bottom: 6),
-    h1: heading.copyWith(fontSize: 24 * textScale),
-    h2: heading.copyWith(fontSize: 21 * textScale),
-    h3: heading.copyWith(fontSize: 19 * textScale),
+    h1: heading.copyWith(fontSize: 21 * textScale),
+    h2: heading.copyWith(fontSize: 19 * textScale),
+    h3: heading.copyWith(fontSize: 17 * textScale),
     h1Padding: const EdgeInsets.only(top: 14, bottom: 6),
     h2Padding: const EdgeInsets.only(top: 12, bottom: 5),
     h3Padding: const EdgeInsets.only(top: 10, bottom: 4),
@@ -705,7 +705,7 @@ MarkdownStyleSheet blogMarkdownStyleSheet(
     code: blogStyle(
       theme.textTheme.bodyMedium?.copyWith(
         color: palette.ink,
-        fontSize: 14 * textScale,
+        fontSize: 13 * textScale,
         backgroundColor: palette.surfaceRaised,
       ),
     ),

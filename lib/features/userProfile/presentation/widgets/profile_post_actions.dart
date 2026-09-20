@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -31,54 +33,116 @@ class ProfileComposerPrompt extends StatelessWidget {
     return Semantics(
       button: true,
       label: l10n.profileComposerPrompt,
-      child: Material(
-        color: ProfilePalette.panelSoft(context),
+      child: ClipRRect(
         borderRadius: AppRadii.fullBorder,
-        child: InkWell(
-          key: const ValueKey('profile-create-post'),
-          onTap: onTap,
-          borderRadius: AppRadii.fullBorder,
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 56),
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-            child: Row(
-              children: [
-                RiksaProfileAvatar(
-                  user: user,
-                  radius: 19,
-                  avatarPath: avatarPath,
-                  borderColor: ProfilePalette.border(context),
-                  ringColor: ProfilePalette.panel(context),
-                  frameTier: frameTier,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Material(
+            color: ProfilePalette.panelSoft(context).withValues(alpha: 0.6),
+            borderRadius: AppRadii.fullBorder,
+            child: InkWell(
+              key: const ValueKey('profile-create-post'),
+              onTap: onTap,
+              borderRadius: AppRadii.fullBorder,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 56),
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+                child: Row(
+                  children: [
+                    RiksaProfileAvatar(
+                      user: user,
+                      radius: 19,
+                      avatarPath: avatarPath,
+                      borderColor: ProfilePalette.border(context),
+                      ringColor: ProfilePalette.panel(context),
+                      frameTier: frameTier,
+                    ),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Text(
+                        l10n.profileComposerPrompt,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: ProfilePalette.muted(context),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _ProfileGlassActionCircle(
+                      icon: Icons.add_rounded,
+                      color: ProfilePalette.aubergine(context),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: Text(
-                    l10n.profileComposerPrompt,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: ProfilePalette.muted(context),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileGlassActionCircle extends StatelessWidget {
+  const _ProfileGlassActionCircle({required this.icon, required this.color});
+
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final outerFill = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.58);
+    final innerFill = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.54);
+    final border = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.72);
+
+    return SizedBox.square(
+      dimension: 40,
+      child: DecoratedBox(
+        decoration: ShapeDecoration(
+          color: outerFill,
+          shape: CircleBorder(side: BorderSide(color: border)),
+          shadows: [
+            BoxShadow(
+              color: palette.ink.withValues(alpha: isDark ? 0.18 : 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: ClipOval(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: DecoratedBox(
+                decoration: ShapeDecoration(
+                  color: innerFill,
+                  shape: CircleBorder(
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.36),
                     ),
                   ),
+                  shadows: [
+                    BoxShadow(
+                      color: palette.ink.withValues(alpha: 0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: ProfilePalette.aubergine(context),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.add_rounded,
-                    size: 21,
-                    color: ProfilePalette.onAubergine(context),
-                  ),
-                ),
-              ],
+                child: Icon(icon, size: 22, color: color),
+              ),
             ),
           ),
         ),
@@ -106,7 +170,7 @@ class ProfilePostsSummary extends StatelessWidget {
         style: TextStyle(
           color: ProfilePalette.muted(context),
           fontSize: 12.5,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w600,
           letterSpacing: .2,
         ),
       ),
@@ -130,10 +194,9 @@ class ProfilePostsEmpty extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14),
         child: Column(
           children: [
-            Icon(
-              Icons.forum_outlined,
+            ProfilePostsEmptyPixelIcon(
               color: ProfilePalette.green(context),
-              size: 34,
+              accent: ProfilePalette.aubergine(context),
             ),
             const SizedBox(height: 10),
             Text(
@@ -142,30 +205,208 @@ class ProfilePostsEmpty extends StatelessWidget {
               style: TextStyle(color: ProfilePalette.muted(context)),
             ),
             const SizedBox(height: 14),
-            FilledButton.icon(
+            _ProfileEmptyCreateButton(
               key: const ValueKey('profile-empty-create-post'),
-              onPressed: onCreate,
-              style: FilledButton.styleFrom(
-                backgroundColor: ProfilePalette.aubergine(context),
-                foregroundColor: ProfilePalette.onAubergine(context),
-                minimumSize: const Size(0, 46),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: AppRadii.fullBorder,
-                ),
-              ),
-              icon: const Icon(Icons.edit_note_rounded, size: 20),
-              label: Text(
-                l10n.writeFirstPost,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
+              label: l10n.writeFirstPost,
+              onTap: onCreate,
             ),
           ],
         ),
       ),
     );
   }
+}
+
+class _ProfileEmptyCreateButton extends StatelessWidget {
+  const _ProfileEmptyCreateButton({
+    super.key,
+    required this.label,
+    required this.onTap,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final glassFill = isDark
+        ? palette.surface.withValues(alpha: 0.46)
+        : Colors.white.withValues(alpha: 0.58);
+    final glassBorder = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.72);
+    final selectedFill = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.54);
+
+    return Semantics(
+      button: true,
+      label: label,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: AppRadii.fullBorder,
+          boxShadow: [
+            BoxShadow(
+              color: palette.ink.withValues(alpha: isDark ? 0.18 : 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: AppRadii.fullBorder,
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: Container(
+              width: 240,
+              height: 46,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: glassFill,
+                borderRadius: AppRadii.fullBorder,
+                border: Border.all(color: glassBorder),
+              ),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: selectedFill,
+                  borderRadius: AppRadii.fullBorder,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.36),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: palette.ink.withValues(alpha: 0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: AppRadii.fullBorder,
+                  child: InkWell(
+                    borderRadius: AppRadii.fullBorder,
+                    onTap: onTap,
+                    child: Center(
+                      child: Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: RiksaTypography.bodyStyleFor(
+                          label,
+                          Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: palette.brand,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ProfilePostsEmptyPixelIcon extends StatelessWidget {
+  const ProfilePostsEmptyPixelIcon({
+    super.key,
+    required this.color,
+    required this.accent,
+    this.size = 58,
+  });
+
+  final Color color;
+  final Color accent;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: size,
+    child: CustomPaint(
+      painter: _ProfilePostsEmptyPixelPainter(color: color, accent: accent),
+    ),
+  );
+}
+
+class _ProfilePostsEmptyPixelPainter extends CustomPainter {
+  const _ProfilePostsEmptyPixelPainter({
+    required this.color,
+    required this.accent,
+  });
+
+  final Color color;
+  final Color accent;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final unit = size.width / 20;
+    final outline = Paint()
+      ..color = Color.lerp(color, Colors.black, .24)!
+      ..style = PaintingStyle.fill;
+    final fill = Paint()
+      ..color = Colors.white.withValues(alpha: .9)
+      ..style = PaintingStyle.fill;
+    final shade = Paint()
+      ..color = color.withValues(alpha: .22)
+      ..style = PaintingStyle.fill;
+    final main = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final purple = Paint()
+      ..color = accent
+      ..style = PaintingStyle.fill;
+    final purpleSoft = Paint()
+      ..color = accent.withValues(alpha: .26)
+      ..style = PaintingStyle.fill;
+    final glow = Paint()
+      ..color = accent.withValues(alpha: .1)
+      ..style = PaintingStyle.fill;
+
+    void px(Paint paint, int x, int y, [int w = 1, int h = 1]) {
+      canvas.drawRect(
+        Rect.fromLTWH(x * unit, y * unit, w * unit, h * unit),
+        paint,
+      );
+    }
+
+    px(glow, 2, 3, 16, 14);
+    px(purpleSoft, 3, 4, 14, 12);
+
+    px(outline, 4, 3, 12, 1);
+    px(outline, 3, 4, 1, 10);
+    px(outline, 16, 4, 1, 9);
+    px(outline, 4, 13, 7, 1);
+    px(outline, 10, 14, 1, 2);
+    px(outline, 11, 15, 3, 1);
+    px(outline, 14, 13, 2, 1);
+
+    px(fill, 4, 4, 12, 9);
+    px(shade, 5, 5, 10, 1);
+    px(shade, 5, 11, 8, 1);
+    px(fill, 11, 13, 3, 2);
+
+    px(main, 6, 7, 8, 1);
+    px(main, 6, 9, 6, 1);
+    px(main, 6, 11, 4, 1);
+    px(purple, 13, 10, 1, 1);
+    px(purple, 14, 9, 1, 1);
+
+    px(outline, 2, 16, 3, 1);
+    px(outline, 15, 16, 3, 1);
+    px(main, 5, 17, 10, 1);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ProfilePostsEmptyPixelPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.accent != accent;
 }
 
 enum ProfilePostAction { edit, delete }
@@ -223,7 +464,7 @@ Future<ProfilePostAction?> showProfilePostActions(
                   style: TextStyle(
                     color: ProfilePalette.text(context),
                     fontSize: 15,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 12),

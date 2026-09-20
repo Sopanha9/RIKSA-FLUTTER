@@ -67,7 +67,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 color: Theme.of(context).brightness == Brightness.dark
                     ? ProfilePalette.text(context)
                     : ProfilePalette.aubergine(context),
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -500,7 +500,9 @@ class _PublicRank extends StatelessWidget {
       children: [
         if (rank!.countryRank != null)
           ProfileRankCard(
-            icon: Icons.public_rounded,
+            iconWidget: const ProfileRankPixelIcon(
+              kind: ProfileRankIconKind.country,
+            ),
             label: l10n.countryRank,
             rank: rank!.countryRank,
             unrankedLabel: l10n.unranked,
@@ -509,7 +511,9 @@ class _PublicRank extends StatelessWidget {
           const SizedBox(height: 12),
         if (rank!.provinceRank != null)
           ProfileRankCard(
-            icon: Icons.location_on_outlined,
+            iconWidget: const ProfileRankPixelIcon(
+              kind: ProfileRankIconKind.province,
+            ),
             label: l10n.provinceRank,
             rank: rank!.provinceRank,
             unrankedLabel: l10n.unranked,

@@ -15,12 +15,11 @@ import 'golden_fonts.dart';
 
 class _NewLearnerLocale extends LocaleNotifier {
   @override
-  LocaleState build() =>
-      const LocaleState(
-        locale: Locale('en'),
-        isReady: true,
-        hasSelection: false,
-      );
+  LocaleState build() => const LocaleState(
+    locale: Locale('en'),
+    isReady: true,
+    hasSelection: false,
+  );
 }
 
 class _SignedOut extends AuthNotifier {

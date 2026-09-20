@@ -333,9 +333,9 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
             style: RiksaTypography.titleStyleFor(
               _title,
               theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
                 height: 1.25,
-                letterSpacing: -.4,
+                letterSpacing: 0,
                 color: palette.ink,
               ),
             ),
@@ -382,18 +382,18 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
           style: RiksaTypography.titleStyleFor(
             _titleCtrl.text,
             theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               height: 1.25,
-              letterSpacing: -.4,
+              letterSpacing: 0,
             ),
           ),
           decoration: _bareField(
             context,
             l10n.blogTitleHint,
             hintStyle: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               height: 1.25,
-              letterSpacing: -.4,
+              letterSpacing: 0,
               color: palette.inkFaint,
             ),
           ),
@@ -408,13 +408,13 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
           keyboardType: TextInputType.multiline,
           style: RiksaTypography.bodyStyleFor(
             _contentCtrl.text,
-            theme.textTheme.bodyLarge?.copyWith(fontSize: 17, height: 1.7),
+            theme.textTheme.bodyLarge?.copyWith(fontSize: 15, height: 1.6),
           ),
           decoration: _bareField(
             context,
             l10n.blogBodyHint,
             hintStyle: theme.textTheme.bodyLarge?.copyWith(
-              fontSize: 17,
+              fontSize: 15,
               height: 1.7,
               color: palette.inkFaint,
             ),
@@ -691,7 +691,7 @@ class _TopicSheet extends StatelessWidget {
             child: Text(
               'Choose a topic',
               style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -708,7 +708,7 @@ class _TopicSheet extends StatelessWidget {
                   title: Text(
                     category.name,
                     style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w600,
                     ),
                   ),
                   subtitle: category.description == null

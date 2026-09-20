@@ -1608,7 +1608,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String homeGreeting(String name) {
-    return 'Hello, $name! 👋';
+    return 'Hello, $name!';
   }
 
   @override

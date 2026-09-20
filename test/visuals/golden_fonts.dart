@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 
-/// Loads the app's real fonts, every Poppins weight included, so goldens show
+/// Loads the app's real fonts, Reddit Sans included, so goldens show
 /// the hierarchy the device shows.
 Future<void> loadRiksaGoldenFonts() async {
   final flutterRoot =
@@ -14,19 +14,9 @@ Future<void> loadRiksaGoldenFonts() async {
         ).readAsBytes().then(ByteData.sublistView),
       ))
       .load();
-  final poppins = FontLoader('Poppins');
-  for (final weight in [
-    'Light',
-    'Regular',
-    'Medium',
-    'SemiBold',
-    'Bold',
-    'ExtraBold',
-    'Black',
-  ]) {
-    poppins.addFont(rootBundle.load('assets/fonts/Poppins-$weight.ttf'));
-  }
-  await poppins.load();
+  final redditSans = FontLoader('Reddit Sans')
+    ..addFont(rootBundle.load('assets/fonts/RedditSans-Variable.ttf'));
+  await redditSans.load();
   for (final entry in {
     'Kantumruy Pro': 'assets/fonts/KantumruyPro-Variable.ttf',
     'Khmer OS Siemreap': 'assets/fonts/KhmerOS_siemreap.ttf',

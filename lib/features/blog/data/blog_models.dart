@@ -1,6 +1,8 @@
 /// Blog data models for the Riksa API. See docs/BLOG_API.md.
 library;
 
+import '../../social/data/social_models.dart';
+
 enum BlogStatus {
   pending,
   approved,
@@ -29,6 +31,7 @@ class BlogPost {
     required this.liked,
     required this.createdAt,
     required this.updatedAt,
+    this.author,
   });
 
   final String id;
@@ -44,6 +47,7 @@ class BlogPost {
   final bool liked;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final SocialAuthor? author;
 
   bool get hasCover => coverUrl != null && coverUrl!.isNotEmpty;
 
@@ -71,6 +75,9 @@ class BlogPost {
     updatedAt:
         DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
         DateTime.now(),
+    author: json['author'] != null
+        ? SocialAuthor.fromJson(json['author'] as Map<String, dynamic>)
+        : null,
   );
 }
 

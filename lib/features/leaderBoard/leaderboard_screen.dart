@@ -208,8 +208,8 @@ class _TopHeader extends StatelessWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0,
           ),
         ),
         Container(
@@ -530,7 +530,7 @@ class _PodiumCard extends StatelessWidget {
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -552,7 +552,7 @@ class _PodiumCard extends StatelessWidget {
                   style: TextStyle(
                     color: palette.ink,
                     fontSize: 13,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -593,7 +593,7 @@ class _PodiumCard extends StatelessWidget {
                         ? AppColors.ink
                         : (isDark ? palette.ink : Colors.white),
                     fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -705,7 +705,7 @@ class _RankingsSheet extends StatelessWidget {
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 19,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               if (listRows.isNotEmpty)
@@ -818,7 +818,7 @@ class _RankingListRow extends StatelessWidget {
                   '#$rank',
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                     color: isCurrentUser
                         ? AppColors.editorialPink
                         : const Color(0xFF70695E),
@@ -866,7 +866,7 @@ class _RankingListRow extends StatelessWidget {
                             style: const TextStyle(
                               color: Color(0xFF121212),
                               fontSize: 14,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -886,7 +886,7 @@ class _RankingListRow extends StatelessWidget {
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 9,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w600,
                                 letterSpacing: 0.4,
                               ),
                             ),
@@ -925,7 +925,7 @@ class _RankingListRow extends StatelessWidget {
                   style: TextStyle(
                     color: isCurrentUser ? AppColors.ink : Colors.white,
                     fontSize: 11,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -1014,7 +1014,7 @@ class _RankGapIndicator extends StatelessWidget {
           style: TextStyle(
             color: Color(0xFF70695E),
             fontSize: 14,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             letterSpacing: 4,
           ),
         ),

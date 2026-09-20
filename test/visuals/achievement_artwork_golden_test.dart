@@ -13,7 +13,7 @@ import 'package:riksa_app/features/userProfile/presentation/widgets/profile_ui.d
 void main() {
   setUpAll(() async {
     for (final entry in {
-      'Poppins': 'assets/fonts/Poppins-Regular.ttf',
+      'Reddit Sans': 'assets/fonts/RedditSans-Variable.ttf',
       'Kantumruy Pro': 'assets/fonts/KantumruyPro-Variable.ttf',
     }.entries) {
       await (FontLoader(entry.key)..addFont(

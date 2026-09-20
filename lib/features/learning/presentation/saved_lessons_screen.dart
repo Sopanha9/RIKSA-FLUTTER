@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -77,6 +79,12 @@ class _SavedLessonsScreenState extends ConsumerState<SavedLessonsScreen> {
       backgroundColor: palette.canvas,
       appBar: AppBar(
         backgroundColor: palette.canvas,
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          style: IconButton.styleFrom(backgroundColor: Colors.transparent),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         titleSpacing: 0,
         title: Text(
           title,
@@ -194,29 +202,60 @@ class _SubjectChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fill = selected
+        ? palette.brand.withValues(alpha: isDark ? 0.44 : 0.84)
+        : isDark
+        ? palette.surface.withValues(alpha: 0.34)
+        : Colors.white.withValues(alpha: 0.46);
+    final border = selected
+        ? Colors.white.withValues(alpha: isDark ? 0.18 : 0.72)
+        : Colors.white.withValues(alpha: isDark ? 0.10 : 0.58);
+    final textColor = selected ? palette.onBrand : palette.inkMuted;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Semantics(
         button: true,
         selected: selected,
-        child: InkWell(
-          onTap: onTap,
+        child: ClipRRect(
           borderRadius: AppRadii.fullBorder,
-          child: AnimatedContainer(
-            duration: RiksaMotion.resolve(context, RiksaMotion.fast),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: selected ? palette.brand : Colors.transparent,
-              borderRadius: AppRadii.fullBorder,
-            ),
-            child: Text(
-              label,
-              style: RiksaTypography.bodyStyleFor(
-                label,
-                Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: selected ? palette.onBrand : palette.inkMuted,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: AppRadii.fullBorder,
+                child: AnimatedContainer(
+                  duration: RiksaMotion.resolve(context, RiksaMotion.fast),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: fill,
+                    borderRadius: AppRadii.fullBorder,
+                    border: Border.all(color: border),
+                    boxShadow: [
+                      if (selected)
+                        BoxShadow(
+                          color: palette.brand.withValues(alpha: 0.18),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                        ),
+                    ],
+                  ),
+                  child: Text(
+                    label,
+                    style: RiksaTypography.bodyStyleFor(
+                      label,
+                      Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: textColor,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -257,7 +296,7 @@ class _SavedLessonRow extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(10, 10, 4, 10),
           child: Row(
             children: [
-              StemSubjectTile(subject: subject, size: 56),
+              SubjectPixelArtwork(subject: subject, size: 56),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(

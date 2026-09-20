@@ -41,7 +41,7 @@ class RankingsSheet extends StatelessWidget {
                 color: isDark ? context.riksa.ink : AppColors.editorialInk,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                letterSpacing: -.3,
+                letterSpacing: 0,
               ),
             ),
             if ((totalCount ?? listRows.length) > 0)

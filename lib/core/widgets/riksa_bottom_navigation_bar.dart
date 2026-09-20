@@ -17,10 +17,12 @@ class RiksaBottomNavigationBar extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.onSelected,
+    this.isExpanded = true,
   }) : assert(currentIndex >= 0 && currentIndex < 5);
 
   final int currentIndex;
   final ValueChanged<int> onSelected;
+  final bool isExpanded;
 
   static const int aiTutorIndex = 2;
   static const double _height = 60;
@@ -46,14 +48,7 @@ class RiksaBottomNavigationBar extends StatelessWidget {
           activeIcon: Icons.auto_stories_rounded,
         ),
       ),
-      (
-        3,
-        _RiksaNavigationItem(
-          label: l10n.ranksTab,
-          icon: Icons.leaderboard_outlined,
-          activeIcon: Icons.leaderboard_rounded,
-        ),
-      ),
+
       (
         4,
         _RiksaNavigationItem(
@@ -64,26 +59,26 @@ class RiksaBottomNavigationBar extends StatelessWidget {
       ),
     ];
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final glassGradient = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        Colors.white.withValues(alpha: 0.3),
-        Colors.black.withValues(alpha: 0.1),
-      ],
-    );
-    final glassBorder = Colors.white.withValues(alpha: 0.3);
+    final glassFill = isDark
+        ? palette.surface.withValues(alpha: 0.46)
+        : Colors.white.withValues(alpha: 0.58);
+    final glassBorder = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.72);
     final shadow = BoxShadow(
-      color: Colors.black.withValues(alpha: isDark ? .34 : .12),
-      blurRadius: 26,
-      offset: const Offset(0, 10),
+      color: palette.ink.withValues(alpha: isDark ? .18 : .08),
+      blurRadius: 18,
+      offset: const Offset(0, 8),
     );
 
-    // Labels grow with the learner's text size, but only so far: past that
-    // the fixed-height pill would have to shrink them again anyway.
-    return MediaQuery.withClampedTextScaling(
+    final activeTabIcon = currentIndex == aiTutorIndex
+        ? Icons.auto_awesome_rounded
+        : tabs.firstWhere((t) => t.$1 == currentIndex).$2.activeIcon;
+
+    final fullBar = MediaQuery.withClampedTextScaling(
       maxScaleFactor: 1.3,
       child: SafeArea(
+        key: const ValueKey('full-bottom-nav-bar'),
         top: false,
         minimum: const EdgeInsets.fromLTRB(16, 6, 16, 12),
         child: Row(
@@ -92,12 +87,14 @@ class RiksaBottomNavigationBar extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: AppRadii.fullBorder,
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
                   child: Container(
                     key: const ValueKey('bottom-nav-surface'),
                     decoration: ShapeDecoration(
-                      gradient: glassGradient,
-                      shape: StadiumBorder(side: BorderSide(color: glassBorder)),
+                      color: glassFill,
+                      shape: StadiumBorder(
+                        side: BorderSide(color: glassBorder),
+                      ),
                       shadows: [shadow],
                     ),
                     clipBehavior: Clip.antiAlias,
@@ -119,12 +116,92 @@ class RiksaBottomNavigationBar extends StatelessWidget {
               selected: currentIndex == aiTutorIndex,
               shadow: shadow,
               glassBorder: glassBorder,
-              glassGradient: glassGradient,
+              glassFill: glassFill,
               onTap: () => onSelected(aiTutorIndex),
             ),
           ],
         ),
       ),
+    );
+
+    final collapsedFab = SafeArea(
+      key: const ValueKey('collapsed-bottom-nav-fab'),
+      top: false,
+      minimum: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+      child: Semantics(
+        label: 'Current Tab',
+        button: true,
+        child: Container(
+              width: RiksaBottomNavigationBar._height,
+              height: RiksaBottomNavigationBar._height,
+              decoration: ShapeDecoration(
+                shape: CircleBorder(side: BorderSide(color: glassBorder)),
+                shadows: [shadow],
+                color: glassFill,
+              ),
+              child: ClipOval(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : Colors.white.withValues(alpha: 0.54),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.36),
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        shape: const CircleBorder(),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () {},
+                          child: Center(
+                            child: Icon(
+                              activeTabIcon,
+                              color: palette.brand,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+    );
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
+        return Stack(
+          alignment: Alignment.bottomLeft,
+          children: <Widget>[
+            ...previousChildren,
+            if (currentChild != null) currentChild,
+          ],
+        );
+      },
+      transitionBuilder: (child, animation) {
+        final offsetAnimation = Tween<Offset>(
+          begin: const Offset(-1.0, 0.0),
+          end: Offset.zero,
+        ).animate(animation);
+
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(position: offsetAnimation, child: child),
+        );
+      },
+      child: isExpanded ? fullBar : collapsedFab,
     );
   }
 }
@@ -171,16 +248,18 @@ class _PillTabTrack extends StatelessWidget {
                   child: DecoratedBox(
                     key: const ValueKey('bottom-nav-selection-pill'),
                     decoration: ShapeDecoration(
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.white.withValues(alpha: 0.54),
                       shape: StadiumBorder(
                         side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.15),
+                          color: Colors.white.withValues(alpha: 0.36),
                         ),
                       ),
                       shadows: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: .06),
-                          blurRadius: 12,
+                          color: palette.ink.withValues(alpha: .06),
+                          blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
                       ],
@@ -224,7 +303,10 @@ class _PillTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? Colors.white : Colors.white.withValues(alpha: 0.7);
+    final palette = context.riksa;
+    final color = selected
+        ? palette.brand
+        : palette.inkMuted.withValues(alpha: 0.82);
     return Semantics(
       key: ValueKey('bottom-nav-destination-$index'),
       label: item.label,
@@ -288,12 +370,12 @@ class _PillTab extends StatelessWidget {
                         item.label,
                         TextStyle(
                           fontFamily: RiksaTypography.latinFamily,
-                          fontSize: 11,
-                          height: 1.25,
+                          fontSize: selected ? 11.2 : 10.8,
+                          height: 1.18,
                           color: color,
                           fontWeight: selected
                               ? FontWeight.w600
-                              : FontWeight.w500,
+                              : FontWeight.w400,
                         ),
                       )!,
                       child: Text(
@@ -322,7 +404,7 @@ class _AiTutorButton extends StatelessWidget {
     required this.selected,
     required this.shadow,
     required this.glassBorder,
-    required this.glassGradient,
+    required this.glassFill,
     required this.onTap,
   });
 
@@ -330,7 +412,7 @@ class _AiTutorButton extends StatelessWidget {
   final bool selected;
   final BoxShadow shadow;
   final Color glassBorder;
-  final Gradient glassGradient;
+  final Color glassFill;
   final VoidCallback onTap;
 
   @override
@@ -359,11 +441,11 @@ class _AiTutorButton extends StatelessWidget {
           decoration: ShapeDecoration(
             shape: CircleBorder(side: BorderSide(color: glassBorder)),
             shadows: [shadow],
-            gradient: glassGradient,
+            color: glassFill,
           ),
           child: ClipOval(
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+              filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
               child: Padding(
                 padding: const EdgeInsets.all(4),
                 child: AnimatedContainer(
@@ -371,9 +453,13 @@ class _AiTutorButton extends StatelessWidget {
                   curve: RiksaMotion.standardCurve,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: palette.brand,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.white.withValues(alpha: 0.54),
                     border: Border.all(
-                      color: selected ? AppColors.lime : Colors.transparent,
+                      color: selected
+                          ? AppColors.lime
+                          : Colors.white.withValues(alpha: 0.36),
                       width: 3,
                     ),
                   ),
@@ -383,10 +469,10 @@ class _AiTutorButton extends StatelessWidget {
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: onTap,
-                      child: const Center(
+                      child: Center(
                         child: Icon(
                           Icons.auto_awesome_rounded,
-                          color: Colors.white,
+                          color: palette.brand,
                           size: 24,
                         ),
                       ),

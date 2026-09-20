@@ -450,14 +450,14 @@ class RiksaMotion {
 class RiksaTypography {
   RiksaTypography._();
   static const latinFamily = 'Poppins';
-  static const khmerFamily = 'Noto Sans Khmer';
-  static const khmerTitleFamily = 'Koulen';
-  static const khmerLegacyBodyFamily = 'Kantumruy Pro';
+  static const legacyLatinFamily = 'Reddit Sans';
+  static const khmerFamily = 'Khmer OS Siemreap';
+  static const khmerTitleFamily = 'Khmer OS Siemreap';
+  static const khmerLegacyBodyFamily = 'Khmer OS Siemreap';
   static const khmerBodyFamily = 'Khmer OS Siemreap';
-  static const fallback = <String>[khmerFamily];
+  static const fallback = <String>[latinFamily, khmerBodyFamily];
   static const khmerTitleFallback = <String>[
     khmerBodyFamily,
-    khmerLegacyBodyFamily,
     khmerFamily,
     latinFamily,
   ];
@@ -485,30 +485,31 @@ class RiksaTypography {
     return style.copyWith(
       fontFamily: khmerBodyFamily,
       fontFamilyFallback: const [
-        khmerLegacyBodyFamily,
+        khmerBodyFamily,
         khmerFamily,
         latinFamily,
+        legacyLatinFamily,
       ],
       letterSpacing: 0,
     );
   }
 
   static TextTheme textTheme(Color ink, Color muted) => TextTheme(
-    displayLarge: _style(36, FontWeight.w700, ink, 1.12),
-    displayMedium: _style(32, FontWeight.w700, ink, 1.15),
-    displaySmall: _style(24, FontWeight.w600, ink, 1.18),
-    headlineLarge: _style(22, FontWeight.w600, ink, 1.22),
-    headlineMedium: _style(20, FontWeight.w600, ink, 1.25),
-    headlineSmall: _style(18, FontWeight.w600, ink, 1.27),
-    titleLarge: _style(16, FontWeight.w600, ink, 1.3),
-    titleMedium: _style(16, FontWeight.w600, ink, 1.35),
-    titleSmall: _style(15, FontWeight.w600, ink, 1.38),
-    bodyLarge: _style(16, FontWeight.w400, ink, 1.55),
-    bodyMedium: _style(14, FontWeight.w400, ink, 1.55),
-    bodySmall: _style(12, FontWeight.w400, muted, 1.5),
-    labelLarge: _style(14, FontWeight.w600, ink, 1.35),
-    labelMedium: _style(12, FontWeight.w600, ink, 1.35),
-    labelSmall: _style(11, FontWeight.w600, muted, 1.35),
+    displayLarge: _style(26, FontWeight.w600, ink, 32 / 26),
+    displayMedium: _style(24, FontWeight.w600, ink, 30 / 24),
+    displaySmall: _style(21, FontWeight.w600, ink, 27 / 21),
+    headlineLarge: _style(21, FontWeight.w600, ink, 27 / 21),
+    headlineMedium: _style(18, FontWeight.w600, ink, 24 / 18),
+    headlineSmall: _style(16, FontWeight.w600, ink, 22 / 16),
+    titleLarge: _style(17, FontWeight.w500, ink, 23 / 17),
+    titleMedium: _style(15, FontWeight.w500, ink, 21 / 15),
+    titleSmall: _style(14, FontWeight.w500, ink, 19 / 14),
+    bodyLarge: _style(15, FontWeight.w400, ink, 23 / 15),
+    bodyMedium: _style(13.5, FontWeight.w400, ink, 20 / 13.5),
+    bodySmall: _style(11.5, FontWeight.w400, muted, 17 / 11.5),
+    labelLarge: _style(13, FontWeight.w500, ink, 19 / 13),
+    labelMedium: _style(11.5, FontWeight.w500, ink, 16 / 11.5),
+    labelSmall: _style(10.5, FontWeight.w400, muted, 14 / 10.5),
   );
 
   static TextStyle _style(
@@ -523,6 +524,7 @@ class RiksaTypography {
     fontWeight: weight,
     color: color,
     height: height,
+    letterSpacing: 0,
   );
 }
 
@@ -543,6 +545,59 @@ class AppTheme {
 
   static ThemeData get light => _theme(Brightness.light, RiksaPalette.light);
   static ThemeData get dark => _theme(Brightness.dark, RiksaPalette.dark);
+
+  static ButtonStyle _glassPillButtonStyle({
+    required RiksaPalette palette,
+    required bool isDark,
+    required TextStyle? textStyle,
+    EdgeInsetsGeometry padding = const EdgeInsets.symmetric(
+      horizontal: RiksaSpacing.lg,
+    ),
+    Size minimumSize = const Size(0, 46),
+  }) {
+    final fill = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.54);
+    final border = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.72);
+    final disabledFill = palette.outline.withValues(alpha: isDark ? 0.18 : 0.5);
+    final pressedFill = isDark
+        ? Colors.white.withValues(alpha: 0.14)
+        : Colors.white.withValues(alpha: 0.72);
+
+    return ButtonStyle(
+      minimumSize: WidgetStateProperty.all(minimumSize),
+      padding: WidgetStateProperty.all(padding),
+      shape: WidgetStateProperty.all(const StadiumBorder()),
+      textStyle: WidgetStateProperty.all(textStyle),
+      elevation: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.disabled) ? 0 : 2,
+      ),
+      shadowColor: WidgetStateProperty.all(
+        palette.ink.withValues(alpha: isDark ? 0.18 : 0.08),
+      ),
+      surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
+      overlayColor: WidgetStateProperty.all(
+        palette.brand.withValues(alpha: isDark ? 0.14 : 0.08),
+      ),
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) return disabledFill;
+        if (states.contains(WidgetState.pressed)) return pressedFill;
+        return fill;
+      }),
+      foregroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) return palette.inkMuted;
+        return palette.brand;
+      }),
+      side: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return BorderSide(color: palette.outline.withValues(alpha: 0.6));
+        }
+        return BorderSide(color: border);
+      }),
+    );
+  }
 
   static ThemeData _theme(Brightness brightness, RiksaPalette palette) {
     final isDark = brightness == Brightness.dark;
@@ -618,6 +673,10 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         titleTextStyle: textTheme.titleLarge,
       ),
+      actionIconTheme: ActionIconThemeData(
+        backButtonIconBuilder: (BuildContext context) =>
+            const Icon(Icons.arrow_back_ios_new),
+      ),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
           minimumSize: const Size.square(48),
@@ -677,41 +736,41 @@ class AppTheme {
         hintStyle: textTheme.bodyMedium?.copyWith(color: palette.inkMuted),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: palette.brand,
-          foregroundColor: palette.onBrand,
-          disabledBackgroundColor: palette.outline,
-          disabledForegroundColor: palette.inkMuted,
-          minimumSize: const Size(0, 48),
-          padding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.lg),
-          shape: const StadiumBorder(),
-          textStyle: textTheme.labelLarge,
+        style: _glassPillButtonStyle(
+          palette: palette,
+          isDark: isDark,
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: palette.anchor,
-          foregroundColor: palette.onAnchor,
-          minimumSize: const Size(0, 48),
-          shape: const StadiumBorder(),
-          textStyle: textTheme.labelLarge,
-          elevation: 0,
+        style: _glassPillButtonStyle(
+          palette: palette,
+          isDark: isDark,
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          backgroundColor: palette.surface,
-          foregroundColor: palette.ink,
-          minimumSize: const Size(0, 48),
-          side: BorderSide(color: palette.outline),
-          shape: const StadiumBorder(),
-          textStyle: textTheme.labelLarge,
+        style: _glassPillButtonStyle(
+          palette: palette,
+          isDark: isDark,
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: palette.brand,
-          textStyle: textTheme.labelLarge,
+        style: _glassPillButtonStyle(
+          palette: palette,
+          isDark: isDark,
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.md),
+          minimumSize: const Size(0, 40),
         ),
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(

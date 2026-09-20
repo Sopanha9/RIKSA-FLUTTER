@@ -1,9 +1,12 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_shell.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/pixel_fire_icon.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -72,10 +75,12 @@ class _HomeBody extends ConsumerWidget {
       );
     }
 
+    final bottomNavClearance = MediaQuery.paddingOf(context).bottom + 24;
+
     return ListView(
       key: const PageStorageKey('learning-home-scroll'),
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      padding: EdgeInsets.fromLTRB(16, 4, 16, bottomNavClearance),
       children: [
         const _GreetingRow(),
         const SizedBox(height: RiksaSpacing.lg),
@@ -92,7 +97,7 @@ class _HomeBody extends ConsumerWidget {
           l10n.yourSubjects,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            letterSpacing: -.3,
+            letterSpacing: 0,
           ),
         ),
         const SizedBox(height: RiksaSpacing.sm),
@@ -169,7 +174,7 @@ class _GreetingRow extends ConsumerWidget {
                   name,
                   Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    letterSpacing: -.2,
+                    letterSpacing: 0,
                   ),
                 ),
               ),
@@ -210,32 +215,42 @@ class _StreakChip extends ConsumerWidget {
     final tone = statusTone(context, LearningStatus.current);
     return Semantics(
       label: l10n.streakDays(days),
-      child: Container(
+      child: ClipRRect(
         key: const ValueKey('learning-streak-chip'),
-        height: 36,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: tone.surface,
-          borderRadius: AppRadii.fullBorder,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.local_fire_department_rounded,
-              size: 16,
-              color: tone.accent,
+        borderRadius: AppRadii.fullBorder,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+          child: Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.56),
+              borderRadius: AppRadii.fullBorder,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+              boxShadow: [
+                BoxShadow(
+                  color: context.riksa.ink.withValues(alpha: 0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, 7),
+                ),
+              ],
             ),
-            const SizedBox(width: RiksaSpacing.xxs + 2),
-            Text(
-              '$days',
-              style: TextStyle(
-                color: tone.accent,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const PixelFireIcon(size: 16),
+                const SizedBox(width: RiksaSpacing.xxs + 2),
+                Text(
+                  '$days',
+                  style: TextStyle(
+                    color: tone.accent,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -369,130 +384,187 @@ class _ContinueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final tone = statusTone(context, LearningStatus.current);
+    final subjectIdentity = subjectTone(context, subject.subject);
+    final palette = context.riksa;
     final theme = Theme.of(context);
     final minutes = lesson.durationMinutes;
     final progress = lesson.progress ?? 0;
+    final actionLabel = progress > 0
+        ? l10n.lessonResumeAction
+        : l10n.lessonStartAction;
 
     return RiksaTapFeedback(
       child: Material(
-        color: tone.surface,
-        borderRadius: AppRadii.featureBorder,
+        color: palette.surface,
         clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadii.featureBorder,
+          side: BorderSide(color: palette.outline),
+        ),
         child: InkWell(
           key: ValueKey('continue-lesson-${lesson.id}'),
           onTap: onTap,
-          child: Stack(
-            children: [
-              PositionedDirectional(
-                top: -44,
-                end: -48,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: tone.accent.withValues(alpha: .13),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const SizedBox.square(dimension: 96),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      children: [
-                        StemSubjectTile(subject: subject.subject, size: 38),
-                        const SizedBox(width: RiksaSpacing.sm - 2),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                subject.category.name.toUpperCase(),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: tone.accent,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: .9,
-                                  fontSize: 10.5,
-                                ),
-                              ),
-                              Text(
-                                l10n.continueLearning,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: context.riksa.inkMuted,
-                                ),
-                              ),
-                            ],
+                    SubjectPixelArtwork(subject: subject.subject, size: 52),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            subject.category.name.toUpperCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: subjectIdentity.accent,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: .9,
+                              fontSize: 10,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: RiksaSpacing.md - 2),
-                    Text(
-                      lesson.title,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: RiksaTypography.titleStyleFor(
-                        lesson.title,
-                        theme.textTheme.headlineSmall?.copyWith(
-                          color: tone.ink,
-                          fontSize: 18,
-                          height: 1.16,
-                          letterSpacing: -.6,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        khmerHeight: 1.3,
+                          const SizedBox(height: 3),
+                          Text(
+                            lesson.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: RiksaTypography.titleStyleFor(
+                              lesson.title,
+                              theme.textTheme.titleSmall?.copyWith(
+                                color: palette.ink,
+                                fontWeight: FontWeight.w700,
+                                height: 1.2,
+                                letterSpacing: 0,
+                              ),
+                              khmerHeight: 1.35,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: RiksaSpacing.md - 2),
-                    Wrap(
-                      spacing: RiksaSpacing.xs - 1,
-                      runSpacing: RiksaSpacing.xs - 1,
-                      children: [
-                        if (minutes != null)
-                          LearningPill(
-                            icon: Icons.schedule_rounded,
-                            label: l10n.minutesShort(minutes),
-                            accent: tone.accent,
-                          ),
-                        if (lesson.baseXp > 0)
-                          LearningPill(
-                            icon: Icons.auto_awesome_rounded,
-                            label: l10n.xpRewardAmount(lesson.baseXp),
-                            accent: tone.accent,
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: RiksaSpacing.sm),
-                    LearningTrack(
-                      key: ValueKey('continue-progress-${lesson.id}'),
-                      value: progress,
-                      color: tone.accent,
-                      background: tone.accent.withValues(alpha: .22),
-                    ),
-                    const SizedBox(height: RiksaSpacing.md),
-                    LearningPrimaryButton(
-                      key: ValueKey('resume-lesson-${lesson.id}'),
-                      label: progress > 0
-                          ? l10n.lessonResumeAction
-                          : l10n.lessonStartAction,
-                      icon: Icons.arrow_forward_rounded,
-                      background: learningAnchor(context),
-                      foreground: onLearningAnchor(context),
-                      onPressed: onTap,
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    if (minutes != null) ...[
+                      _ContinueMetric(
+                        icon: Icons.schedule_rounded,
+                        label: l10n.minutesShort(minutes),
+                        accent: subjectIdentity.accent,
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    if (lesson.baseXp > 0)
+                      _ContinueMetric(
+                        icon: Icons.auto_awesome_rounded,
+                        label: l10n.xpRewardAmount(lesson.baseXp),
+                        accent: subjectIdentity.accent,
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                LearningTrack(
+                  key: ValueKey('continue-progress-${lesson.id}'),
+                  value: progress,
+                  color: subjectIdentity.accent,
+                  background: palette.surfaceRaised,
+                  height: 5,
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: FilledButton(
+                    key: ValueKey('resume-lesson-${lesson.id}'),
+                    onPressed: onTap,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                    ),
+                    child: Text(
+                      actionLabel,
+                      style: RiksaTypography.bodyStyleFor(
+                        actionLabel,
+                        const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ContinueMetric extends StatelessWidget {
+  const _ContinueMetric({
+    required this.icon,
+    required this.label,
+    required this.accent,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fill = isDark
+        ? palette.surface.withValues(alpha: .42)
+        : Colors.white.withValues(alpha: .58);
+    final border = isDark
+        ? Colors.white.withValues(alpha: .12)
+        : Colors.white.withValues(alpha: .72);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: AppRadii.fullBorder,
+        boxShadow: [
+          BoxShadow(
+            color: palette.ink.withValues(alpha: isDark ? .14 : .06),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: AppRadii.fullBorder,
+          border: Border.all(color: border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 13, color: accent),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: palette.ink,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -524,8 +596,8 @@ class _AllDoneCard extends StatelessWidget {
           Text(
             l10n.everySubjectFinished,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontSize: 22,
-              letterSpacing: -.5,
+              fontSize: 20,
+              letterSpacing: 0,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -575,7 +647,6 @@ class _SubjectTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.riksa;
-    final tone = subjectTone(context, subject.subject);
     final l10n = AppLocalizations.of(context)!;
     final name = subject.category.name;
     return Material(
@@ -592,13 +663,7 @@ class _SubjectTile extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              SizedBox.square(
-                dimension: 56,
-                child: _SubjectArtwork(
-                  subject: subject.subject,
-                  accent: tone.accent,
-                ),
-              ),
+              SubjectPixelArtwork(subject: subject.subject),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -670,18 +735,6 @@ String _subjectDescription(AppLocalizations l10n, StemSubject subject) =>
       StemSubject.technology => l10n.technologySubjectDescription,
       StemSubject.other => l10n.generalSubjectDescription,
     };
-
-class _SubjectArtwork extends StatelessWidget {
-  const _SubjectArtwork({required this.subject, required this.accent});
-  final StemSubject subject;
-  final Color accent;
-  @override
-  Widget build(BuildContext context) => StemSubjectTile(
-    key: ValueKey('subject-artwork-${subject.name}'),
-    subject: subject,
-    size: 56,
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Destination

@@ -50,7 +50,10 @@ void main() {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      FilledButton(onPressed: () {}, child: const Text('Log in')),
+                      FilledButton(
+                        onPressed: () {},
+                        child: const Text('Log in'),
+                      ),
                       const SizedBox(width: 12),
                       const RiksaIconTile(
                         icon: Icons.science_outlined,

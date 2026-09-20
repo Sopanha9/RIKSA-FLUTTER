@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -235,17 +237,28 @@ class ProfilePanel extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: ProfilePalette.panel(context),
-    shape: RoundedRectangleBorder(
-      borderRadius: AppRadii.mediumBorder,
-      side: ProfilePaletteScope.maybeOf(context) == null
-          ? BorderSide.none
-          : BorderSide(color: ProfilePalette.border(context)),
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: AppRadii.mediumBorder,
+    child: BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+      child: Material(
+        color: ProfilePalette.panel(context).withValues(alpha: 0.6),
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadii.mediumBorder,
+          side: ProfilePaletteScope.maybeOf(context) == null
+              ? BorderSide.none
+              : BorderSide(
+                  color: ProfilePalette.border(context).withValues(alpha: 0.5),
+                ),
+        ),
+        elevation: 0,
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: padding ?? const EdgeInsets.all(18),
+          child: child,
+        ),
+      ),
     ),
-    elevation: 0,
-    clipBehavior: Clip.antiAlias,
-    child: Padding(padding: padding ?? const EdgeInsets.all(18), child: child),
   );
 }
 
@@ -364,9 +377,9 @@ class ProfileIdentityHeader extends StatelessWidget {
                   displayName,
                   TextStyle(
                     color: ProfilePalette.text(context),
-                    fontSize: 22,
-                    letterSpacing: -.4,
-                    fontWeight: FontWeight.w900,
+                    fontSize: 20,
+                    letterSpacing: 0,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -458,7 +471,7 @@ class ProfileIdentityHeader extends StatelessWidget {
                       style: TextStyle(
                         color: ProfilePalette.text(context),
                         fontSize: 14,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -901,7 +914,7 @@ class _ProfileTabButton extends StatelessWidget {
                         : ProfilePalette.muted(context),
                     fontSize: 12.5,
                     height: 1.2,
-                    fontWeight: selected ? FontWeight.w900 : FontWeight.w600,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                   ),
                 ),
               ),
@@ -987,7 +1000,7 @@ class ProfileAchievementTile extends StatelessWidget {
                   style: TextStyle(
                     color: ProfilePalette.xp(context),
                     fontSize: 11,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -996,7 +1009,7 @@ class ProfileAchievementTile extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           name,
-          style: const TextStyle(fontWeight: FontWeight.w900, height: 1.2),
+          style: const TextStyle(fontWeight: FontWeight.w700, height: 1.2),
         ),
         const SizedBox(height: 5),
         Text(
@@ -1015,14 +1028,16 @@ class ProfileAchievementTile extends StatelessWidget {
 class ProfileRankCard extends StatelessWidget {
   const ProfileRankCard({
     super.key,
-    required this.icon,
     required this.label,
     required this.rank,
     required this.unrankedLabel,
+    this.icon,
+    this.iconWidget,
     this.trailing,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final Widget? iconWidget;
   final String label;
   final int? rank;
   final String unrankedLabel;
@@ -1039,7 +1054,11 @@ class ProfileRankCard extends StatelessWidget {
             color: ProfilePalette.greenSoft(context),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: ProfilePalette.green(context)),
+          child: Center(
+            child:
+                iconWidget ??
+                Icon(icon, color: ProfilePalette.green(context), size: 23),
+          ),
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -1050,15 +1069,21 @@ class ProfileRankCard extends StatelessWidget {
                 label,
                 style: TextStyle(
                   color: ProfilePalette.muted(context),
-                  fontSize: 12,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  height: 1.15,
                 ),
               ),
               const SizedBox(height: 3),
               Text(
                 rank != null && rank! > 0 ? '#$rank' : unrankedLabel,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: ProfilePalette.text(context),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  height: 1.12,
                 ),
               ),
             ],
@@ -1068,6 +1093,107 @@ class ProfileRankCard extends StatelessWidget {
       ],
     ),
   );
+}
+
+enum ProfileRankIconKind { country, province }
+
+class ProfileRankPixelIcon extends StatelessWidget {
+  const ProfileRankPixelIcon({super.key, required this.kind, this.size = 30});
+
+  final ProfileRankIconKind kind;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: size,
+    child: CustomPaint(
+      painter: _ProfileRankPixelIconPainter(
+        kind: kind,
+        color: ProfilePalette.green(context),
+        accent: ProfilePalette.aubergine(context),
+      ),
+    ),
+  );
+}
+
+class _ProfileRankPixelIconPainter extends CustomPainter {
+  const _ProfileRankPixelIconPainter({
+    required this.kind,
+    required this.color,
+    required this.accent,
+  });
+
+  final ProfileRankIconKind kind;
+  final Color color;
+  final Color accent;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final unit = size.width / 18;
+    final outline = Paint()
+      ..color = Color.lerp(color, Colors.black, .28)!
+      ..style = PaintingStyle.fill;
+    final main = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final soft = Paint()
+      ..color = color.withValues(alpha: .24)
+      ..style = PaintingStyle.fill;
+    final purple = Paint()
+      ..color = accent
+      ..style = PaintingStyle.fill;
+    final white = Paint()
+      ..color = Colors.white.withValues(alpha: .88)
+      ..style = PaintingStyle.fill;
+
+    void px(Paint paint, int x, int y, [int w = 1, int h = 1]) {
+      canvas.drawRect(
+        Rect.fromLTWH(x * unit, y * unit, w * unit, h * unit),
+        paint,
+      );
+    }
+
+    switch (kind) {
+      case ProfileRankIconKind.country:
+        px(soft, 3, 3, 12, 12);
+        px(outline, 5, 2, 8, 1);
+        px(outline, 3, 4, 12, 1);
+        px(outline, 2, 6, 14, 6);
+        px(outline, 3, 12, 12, 2);
+        px(outline, 5, 14, 8, 1);
+        px(main, 5, 3, 8, 1);
+        px(main, 4, 5, 10, 2);
+        px(main, 3, 7, 12, 4);
+        px(main, 4, 11, 10, 2);
+        px(main, 6, 13, 6, 1);
+        px(white, 8, 4, 2, 10);
+        px(white, 4, 8, 10, 2);
+        px(purple, 6, 5, 2, 2);
+        px(purple, 10, 10, 2, 2);
+      case ProfileRankIconKind.province:
+        px(soft, 4, 3, 10, 12);
+        px(outline, 6, 2, 6, 1);
+        px(outline, 4, 4, 10, 1);
+        px(outline, 3, 6, 12, 5);
+        px(outline, 4, 11, 10, 2);
+        px(outline, 6, 13, 6, 2);
+        px(outline, 8, 15, 2, 1);
+        px(main, 6, 3, 6, 1);
+        px(main, 5, 5, 8, 1);
+        px(main, 4, 6, 10, 4);
+        px(main, 5, 10, 8, 2);
+        px(main, 7, 12, 4, 2);
+        px(main, 8, 14, 2, 1);
+        px(white, 7, 6, 4, 4);
+        px(purple, 8, 7, 2, 2);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ProfileRankPixelIconPainter oldDelegate) =>
+      oldDelegate.kind != kind ||
+      oldDelegate.color != color ||
+      oldDelegate.accent != accent;
 }
 
 class ProfileLoadingState extends StatelessWidget {

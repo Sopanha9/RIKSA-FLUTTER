@@ -257,9 +257,9 @@ class BlogTimelineRow extends ConsumerWidget {
                       style: RiksaTypography.bodyStyleFor(
                         post.title,
                         theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w600,
                           height: 1.3,
-                          letterSpacing: -.2,
+                          letterSpacing: 0,
                           color: palette.ink,
                         ),
                       ),

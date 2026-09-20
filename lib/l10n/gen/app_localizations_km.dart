@@ -1563,7 +1563,7 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String homeGreeting(String name) {
-    return 'សួស្តី $name! 👋';
+    return 'សួស្តី $name!';
   }
 
   @override

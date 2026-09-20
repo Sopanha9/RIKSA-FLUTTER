@@ -934,7 +934,7 @@
   "splashDescription": "Your Grade 12 STEM learning companion for a brighter Cambodia.",
   "skipLabel": "Skip",
   "nextLabel": "Next",
-  "homeGreeting": "Hello, {name}! 👋",
+  "homeGreeting": "Hello, {name}!",
   "@homeGreeting": {"placeholders":{"name":{"type":"String"}}},
   "homeSubtitle": "Keep going! Knowledge builds your future.",
   "homeSearchHint": "Search posts, topics, or lessons...",

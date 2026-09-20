@@ -30,6 +30,7 @@ class RiksaProfileDrawer extends ConsumerWidget {
     final palette = context.riksa;
     final auth = ref.watch(authProvider);
     final user = auth is Authenticated ? auth.user : null;
+    final l10n = AppLocalizations.of(context)!;
 
     return Drawer(
       key: const ValueKey('profile-drawer'),
@@ -66,66 +67,106 @@ class RiksaProfileDrawer extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _DrawerItem(
-                          itemKey: const ValueKey('drawer-profile'),
-                          icon: Icons.person_outline_rounded,
-                          label: AppLocalizations.of(context)!.profile,
-                          onTap: () => _go(context, '/profile'),
+                        _DrawerSection(
+                          title: 'General',
+                          initiallyExpanded: true,
+                          children: [
+                            _DrawerItem(
+                              itemKey: const ValueKey('drawer-progress'),
+                              icon: Icons.timeline_rounded,
+                              label: 'Progress',
+                              onTap: () => _go(context, '/progress'),
+                            ),
+                            _DrawerItem(
+                              itemKey: const ValueKey('drawer-my-posts'),
+                              icon: Icons.article_outlined,
+                              label: l10n.myPosts,
+                              onTap: () => _go(context, '/blog/my-posts'),
+                            ),
+                            _DrawerItem(
+                              itemKey: const ValueKey('drawer-saved-lessons'),
+                              icon: Icons.bookmark_border_rounded,
+                              label: l10n.menuSavedLessons,
+                              onTap: () => _go(context, '/learn/saved'),
+                            ),
+                          ],
                         ),
-                        _DrawerItem(
-                          itemKey: const ValueKey('drawer-leaderboard'),
-                          icon: Icons.emoji_events_outlined,
-                          label: AppLocalizations.of(context)!.leaderboard,
-                          onTap: () => _go(context, '/leaderboard'),
-                        ),
-                        _DrawerItem(
-                          itemKey: const ValueKey('drawer-progress'),
-                          icon: Icons.timeline_rounded,
-                          label: AppLocalizations.of(context)!.progressHistory,
-                          onTap: () => _go(context, '/progress'),
-                        ),
-                        _DrawerItem(
-                          itemKey: const ValueKey('drawer-communities'),
-                          icon: Icons.groups_outlined,
-                          label: AppLocalizations.of(context)!.communitiesMenu,
-                          onTap: () => _go(context, '/communities'),
-                        ),
-                        _DrawerItem(
-                          itemKey: const ValueKey('drawer-my-posts'),
-                          icon: Icons.article_outlined,
-                          label: AppLocalizations.of(context)!.myPosts,
-                          onTap: () => _go(context, '/blog/my-posts'),
-                        ),
-                        _DrawerItem(
-                          itemKey: const ValueKey('drawer-saved-lessons'),
-                          icon: Icons.bookmark_border_rounded,
-                          label:
-                              Localizations.localeOf(context).languageCode ==
-                                  'km'
-                              ? 'មេរៀនបានរក្សាទុក'
-                              : 'Saved Lessons',
-                          onTap: () => _go(context, '/learn/saved'),
-                        ),
-                        const Spacer(),
                         Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: RiksaSpacing.sm,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Divider(height: 1, color: palette.outline),
                         ),
-                        _DrawerItem(
-                          itemKey: const ValueKey('drawer-edit-profile'),
-                          icon: Icons.edit_outlined,
-                          label: AppLocalizations.of(context)!.editProfile,
-                          onTap: () => _go(context, '/profile/edit'),
+                        _DrawerSection(
+                          title: 'About',
+                          initiallyExpanded: false,
+                          children: [
+                            _DrawerItem(
+                              itemKey: const ValueKey('drawer-about-riksa'),
+                              icon: Icons.language_rounded,
+                              label: 'RIKSA',
+                              onTap: () => _go(context, '/about/riksa'),
+                            ),
+                            _DrawerItem(
+                              itemKey: const ValueKey('drawer-user-agreement'),
+                              icon: Icons.check_circle_outline_rounded,
+                              label: 'User Agreement',
+                              onTap: () =>
+                                  _go(context, '/about/user-agreement'),
+                            ),
+                          ],
                         ),
-                        _DrawerItem(
-                          itemKey: const ValueKey('drawer-settings'),
-                          icon: Icons.settings_outlined,
-                          label: AppLocalizations.of(context)!.settings,
-                          onTap: () => _go(context, '/profile/settings'),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Divider(height: 1, color: palette.outline),
                         ),
+                        _DrawerSection(
+                          title: 'Setting',
+                          initiallyExpanded: false,
+                          children: [
+                            _DrawerItem(
+                              itemKey: const ValueKey('drawer-privacy-center'),
+                              icon: Icons.lock_outline_rounded,
+                              label: 'Privacy Center',
+                              onTap: () => _go(context, '/settings/privacy'),
+                            ),
+                            _DrawerItem(
+                              itemKey: const ValueKey('drawer-settings'),
+                              icon: Icons.settings_outlined,
+                              label: 'General Setting',
+                              onTap: () => _go(context, '/profile/settings'),
+                            ),
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Divider(height: 1, color: palette.outline),
+                        ),
+                        _DrawerSection(
+                          title: 'Help and Support',
+                          initiallyExpanded: false,
+                          children: [
+                            _DrawerItem(
+                              itemKey: const ValueKey('drawer-faq'),
+                              icon: Icons.help_outline_rounded,
+                              label: l10n.faq,
+                              onTap: () => _showDocument(context, l10n.faq),
+                            ),
+                            _DrawerItem(
+                              itemKey: const ValueKey('drawer-terms'),
+                              icon: Icons.description_outlined,
+                              label: l10n.termsOfService,
+                              onTap: () =>
+                                  _showDocument(context, l10n.termsOfService),
+                            ),
+                            _DrawerItem(
+                              itemKey: const ValueKey('drawer-privacy-legal'),
+                              icon: Icons.privacy_tip_outlined,
+                              label: l10n.privacyPolicy,
+                              onTap: () =>
+                                  _showDocument(context, l10n.privacyPolicy),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
                       ],
                     ),
                   ),
@@ -145,6 +186,23 @@ class RiksaProfileDrawer extends ConsumerWidget {
   void _go(BuildContext context, String path) {
     Navigator.of(context).pop();
     context.push(path);
+  }
+
+  Future<void> _showDocument(BuildContext context, String title) async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(l10n.supportDocumentUnavailable),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -169,39 +227,52 @@ class _DrawerIdentity extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          RiksaProfileAvatar(
-            user: signedIn,
-            radius: 27,
-            avatarPath: ref.watch(profileAvatarProvider),
-            frameTier: dashboard.value?.gamification.currentTier,
-          ),
-          const SizedBox(height: RiksaSpacing.sm),
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: RiksaTypography.titleStyleFor(
-              name,
-              theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+          InkWell(
+            onTap: () {
+              Navigator.of(context).pop();
+              context.push('/profile');
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Row(
+                children: [
+                  RiksaProfileAvatar(
+                    user: signedIn,
+                    radius: 27,
+                    avatarPath: ref.watch(profileAvatarProvider),
+                    frameTier: dashboard.value?.gamification.currentTier,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: RiksaTypography.titleStyleFor(
+                            name,
+                            theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '@${signedIn.username}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: palette.inkMuted,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
-          Text(
-            '@${signedIn.username}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: palette.inkMuted, fontSize: 13),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            l10n.gradeStemLabel,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: palette.inkMuted,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: RiksaSpacing.sm),
@@ -270,7 +341,7 @@ class _Count extends StatelessWidget {
         style: TextStyle(
           color: context.riksa.ink,
           fontSize: 14,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w600,
         ),
       ),
       const SizedBox(width: 4),
@@ -303,7 +374,7 @@ class _DrawerItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       child: Row(
         children: [
-          Icon(icon, size: 24, color: context.riksa.ink),
+          Icon(icon, size: 22, color: context.riksa.inkMuted),
           const SizedBox(width: RiksaSpacing.md),
           Expanded(
             child: Text(
@@ -312,10 +383,9 @@ class _DrawerItem extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: RiksaTypography.bodyStyleFor(
                 label,
-                TextStyle(
+                Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w400,
                   color: context.riksa.ink,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
@@ -408,17 +478,51 @@ class _DrawerFooter extends ConsumerWidget {
                 icon: const Icon(Icons.logout_rounded, size: 18),
                 label: Text(l10n.logout),
                 style: TextButton.styleFrom(
-                  foregroundColor: palette.inkMuted,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
                   ),
-                  shape: const StadiumBorder(),
                 ),
               ),
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _DrawerSection extends StatelessWidget {
+  const _DrawerSection({
+    required this.title,
+    required this.initiallyExpanded,
+    required this.children,
+  });
+
+  final String title;
+  final bool initiallyExpanded;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        initiallyExpanded: initiallyExpanded,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 20),
+        childrenPadding: const EdgeInsets.only(bottom: 8),
+        iconColor: context.riksa.ink,
+        collapsedIconColor: context.riksa.ink,
+        title: Text(
+          title,
+          style: RiksaTypography.titleStyleFor(
+            title,
+            Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        ),
+        children: children,
       ),
     );
   }

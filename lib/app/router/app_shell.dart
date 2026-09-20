@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/riksa_bottom_navigation_bar.dart';
@@ -78,6 +79,8 @@ class AppShellScope extends InheritedWidget {
 }
 
 class _AppShellState extends State<AppShell> {
+  bool _showNavBar = true;
+
   @override
   Widget build(BuildContext context) {
     final router = GoRouter.of(context);
@@ -87,10 +90,20 @@ class _AppShellState extends State<AppShell> {
       drawer: const RiksaProfileDrawer(),
       // The Builder is what gives the opener a context below this Scaffold, so
       // `Scaffold.of` resolves to the shell rather than to a tab's own.
-      body: Builder(
-        builder: (context) => AppShellScope(
-          openDrawer: Scaffold.of(context).openDrawer,
-          child: widget.navigationShell,
+      body: NotificationListener<UserScrollNotification>(
+        onNotification: (notification) {
+          if (notification.direction == ScrollDirection.reverse) {
+            if (_showNavBar) setState(() => _showNavBar = false);
+          } else if (notification.direction == ScrollDirection.forward) {
+            if (!_showNavBar) setState(() => _showNavBar = true);
+          }
+          return false;
+        },
+        child: Builder(
+          builder: (context) => AppShellScope(
+            openDrawer: Scaffold.of(context).openDrawer,
+            child: widget.navigationShell,
+          ),
         ),
       ),
       // The shell builder does not run again for a push inside a branch, so
@@ -106,6 +119,7 @@ class _AppShellState extends State<AppShell> {
           return RiksaBottomNavigationBar(
             key: const ValueKey('persistent-bottom-navigation'),
             currentIndex: widget.navigationShell.currentIndex,
+            isExpanded: _showNavBar,
             onSelected: (index) {
               widget.navigationShell.goBranch(
                 index,

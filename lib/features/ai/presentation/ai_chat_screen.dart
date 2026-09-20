@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -493,6 +495,16 @@ class _Composer extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sendOuterFill = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.58);
+    final sendFill = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.54);
+    final sendBorder = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.72);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: Container(
@@ -530,19 +542,62 @@ class _Composer extends StatelessWidget {
             ),
             RiksaTapFeedback(
               enabled: enabled,
-              child: IconButton.filled(
-                key: const ValueKey('send-ai-message'),
-                tooltip: l10n.aiSendMessage,
-                onPressed: enabled ? onSend : null,
-                iconSize: 20,
-                style: IconButton.styleFrom(
-                  backgroundColor: palette.brand,
-                  foregroundColor: palette.onBrand,
-                  disabledBackgroundColor: palette.brandSoft,
-                  disabledForegroundColor: palette.brand.withValues(alpha: .5),
-                  minimumSize: const Size.square(42),
+              child: SizedBox.square(
+                dimension: 50,
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    color: sendOuterFill,
+                    shape: CircleBorder(side: BorderSide(color: sendBorder)),
+                    shadows: [
+                      BoxShadow(
+                        color: palette.ink.withValues(
+                          alpha: isDark ? 0.18 : 0.08,
+                        ),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: DecoratedBox(
+                          decoration: ShapeDecoration(
+                            color: sendFill,
+                            shape: CircleBorder(
+                              side: BorderSide(
+                                color: Colors.white.withValues(alpha: 0.36),
+                              ),
+                            ),
+                            shadows: [
+                              BoxShadow(
+                                color: palette.ink.withValues(alpha: 0.06),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            key: const ValueKey('send-ai-message'),
+                            tooltip: l10n.aiSendMessage,
+                            onPressed: enabled ? onSend : null,
+                            iconSize: 20,
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: palette.brand,
+                              disabledForegroundColor: palette.inkMuted,
+                              minimumSize: const Size.square(42),
+                              shape: const CircleBorder(),
+                            ),
+                            icon: const Icon(Icons.send_rounded),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                icon: const Icon(Icons.send_rounded),
               ),
             ),
           ],

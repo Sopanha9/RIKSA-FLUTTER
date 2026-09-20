@@ -182,8 +182,8 @@ class ProvincePrompt extends StatelessWidget {
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 15,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -.2,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 6),
@@ -234,7 +234,7 @@ class RankGapIndicator extends StatelessWidget {
           style: TextStyle(
             color: Color(0xFF70695E),
             fontSize: 14,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             letterSpacing: 4,
           ),
         ),

@@ -4,12 +4,13 @@
 /// that drift apart.
 library;
 
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_interactions.dart';
 import '../../../../l10n/gen/app_localizations.dart';
-import '../learning_design.dart';
 
 /// A rounded-square icon badge. Never a circle, never a square.
 class LearningBadge extends StatelessWidget {
@@ -150,11 +151,10 @@ class LearningPrimaryButton extends StatelessWidget {
       ),
     );
     final style = FilledButton.styleFrom(
-      backgroundColor: background ?? learningAnchor(context),
-      foregroundColor: foreground ?? onLearningAnchor(context),
+      backgroundColor: background,
+      foregroundColor: foreground,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       minimumSize: const Size.fromHeight(54),
-      shape: const StadiumBorder(),
     );
     final callback = busy ? null : onPressed;
     return RiksaTapFeedback(
@@ -163,12 +163,12 @@ class LearningPrimaryButton extends StatelessWidget {
           ? FilledButton(
               onPressed: null,
               style: style.copyWith(
-                backgroundColor: WidgetStatePropertyAll(
-                  background ?? learningAnchor(context),
-                ),
-                foregroundColor: WidgetStatePropertyAll(
-                  foreground ?? onLearningAnchor(context),
-                ),
+                backgroundColor: background == null
+                    ? null
+                    : WidgetStatePropertyAll(background),
+                foregroundColor: foreground == null
+                    ? null
+                    : WidgetStatePropertyAll(foreground),
               ),
               child: Semantics(
                 liveRegion: true,
@@ -184,7 +184,7 @@ class LearningPrimaryButton extends StatelessWidget {
                           dimension: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: foreground ?? onLearningAnchor(context),
+                            color: foreground ?? context.riksa.brand,
                           ),
                         ),
                       const SizedBox(width: 10),
@@ -282,56 +282,73 @@ class LearningActionBar extends StatelessWidget {
       busy: busy,
     );
 
-    return Container(
-      decoration: BoxDecoration(
-        color: palette.canvas,
-        border: Border(top: BorderSide(color: palette.outline)),
-      ),
-      child: SafeArea(
-        top: false,
-        // A minimum on top of the inset: a device that reports no gesture bar
-        // leaves SafeArea contributing nothing, and the pills end up sitting on
-        // the bezel curve.
-        minimum: const EdgeInsets.only(bottom: RiksaSpacing.xs),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            20,
-            RiksaSpacing.md,
-            20,
-            RiksaSpacing.md,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fill = isDark
+        ? palette.surface.withValues(alpha: 0.58)
+        : Colors.white.withValues(alpha: 0.72);
+    final border = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.72);
+
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.only(bottom: RiksaSpacing.md),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: AppRadii.fullBorder,
+            boxShadow: [
+              BoxShadow(
+                color: palette.ink.withValues(alpha: isDark ? 0.2 : 0.1),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-          child: Row(
-            children: [
-              if (onBack != null && backLabel != null) ...[
-                Expanded(
-                  child: OutlinedButton(
-                    key: const ValueKey('learning-action-back'),
-                    onPressed: onBack,
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(54),
-                      shape: const StadiumBorder(),
-                      side: BorderSide(color: palette.outline),
-                      foregroundColor: palette.ink,
-                    ),
-                    child: Text(
-                      backLabel!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: RiksaTypography.bodyStyleFor(
-                        backLabel!,
-                        const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
+          child: ClipRRect(
+            borderRadius: AppRadii.fullBorder,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: fill,
+                  borderRadius: AppRadii.fullBorder,
+                  border: Border.all(color: border),
+                ),
+                child: Row(
+                  children: [
+                    if (onBack != null && backLabel != null) ...[
+                      Expanded(
+                        child: OutlinedButton(
+                          key: const ValueKey('learning-action-back'),
+                          onPressed: onBack,
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(54),
+                          ),
+                          child: Text(
+                            backLabel!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: RiksaTypography.bodyStyleFor(
+                              backLabel!,
+                              const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                      const SizedBox(width: RiksaSpacing.sm),
+                    ],
+                    // The way on always gets the wider half of the bar.
+                    Expanded(flex: 2, child: primary),
+                  ],
                 ),
-                const SizedBox(width: RiksaSpacing.sm),
-              ],
-              // The way on always gets the wider half of the bar.
-              Expanded(flex: 2, child: primary),
-            ],
+              ),
+            ),
           ),
         ),
       ),

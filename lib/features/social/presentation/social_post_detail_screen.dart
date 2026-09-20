@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -312,16 +314,130 @@ class _SocialPostDetailScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final composerClearance = _replyingTo == null ? 120.0 : 164.0;
+    final content = _loading
+        ? const Center(
+            child: CircularProgressIndicator(color: AppColors.editorialPink),
+          )
+        : _post == null
+        ? _ErrorState(message: _error, onRetry: _load)
+        : RefreshIndicator(
+            color: AppColors.editorialPink,
+            onRefresh: _load,
+            child: ListView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(16, 8, 16, composerClearance),
+              children: [
+                _PostBody(
+                  post: _post!,
+                  onAuthorTap: _authorTap(_post!.author),
+                  onReact: _react,
+                  onShare: _share,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Text(
+                      l10n.discussion,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: SocialPalette.ink(context),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _CountBadge(count: _post!.commentCount),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (_comments.isEmpty)
+                  _EmptyComments(message: l10n.noComments)
+                else
+                  for (final thread in _buildCommentThreads(_comments)) ...[
+                    () {
+                      final currentUserId = ref.watch(currentUserIdProvider);
+                      final canDeleteRoot =
+                          thread.root.author.id == currentUserId;
+                      return _CommentCard(
+                        comment: thread.root,
+                        onAuthorTap: _authorTap(thread.root.author),
+                        onReply: () => _startReply(thread.root),
+                        onDelete: canDeleteRoot
+                            ? () => _deleteComment(thread.root)
+                            : null,
+                      );
+                    }(),
+                    if (thread.replies.isNotEmpty) ...[
+                      for (final reply in thread.replies) ...[
+                        () {
+                          final currentUserId = ref.watch(
+                            currentUserIdProvider,
+                          );
+                          final canDeleteReply =
+                              reply.author.id == currentUserId;
+                          SocialComment? parentComment;
+                          for (final c in _comments) {
+                            if (c.id == reply.parentId) {
+                              parentComment = c;
+                              break;
+                            }
+                          }
+                          final replyingTo = parentComment?.author.username;
+                          return _CommentCard(
+                            comment: reply,
+                            replyingToUsername: replyingTo,
+                            isReply: true,
+                            onAuthorTap: _authorTap(reply.author),
+                            onReply: () => _startReply(reply),
+                            onDelete: canDeleteReply
+                                ? () => _deleteComment(reply)
+                                : null,
+                          );
+                        }(),
+                      ],
+                    ],
+                    const SizedBox(height: 10),
+                  ],
+                if (_hasMore)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: OutlinedButton(
+                      onPressed: _loadingMore ? null : _loadMore,
+                      child: _loadingMore
+                          ? const SizedBox.square(
+                              dimension: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(l10n.loadMore),
+                    ),
+                  ),
+              ],
+            ),
+          );
+
     return Scaffold(
       backgroundColor: SocialPalette.canvas(context),
       appBar: AppBar(
         backgroundColor: SocialPalette.canvas(context),
         foregroundColor: SocialPalette.aubergine(context),
         surfaceTintColor: Colors.transparent,
-        title: Text(
-          l10n.postDetail,
-          style: const TextStyle(fontWeight: FontWeight.w800),
+        leadingWidth: 44,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 22),
+          onPressed: () => Navigator.of(context).maybePop(),
         ),
+        titleSpacing: 0,
+        title: _post == null
+            ? Text(
+                l10n.postDetail,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              )
+            : _AuthorLine(
+                author: _post!.author,
+                createdAt: _post!.createdAt,
+                categoryName: _post!.category.name,
+                onAuthorTap: _authorTap(_post!.author),
+              ),
         actions: [
           if (_post != null &&
               _post!.author.id == ref.watch(currentUserIdProvider))
@@ -333,124 +449,29 @@ class _SocialPostDetailScreenState
           const SizedBox(width: 4),
         ],
       ),
-      body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.editorialPink),
-            )
-          : _post == null
-          ? _ErrorState(message: _error, onRetry: _load)
-          : RefreshIndicator(
-              color: AppColors.editorialPink,
-              onRefresh: _load,
-              child: ListView(
-                controller: _scrollController,
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                children: [
-                  _PostBody(
-                    post: _post!,
-                    onAuthorTap: _authorTap(_post!.author),
-                    onReact: _react,
-                    onShare: _share,
-                    onCommentTap: () => _commentFocus.requestFocus(),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Text(
-                        l10n.discussion,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: SocialPalette.aubergine(context),
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      _CountBadge(count: _post!.commentCount),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  if (_comments.isEmpty)
-                    _EmptyComments(message: l10n.noComments)
-                  else
-                    for (final thread in _buildCommentThreads(_comments)) ...[
-                      () {
-                        final currentUserId = ref.watch(currentUserIdProvider);
-                        final canDeleteRoot =
-                            thread.root.author.id == currentUserId;
-                        return _CommentCard(
-                          comment: thread.root,
-                          onAuthorTap: _authorTap(thread.root.author),
-                          onReply: () => _startReply(thread.root),
-                          onDelete: canDeleteRoot
-                              ? () => _deleteComment(thread.root)
-                              : null,
-                        );
-                      }(),
-                      if (thread.replies.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        for (final reply in thread.replies) ...[
-                          () {
-                            final currentUserId = ref.watch(
-                              currentUserIdProvider,
-                            );
-                            final canDeleteReply =
-                                reply.author.id == currentUserId;
-                            return Padding(
-                              padding: const EdgeInsets.only(
-                                left: 24,
-                                bottom: 6,
-                              ),
-                              child: _CommentCard(
-                                comment: reply,
-                                isReply: true,
-                                onAuthorTap: _authorTap(reply.author),
-                                onReply: () => _startReply(reply),
-                                onDelete: canDeleteReply
-                                    ? () => _deleteComment(reply)
-                                    : null,
-                              ),
-                            );
-                          }(),
-                        ],
-                      ],
-                      const SizedBox(height: 10),
-                    ],
-                  if (_hasMore)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: SocialPalette.aubergine(context),
-                          side: BorderSide(
-                            color: SocialPalette.outline(context),
-                          ),
-                        ),
-                        onPressed: _loadingMore ? null : _loadMore,
-                        child: _loadingMore
-                            ? const SizedBox.square(
-                                dimension: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(l10n.loadMore),
-                      ),
-                    ),
-                ],
+      body: Stack(
+        children: [
+          Positioned.fill(child: content),
+          if (_post != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: MediaQuery.viewInsetsOf(context).bottom,
+              child: _CommentComposer(
+                controller: _commentController,
+                focusNode: _commentFocus,
+                submitting: _submitting,
+                replyingTo: _replyingTo,
+                onCancelReply: _cancelReply,
+                hint: _replyingTo != null
+                    ? '${l10n.reply}...'
+                    : l10n.addComment,
+                sendLabel: l10n.sendComment,
+                onSend: _submitComment,
               ),
             ),
-      bottomNavigationBar: _post == null
-          ? null
-          : _CommentComposer(
-              controller: _commentController,
-              focusNode: _commentFocus,
-              submitting: _submitting,
-              replyingTo: _replyingTo,
-              onCancelReply: _cancelReply,
-              hint: _replyingTo != null ? '${l10n.reply}...' : l10n.addComment,
-              sendLabel: l10n.sendComment,
-              onSend: _submitComment,
-            ),
+        ],
+      ),
     );
   }
 
@@ -466,65 +487,29 @@ class _PostBody extends StatelessWidget {
     this.onAuthorTap,
     required this.onReact,
     required this.onShare,
-    this.onCommentTap,
   });
 
   final SocialPost post;
   final VoidCallback? onAuthorTap;
   final VoidCallback onReact;
   final VoidCallback onShare;
-  final VoidCallback? onCommentTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
+    return Padding(
       key: const ValueKey('post-detail-body'),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: SocialPalette.surface(context),
-        borderRadius: AppRadii.mediumBorder,
-        border: Border.all(color: SocialPalette.outline(context)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: .045),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.only(top: 8, bottom: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _AuthorLine(
-            author: post.author,
-            createdAt: post.createdAt,
-            onAuthorTap: onAuthorTap,
-          ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: SocialPalette.pinkSoft(context),
-              borderRadius: AppRadii.smallBorder,
-            ),
-            child: Text(
-              post.category.name,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: SocialPalette.aubergine(context),
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
           Text(
             post.title,
             style: RiksaTypography.bodyStyleFor(
               post.title,
               theme.textTheme.headlineSmall?.copyWith(
                 color: SocialPalette.ink(context),
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
                 height: 1.4,
               ),
             ),
@@ -570,26 +555,16 @@ class _PostBody extends StatelessWidget {
             children: [
               _DetailAction(
                 icon: post.myReaction == null
-                    ? Icons.arrow_upward_outlined
-                    : Icons.arrow_upward_rounded,
+                    ? Icons.favorite_border_rounded
+                    : Icons.favorite_rounded,
                 count: post.reactionCount,
                 selected: post.myReaction != null,
-                semanticLabel: l10n.socialLikeLabel(post.reactionCount),
                 onTap: onReact,
-              ),
-              const SizedBox(width: 10),
-              _DetailAction(
-                key: const ValueKey('post-detail-comment-button'),
-                icon: Icons.mode_comment_outlined,
-                count: post.commentCount,
-                semanticLabel: l10n.socialCommentLabel(post.commentCount),
-                onTap: onCommentTap,
               ),
               const Spacer(),
               _DetailAction(
-                icon: Icons.ios_share_rounded,
+                icon: Icons.share_rounded,
                 count: post.shareCount,
-                semanticLabel: l10n.socialShareLabel(post.shareCount),
                 onTap: onShare,
               ),
             ],
@@ -604,11 +579,13 @@ class _AuthorLine extends StatelessWidget {
   const _AuthorLine({
     required this.author,
     required this.createdAt,
+    required this.categoryName,
     this.onAuthorTap,
   });
 
   final SocialAuthor author;
   final DateTime createdAt;
+  final String categoryName;
   final VoidCallback? onAuthorTap;
 
   @override
@@ -633,13 +610,13 @@ class _AuthorLine extends StatelessWidget {
                   name,
                   style: theme.textTheme.titleSmall?.copyWith(
                     color: SocialPalette.ink(context),
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
               const SizedBox(height: 2),
               Text(
-                '@${author.username} · ${DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(createdAt.toLocal())}',
+                '@${author.username} / $categoryName · ${DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(createdAt.toLocal())}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: SocialPalette.muted(context),
                 ),
@@ -691,6 +668,7 @@ List<_CommentThread> _buildCommentThreads(List<SocialComment> comments) {
 class _CommentCard extends StatelessWidget {
   const _CommentCard({
     required this.comment,
+    this.replyingToUsername,
     this.onAuthorTap,
     this.onReply,
     this.onDelete,
@@ -698,6 +676,7 @@ class _CommentCard extends StatelessWidget {
   });
 
   final SocialComment comment;
+  final String? replyingToUsername;
   final VoidCallback? onAuthorTap;
   final VoidCallback? onReply;
   final VoidCallback? onDelete;
@@ -710,176 +689,182 @@ class _CommentCard extends StatelessWidget {
     final name = comment.author.displayName.isEmpty
         ? comment.author.username
         : comment.author.displayName;
-    return Container(
-      key: ValueKey('comment-card-${comment.id}'),
-      padding: EdgeInsets.all(isReply ? 12 : 15),
-      decoration: BoxDecoration(
-        color: isReply
-            ? SocialPalette.surfaceRaised(context)
-            : SocialPalette.surface(context),
-        border: Border.all(color: SocialPalette.outline(context)),
-        borderRadius: AppRadii.mediumBorder,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _Avatar(
-            author: comment.author,
-            radius: isReply ? 14 : 18,
-            onTap: onAuthorTap,
-          ),
-          SizedBox(width: isReply ? 8 : 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        key: ValueKey(
-                          'comment-author-name-${comment.author.id}',
-                        ),
-                        behavior: HitTestBehavior.opaque,
-                        onTap: onAuthorTap,
-                        child: Text(
-                          name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style:
-                              (isReply
-                                      ? theme.textTheme.labelMedium
-                                      : theme.textTheme.labelLarge)
-                                  ?.copyWith(
-                                    color: SocialPalette.ink(context),
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                        ),
+    final avatarRadius = isReply ? 18.0 : 21.0;
+    final horizontalGap = isReply ? 10.0 : 12.0;
+    final content = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Avatar(
+          author: comment.author,
+          radius: avatarRadius,
+          onTap: onAuthorTap,
+        ),
+        SizedBox(width: horizontalGap),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      key: ValueKey('comment-author-name-${comment.author.id}'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: onAuthorTap,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '@$name',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: SocialPalette.ink(context),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (replyingToUsername != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                '${AppLocalizations.of(context)!.replyingTo} @$replyingToUsername',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: SocialPalette.muted(
+                                    context,
+                                  ).withValues(alpha: 0.8),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
-                    Text(
-                      DateFormat.MMMd(
-                        Localizations.localeOf(context).languageCode,
-                      ).format(comment.createdAt.toLocal()),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: SocialPalette.muted(context),
-                        fontSize: isReply ? 11 : null,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  comment.content,
-                  style: RiksaTypography.bodyStyleFor(
-                    comment.content,
-                    theme.textTheme.bodyMedium?.copyWith(
-                      color: SocialPalette.ink(context),
-                      height: 1.55,
-                      fontSize: isReply ? 13 : null,
                     ),
                   ),
-                ),
-                if (onReply != null || onDelete != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      if (onReply != null)
-                        Semantics(
-                          button: true,
-                          label: AppLocalizations.of(
-                            context,
-                          )!.socialReplyTo(name),
-                          excludeSemantics: true,
-                          child: InkWell(
-                            key: ValueKey('comment-reply-button-${comment.id}'),
-                            onTap: onReply,
-                            borderRadius: AppRadii.smallBorder,
-                            child: Container(
-                              constraints: const BoxConstraints(
-                                minWidth: 48,
-                                minHeight: 48,
-                              ),
-                              alignment: Alignment.center,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.reply_rounded,
-                                    size: 14,
-                                    color: SocialPalette.aubergine(context),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    AppLocalizations.of(context)!.reply,
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: SocialPalette.aubergine(context),
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      if (onDelete != null) ...[
-                        const SizedBox(width: 12),
-                        Semantics(
-                          button: true,
-                          label: AppLocalizations.of(
-                            context,
-                          )!.socialDeleteComment,
-                          excludeSemantics: true,
-                          child: InkWell(
-                            key: ValueKey(
-                              'comment-delete-button-${comment.id}',
-                            ),
-                            onTap: onDelete,
-                            borderRadius: AppRadii.smallBorder,
-                            child: Container(
-                              constraints: const BoxConstraints(
-                                minWidth: 48,
-                                minHeight: 48,
-                              ),
-                              alignment: Alignment.center,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.delete_outline_rounded,
-                                    size: 14,
-                                    color: theme.colorScheme.error,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    isKhmer ? 'លុប' : 'Delete',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.error,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                  const SizedBox(width: 12),
+                  Text(
+                    _relativeCommentAge(context, comment.createdAt),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: SocialPalette.muted(context),
+                      fontWeight: FontWeight.w500,
+                      fontSize: isReply ? 12 : 13,
+                    ),
                   ),
                 ],
-              ],
+              ),
+              SizedBox(height: isReply ? 8 : 10),
+              Text(
+                comment.content,
+                style: RiksaTypography.bodyStyleFor(
+                  comment.content,
+                  theme.textTheme.bodyMedium?.copyWith(
+                    color: SocialPalette.ink(context),
+                    height: 1.38,
+                    fontSize: isReply ? 12 : 13,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+              SizedBox(height: isReply ? 8 : 10),
+              _CommentActionRow(
+                commentId: comment.id,
+                isKhmer: isKhmer,
+                onReply: onReply,
+                onDelete: onDelete,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    return Container(
+      key: ValueKey('comment-card-${comment.id}'),
+      padding: EdgeInsets.only(
+        top: isReply ? 12 : 18,
+        bottom: isReply ? 10 : 16,
+      ),
+      decoration: BoxDecoration(
+        color: SocialPalette.surface(context),
+        border: isReply
+            ? null
+            : Border(top: BorderSide(color: SocialPalette.outline(context))),
+      ),
+      child: isReply
+          ? Padding(padding: const EdgeInsets.only(left: 42), child: content)
+          : content,
+    );
+  }
+}
+
+class _CommentActionRow extends StatelessWidget {
+  const _CommentActionRow({
+    required this.commentId,
+    required this.isKhmer,
+    this.onReply,
+    this.onDelete,
+  });
+
+  final String commentId;
+  final bool isKhmer;
+  final VoidCallback? onReply;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final actionStyle = theme.textTheme.labelLarge?.copyWith(
+      color: SocialPalette.muted(context).withValues(alpha: 0.6),
+      fontWeight: FontWeight.w500,
+      height: 1,
+    );
+    return Row(
+      children: [
+        Text(isKhmer ? 'ចូលចិត្ត' : 'Like', style: actionStyle),
+        const SizedBox(width: 10),
+        if (onReply != null)
+          GestureDetector(
+            key: ValueKey('comment-reply-button-$commentId'),
+            behavior: HitTestBehavior.opaque,
+            onTap: onReply,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                AppLocalizations.of(context)!.reply,
+                style: actionStyle,
+              ),
+            ),
+          ),
+        if (onDelete != null) ...[
+          const SizedBox(width: 10),
+          GestureDetector(
+            key: ValueKey('comment-delete-button-$commentId'),
+            behavior: HitTestBehavior.opaque,
+            onTap: onDelete,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                isKhmer ? 'លុប' : 'Delete',
+                style: actionStyle?.copyWith(color: theme.colorScheme.error),
+              ),
             ),
           ),
         ],
-      ),
+        const Spacer(),
+        Text(isKhmer ? 'លាក់' : 'Hide', style: actionStyle),
+      ],
     );
   }
+}
+
+String _relativeCommentAge(BuildContext context, DateTime createdAt) {
+  final elapsed = DateTime.now().difference(createdAt.toLocal());
+  if (elapsed.inDays >= 1) return '${elapsed.inDays}d';
+  if (elapsed.inHours >= 1) return '${elapsed.inHours}h';
+  if (elapsed.inMinutes >= 1) return '${elapsed.inMinutes}m';
+  return Localizations.localeOf(context).languageCode == 'km' ? 'ឥឡូវ' : 'now';
 }
 
 MarkdownStyleSheet _socialMarkdownStyleSheet(
@@ -893,25 +878,27 @@ MarkdownStyleSheet _socialMarkdownStyleSheet(
       RiksaTypography.bodyStyleFor(content, style) ?? const TextStyle();
 
   final paragraph = socialStyle(
-    theme.textTheme.bodyLarge?.copyWith(
+    theme.textTheme.bodyMedium?.copyWith(
       color: SocialPalette.muted(context),
-      height: 1.7,
+      height: 1.42,
+      fontSize: 13,
     ),
   );
   final heading = socialStyle(
     theme.textTheme.titleLarge?.copyWith(
       color: SocialPalette.ink(context),
-      fontWeight: FontWeight.w800,
+      fontWeight: FontWeight.w600,
       height: hasKhmer ? 1.5 : 1.35,
     ),
   );
 
   return MarkdownStyleSheet.fromTheme(theme).copyWith(
+    textAlign: WrapAlignment.spaceBetween,
     p: paragraph,
     pPadding: const EdgeInsets.only(bottom: 5),
-    h1: heading.copyWith(fontSize: 22),
-    h2: heading.copyWith(fontSize: 20),
-    h3: heading.copyWith(fontSize: 18),
+    h1: heading.copyWith(fontSize: 20),
+    h2: heading.copyWith(fontSize: 18),
+    h3: heading.copyWith(fontSize: 16),
     h1Padding: const EdgeInsets.only(top: 8, bottom: 6),
     h2Padding: const EdgeInsets.only(top: 7, bottom: 5),
     h3Padding: const EdgeInsets.only(top: 6, bottom: 4),
@@ -951,29 +938,16 @@ class _Avatar extends StatelessWidget {
     final label = author.displayName.isEmpty
         ? author.username
         : author.displayName;
-    final avatar = RiksaAvatarImage(
-      value: author.avatarUrl,
-      label: label,
-      size: radius * 2,
-      backgroundColor: SocialPalette.pinkSoft(context),
-      foregroundColor: SocialPalette.aubergine(context),
-    );
-    if (onTap == null) return avatar;
-    return Semantics(
-      button: true,
-      label: AppLocalizations.of(context)!.socialOpenProfile(label),
-      excludeSemantics: true,
-      child: GestureDetector(
-        key: ValueKey('detail-author-avatar-${author.id}'),
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: SizedBox(
-          // The portrait keeps its size; the tappable square does not shrink
-          // below a thumb's width.
-          width: radius * 2 < 48 ? 48 : radius * 2,
-          height: radius * 2 < 48 ? 48 : radius * 2,
-          child: Center(child: avatar),
-        ),
+    return GestureDetector(
+      key: ValueKey('detail-author-avatar-${author.id}'),
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: RiksaAvatarImage(
+        value: author.avatarUrl,
+        label: label,
+        size: radius * 2,
+        backgroundColor: SocialPalette.pinkSoft(context),
+        foregroundColor: SocialPalette.aubergine(context),
       ),
     );
   }
@@ -981,59 +955,37 @@ class _Avatar extends StatelessWidget {
 
 class _DetailAction extends StatelessWidget {
   const _DetailAction({
-    super.key,
     required this.icon,
     required this.count,
-    required this.semanticLabel,
     this.selected = false,
     this.onTap,
   });
 
   final IconData icon;
   final int count;
-
-  /// A count on its own does not say whether it means likes, comments or
-  /// shares, so every action carries its own sentence.
-  final String semanticLabel;
   final bool selected;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = selected
-        ? SocialPalette.pink(context)
-        : SocialPalette.muted(context);
-    return Semantics(
-      button: true,
-      toggled: selected,
-      label: semanticLabel,
-      excludeSemantics: true,
-      child: InkWell(
-        borderRadius: AppRadii.fullBorder,
-        onTap: onTap,
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: selected
-                ? SocialPalette.pinkSoft(context)
-                : SocialPalette.surfaceRaised(context),
-            borderRadius: AppRadii.fullBorder,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 19, color: color),
-              if (count > 0) ...[
-                const SizedBox(width: 5),
-                Text(
-                  '$count',
-                  style: TextStyle(color: color, fontWeight: FontWeight.w700),
-                ),
-              ],
+    final color = selected ? Colors.red : SocialPalette.muted(context);
+    return InkWell(
+      borderRadius: AppRadii.fullBorder,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 19, color: color),
+            if (count > 0) ...[
+              const SizedBox(width: 5),
+              Text(
+                '$count',
+                style: TextStyle(color: color, fontWeight: FontWeight.w600),
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -1046,17 +998,13 @@ class _CountBadge extends StatelessWidget {
   final int count;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-    decoration: BoxDecoration(
-      color: SocialPalette.pinkSoft(context),
-      borderRadius: AppRadii.smallBorder,
-    ),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(left: 4),
     child: Text(
       '$count',
       style: TextStyle(
-        color: SocialPalette.aubergine(context),
-        fontWeight: FontWeight.w800,
+        color: SocialPalette.ink(context),
+        fontWeight: FontWeight.w600,
       ),
     ),
   );
@@ -1078,10 +1026,11 @@ class _EmptyComments extends StatelessWidget {
     child: Column(
       children: [
         Icon(
-          Icons.chat_bubble_outline_rounded,
+          CupertinoIcons.chat_bubble,
           color: SocialPalette.pink(context),
+          size: 32,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Text(
           message,
           textAlign: TextAlign.center,
@@ -1117,7 +1066,7 @@ class _ErrorState extends StatelessWidget {
               l10n.postUnavailable,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: SocialPalette.aubergine(context),
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
@@ -1127,14 +1076,7 @@ class _ErrorState extends StatelessWidget {
               style: TextStyle(color: SocialPalette.muted(context)),
             ),
             const SizedBox(height: 20),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: SocialPalette.aubergine(context),
-                foregroundColor: SocialPalette.onAubergine(context),
-              ),
-              onPressed: onRetry,
-              child: Text(l10n.tryAgain),
-            ),
+            FilledButton(onPressed: onRetry, child: Text(l10n.tryAgain)),
           ],
         ),
       ),
@@ -1166,6 +1108,27 @@ class _CommentComposer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final glassGradient = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Colors.white.withValues(alpha: 0.3),
+        Colors.black.withValues(alpha: 0.1),
+      ],
+    );
+    final glassBorder = Colors.white.withValues(alpha: 0.3);
+    final sendOuterFill = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.58);
+    final sendFill = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.54);
+    final shadow = BoxShadow(
+      color: Colors.black.withValues(alpha: isDark ? .34 : .12),
+      blurRadius: 26,
+      offset: const Offset(0, 10),
+    );
     final replyingName = replyingTo != null
         ? (replyingTo!.author.displayName.isEmpty
               ? replyingTo!.author.username
@@ -1173,145 +1136,192 @@ class _CommentComposer extends StatelessWidget {
         : null;
 
     return Material(
-      color: SocialPalette.surface(context),
+      color: Colors.transparent,
       elevation: 0,
       child: SafeArea(
         top: false,
+        minimum: const EdgeInsets.fromLTRB(12, 6, 12, 10),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (replyingTo != null)
-              Container(
-                key: const ValueKey('reply-indicator-bar'),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: SocialPalette.pinkSoft(context),
-                  border: Border(
-                    bottom: BorderSide(color: SocialPalette.outline(context)),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.reply_rounded,
-                      size: 16,
-                      color: SocialPalette.aubergine(context),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${AppLocalizations.of(context)!.replyingTo} @$replyingName',
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: SocialPalette.aubergine(context),
-                          fontWeight: FontWeight.w700,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ClipRRect(
+                  borderRadius: AppRadii.fullBorder,
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                    child: Container(
+                      key: const ValueKey('reply-indicator-bar'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
                       ),
-                    ),
-                    Semantics(
-                      button: true,
-                      label: AppLocalizations.of(context)!.socialCancelReply,
-                      excludeSemantics: true,
-                      child: InkWell(
-                        key: const ValueKey('cancel-reply-button'),
-                        onTap: onCancelReply,
-                        borderRadius: AppRadii.smallBorder,
-                        child: Container(
-                          constraints: const BoxConstraints(
-                            minWidth: 48,
-                            minHeight: 48,
-                          ),
-                          alignment: Alignment.center,
-                          child: Icon(
-                            Icons.close_rounded,
-                            size: 18,
+                      decoration: ShapeDecoration(
+                        gradient: glassGradient,
+                        shape: StadiumBorder(
+                          side: BorderSide(color: glassBorder),
+                        ),
+                        shadows: [shadow],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.reply_rounded,
+                            size: 16,
                             color: SocialPalette.aubergine(context),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${AppLocalizations.of(context)!.replyingTo} @$replyingName',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: SocialPalette.aubergine(context),
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          InkWell(
+                            key: const ValueKey('cancel-reply-button'),
+                            onTap: onCancelReply,
+                            borderRadius: AppRadii.smallBorder,
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 18,
+                                color: SocialPalette.aubergine(context),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: TextField(
-                      key: const ValueKey('comment-composer'),
-                      controller: controller,
-                      focusNode: focusNode,
-                      minLines: 1,
-                      maxLines: 4,
-                      maxLength: 1000,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: InputDecoration(
-                        hintText: hint,
-                        hintStyle: TextStyle(
-                          color: SocialPalette.muted(context),
-                        ),
-                        counterText: '',
-                        filled: true,
-                        fillColor: SocialPalette.surfaceRaised(context),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: AppRadii.fullBorder,
-                          borderSide: BorderSide(
-                            color: SocialPalette.outline(context),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: AppRadii.fullBorder,
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                      child: Container(
+                        decoration: ShapeDecoration(
+                          gradient: glassGradient,
+                          shape: StadiumBorder(
+                            side: BorderSide(color: glassBorder),
                           ),
+                          shadows: [shadow],
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: AppRadii.fullBorder,
-                          borderSide: BorderSide(
-                            color: SocialPalette.outline(context),
+                        clipBehavior: Clip.antiAlias,
+                        child: TextField(
+                          key: const ValueKey('comment-composer'),
+                          controller: controller,
+                          focusNode: focusNode,
+                          minLines: 1,
+                          maxLines: 4,
+                          maxLength: 1000,
+                          textCapitalization: TextCapitalization.sentences,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: SocialPalette.text(context),
+                            height: 1.35,
                           ),
-                        ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderRadius: AppRadii.fullBorder,
-                          borderSide: BorderSide(
-                            color: AppColors.editorialPink,
-                            width: 1.5,
+                          decoration: InputDecoration(
+                            hintText: hint,
+                            hintStyle: TextStyle(
+                              color: SocialPalette.muted(context),
+                            ),
+                            counterText: '',
+                            filled: true,
+                            fillColor: Colors.white.withValues(
+                              alpha: isDark ? .08 : .16,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 14,
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
                           ),
+                          onSubmitted: (_) => onSend(),
                         ),
                       ),
-                      onSubmitted: (_) => onSend(),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Semantics(
-                    button: true,
-                    label: sendLabel,
-                    child: IconButton(
-                      key: const ValueKey('send-comment-button'),
-                      onPressed: submitting ? null : onSend,
-                      style: IconButton.styleFrom(
-                        backgroundColor: SocialPalette.aubergine(context),
-                        foregroundColor: SocialPalette.onAubergine(context),
-                        disabledBackgroundColor: SocialPalette.outline(context),
-                        shape: const CircleBorder(),
+                ),
+                const SizedBox(width: 10),
+                Semantics(
+                  button: true,
+                  label: sendLabel,
+                  child: SizedBox.square(
+                    dimension: 56,
+                    child: DecoratedBox(
+                      decoration: ShapeDecoration(
+                        color: sendOuterFill,
+                        shape: CircleBorder(
+                          side: BorderSide(color: glassBorder),
+                        ),
+                        shadows: [shadow],
                       ),
-                      icon: submitting
-                          ? const SizedBox.square(
-                              dimension: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
+                      child: ClipOval(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: DecoratedBox(
+                              decoration: ShapeDecoration(
+                                color: sendFill,
+                                shape: CircleBorder(
+                                  side: BorderSide(color: glassBorder),
+                                ),
+                                shadows: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                            )
-                          : const Icon(Icons.send_rounded),
+                              child: IconButton(
+                                key: const ValueKey('send-comment-button'),
+                                onPressed: submitting ? null : onSend,
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  foregroundColor: SocialPalette.aubergine(
+                                    context,
+                                  ),
+                                  disabledForegroundColor: SocialPalette.muted(
+                                    context,
+                                  ),
+                                  fixedSize: const Size.square(48),
+                                  shape: const CircleBorder(),
+                                ),
+                                icon: submitting
+                                    ? SizedBox.square(
+                                        dimension: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: SocialPalette.aubergine(
+                                            context,
+                                          ),
+                                        ),
+                                      )
+                                    : const Icon(Icons.send_rounded),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),

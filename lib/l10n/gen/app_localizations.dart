@@ -2879,7 +2879,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeGreeting.
   ///
   /// In en, this message translates to:
-  /// **'Hello, {name}! 👋'**
+  /// **'Hello, {name}!'**
   String homeGreeting(String name);
 
   /// No description provided for @homeSubtitle.
