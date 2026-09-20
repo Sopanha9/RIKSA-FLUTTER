@@ -16,15 +16,41 @@ void main() {
     await tester.pump();
 
     await tester.enterText(find.byType(RiksaSearchField), 'algebra');
-    await tester.tap(find.text('Mathematics'));
     await tester.tap(find.text('Open card'));
     await tester.tap(find.text('Try again'));
     await tester.pump();
 
     expect(find.text('algebra'), findsOneWidget);
-    expect(tester.widget<FilterChip>(find.byType(FilterChip)).selected, isTrue);
     expect(find.text('Card opened'), findsOneWidget);
     expect(find.text('Retried'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('page header and lesson skeleton remain available', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: const Scaffold(
+          body: Column(
+            children: [
+              RiksaPageHeader(
+                title: 'Learn',
+                subtitle: 'Build your next skill',
+                trailing: Icon(Icons.tune_rounded),
+              ),
+              LessonCardSkeleton(),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(RiksaPageHeader), findsOneWidget);
+    expect(find.byType(LessonCardSkeleton), findsOneWidget);
+    expect(find.text('Learn'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
@@ -37,7 +63,6 @@ class _ComponentHarness extends StatefulWidget {
 }
 
 class _ComponentHarnessState extends State<_ComponentHarness> {
-  bool selected = false;
   bool opened = false;
   bool retried = false;
 
@@ -51,15 +76,6 @@ class _ComponentHarnessState extends State<_ComponentHarness> {
           padding: const EdgeInsets.all(RiksaSpacing.md),
           children: [
             const RiksaSearchField(hintText: 'Search lessons'),
-            const SizedBox(height: RiksaSpacing.sm),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: RiksaChoicePill(
-                label: 'Mathematics',
-                selected: selected,
-                onSelected: (value) => setState(() => selected = value),
-              ),
-            ),
             const SizedBox(height: RiksaSpacing.sm),
             RiksaPastelCard(
               tone: RiksaPastelTone.blush,
