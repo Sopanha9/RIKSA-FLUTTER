@@ -36,6 +36,7 @@ class RiksaSearchBar extends StatelessWidget {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final isDark = theme.brightness == Brightness.dark;
+    final glass = context.riksaGlass;
     final glassGradient = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
@@ -54,14 +55,8 @@ class RiksaSearchBar extends StatelessWidget {
       offset: const Offset(0, 8),
     );
     final controlOuterFill = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.white.withValues(alpha: 0.58);
-    final controlInnerFill = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.white.withValues(alpha: 0.54);
-    final controlBorder = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.white.withValues(alpha: 0.72);
+        ? glass.selectedFill
+        : glass.fill;
 
     return ClipRRect(
       borderRadius: AppRadii.fullBorder,
@@ -119,38 +114,29 @@ class RiksaSearchBar extends StatelessWidget {
                       decoration: ShapeDecoration(
                         color: controlOuterFill,
                         shape: CircleBorder(
-                          side: BorderSide(color: controlBorder),
+                          side: BorderSide(color: glass.border),
                         ),
-                        shadows: [
-                          BoxShadow(
-                            color: palette.ink.withValues(
-                              alpha: isDark ? 0.18 : 0.08,
-                            ),
-                            blurRadius: 18,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
+                        shadows: RiksaElevation.overlay(theme.brightness),
                       ),
                       child: ClipOval(
                         child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                          filter: ImageFilter.blur(
+                            sigmaX: glass.blurSigma,
+                            sigmaY: glass.blurSigma,
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.all(4),
                             child: DecoratedBox(
                               decoration: ShapeDecoration(
-                                color: controlInnerFill,
+                                color: glass.selectedFill,
                                 shape: CircleBorder(
                                   side: BorderSide(
-                                    color: Colors.white.withValues(alpha: 0.36),
+                                    color: glass.selectedBorder,
                                   ),
                                 ),
-                                shadows: [
-                                  BoxShadow(
-                                    color: palette.ink.withValues(alpha: 0.06),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
+                                shadows: RiksaElevation.raised(
+                                  theme.brightness,
+                                ),
                               ),
                               child: Material(
                                 color: Colors.transparent,

@@ -1,10 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
+import '../../../core/widgets/riksa_glass.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../providers/profile_provider.dart';
 
@@ -311,16 +311,6 @@ class _ProgressSectionTabsState extends State<_ProgressSectionTabs> {
   @override
   Widget build(BuildContext context) {
     final palette = context.riksa;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final glassFill = isDark
-        ? palette.surface.withValues(alpha: 0.46)
-        : Colors.white.withValues(alpha: 0.58);
-    final glassBorder = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.white.withValues(alpha: 0.72);
-    final selectedFill = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.white.withValues(alpha: 0.54);
     final duration = RiksaMotion.resolve(context, RiksaMotion.standard);
 
     Widget tab(String label, int index) {
@@ -356,70 +346,34 @@ class _ProgressSectionTabsState extends State<_ProgressSectionTabs> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: AppRadii.fullBorder,
-          boxShadow: [
-            BoxShadow(
-              color: palette.ink.withValues(alpha: isDark ? 0.18 : 0.08),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: AppRadii.fullBorder,
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-            child: Container(
-              height: 46,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: glassFill,
-                borderRadius: AppRadii.fullBorder,
-                border: Border.all(color: glassBorder),
-              ),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final tabWidth = constraints.maxWidth / 2;
-                  final showingRank = _controller.index == 1;
-                  return Stack(
+      child: SizedBox(
+        height: 46,
+        child: RiksaGlassSurface(
+          padding: const EdgeInsets.all(4),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final tabWidth = constraints.maxWidth / 2;
+              final showingRank = _controller.index == 1;
+              return Stack(
+                children: [
+                  AnimatedPositionedDirectional(
+                    duration: duration,
+                    curve: Curves.easeOutCubic,
+                    start: showingRank ? tabWidth : 0,
+                    top: 0,
+                    bottom: 0,
+                    width: tabWidth,
+                    child: const RiksaGlassSelection(),
+                  ),
+                  Row(
                     children: [
-                      AnimatedPositionedDirectional(
-                        duration: duration,
-                        curve: Curves.easeOutCubic,
-                        start: showingRank ? tabWidth : 0,
-                        top: 0,
-                        bottom: 0,
-                        width: tabWidth,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: selectedFill,
-                            borderRadius: AppRadii.fullBorder,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.36),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: palette.ink.withValues(alpha: 0.06),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          tab('XP activity', 0),
-                          tab('Rank changes', 1),
-                        ],
-                      ),
+                      tab('XP activity', 0),
+                      tab('Rank changes', 1),
                     ],
-                  );
-                },
-              ),
-            ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),

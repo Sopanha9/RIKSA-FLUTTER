@@ -495,16 +495,12 @@ class _Composer extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final palette = context.riksa;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final glass = context.riksaGlass;
     final sendOuterFill = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.white.withValues(alpha: 0.58);
-    final sendFill = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.white.withValues(alpha: 0.54);
-    final sendBorder = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.white.withValues(alpha: 0.72);
+        ? glass.selectedFill
+        : glass.fill;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: Container(
@@ -547,37 +543,28 @@ class _Composer extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: ShapeDecoration(
                     color: sendOuterFill,
-                    shape: CircleBorder(side: BorderSide(color: sendBorder)),
-                    shadows: [
-                      BoxShadow(
-                        color: palette.ink.withValues(
-                          alpha: isDark ? 0.18 : 0.08,
-                        ),
-                        blurRadius: 18,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+                    shape: CircleBorder(
+                      side: BorderSide(color: glass.border),
+                    ),
+                    shadows: RiksaElevation.overlay(theme.brightness),
                   ),
                   child: ClipOval(
                     child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                      filter: ImageFilter.blur(
+                        sigmaX: glass.blurSigma,
+                        sigmaY: glass.blurSigma,
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(4),
                         child: DecoratedBox(
                           decoration: ShapeDecoration(
-                            color: sendFill,
+                            color: glass.selectedFill,
                             shape: CircleBorder(
                               side: BorderSide(
-                                color: Colors.white.withValues(alpha: 0.36),
+                                color: glass.selectedBorder,
                               ),
                             ),
-                            shadows: [
-                              BoxShadow(
-                                color: palette.ink.withValues(alpha: 0.06),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                            shadows: RiksaElevation.raised(theme.brightness),
                           ),
                           child: IconButton(
                             key: const ValueKey('send-ai-message'),

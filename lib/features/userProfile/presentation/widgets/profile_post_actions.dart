@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/riksa_glass.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../auth/data/auth_models.dart';
 import 'profile_ui.dart';
@@ -94,52 +95,36 @@ class _ProfileGlassActionCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.riksa;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final glass = context.riksaGlass;
     final outerFill = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.white.withValues(alpha: 0.58);
-    final innerFill = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.white.withValues(alpha: 0.54);
-    final border = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.white.withValues(alpha: 0.72);
+        ? glass.selectedFill
+        : glass.fill;
 
     return SizedBox.square(
       dimension: 40,
       child: DecoratedBox(
         decoration: ShapeDecoration(
           color: outerFill,
-          shape: CircleBorder(side: BorderSide(color: border)),
-          shadows: [
-            BoxShadow(
-              color: palette.ink.withValues(alpha: isDark ? 0.18 : 0.08),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          shape: CircleBorder(side: BorderSide(color: glass.border)),
+          shadows: RiksaElevation.overlay(theme.brightness),
         ),
         child: ClipOval(
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            filter: ImageFilter.blur(
+              sigmaX: glass.blurSigma,
+              sigmaY: glass.blurSigma,
+            ),
             child: Padding(
               padding: const EdgeInsets.all(4),
               child: DecoratedBox(
                 decoration: ShapeDecoration(
-                  color: innerFill,
+                  color: glass.selectedFill,
                   shape: CircleBorder(
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.36),
-                    ),
+                    side: BorderSide(color: glass.selectedBorder),
                   ),
-                  shadows: [
-                    BoxShadow(
-                      color: palette.ink.withValues(alpha: 0.06),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  shadows: RiksaElevation.raised(theme.brightness),
                 ),
                 child: Icon(icon, size: 22, color: color),
               ),
@@ -230,78 +215,33 @@ class _ProfileEmptyCreateButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.riksa;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final glassFill = isDark
-        ? palette.surface.withValues(alpha: 0.46)
-        : Colors.white.withValues(alpha: 0.58);
-    final glassBorder = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.white.withValues(alpha: 0.72);
-    final selectedFill = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.white.withValues(alpha: 0.54);
 
     return Semantics(
       button: true,
       label: label,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: AppRadii.fullBorder,
-          boxShadow: [
-            BoxShadow(
-              color: palette.ink.withValues(alpha: isDark ? 0.18 : 0.08),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: AppRadii.fullBorder,
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-            child: Container(
-              width: 240,
-              height: 46,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: glassFill,
+      child: SizedBox(
+        width: 240,
+        height: 46,
+        child: RiksaGlassSurface(
+          padding: const EdgeInsets.all(4),
+          child: RiksaGlassSelection(
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: AppRadii.fullBorder,
+              child: InkWell(
                 borderRadius: AppRadii.fullBorder,
-                border: Border.all(color: glassBorder),
-              ),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: selectedFill,
-                  borderRadius: AppRadii.fullBorder,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.36),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: palette.ink.withValues(alpha: 0.06),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  borderRadius: AppRadii.fullBorder,
-                  child: InkWell(
-                    borderRadius: AppRadii.fullBorder,
-                    onTap: onTap,
-                    child: Center(
-                      child: Text(
-                        label,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: RiksaTypography.bodyStyleFor(
-                          label,
-                          Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: palette.brand,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                onTap: onTap,
+                child: Center(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: RiksaTypography.bodyStyleFor(
+                      label,
+                      Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: palette.brand,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
