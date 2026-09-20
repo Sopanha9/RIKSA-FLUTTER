@@ -728,3 +728,81 @@ grep -rl 'withValues(alpha: 0.58)' lib --include=*.dart \
 | Dead code | `lib/features/leaderBoard/leaderboard_screen.dart` |
 | Identical tab strips | `lib/features/leaderBoard/presentation/widgets/leaderboard_scope_tabs.dart:9`; `lib/features/social/presentation/social_feed_screen.dart:795` |
 | Contradictory docs | `DESIGN.md`, `docs/REFERENCE_UI.md`, `docs/UI_CLEANUP_PLAN.md`, `docs/EDITORIAL_DESIGN_SYSTEM.md` |
+
+---
+
+# Remediation Status — 2026-09-20
+
+Implemented on `merge/sombath-onto-mine`, commits `119c4b4`..`8307cc9`.
+
+**Verification method.** The baseline was **not green**: 319 passing / **84 failing**
+before any change, almost all stale goldens from the `6c6cebb` glasses merge plus
+the in-flight bottom-nav work. The golden suite therefore *cannot* detect a visual
+regression from this refactor. Two things compensate:
+
+1. Every extracted token is **numerically identical** to the literal it replaced,
+   so migration is visually invisible by construction.
+2. Verification is a **set-difference** against the recorded 84, not a "tests pass"
+   claim.
+
+Final state: `flutter analyze` **8 issues — identical to baseline**, tests **80 failing,
+zero new failures**, 4 fixed (the deleted dead-component goldens).
+
+## Addressed
+
+| Item | Outcome |
+|---|---|
+| P0.1 | `DESIGN.md` corrected against the theme — primary colour, all 15 type roles, all 8 radii, glass/elevation/gutter tokens, the `editorial*` alias warning, the Khmer font gap |
+| P0.2 *(partial)* | `RiksaSpacing.gutter = 20` added and documented. Nav-inset half **deferred** |
+| P0.3 | `SocialPalette` retired (97 → 5 refs); `ProfilePalette` reduced (146 → 30 refs) |
+| P1.1 | `RiksaGlass` tokens + `RiksaGlassSurface` / `RiksaGlassSelection`; 6 sites migrated |
+| P1.2 *(partial)* | 9 bold `w700` roles added. Migrating the 153 existing overrides not done |
+| P1.3 *(partial)* | `RiksaElevation.raised` / `.overlay` added. Migrating the 48 shadows not done |
+| P2.1 | Dead 1,055-line leaderboard screen deleted |
+| P2.2 | 11 dead core widgets + 3 orphaned helpers deleted with their goldens; live `RiksaPageHeader` coverage moved to a widget test |
+| P2.4 *(partial)* | The two duplicated strips unified as `RiksaSegmentedTabs`. The other three not done |
+| P3.1 | Five exact-duplicate literals replaced with their tokens |
+| P3.2 | `AppColors.socialLike` adopted |
+| P3.3 | Three const dark-mode bypasses fixed |
+| P3.4 *(partial)* | Comment actions, author identities, blog cover, 48px targets. Nav string **deferred** |
+| P3.6 | `AppRadii.row`/`large` and `displaySmall`/`headlineLarge` documented as intentional aliases (not changed — changing them is a visual redesign) |
+| P3.8 | Broken `/auth/province` → `/province-select` fixed |
+
+## Deferred — bottom navigation is owned by another developer
+
+Not touched, by instruction. These remain open:
+
+- **P0.2 (nav inset).** `RiksaBottomNavigationBar._height` is still private, and
+  `blog_feed_screen` / `home_dashboard_screen` / `subject_roadmap_screen` /
+  `lesson_catalog_screen` still hardcode 96 / 110 / 132 / 160 clearance.
+- **P1.1 (nav glass).** `riksa_bottom_navigation_bar.dart` still carries its own
+  inline copy of the glass recipe. It is the one remaining duplicate.
+- **P3.4 (nav a11y).** The hardcoded English `'Current Tab'` and its empty `onTap`.
+- **Doc contradiction #3.** `docs/REFERENCE_UI.md` and `docs/UI_CLEANUP_PLAN.md`
+  specify mutually exclusive navigation. Both files are left entirely untouched.
+
+## Rejected after verification — the audit was wrong
+
+- **"3 `IconButton`s with 0 tooltips" (`social_feed_screen.dart`).** Those are the
+  file's own `_HeaderGlassIconButton` class, not Flutter's widget, and both call
+  sites already carry `Semantics(label:)`.
+- **"The two tab strips are line-for-line identical."** They are not: 46px with
+  outer padding and a selection haptic vs 48px with a container key. All
+  differences preserved.
+- **"The glass recipe recurs across 8 files."** Three of those are genuinely
+  different surfaces — blur 18 + gradient; fill 0.58/0.72 with a blur-24 shadow;
+  blur 12 over `panelSoft @ 0.6` — and were deliberately not migrated.
+- **P3.5 (delete 3 unused fonts).** Refused. Koulen, Kantumruy Pro and Noto Sans
+  Khmer are exactly the Khmer stack `DESIGN.md` specifies and `KHMER_TODO.md` is
+  actively building toward. They are specified-but-unwired, not dead. The gap is
+  now documented in `DESIGN.md` instead.
+
+## Not attempted
+
+P1.4 bottom-sheet surface, P1.5 loading/empty convergence, P2.3 `_LeaderboardSearchField`,
+P2.5 shared screen header, P2.6 chips, P2.7 the 77 `styleFrom` overrides, P3.7 icon policy,
+P0.4 the `editorial*` rename, and archiving the superseded documents.
+
+P0.4 is deliberately sequenced last: consolidating the palettes first removed a
+large share of the `editorial*` references, so the rename is now a smaller change
+than the audit measured.
