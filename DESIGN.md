@@ -1,20 +1,34 @@
 # Riksa — Design System
 
-Flutter. Tokens live in [app_theme.dart](lib/core/theme/app_theme.dart) and are
-reached through `context.riksa` (a `RiksaPalette` theme extension), never by
-importing raw `AppColors` into feature code.
+**Source of truth: [app_theme.dart](lib/core/theme/app_theme.dart).** Where this
+document and the code disagree, the code wins and this document is the bug. Every
+value below was checked against the theme on 2026-09-20; sections marked
+*known deviation* describe where the shipped app knowingly differs from the
+stated rule.
+
+Tokens are reached through `context.riksa` (a `RiksaPalette` theme extension).
+Prefer it in feature code. Direct `AppColors` imports still exist in roughly 180
+places — they are not yet an error, but new code should not add more, because
+`AppColors` bypasses the dark-aware layer.
 
 ## Direction
 
 **Playful and minimal, on rounded pastel blocks.** Soft pastel surfaces carry
-the warmth, generous radii carry the friendliness, and a single warm near-black
-(`editorialAubergine` `#2A061D`, never pure black) carries every primary action
+the warmth, generous radii carry the friendliness, and a single saturated violet
+(`AppColors.violet` `#7657EE`, never pure black) carries every primary action
 as a full pill. Air between blocks does the separating; hairline borders are
 rare. Line-art illustration, pastel discs and small four-point sparkles are the
 decorative vocabulary. One loud moment per flow, quiet everywhere else.
 
+> **Naming warning.** `AppColors` still carries an `editorial*` / `brandJade*`
+> vocabulary from an abandoned direction, aliased onto the current violet
+> system — `editorialAubergine`, `editorialPink` and friends resolve to violet
+> values, not to the near-black or pink their names suggest. The values are
+> correct; the names lie. Read them as aliases, not as descriptions.
+
 This is not an editorial or spec-sheet system. Mono labels, hairline rules and
-tabular column layouts are out of register.
+tabular column layouts are out of register. `docs/EDITORIAL_DESIGN_SYSTEM.md`
+describes a superseded direction and does not govern.
 
 ## Color
 
@@ -29,7 +43,7 @@ Within the learning tab:
 | Mint `#DDF0DC` | Done. |
 | White `#FFFFFF` | Available, not started. |
 | Cream `#FBEBCD` | The goal, and set-apart content such as formulas. |
-| Aubergine `#2A061D` | Actions, and the fixed destination bar. |
+| Violet `#7657EE` | Actions, and the fixed destination bar. |
 
 At most one pastel-filled focal surface per screen, plus one drenched screen per
 flow for the earned moment. The failure mode to avoid is the current lesson
@@ -53,9 +67,10 @@ raised surfaces. Light mode is unchanged.
 | `jade` | `#237A5B` | `#69B893` | Completion, understood |
 | `saffron` | `#E69A18` | `#F4B84D` | Streak, XP, current position |
 
-Interaction anchor: `editorialBlack` `#111012` in light, `editorialPink`
-`#EE8FD0` in dark. Pink is an accent and a dark-mode anchor. It is not a
-default surface.
+Interaction anchor: `AppColors.violet` `#7657EE`, which is what
+`editorialAubergine` resolves to. The dark-mode accent is `editorialPink`
+`#9D86F7` — a lavender, despite the name. `editorialBlack` is `#1D1533`, the
+same value as `ink`. None of these three is a default surface.
 
 ### Subject hues
 
@@ -86,6 +101,13 @@ One per STEM subject, used at full strength on marks and numerals, and as a
 
 Latin: **Poppins**. Khmer display: **Koulen**. Khmer body:
 **Khmer OS Siemreap**, falling back to Kantumruy Pro and Noto Sans Khmer.
+
+> **Known gap.** Only Poppins, Reddit Sans (legacy fallback) and Khmer OS
+> Siemreap are actually referenced from `lib/`. Koulen, Kantumruy Pro and Noto
+> Sans Khmer ship in the bundle (~2.1 MB) and are loaded by golden tests, but no
+> runtime code selects them — so the Khmer display face specified above does not
+> currently render. Wire them up or drop them deliberately; do not delete them
+> as "unused" while this section still specifies them.
 Mixed-script strings must pass through
 `RiksaTypography.titleStyleFor` / `bodyStyleFor`, which swap family, weight and
 line height per script.
@@ -95,11 +117,28 @@ display steps:
 
 | Step | Size / weight | Use |
 |---|---|---|
-| `displaySmall` | 28 / 700 | Screen title |
-| `headlineSmall` | 21 / 700 | Focal card title |
-| `titleMedium` | 17 / 600 | Lesson row title |
-| `bodyMedium` | 14 / 400 | Lesson reading copy |
-| `labelSmall` | 11 / 600 | Metadata, unit labels |
+| `displayLarge` | 26 / 600 | Screen title |
+| `displayMedium` | 24 / 600 | Screen title, tighter |
+| `displaySmall` | 21 / 600 | Alias of `headlineLarge` |
+| `headlineLarge` | 21 / 600 | Focal card title — prefer this over `displaySmall` |
+| `headlineMedium` | 18 / 600 | Section heading |
+| `headlineSmall` | 16 / 600 | Sub-heading |
+| `titleLarge` | 17 / 500 | Lesson row title |
+| `titleMedium` | 15 / 500 | Row title |
+| `titleSmall` | 14 / 500 | Dense row title |
+| `bodyLarge` | 15 / 400 | Lesson reading copy |
+| `bodyMedium` | 13.5 / 400 | Body copy |
+| `bodySmall` | 11.5 / 400 | Supporting copy (muted) |
+| `labelLarge` | 13 / 500 | Button and tab labels |
+| `labelMedium` | 11.5 / 500 | Metadata |
+| `labelSmall` | 10.5 / 400 | Unit labels (muted) |
+
+**Bold roles.** The scale above stops at w600. For emphasis use the w700
+variants rather than an inline `TextStyle`: `labelLargeBold`, `labelMediumBold`,
+`labelSmallBold`, `titleLargeBold`, `titleMediumBold`, `titleSmallBold`,
+`bodyLargeBold`, `bodyMediumBold`, `bodySmallBold`. They are a `TextTheme`
+extension, so `Theme.of(context).textTheme.titleMediumBold` resolves them. Each
+differs from its base role only in weight.
 
 - Lesson reading copy sits at 16–17px with 1.6 line height and a measure capped
   near 68 characters. Reading is the one place that gets generous leading.
@@ -111,12 +150,17 @@ display steps:
 
 | Radius | Token | Use |
 |---|---|---|
-| 13 | `AppRadii.small` | Icon badges (squircle, never a square) |
-| 15 | `AppRadii.medium` | Rows nested inside a panel |
-| 20 | `AppRadii.large` | Secondary cards |
-| 24 | `AppRadii.large`+ | Panels, inline blocks |
-| 32 | `AppRadii.extraLarge` | Feature cards, drenched headers |
+| 8 | `AppRadii.small` | Small inner shapes |
+| 13 | `AppRadii.badge` | Icon badges (squircle, never a square) |
+| 14 | `AppRadii.medium` | Rows nested inside a panel |
+| 16 | `AppRadii.row` / `AppRadii.large` | Cards and rows — two names, one value |
+| 20 | `AppRadii.panel` | Panels, inline blocks |
+| 24 | `AppRadii.feature` | Feature cards |
+| 28 | `AppRadii.extraLarge` | Drenched headers, tall sheets |
 | full | `AppRadii.fullBorder` | Buttons, chips, avatars |
+
+`row` and `large` are both 16. The duplication is intentional and kept for
+compatibility; prefer `large` unless the shape really is a list row.
 
 Nothing is square and nothing is hard-edged. Buttons are always full pills at
 54dp, never rectangles with a small radius.
@@ -125,13 +169,36 @@ Nothing is square and nothing is hard-edged. Buttons are always full pills at
   at `outline`.
 - One level of nesting is allowed and expected: white pill rows inside a pastel
   unit panel. Two levels is not.
-- Elevation is a single low shadow (`RiksaElevation.low`) or nothing. The
-  current item may carry one soft shadow to lift it off its pastel ground.
+- Elevation has three roles and nothing else. Do not hand-write a `BoxShadow`.
+  - `RiksaElevation.low` — resting cards. The current item may carry one soft
+    shadow to lift it off its pastel ground.
+  - `RiksaElevation.raised` — ink @ 6%, blur 10, offset (0,4). Selected chips
+    and small lifted surfaces.
+  - `RiksaElevation.overlay` — ink @ 18% dark / 8% light, blur 18, offset (0,8).
+    Glass chrome, sheets and floating bars.
+
+## Glass
+
+Glass is the app's signature chrome, not decoration: a blur, a translucent
+fill and a hairline light border, used for floating controls that sit over
+content. It is a token, never hand-rolled.
+
+- `context.riksaGlass` gives `fill`, `border`, `selectedFill`, `selectedBorder`
+  and `blurSigma` (14 by default), all brightness-aware.
+- `RiksaGlassSurface` draws the full recipe — shadow, clip, backdrop blur, fill
+  and border. `RiksaGlassSelection` draws the selected chip inside a strip.
+- `RiksaSegmentedTabs` is the shared glass tab strip. Do not build another.
+
+Use glass for chrome that floats over scrolling content. Do not use it for
+resting content surfaces — those are flat pastel or `surface`.
 
 ## Layout
 
-- Base grid 4dp. Screen gutter 18–20dp. Section rhythm varies deliberately:
-  24dp inside a group, 32–40dp between groups.
+- Base grid 4dp. Screen gutter is `RiksaSpacing.gutter` (20dp) — use the token,
+  not a literal. Auth and AI reading surfaces may widen to 24dp. Section rhythm
+  varies deliberately: 24dp inside a group, 32–40dp between groups.
+- `RiksaSpacing` is 4 / 8 / 12 / 16 / **20 (`gutter`)** / 24 / 32 / 48. Values
+  off that scale (6, 10, 14, 18, 22) are legacy and should not be added to.
 - Must hold at 360dp width and at 200% text scale.
 - Bottom navigation floats on the screen a tab lands on, and every scroll view
   there reserves ~112dp of bottom padding for it.
@@ -215,10 +282,14 @@ record the specific typography, spacing or motion behavior being adopted.
 ## Banned
 
 - Side-stripe borders as accents.
-- Gradient text and gradient card fills. Pastels are flat.
-- Decorative glassmorphism.
+- Gradient text. *Known deviation:* gradient card fills were banned here, but
+  about ten ship today, including the dashboard learning card. Treat them as
+  legacy — do not add more, and prefer a flat pastel for anything new.
+- Glass used as decoration, or hand-rolled. Glass itself is sanctioned chrome —
+  see **Glass** above — but only through `RiksaGlassSurface` /
+  `RiksaSegmentedTabs`, and only for controls floating over content.
 - Pure black `#000000` as text, or as any light-mode surface. The action
-  anchor is aubergine `#2A061D` in light and pink `#EE8FD0` in dark; the
+  anchor is violet `#7657EE` in light and lavender `#9D86F7` in dark; the
   dark-mode page ground is the single sanctioned use of true black.
 - Square corners and small radii on anything interactive.
 - Long scrolling runs of same-size cards where colour carries no state.
