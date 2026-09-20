@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/notifications/streak_reminder_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_mode_provider.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/profile_cover_provider.dart';
@@ -41,9 +42,9 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     final streakReminderEnabled = streakReminderAsync.value ?? true;
 
     return Scaffold(
-      backgroundColor: ProfilePalette.canvas(context),
+      backgroundColor: context.riksa.canvas,
       appBar: AppBar(
-        backgroundColor: ProfilePalette.canvas(context),
+        backgroundColor: context.riksa.canvas,
         centerTitle: false,
         title: Text(
           l10n.settings,
@@ -79,7 +80,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                       ),
                       subtitle: Text(
                         '@${user.username}',
-                        style: TextStyle(color: ProfilePalette.muted(context)),
+                        style: TextStyle(color: context.riksa.inkMuted),
                       ),
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: () => context.push('/profile/edit'),
@@ -144,7 +145,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                       ListTile(
                         leading: Icon(
                           Icons.translate_rounded,
-                          color: ProfilePalette.muted(context),
+                          color: context.riksa.inkMuted,
                         ),
                         title: Text(l10n.language),
                         subtitle: Text(
@@ -152,7 +153,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                               ? l10n.languageKm
                               : l10n.languageEn,
                           style: TextStyle(
-                            color: ProfilePalette.muted(context),
+                            color: context.riksa.inkMuted,
                           ),
                         ),
                         trailing: Switch.adaptive(
@@ -169,7 +170,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                 Text(
                   l10n.helpAndLegal,
                   style: TextStyle(
-                    color: ProfilePalette.muted(context),
+                    color: context.riksa.inkMuted,
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                   ),
@@ -204,7 +205,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                   key: const ValueKey('settings-logout'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Theme.of(context).colorScheme.error,
-                    backgroundColor: ProfilePalette.panel(context),
+                    backgroundColor: context.riksa.surface,
                     side: BorderSide(
                       color: Theme.of(context).colorScheme.error,
                     ),
@@ -249,11 +250,11 @@ class _SettingsSwitchRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-    leading: Icon(icon, color: ProfilePalette.muted(context)),
+    leading: Icon(icon, color: context.riksa.inkMuted),
     title: Text(title),
     subtitle: Text(
       subtitle,
-      style: TextStyle(color: ProfilePalette.muted(context), fontSize: 12),
+      style: TextStyle(color: context.riksa.inkMuted, fontSize: 12),
     ),
     trailing: Switch.adaptive(
       value: value,
@@ -280,7 +281,7 @@ class _DocumentRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final address = url;
-    final muted = ProfilePalette.muted(context);
+    final muted = context.riksa.inkMuted;
     if (address == null) {
       return ListTile(
         enabled: false,
@@ -317,5 +318,5 @@ class _SettingsDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      Divider(height: 1, indent: 56, color: ProfilePalette.border(context));
+      Divider(height: 1, indent: 56, color: context.riksa.outline);
 }

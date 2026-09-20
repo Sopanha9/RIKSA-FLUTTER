@@ -58,7 +58,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       child: Builder(
         builder: (context) => Scaffold(
           key: const ValueKey('personal-profile-scaffold'),
-          backgroundColor: ProfilePalette.canvas(context),
+          backgroundColor: context.riksa.canvas,
           floatingActionButton: AnimatedSlide(
             duration: RiksaMotion.resolve(context, RiksaMotion.standard),
             curve: RiksaMotion.standardCurve,
@@ -135,7 +135,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     pinned: true,
                     delegate: ProfileTabsHeaderDelegate(
                       extent: ProfileTabs.heightFor(context),
-                      color: ProfilePalette.canvas(context),
+                      color: context.riksa.canvas,
                       tabs: ProfileTabs(
                         selected: _tab,
                         postsLabel: l10n.myPosts,
@@ -419,10 +419,10 @@ class _ProfileHeader extends ConsumerWidget {
             child: Container(
               key: const ValueKey('profile-learning-card'),
               decoration: BoxDecoration(
-                color: ProfilePalette.panel(context).withValues(alpha: 0.6),
+                color: context.riksa.surface.withValues(alpha: 0.6),
                 borderRadius: AppRadii.largeBorder,
                 border: Border.all(
-                  color: ProfilePalette.border(context).withValues(alpha: 0.5),
+                  color: context.riksa.outline.withValues(alpha: 0.5),
                 ),
               ),
               clipBehavior: Clip.antiAlias,
@@ -447,8 +447,8 @@ class _ProfileHeader extends ConsumerWidget {
                           radius: _avatarRadius,
                           avatarPath: localAvatar,
                           frameTier: game?.currentTier,
-                          borderColor: ProfilePalette.panel(context),
-                          ringColor: ProfilePalette.panel(context),
+                          borderColor: context.riksa.surface,
+                          ringColor: context.riksa.surface,
                         ),
                       ),
                     ],
@@ -478,7 +478,7 @@ class _ProfileHeader extends ConsumerWidget {
                                   style: RiksaTypography.titleStyleFor(
                                     name,
                                     theme.textTheme.titleMedium?.copyWith(
-                                      color: ProfilePalette.text(context),
+                                      color: context.riksa.ink,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
@@ -503,7 +503,7 @@ class _ProfileHeader extends ConsumerWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: ProfilePalette.muted(context),
+                                color: context.riksa.inkMuted,
                               ),
                             ),
                         ],
@@ -534,7 +534,7 @@ class _ProfileHeader extends ConsumerWidget {
                     style: RiksaTypography.bodyStyleFor(
                       user.bio!.trim(),
                       theme.textTheme.bodyMedium?.copyWith(
-                        color: ProfilePalette.text(context),
+                        color: context.riksa.ink,
                       ),
                     ),
                   ),
@@ -544,7 +544,7 @@ class _ProfileHeader extends ConsumerWidget {
                     style: RiksaTypography.bodyStyleFor(
                       meta,
                       theme.textTheme.bodySmall?.copyWith(
-                        color: ProfilePalette.muted(context),
+                        color: context.riksa.inkMuted,
                       ),
                     ),
                   ),
@@ -632,7 +632,7 @@ class _ProfileTierProgress extends StatelessWidget {
           )
         : null;
     final small = Theme.of(context).textTheme.labelSmall?.copyWith(
-      color: ProfilePalette.muted(context),
+      color: context.riksa.inkMuted,
       fontWeight: FontWeight.w500,
     );
 
@@ -731,10 +731,10 @@ class _ProfileStats extends StatelessWidget {
           key: const ValueKey('profile-stats'),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: ProfilePalette.panel(context).withValues(alpha: 0.6),
+            color: context.riksa.surface.withValues(alpha: 0.6),
             borderRadius: AppRadii.largeBorder,
             border: Border.all(
-              color: ProfilePalette.border(context).withValues(alpha: 0.5),
+              color: context.riksa.outline.withValues(alpha: 0.5),
             ),
           ),
           child: IntrinsicHeight(
@@ -745,7 +745,7 @@ class _ProfileStats extends StatelessWidget {
                     VerticalDivider(
                       width: 1,
                       thickness: 1,
-                      color: ProfilePalette.border(context),
+                      color: context.riksa.outline,
                     ),
                   Expanded(
                     child: Column(
@@ -755,7 +755,7 @@ class _ProfileStats extends StatelessWidget {
                         Text(
                           item.value,
                           style: theme.textTheme.titleMedium?.copyWith(
-                            color: ProfilePalette.text(context),
+                            color: context.riksa.ink,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -768,7 +768,7 @@ class _ProfileStats extends StatelessWidget {
                             style: RiksaTypography.bodyStyleFor(
                               item.label,
                               theme.textTheme.labelSmall?.copyWith(
-                                color: ProfilePalette.muted(context),
+                                color: context.riksa.inkMuted,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),

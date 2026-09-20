@@ -15,61 +15,44 @@ class ProfilePalette {
   static ProfilePaletteScope? _scope(BuildContext context) =>
       ProfilePaletteScope.maybeOf(context);
 
+  /// Editorial profile routes use pink, not Riksa's violet [RiksaPalette.brand]
+  /// in light mode.
   static Color green(BuildContext context) =>
       _scope(context)?.accent ?? context.riksa.brand;
+
+  /// Scoped profile routes use editorial pink, not [RiksaPalette.saffron].
   static Color streak(BuildContext context) =>
       _scope(context)?.achievement ?? context.riksa.saffron;
+
+  /// Scoped profile routes use editorial pink, not [RiksaPalette.saffron].
   static Color xp(BuildContext context) =>
       _scope(context)?.achievement ?? context.riksa.saffron;
 
-  static Color canvas(BuildContext context) =>
-      _scope(context)?.canvas ?? Theme.of(context).scaffoldBackgroundColor;
-
-  static Color panel(BuildContext context) =>
-      _scope(context)?.panel ??
-      Theme.of(context).colorScheme.surfaceContainerLow;
-
-  static Color panelSoft(BuildContext context) =>
-      _scope(context)?.panelSoft ??
-      Theme.of(context).colorScheme.surfaceContainer;
-
-  static Color border(BuildContext context) =>
-      _scope(context)?.border ?? Theme.of(context).colorScheme.outline;
-
-  static Color text(BuildContext context) =>
-      _scope(context)?.text ?? Theme.of(context).colorScheme.onSurface;
-
-  static Color muted(BuildContext context) =>
-      _scope(context)?.muted ?? Theme.of(context).colorScheme.onSurfaceVariant;
-
-  static Color greenSoft(BuildContext context) =>
-      _scope(context)?.accentSoft ??
-      Theme.of(context).colorScheme.primaryContainer;
-
+  /// The unscoped fallback is legacy saffron-soft while editorial routes use
+  /// violet-soft, so no single Riksa semantic field represents both.
   static Color achievementSoft(BuildContext context) =>
       _scope(context)?.achievementSoft ?? AppColors.gamificationOrangeSoft;
 
+  /// Light mode is Riksa brand, but dark mode is a raised surface.
   static Color aubergine(BuildContext context) =>
       _scope(context)?.aubergine ??
       (Theme.of(context).brightness == Brightness.dark
           ? AppColors.editorialAubergineRaised
           : AppColors.editorialAubergine);
 
+  /// Editorial pink differs from [RiksaPalette.brand] in light mode.
   static Color pink(BuildContext context) =>
       _scope(context)?.pink ?? AppColors.editorialPink;
 
-  static Color pinkSoft(BuildContext context) =>
-      _scope(context)?.pinkSoft ??
-      (Theme.of(context).brightness == Brightness.dark
-          ? AppColors.violetDarkSoft
-          : AppColors.editorialPinkSoft);
-
+  /// Unscoped dark callers use a raised surface, while scoped routes use the
+  /// base surface, so neither Riksa surface field is universally equivalent.
   static Color editorialSurface(BuildContext context) =>
       _scope(context)?.editorialSurface ??
       (Theme.of(context).brightness == Brightness.dark
           ? Theme.of(context).colorScheme.surfaceContainer
           : AppColors.editorialSurface);
 
+  /// This warm near-white has no value-identical Riksa semantic field.
   static Color onAubergine(BuildContext context) =>
       _scope(context)?.onAubergine ?? const Color(0xFFFFF8FC);
 }
@@ -79,19 +62,11 @@ class ProfilePalette {
 class ProfilePaletteScope extends InheritedWidget {
   const ProfilePaletteScope({
     super.key,
-    required this.canvas,
-    required this.panel,
-    required this.panelSoft,
-    required this.border,
-    required this.text,
-    required this.muted,
     required this.accent,
-    required this.accentSoft,
     required this.achievement,
     required this.achievementSoft,
     required this.aubergine,
     required this.pink,
-    required this.pinkSoft,
     required this.editorialSurface,
     required this.onAubergine,
     required super.child,
@@ -104,16 +79,7 @@ class ProfilePaletteScope extends InheritedWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final palette = context.riksa;
     return ProfilePaletteScope(
-      canvas: isDark ? palette.canvas : AppColors.editorialNeutralCanvas,
-      panel: isDark ? palette.surface : AppColors.editorialNeutralSurface,
-      panelSoft: isDark ? palette.surfaceRaised : AppColors.editorialField,
-      border: isDark ? palette.outline : AppColors.editorialOutline,
-      text: isDark ? palette.ink : AppColors.editorialInk,
-      muted: isDark ? palette.inkMuted : AppColors.editorialMuted,
       accent: AppColors.editorialPink,
-      accentSoft: isDark
-          ? AppColors.violetDarkSoft
-          : AppColors.editorialPinkSoft,
       achievement: AppColors.editorialPink,
       achievementSoft: isDark
           ? AppColors.violetDarkSoft
@@ -122,7 +88,6 @@ class ProfilePaletteScope extends InheritedWidget {
           ? AppColors.editorialAubergineRaised
           : AppColors.editorialAubergine,
       pink: AppColors.editorialPink,
-      pinkSoft: isDark ? AppColors.violetDarkSoft : AppColors.editorialPinkSoft,
       editorialSurface: isDark
           ? palette.surface
           : AppColors.editorialNeutralSurface,
@@ -131,19 +96,11 @@ class ProfilePaletteScope extends InheritedWidget {
     );
   }
 
-  final Color canvas;
-  final Color panel;
-  final Color panelSoft;
-  final Color border;
-  final Color text;
-  final Color muted;
   final Color accent;
-  final Color accentSoft;
   final Color achievement;
   final Color achievementSoft;
   final Color aubergine;
   final Color pink;
-  final Color pinkSoft;
   final Color editorialSurface;
   final Color onAubergine;
 
@@ -152,19 +109,11 @@ class ProfilePaletteScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(ProfilePaletteScope oldWidget) =>
-      canvas != oldWidget.canvas ||
-      panel != oldWidget.panel ||
-      panelSoft != oldWidget.panelSoft ||
-      border != oldWidget.border ||
-      text != oldWidget.text ||
-      muted != oldWidget.muted ||
       accent != oldWidget.accent ||
-      accentSoft != oldWidget.accentSoft ||
       achievement != oldWidget.achievement ||
       achievementSoft != oldWidget.achievementSoft ||
       aubergine != oldWidget.aubergine ||
       pink != oldWidget.pink ||
-      pinkSoft != oldWidget.pinkSoft ||
       editorialSurface != oldWidget.editorialSurface ||
       onAubergine != oldWidget.onAubergine;
 }
@@ -204,8 +153,8 @@ class RiksaProfileAvatar extends StatelessWidget {
         value: avatarPath ?? user.avatarUrl,
         label: name,
         size: radius * 2,
-        backgroundColor: ProfilePalette.panelSoft(context),
-        foregroundColor: ProfilePalette.text(context),
+        backgroundColor: context.riksa.surfaceRaised,
+        foregroundColor: context.riksa.ink,
         frameTier: frameTier,
       );
     }
@@ -223,8 +172,8 @@ class RiksaProfileAvatar extends StatelessWidget {
         value: avatarPath ?? user.avatarUrl,
         label: name,
         size: (radius - 3) * 2,
-        backgroundColor: ProfilePalette.panelSoft(context),
-        foregroundColor: ProfilePalette.text(context),
+        backgroundColor: context.riksa.surfaceRaised,
+        foregroundColor: context.riksa.ink,
       ),
     );
   }
@@ -242,13 +191,13 @@ class ProfilePanel extends StatelessWidget {
     child: BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
       child: Material(
-        color: ProfilePalette.panel(context).withValues(alpha: 0.6),
+        color: context.riksa.surface.withValues(alpha: 0.6),
         shape: RoundedRectangleBorder(
           borderRadius: AppRadii.mediumBorder,
           side: ProfilePaletteScope.maybeOf(context) == null
               ? BorderSide.none
               : BorderSide(
-                  color: ProfilePalette.border(context).withValues(alpha: 0.5),
+                  color: context.riksa.outline.withValues(alpha: 0.5),
                 ),
         ),
         elevation: 0,
@@ -376,7 +325,7 @@ class ProfileIdentityHeader extends StatelessWidget {
                 style: RiksaTypography.titleStyleFor(
                   displayName,
                   TextStyle(
-                    color: ProfilePalette.text(context),
+                    color: context.riksa.ink,
                     fontSize: 20,
                     letterSpacing: 0,
                     fontWeight: FontWeight.w700,
@@ -402,7 +351,7 @@ class ProfileIdentityHeader extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: ProfilePalette.muted(context),
+              color: context.riksa.inkMuted,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -417,7 +366,7 @@ class ProfileIdentityHeader extends StatelessWidget {
             style: RiksaTypography.bodyStyleFor(
               trimmedBio,
               TextStyle(
-                color: ProfilePalette.text(context),
+                color: context.riksa.ink,
                 fontSize: 14.5,
                 height: 1.45,
               ),
@@ -437,14 +386,14 @@ class ProfileIdentityHeader extends StatelessWidget {
                     Icon(
                       item.icon,
                       size: 15,
-                      color: ProfilePalette.muted(context),
+                      color: context.riksa.inkMuted,
                     ),
                     const SizedBox(width: 5),
                     Flexible(
                       child: Text(
                         item.label,
                         style: TextStyle(
-                          color: ProfilePalette.muted(context),
+                          color: context.riksa.inkMuted,
                           fontSize: 13,
                         ),
                       ),
@@ -469,7 +418,7 @@ class ProfileIdentityHeader extends StatelessWidget {
                     Text(
                       item.value,
                       style: TextStyle(
-                        color: ProfilePalette.text(context),
+                        color: context.riksa.ink,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
@@ -479,7 +428,7 @@ class ProfileIdentityHeader extends StatelessWidget {
                       child: Text(
                         item.label,
                         style: TextStyle(
-                          color: ProfilePalette.muted(context),
+                          color: context.riksa.inkMuted,
                           fontSize: 13,
                         ),
                       ),
@@ -523,8 +472,8 @@ class ProfileIconAction extends StatelessWidget {
     style: IconButton.styleFrom(
       minimumSize: const Size.square(44),
       backgroundColor: ProfilePalette.editorialSurface(context),
-      foregroundColor: ProfilePalette.text(context),
-      side: BorderSide(color: ProfilePalette.border(context)),
+      foregroundColor: context.riksa.ink,
+      side: BorderSide(color: context.riksa.outline),
     ),
     icon: Icon(icon, size: 19),
   );
@@ -551,8 +500,8 @@ class ProfileTierRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reached = ProfilePalette.text(context);
-    final ahead = ProfilePalette.muted(context).withValues(alpha: .3);
+    final reached = context.riksa.ink;
+    final ahead = context.riksa.inkMuted.withValues(alpha: .3);
 
     final segments = <Widget>[];
     for (var i = 0; i < tiers.length; i++) {
@@ -594,9 +543,9 @@ class ProfileTierRail extends StatelessWidget {
           children: [
             _RailEndLabel(
               label: startLabel,
-              color: ProfilePalette.muted(context),
+              color: context.riksa.inkMuted,
             ),
-            _RailEndLabel(label: endLabel, color: ProfilePalette.text(context)),
+            _RailEndLabel(label: endLabel, color: context.riksa.ink),
           ],
         ),
       ],
@@ -740,7 +689,7 @@ class ProfileTierPanel extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: ProfilePalette.text(context),
+                    color: context.riksa.ink,
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
                   ),
@@ -750,7 +699,7 @@ class ProfileTierPanel extends StatelessWidget {
               Text(
                 totalXpLabel,
                 style: TextStyle(
-                  color: ProfilePalette.muted(context),
+                  color: context.riksa.inkMuted,
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
                 ),
@@ -794,9 +743,9 @@ class ProfileTabs extends StatelessWidget {
     height: heightFor(context),
     child: DecoratedBox(
       decoration: BoxDecoration(
-        color: ProfilePalette.canvas(context),
+        color: context.riksa.canvas,
         border: Border(
-          bottom: BorderSide(color: ProfilePalette.border(context)),
+          bottom: BorderSide(color: context.riksa.outline),
         ),
       ),
       child: _strip(context),
@@ -910,8 +859,8 @@ class _ProfileTabButton extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: selected
-                        ? ProfilePalette.text(context)
-                        : ProfilePalette.muted(context),
+                        ? context.riksa.ink
+                        : context.riksa.inkMuted,
                     fontSize: 12.5,
                     height: 1.2,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
@@ -1015,7 +964,7 @@ class ProfileAchievementTile extends StatelessWidget {
         Text(
           description,
           style: TextStyle(
-            color: ProfilePalette.muted(context),
+            color: context.riksa.inkMuted,
             fontSize: 11,
             height: 1.3,
           ),
@@ -1051,7 +1000,7 @@ class ProfileRankCard extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: ProfilePalette.greenSoft(context),
+            color: context.riksa.brandSoft,
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -1068,7 +1017,7 @@ class ProfileRankCard extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: ProfilePalette.muted(context),
+                  color: context.riksa.inkMuted,
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
                   height: 1.15,
@@ -1080,7 +1029,7 @@ class ProfileRankCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: ProfilePalette.text(context),
+                  color: context.riksa.ink,
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                   height: 1.12,
@@ -1229,7 +1178,7 @@ class ProfileEmptyPanel extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: TextStyle(color: ProfilePalette.muted(context)),
+            style: TextStyle(color: context.riksa.inkMuted),
           ),
         ],
       ),
@@ -1262,7 +1211,7 @@ class ProfileErrorPanel extends StatelessWidget {
         Text(
           message,
           textAlign: TextAlign.center,
-          style: TextStyle(color: ProfilePalette.muted(context)),
+          style: TextStyle(color: context.riksa.inkMuted),
         ),
         const SizedBox(height: 12),
         FilledButton.tonal(

@@ -39,7 +39,7 @@ class ProfileComposerPrompt extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Material(
-            color: ProfilePalette.panelSoft(context).withValues(alpha: 0.6),
+            color: context.riksa.surfaceRaised.withValues(alpha: 0.6),
             borderRadius: AppRadii.fullBorder,
             child: InkWell(
               key: const ValueKey('profile-create-post'),
@@ -54,8 +54,8 @@ class ProfileComposerPrompt extends StatelessWidget {
                       user: user,
                       radius: 19,
                       avatarPath: avatarPath,
-                      borderColor: ProfilePalette.border(context),
-                      ringColor: ProfilePalette.panel(context),
+                      borderColor: context.riksa.outline,
+                      ringColor: context.riksa.surface,
                       frameTier: frameTier,
                     ),
                     const SizedBox(width: 11),
@@ -65,7 +65,7 @@ class ProfileComposerPrompt extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: ProfilePalette.muted(context),
+                          color: context.riksa.inkMuted,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
@@ -153,7 +153,7 @@ class ProfilePostsSummary extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          color: ProfilePalette.muted(context),
+          color: context.riksa.inkMuted,
           fontSize: 12.5,
           fontWeight: FontWeight.w600,
           letterSpacing: .2,
@@ -187,7 +187,7 @@ class ProfilePostsEmpty extends StatelessWidget {
             Text(
               l10n.noPostsYet,
               textAlign: TextAlign.center,
-              style: TextStyle(color: ProfilePalette.muted(context)),
+              style: TextStyle(color: context.riksa.inkMuted),
             ),
             const SizedBox(height: 14),
             _ProfileEmptyCreateButton(
@@ -374,7 +374,7 @@ Future<ProfilePostAction?> showProfilePostActions(
         // A Material, not a plain coloured box: the rows below are ListTiles
         // and paint their ink on the nearest Material ancestor.
         child: Material(
-          color: ProfilePalette.panel(context),
+          color: context.riksa.surface,
           child: Padding(
             padding: EdgeInsets.fromLTRB(
               18,
@@ -391,7 +391,7 @@ Future<ProfilePostAction?> showProfilePostActions(
                     width: 42,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: ProfilePalette.border(context),
+                      color: context.riksa.outline,
                       borderRadius: AppRadii.fullBorder,
                     ),
                   ),
@@ -402,7 +402,7 @@ Future<ProfilePostAction?> showProfilePostActions(
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: ProfilePalette.text(context),
+                    color: context.riksa.ink,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
@@ -415,12 +415,12 @@ Future<ProfilePostAction?> showProfilePostActions(
                   ),
                   leading: Icon(
                     Icons.edit_outlined,
-                    color: ProfilePalette.text(context),
+                    color: context.riksa.ink,
                   ),
                   title: Text(
                     l10n.editPost,
                     style: TextStyle(
-                      color: ProfilePalette.text(context),
+                      color: context.riksa.ink,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
