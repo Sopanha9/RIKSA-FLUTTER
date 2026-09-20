@@ -58,13 +58,13 @@ class SocialPostCard extends StatelessWidget {
           key: ValueKey('post-${post.id}'),
           color: tinted
               ? (isDark
-                    ? SocialPalette.editorialSurface(context)
+                    ? context.riksa.surface
                     : Color.lerp(
-                        SocialPalette.surface(context),
-                        SocialPalette.pinkSoft(context),
+                        context.riksa.surface,
+                        context.riksa.brandSoft,
                         .18,
                       ))
-              : SocialPalette.surface(context),
+              : context.riksa.surface,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: AppRadii.largeBorder,
@@ -94,7 +94,7 @@ class SocialPostCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         height: 1.35,
                         letterSpacing: 0,
-                        color: SocialPalette.text(context),
+                        color: context.riksa.ink,
                       ),
                     ),
                   ),
@@ -108,7 +108,7 @@ class SocialPostCard extends StatelessWidget {
                         post.plainTextPreview,
                         theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 15,
-                          color: SocialPalette.muted(context),
+                          color: context.riksa.inkMuted,
                           height: 1.42,
                         ),
                       ),
@@ -128,7 +128,7 @@ class SocialPostCard extends StatelessWidget {
                                 color: colors.surfaceContainer,
                                 child: Icon(
                                   Icons.image_not_supported_outlined,
-                                  color: SocialPalette.muted(context),
+                                  color: context.riksa.inkMuted,
                                   size: 32,
                                 ),
                               ),
@@ -247,7 +247,7 @@ class _PostMetadata extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.labelLarge?.copyWith(
-                              color: SocialPalette.text(context),
+                              color: context.riksa.ink,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -268,7 +268,7 @@ class _PostMetadata extends StatelessWidget {
                     TextSpan(
                       text: categoryPrefix(post.category),
                       style: TextStyle(
-                        color: SocialPalette.text(context),
+                        color: context.riksa.ink,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0,
                       ),
@@ -276,7 +276,7 @@ class _PostMetadata extends StatelessWidget {
                     TextSpan(
                       text: ' ${post.category.name} · $date',
                       style: TextStyle(
-                        color: SocialPalette.muted(context),
+                        color: context.riksa.inkMuted,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -310,7 +310,7 @@ class _OfficialBadge extends StatelessWidget {
       key: const ValueKey('official-account-badge'),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: SocialPalette.pinkSoft(context),
+        color: context.riksa.brandSoft,
         borderRadius: AppRadii.fullBorder,
       ),
       child: Row(
@@ -325,7 +325,7 @@ class _OfficialBadge extends StatelessWidget {
           Text(
             AppLocalizations.of(context)!.official,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: SocialPalette.aubergine(context),
+              color: context.riksa.brand,
               fontSize: 10,
               fontWeight: FontWeight.w700,
               height: 1,
@@ -427,7 +427,7 @@ class SocialAuthorAvatar extends StatelessWidget {
         ? (
             background: Color.alphaBlend(
               light.foreground.withValues(alpha: .35),
-              SocialPalette.surface(context),
+              context.riksa.surface,
             ),
             foreground: light.background,
           )
@@ -514,7 +514,7 @@ class _PrimaryReactionButton extends StatelessWidget {
                   size: 17,
                   color: isSelected
                       ? AppColors.socialLike
-                      : SocialPalette.muted(context),
+                      : context.riksa.inkMuted,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -522,7 +522,7 @@ class _PrimaryReactionButton extends StatelessWidget {
                   style: TextStyle(
                     color: isSelected
                         ? AppColors.socialLike
-                        : SocialPalette.muted(context),
+                        : context.riksa.inkMuted,
                     fontSize: 13,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w600,
                   ),
@@ -552,7 +552,7 @@ class _LightAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mutedColor = SocialPalette.muted(context);
+    final mutedColor = context.riksa.inkMuted;
     final content = Material(
       color: Colors.transparent,
       borderRadius: AppRadii.fullBorder,

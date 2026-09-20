@@ -44,7 +44,7 @@ class SocialCreateMenuSheet extends StatelessWidget {
           24 + MediaQuery.paddingOf(context).bottom,
         ),
         decoration: BoxDecoration(
-          color: SocialPalette.panel(context),
+          color: context.riksa.surface,
           borderRadius: const BorderRadius.vertical(
             top: Radius.circular(AppRadii.large),
           ),
@@ -58,7 +58,7 @@ class SocialCreateMenuSheet extends StatelessWidget {
                 width: 42,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: SocialPalette.border(context),
+                  color: context.riksa.outline,
                   borderRadius: AppRadii.fullBorder,
                 ),
               ),
@@ -68,7 +68,7 @@ class SocialCreateMenuSheet extends StatelessWidget {
               l10n.createCommunityContent,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: SocialPalette.text(context),
+                color: context.riksa.ink,
               ),
             ),
             const SizedBox(height: 14),
@@ -86,7 +86,7 @@ class SocialCreateMenuSheet extends StatelessWidget {
               artwork: SocialCreateArtwork.question,
               title: l10n.askCommunity,
               subtitle: l10n.askCommunitySubtitle,
-              color: SocialPalette.aubergine(context),
+              color: context.riksa.brand,
               onTap: () => Navigator.pop(context, SocialCreateAction.question),
             ),
             const SizedBox(height: 10),
@@ -125,7 +125,7 @@ class SocialCreateOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Material(
-      color: SocialPalette.editorialSurface(context),
+      color: context.riksa.surface,
       borderRadius: AppRadii.mediumBorder,
       child: InkWell(
         borderRadius: AppRadii.mediumBorder,
@@ -154,14 +154,14 @@ class SocialCreateOption extends StatelessWidget {
                       title,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: SocialPalette.text(context),
+                        color: context.riksa.ink,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: SocialPalette.muted(context),
+                        color: context.riksa.inkMuted,
                       ),
                     ),
                   ],
@@ -169,7 +169,7 @@ class SocialCreateOption extends StatelessWidget {
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: SocialPalette.muted(context),
+                color: context.riksa.inkMuted,
               ),
             ],
           ),

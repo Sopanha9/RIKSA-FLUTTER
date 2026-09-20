@@ -341,7 +341,7 @@ class _SocialPostDetailScreenState
                     Text(
                       l10n.discussion,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: SocialPalette.ink(context),
+                        color: context.riksa.ink,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -416,10 +416,10 @@ class _SocialPostDetailScreenState
           );
 
     return Scaffold(
-      backgroundColor: SocialPalette.canvas(context),
+      backgroundColor: context.riksa.canvas,
       appBar: AppBar(
-        backgroundColor: SocialPalette.canvas(context),
-        foregroundColor: SocialPalette.aubergine(context),
+        backgroundColor: context.riksa.canvas,
+        foregroundColor: context.riksa.brand,
         surfaceTintColor: Colors.transparent,
         leadingWidth: 44,
         leading: IconButton(
@@ -509,7 +509,7 @@ class _PostBody extends StatelessWidget {
             style: RiksaTypography.bodyStyleFor(
               post.title,
               theme.textTheme.headlineSmall?.copyWith(
-                color: SocialPalette.ink(context),
+                color: context.riksa.ink,
                 fontWeight: FontWeight.w600,
                 height: 1.4,
               ),
@@ -538,11 +538,11 @@ class _PostBody extends StatelessWidget {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(
                   height: 180,
-                  color: SocialPalette.surfaceRaised(context),
+                  color: context.riksa.surfaceRaised,
                   alignment: Alignment.center,
                   child: Icon(
                     Icons.image_not_supported_outlined,
-                    color: SocialPalette.muted(context),
+                    color: context.riksa.inkMuted,
                     size: 34,
                   ),
                 ),
@@ -550,7 +550,7 @@ class _PostBody extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 18),
-          Divider(color: SocialPalette.outline(context)),
+          Divider(color: context.riksa.outline),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -610,7 +610,7 @@ class _AuthorLine extends StatelessWidget {
                 child: Text(
                   name,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: SocialPalette.ink(context),
+                    color: context.riksa.ink,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -619,7 +619,7 @@ class _AuthorLine extends StatelessWidget {
               Text(
                 '@${author.username} / $categoryName · ${DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(createdAt.toLocal())}',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: SocialPalette.muted(context),
+                  color: context.riksa.inkMuted,
                 ),
               ),
             ],
@@ -721,7 +721,7 @@ class _CommentCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleSmall?.copyWith(
-                              color: SocialPalette.ink(context),
+                              color: context.riksa.ink,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -733,9 +733,9 @@ class _CommentCard extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.textTheme.labelMedium?.copyWith(
-                                  color: SocialPalette.muted(
-                                    context,
-                                  ).withValues(alpha: 0.8),
+                                  color: context.riksa.inkMuted.withValues(
+                                    alpha: 0.8,
+                                  ),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -748,7 +748,7 @@ class _CommentCard extends StatelessWidget {
                   Text(
                     _relativeCommentAge(context, comment.createdAt),
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: SocialPalette.muted(context),
+                      color: context.riksa.inkMuted,
                       fontWeight: FontWeight.w500,
                       fontSize: isReply ? 12 : 13,
                     ),
@@ -761,7 +761,7 @@ class _CommentCard extends StatelessWidget {
                 style: RiksaTypography.bodyStyleFor(
                   comment.content,
                   theme.textTheme.bodyMedium?.copyWith(
-                    color: SocialPalette.ink(context),
+                    color: context.riksa.ink,
                     height: 1.38,
                     fontSize: isReply ? 12 : 13,
                     fontWeight: FontWeight.w400,
@@ -788,10 +788,10 @@ class _CommentCard extends StatelessWidget {
         bottom: isReply ? 10 : 16,
       ),
       decoration: BoxDecoration(
-        color: SocialPalette.surface(context),
+        color: context.riksa.surface,
         border: isReply
             ? null
-            : Border(top: BorderSide(color: SocialPalette.outline(context))),
+            : Border(top: BorderSide(color: context.riksa.outline)),
       ),
       child: isReply
           ? Padding(padding: const EdgeInsets.only(left: 42), child: content)
@@ -817,7 +817,7 @@ class _CommentActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final actionStyle = theme.textTheme.labelLarge?.copyWith(
-      color: SocialPalette.muted(context).withValues(alpha: 0.6),
+      color: context.riksa.inkMuted.withValues(alpha: 0.6),
       fontWeight: FontWeight.w500,
       height: 1,
     );
@@ -896,14 +896,14 @@ MarkdownStyleSheet _socialMarkdownStyleSheet(
 
   final paragraph = socialStyle(
     theme.textTheme.bodyMedium?.copyWith(
-      color: SocialPalette.muted(context),
+      color: context.riksa.inkMuted,
       height: 1.42,
       fontSize: 13,
     ),
   );
   final heading = socialStyle(
     theme.textTheme.titleLarge?.copyWith(
-      color: SocialPalette.ink(context),
+      color: context.riksa.ink,
       fontWeight: FontWeight.w600,
       height: hasKhmer ? 1.5 : 1.35,
     ),
@@ -923,22 +923,22 @@ MarkdownStyleSheet _socialMarkdownStyleSheet(
     em: socialStyle(const TextStyle(fontStyle: FontStyle.italic)),
     code: socialStyle(
       theme.textTheme.bodyMedium?.copyWith(
-        color: SocialPalette.ink(context),
-        backgroundColor: SocialPalette.surfaceRaised(context),
+        color: context.riksa.ink,
+        backgroundColor: context.riksa.surfaceRaised,
       ),
     ),
     codeblockDecoration: BoxDecoration(
-      color: SocialPalette.surfaceRaised(context),
+      color: context.riksa.surfaceRaised,
       borderRadius: AppRadii.smallBorder,
-      border: Border.all(color: SocialPalette.outline(context)),
+      border: Border.all(color: context.riksa.outline),
     ),
     codeblockPadding: const EdgeInsets.all(12),
-    blockquote: paragraph.copyWith(color: SocialPalette.muted(context)),
+    blockquote: paragraph.copyWith(color: context.riksa.inkMuted),
     listBullet: paragraph,
     blockSpacing: 10,
     listIndent: 22,
     horizontalRuleDecoration: BoxDecoration(
-      border: Border(top: BorderSide(color: SocialPalette.outline(context))),
+      border: Border(top: BorderSide(color: context.riksa.outline)),
     ),
   );
 }
@@ -963,8 +963,8 @@ class _Avatar extends StatelessWidget {
         value: author.avatarUrl,
         label: label,
         size: radius * 2,
-        backgroundColor: SocialPalette.pinkSoft(context),
-        foregroundColor: SocialPalette.aubergine(context),
+        backgroundColor: context.riksa.brandSoft,
+        foregroundColor: context.riksa.brand,
       ),
     );
   }
@@ -987,7 +987,7 @@ class _DetailAction extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = selected
         ? AppColors.socialLike
-        : SocialPalette.muted(context);
+        : context.riksa.inkMuted;
     return InkWell(
       borderRadius: AppRadii.fullBorder,
       onTap: onTap,
@@ -1022,7 +1022,7 @@ class _CountBadge extends StatelessWidget {
     child: Text(
       '$count',
       style: TextStyle(
-        color: SocialPalette.ink(context),
+        color: context.riksa.ink,
         fontWeight: FontWeight.w600,
       ),
     ),
@@ -1038,9 +1038,9 @@ class _EmptyComments extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
-      color: SocialPalette.surface(context),
+      color: context.riksa.surface,
       borderRadius: AppRadii.mediumBorder,
-      border: Border.all(color: SocialPalette.outline(context)),
+      border: Border.all(color: context.riksa.outline),
     ),
     child: Column(
       children: [
@@ -1053,7 +1053,7 @@ class _EmptyComments extends StatelessWidget {
         Text(
           message,
           textAlign: TextAlign.center,
-          style: TextStyle(color: SocialPalette.muted(context)),
+          style: TextStyle(color: context.riksa.inkMuted),
         ),
       ],
     ),
@@ -1084,7 +1084,7 @@ class _ErrorState extends StatelessWidget {
             Text(
               l10n.postUnavailable,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: SocialPalette.aubergine(context),
+                color: context.riksa.brand,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1092,7 +1092,7 @@ class _ErrorState extends StatelessWidget {
             Text(
               message ?? l10n.postUnavailableMessage,
               textAlign: TextAlign.center,
-              style: TextStyle(color: SocialPalette.muted(context)),
+              style: TextStyle(color: context.riksa.inkMuted),
             ),
             const SizedBox(height: 20),
             FilledButton(onPressed: onRetry, child: Text(l10n.tryAgain)),
@@ -1188,14 +1188,14 @@ class _CommentComposer extends StatelessWidget {
                           Icon(
                             Icons.reply_rounded,
                             size: 16,
-                            color: SocialPalette.aubergine(context),
+                            color: context.riksa.brand,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               '${AppLocalizations.of(context)!.replyingTo} @$replyingName',
                               style: theme.textTheme.labelMedium?.copyWith(
-                                color: SocialPalette.aubergine(context),
+                                color: context.riksa.brand,
                                 fontWeight: FontWeight.w700,
                               ),
                               maxLines: 1,
@@ -1211,7 +1211,7 @@ class _CommentComposer extends StatelessWidget {
                               child: Icon(
                                 Icons.close_rounded,
                                 size: 18,
-                                color: SocialPalette.aubergine(context),
+                                color: context.riksa.brand,
                               ),
                             ),
                           ),
@@ -1247,13 +1247,13 @@ class _CommentComposer extends StatelessWidget {
                           maxLength: 1000,
                           textCapitalization: TextCapitalization.sentences,
                           style: theme.textTheme.bodyLarge?.copyWith(
-                            color: SocialPalette.text(context),
+                            color: context.riksa.ink,
                             height: 1.35,
                           ),
                           decoration: InputDecoration(
                             hintText: hint,
                             hintStyle: TextStyle(
-                              color: SocialPalette.muted(context),
+                              color: context.riksa.inkMuted,
                             ),
                             counterText: '',
                             filled: true,
@@ -1315,12 +1315,9 @@ class _CommentComposer extends StatelessWidget {
                                 )!.sendComment,
                                 style: IconButton.styleFrom(
                                   backgroundColor: Colors.transparent,
-                                  foregroundColor: SocialPalette.aubergine(
-                                    context,
-                                  ),
-                                  disabledForegroundColor: SocialPalette.muted(
-                                    context,
-                                  ),
+                                  foregroundColor: context.riksa.brand,
+                                  disabledForegroundColor:
+                                      context.riksa.inkMuted,
                                   fixedSize: const Size.square(48),
                                   shape: const CircleBorder(),
                                 ),
@@ -1329,9 +1326,7 @@ class _CommentComposer extends StatelessWidget {
                                         dimension: 18,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
-                                          color: SocialPalette.aubergine(
-                                            context,
-                                          ),
+                                          color: context.riksa.brand,
                                         ),
                                       )
                                     : const Icon(Icons.send_rounded),

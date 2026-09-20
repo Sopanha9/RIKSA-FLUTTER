@@ -78,7 +78,7 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
         ? ref.watch(blogFeedProvider)
         : null;
     return Scaffold(
-      backgroundColor: SocialPalette.canvas(context),
+      backgroundColor: context.riksa.canvas,
       floatingActionButton: AnimatedSlide(
         duration: const Duration(milliseconds: 230),
         curve: Curves.easeInOutCubic,
@@ -754,13 +754,13 @@ class _YourArticlesLink extends ConsumerWidget {
                 Icon(
                   Icons.drafts_outlined,
                   size: 18,
-                  color: SocialPalette.muted(context),
+                  color: context.riksa.inkMuted,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   l10n.yourArticles,
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: SocialPalette.text(context),
+                    color: context.riksa.ink,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -773,7 +773,7 @@ class _YourArticlesLink extends ConsumerWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: SocialPalette.pinkSoft(context),
+                      color: context.riksa.brandSoft,
                       borderRadius: AppRadii.fullBorder,
                     ),
                     child: Text(
@@ -789,7 +789,7 @@ class _YourArticlesLink extends ConsumerWidget {
                 Icon(
                   Icons.chevron_right_rounded,
                   size: 20,
-                  color: SocialPalette.muted(context),
+                  color: context.riksa.inkMuted,
                 ),
               ],
             ),
@@ -964,7 +964,7 @@ class _GlassBlogCard extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w800,
-                            color: SocialPalette.text(context),
+                            color: context.riksa.ink,
                           ),
                         ),
                       ),
@@ -980,7 +980,7 @@ class _GlassBlogCard extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: SocialPalette.muted(context),
+                          color: context.riksa.inkMuted,
                           fontSize: 12,
                         ),
                       ),
@@ -989,7 +989,7 @@ class _GlassBlogCard extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Material(
-                  color: SocialPalette.surface(context),
+                  color: context.riksa.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: AppRadii.largeBorder,
                     side: BorderSide(color: context.riksa.outline),
@@ -1024,7 +1024,7 @@ class _GlassBlogCard extends ConsumerWidget {
                                     fontWeight: FontWeight.w700,
                                     height: 1.35,
                                     letterSpacing: 0,
-                                    color: SocialPalette.text(context),
+                                    color: context.riksa.ink,
                                   ),
                                 ),
                               ),
@@ -1037,7 +1037,7 @@ class _GlassBlogCard extends ConsumerWidget {
                                   post.content,
                                   theme.textTheme.bodyMedium?.copyWith(
                                     fontSize: 15,
-                                    color: SocialPalette.muted(context),
+                                    color: context.riksa.inkMuted,
                                     height: 1.42,
                                   ),
                                 ),
@@ -1048,12 +1048,12 @@ class _GlassBlogCard extends ConsumerWidget {
                                   Text(
                                     DateFormat.yMMMd().format(post.createdAt),
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: SocialPalette.muted(context),
+                                      color: context.riksa.inkMuted,
                                     ),
                                   ),
                                   const Spacer(),
                                   Material(
-                                    color: SocialPalette.editorialSurface(context),
+                                    color: context.riksa.surface,
                                     borderRadius: AppRadii.fullBorder,
                                     child: InkWell(
                                       borderRadius: AppRadii.fullBorder,
@@ -1073,7 +1073,7 @@ class _GlassBlogCard extends ConsumerWidget {
                                               size: 16,
                                               color: post.liked
                                                   ? Colors.red
-                                                  : SocialPalette.muted(context),
+                                                  : context.riksa.inkMuted,
                                             ),
                                             const SizedBox(width: 5),
                                             Text(
@@ -1081,7 +1081,7 @@ class _GlassBlogCard extends ConsumerWidget {
                                               style: TextStyle(
                                                 color: post.liked
                                                     ? Colors.red
-                                                    : SocialPalette.muted(context),
+                                                    : context.riksa.inkMuted,
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w700,
                                               ),
@@ -1137,7 +1137,7 @@ class _FeedMessage extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: SocialPalette.pinkSoft(context),
+                color: context.riksa.brandSoft,
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: SocialPalette.pink(context), size: 29),
@@ -1148,7 +1148,7 @@ class _FeedMessage extends StatelessWidget {
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: SocialPalette.text(context),
+                color: context.riksa.ink,
               ),
             ),
             const SizedBox(height: 7),
@@ -1156,7 +1156,7 @@ class _FeedMessage extends StatelessWidget {
               message,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: SocialPalette.muted(context),
+                color: context.riksa.inkMuted,
                 height: 1.45,
               ),
             ),
@@ -1182,7 +1182,7 @@ class _FeedSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = SocialPalette.surfaceRaised(context);
+    final color = context.riksa.surfaceRaised;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/gen/app_localizations.dart';
-import 'social_palette.dart';
 
 enum _OwnerAction { edit, delete }
 
@@ -34,9 +33,9 @@ class SocialOwnerMenu extends StatelessWidget {
       icon: Icon(
         Icons.more_horiz_rounded,
         size: 20,
-        color: SocialPalette.muted(context),
+        color: context.riksa.inkMuted,
       ),
-      color: SocialPalette.surface(context),
+      color: context.riksa.surface,
       shape: const RoundedRectangleBorder(borderRadius: AppRadii.mediumBorder),
       onSelected: (action) => switch (action) {
         _OwnerAction.edit => onEdit(),
