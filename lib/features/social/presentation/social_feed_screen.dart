@@ -685,27 +685,35 @@ class _HeaderGlassIconButton extends StatelessWidget {
         ? Colors.white.withValues(alpha: 0.12)
         : Colors.white.withValues(alpha: 0.72);
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: palette.ink.withValues(alpha: isDark ? 0.18 : 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+    return SizedBox.square(
+      dimension: 48,
       child: Material(
-        color: fill,
-        shape: CircleBorder(side: BorderSide(color: border)),
-        clipBehavior: Clip.antiAlias,
+        color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           customBorder: const CircleBorder(),
-          child: SizedBox.square(
-            dimension: 42,
-            child: Icon(icon, size: 22, color: palette.ink),
+          child: Center(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: palette.ink.withValues(alpha: isDark ? 0.18 : 0.08),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: fill,
+                shape: CircleBorder(side: BorderSide(color: border)),
+                clipBehavior: Clip.antiAlias,
+                child: SizedBox.square(
+                  dimension: 42,
+                  child: Icon(icon, size: 22, color: palette.ink),
+                ),
+              ),
+            ),
           ),
         ),
       ),

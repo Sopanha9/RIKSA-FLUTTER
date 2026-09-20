@@ -203,9 +203,11 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                 OutlinedButton.icon(
                   key: const ValueKey('settings-logout'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFFF7B8B),
+                    foregroundColor: Theme.of(context).colorScheme.error,
                     backgroundColor: ProfilePalette.panel(context),
-                    side: const BorderSide(color: Color(0xFF593139)),
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                   onPressed: () async {
                     await ref.read(authProvider.notifier).logout();

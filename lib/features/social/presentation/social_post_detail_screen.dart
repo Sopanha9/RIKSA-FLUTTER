@@ -424,6 +424,7 @@ class _SocialPostDetailScreenState
         leadingWidth: 44,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 22),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         titleSpacing: 0,
@@ -825,29 +826,45 @@ class _CommentActionRow extends StatelessWidget {
         Text(isKhmer ? 'ចូលចិត្ត' : 'Like', style: actionStyle),
         const SizedBox(width: 10),
         if (onReply != null)
-          GestureDetector(
-            key: ValueKey('comment-reply-button-$commentId'),
-            behavior: HitTestBehavior.opaque,
-            onTap: onReply,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Text(
-                AppLocalizations.of(context)!.reply,
-                style: actionStyle,
+          Semantics(
+            button: true,
+            label: AppLocalizations.of(context)!.reply,
+            excludeSemantics: true,
+            child: GestureDetector(
+              key: ValueKey('comment-reply-button-$commentId'),
+              behavior: HitTestBehavior.opaque,
+              onTap: onReply,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                child: Center(
+                  child: Text(
+                    AppLocalizations.of(context)!.reply,
+                    style: actionStyle,
+                  ),
+                ),
               ),
             ),
           ),
         if (onDelete != null) ...[
           const SizedBox(width: 10),
-          GestureDetector(
-            key: ValueKey('comment-delete-button-$commentId'),
-            behavior: HitTestBehavior.opaque,
-            onTap: onDelete,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Text(
-                isKhmer ? 'លុប' : 'Delete',
-                style: actionStyle?.copyWith(color: theme.colorScheme.error),
+          Semantics(
+            button: true,
+            label: AppLocalizations.of(context)!.delete,
+            excludeSemantics: true,
+            child: GestureDetector(
+              key: ValueKey('comment-delete-button-$commentId'),
+              behavior: HitTestBehavior.opaque,
+              onTap: onDelete,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                child: Center(
+                  child: Text(
+                    AppLocalizations.of(context)!.delete,
+                    style: actionStyle?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -968,7 +985,9 @@ class _DetailAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? Colors.red : SocialPalette.muted(context);
+    final color = selected
+        ? AppColors.socialLike
+        : SocialPalette.muted(context);
     return InkWell(
       borderRadius: AppRadii.fullBorder,
       onTap: onTap,
@@ -1291,6 +1310,9 @@ class _CommentComposer extends StatelessWidget {
                               child: IconButton(
                                 key: const ValueKey('send-comment-button'),
                                 onPressed: submitting ? null : onSend,
+                                tooltip: AppLocalizations.of(
+                                  context,
+                                )!.sendComment,
                                 style: IconButton.styleFrom(
                                   backgroundColor: Colors.transparent,
                                   foregroundColor: SocialPalette.aubergine(

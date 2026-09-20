@@ -146,7 +146,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                             style: IconButton.styleFrom(
                                               backgroundColor:
                                                   ProfilePalette.green(context),
-                                              foregroundColor: Colors.black,
+                                              foregroundColor:
+                                                  context.riksa.onBrand,
                                             ),
                                             onPressed: () =>
                                                 _chooseAvatar(context),
@@ -463,7 +464,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       child: Icon(
                                         Icons.check_rounded,
                                         size: 13,
-                                        color: Colors.white,
+                                        color: context.riksa.onBrand,
                                       ),
                                     ),
                                   ),
@@ -566,7 +567,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     padding: const EdgeInsets.all(7),
                                     child: CircleAvatar(
                                       radius: 10,
-                                      backgroundColor: Colors.white,
+                                      backgroundColor: context.riksa.onBrand,
                                       child: Icon(
                                         Icons.check_rounded,
                                         size: 15,

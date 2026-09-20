@@ -126,7 +126,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                   currentUser!.provinceId!.isEmpty)) {
                             return ProvincePrompt(
                               onSelectProvince: () =>
-                                  context.push('/auth/province'),
+                                  context.push('/province-select'),
                             );
                           }
 

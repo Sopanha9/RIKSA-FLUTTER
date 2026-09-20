@@ -520,6 +520,7 @@ class BlogCoverImage extends StatelessWidget {
           child: Image.network(
             url,
             fit: BoxFit.cover,
+            excludeFromSemantics: true,
             errorBuilder: (_, _, _) => ColoredBox(
               color: palette.surfaceRaised,
               child: Icon(

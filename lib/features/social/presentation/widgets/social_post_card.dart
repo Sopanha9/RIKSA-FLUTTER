@@ -203,16 +203,22 @@ class _PostMetadata extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        GestureDetector(
-          key: ValueKey('author-avatar-${post.author.id}'),
-          behavior: HitTestBehavior.opaque,
-          onTap: onAuthorTap,
-          child: SocialAuthorAvatar(
-            imageUrl: post.author.avatarUrl,
-            label: authorName,
-            seed: post.author.username.isEmpty
-                ? post.author.id
-                : post.author.username,
+        Semantics(
+          button: true,
+          enabled: onAuthorTap != null,
+          label: AppLocalizations.of(context)!.socialOpenProfile(authorName),
+          excludeSemantics: true,
+          child: GestureDetector(
+            key: ValueKey('author-avatar-${post.author.id}'),
+            behavior: HitTestBehavior.opaque,
+            onTap: onAuthorTap,
+            child: SocialAuthorAvatar(
+              imageUrl: post.author.avatarUrl,
+              label: authorName,
+              seed: post.author.username.isEmpty
+                  ? post.author.id
+                  : post.author.username,
+            ),
           ),
         ),
         const SizedBox(width: 12),
@@ -223,19 +229,27 @@ class _PostMetadata extends StatelessWidget {
               Row(
                 children: [
                   Flexible(
-                    child: GestureDetector(
-                      key: ValueKey('author-name-${post.author.id}'),
-                      behavior: HitTestBehavior.opaque,
-                      onTap: onAuthorTap,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Text(
-                          authorName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: SocialPalette.text(context),
-                            fontWeight: FontWeight.w600,
+                    child: Semantics(
+                      button: true,
+                      enabled: onAuthorTap != null,
+                      label: AppLocalizations.of(
+                        context,
+                      )!.socialOpenProfile(authorName),
+                      excludeSemantics: true,
+                      child: GestureDetector(
+                        key: ValueKey('author-name-${post.author.id}'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: onAuthorTap,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Text(
+                            authorName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: SocialPalette.text(context),
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
@@ -498,14 +512,16 @@ class _PrimaryReactionButton extends StatelessWidget {
                       ? Icons.favorite_rounded
                       : Icons.favorite_border_rounded,
                   size: 17,
-                  color: isSelected ? Colors.red : SocialPalette.muted(context),
+                  color: isSelected
+                      ? AppColors.socialLike
+                      : SocialPalette.muted(context),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   _compactCount(count),
                   style: TextStyle(
                     color: isSelected
-                        ? Colors.red
+                        ? AppColors.socialLike
                         : SocialPalette.muted(context),
                     fontSize: 13,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w600,

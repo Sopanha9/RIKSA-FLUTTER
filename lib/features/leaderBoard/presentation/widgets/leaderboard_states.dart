@@ -226,13 +226,14 @@ class RankGapIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Center(
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Text(
           '• • •',
           style: TextStyle(
-            color: Color(0xFF70695E),
+            color: isDark ? context.riksa.inkMuted : AppColors.editorialMuted,
             fontSize: 14,
             fontWeight: FontWeight.w700,
             letterSpacing: 4,
