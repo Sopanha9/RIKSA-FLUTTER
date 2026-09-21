@@ -123,7 +123,7 @@ class LessonSearchDelegate extends SearchDelegate<LessonSummary?> {
             horizontal: RiksaSpacing.md,
             vertical: RiksaSpacing.xxs,
           ),
-          leading: StemSubjectTile(subject: subject, size: 40),
+          leading: SubjectPixelArtwork(subject: subject, size: 42),
           title: Text(
             lesson.title,
             maxLines: 2,

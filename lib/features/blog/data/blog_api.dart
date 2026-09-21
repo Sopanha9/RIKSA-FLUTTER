@@ -4,6 +4,7 @@ import '../../../core/network/api_config.dart';
 import '../../../core/network/dio_client.dart';
 import '../../auth/data/auth_api.dart';
 import 'blog_models.dart';
+import '../../../l10n/gen/app_localizations.dart';
 
 /// The two writes only the author may perform on their own post.
 enum BlogOwnerAction { edit, delete }
@@ -12,13 +13,16 @@ enum BlogOwnerAction { edit, delete }
 ///
 /// `403` and `404` are the two outcomes a reader can act on; `405`/`501` say
 /// the deployed backend has not shipped the endpoint yet.
-String blogOwnerActionError(DioException error, BlogOwnerAction action) {
-  final gerund = action == BlogOwnerAction.edit ? 'Editing' : 'Deleting';
-  final verb = action == BlogOwnerAction.edit ? 'edit' : 'delete';
+String blogOwnerActionError(
+  DioException error,
+  BlogOwnerAction action, {
+  required AppLocalizations l10n,
+}) {
+  final editing = action == BlogOwnerAction.edit;
   return switch (error.response?.statusCode) {
-    403 => 'You can only $verb your own posts',
-    404 => 'This post no longer exists',
-    405 || 501 => '$gerund is not available on this server yet',
+    403 => editing ? l10n.blogOwnerEditFailed : l10n.blogOwnerDeleteFailed,
+    404 => l10n.blogPostGone,
+    405 || 501 => l10n.blogSomethingWentWrong,
     _ => dioErrorMessage(error),
   };
 }

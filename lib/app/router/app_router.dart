@@ -333,7 +333,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/profile/setup',
                 builder: (context, state) => ProfileSetupOverviewScreen(
-                  onSetUpProfile: () => context.go('/home'),
+                  onSetUpProfile: () => context.go('/profile/edit'),
                 ),
               ),
             ],

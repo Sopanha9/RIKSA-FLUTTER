@@ -8,6 +8,7 @@ import '../../../userProfile/data/profile_models.dart';
 import '../../../userProfile/presentation/public_profile_navigation.dart';
 import '../../../userProfile/presentation/widgets/profile_ui.dart';
 import 'ranking_list_row.dart';
+import '../../../../l10n/gen/app_localizations.dart';
 
 class RankingsSheet extends StatelessWidget {
   const RankingsSheet({
@@ -35,12 +36,12 @@ class RankingsSheet extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Rankings',
+              AppLocalizations.of(context)!.leaderboardRankings,
               style: TextStyle(
                 color: isDark ? context.riksa.ink : AppColors.editorialInk,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                letterSpacing: -.3,
+                letterSpacing: 0,
               ),
             ),
             if ((totalCount ?? listRows.length) > 0)

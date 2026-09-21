@@ -2,48 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 
+/// Social colors that intentionally have no value-identical [RiksaPalette]
+/// token in both brightness modes.
 abstract final class SocialPalette {
   static bool _isDark(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark;
 
-  static Color canvas(BuildContext context) => _isDark(context)
-      ? context.riksa.canvas
-      : AppColors.editorialNeutralCanvas;
-
-  static Color surface(BuildContext context) => _isDark(context)
-      ? context.riksa.surface
-      : AppColors.editorialNeutralSurface;
-
-  static Color surfaceRaised(BuildContext context) =>
-      _isDark(context) ? context.riksa.surfaceRaised : AppColors.editorialField;
-
-  static Color ink(BuildContext context) =>
-      _isDark(context) ? context.riksa.ink : AppColors.editorialInk;
-
-  static Color muted(BuildContext context) =>
-      _isDark(context) ? context.riksa.inkMuted : AppColors.editorialMuted;
-
-  static Color outline(BuildContext context) =>
-      _isDark(context) ? context.riksa.outline : AppColors.editorialOutline;
-
-  /// The strong accent: text, icons and filled buttons. In dark mode it is
-  /// the light violet, because a dark accent vanishes on the dark surfaces.
-  static Color aubergine(BuildContext context) =>
-      _isDark(context) ? AppColors.editorialPink : AppColors.editorialAubergine;
-
+  /// Always editorial pink (#9D86F7), which differs from
+  /// [RiksaPalette.brand] in light mode.
   static Color pink(BuildContext context) => AppColors.editorialPink;
 
-  static Color pinkSoft(BuildContext context) =>
-      _isDark(context) ? context.riksa.brandSoft : AppColors.editorialPinkSoft;
-
-  /// Content on an [aubergine] fill: white on violet, deep ink on the light
-  /// violet dark mode uses.
+  /// Uses #FFF8FC in light mode and [AppColors.deepInk] in dark mode; both
+  /// differ from [RiksaPalette.onBrand].
   static Color onAubergine(BuildContext context) =>
       _isDark(context) ? AppColors.deepInk : const Color(0xFFFFF8FC);
-
-  static Color green(BuildContext context) => pink(context);
-  static Color panel(BuildContext context) => surface(context);
-  static Color border(BuildContext context) => outline(context);
-  static Color text(BuildContext context) => ink(context);
-  static Color editorialSurface(BuildContext context) => surface(context);
 }

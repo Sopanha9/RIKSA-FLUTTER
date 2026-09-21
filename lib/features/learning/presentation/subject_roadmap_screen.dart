@@ -164,9 +164,9 @@ class _RoadmapHeader extends StatelessWidget {
                             style: RiksaTypography.titleStyleFor(
                               name,
                               theme.textTheme.headlineMedium?.copyWith(
-                                fontSize: 27,
+                                fontSize: 24,
                                 height: 1.12,
-                                letterSpacing: -.7,
+                                letterSpacing: 0,
                                 fontWeight: FontWeight.w700,
                               ),
                               khmerHeight: 1.28,
@@ -265,8 +265,8 @@ class _ProgressRing extends StatelessWidget {
               value: percent,
               format: (value) => '$value%',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -.4,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0,
               ),
             ),
           ],
@@ -477,7 +477,7 @@ class _StoneCardState extends State<_StoneCard> {
                               Theme.of(context).textTheme.titleSmall?.copyWith(
                                 color: widget.tone.ink,
                                 fontWeight: FontWeight.w700,
-                                letterSpacing: -.25,
+                                letterSpacing: 0,
                                 height: 1.25,
                               ),
                               khmerHeight: 1.35,
@@ -518,9 +518,6 @@ class _StoneCardState extends State<_StoneCard> {
                     LearningPrimaryButton(
                       key: ValueKey('roadmap-continue-${widget.stone.id}'),
                       label: l10n.continueReading,
-                      icon: Icons.arrow_forward_rounded,
-                      background: learningAnchor(context),
-                      foreground: onLearningAnchor(context),
                       onPressed: () =>
                           context.push('/learn/${resume.id}', extra: resume),
                     ),
@@ -705,7 +702,7 @@ class _GoalStone extends StatelessWidget {
                   l10n.readyForExam,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
-                    letterSpacing: -.25,
+                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: RiksaSpacing.xxs),

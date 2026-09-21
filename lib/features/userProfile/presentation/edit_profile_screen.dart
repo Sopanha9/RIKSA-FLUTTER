@@ -83,9 +83,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       dirty: _isDirty(user),
       busy: _saving,
       child: Scaffold(
-        backgroundColor: ProfilePalette.canvas(context),
+        backgroundColor: context.riksa.canvas,
         appBar: AppBar(
-          backgroundColor: ProfilePalette.canvas(context),
+          backgroundColor: context.riksa.canvas,
           centerTitle: true,
           title: Text(
             l10n.editProfile,
@@ -146,7 +146,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                             style: IconButton.styleFrom(
                                               backgroundColor:
                                                   ProfilePalette.green(context),
-                                              foregroundColor: Colors.black,
+                                              foregroundColor:
+                                                  context.riksa.onBrand,
                                             ),
                                             onPressed: () =>
                                                 _chooseAvatar(context),
@@ -210,17 +211,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       value: null,
                                       child: Text(l10n.genderUnspecified),
                                     ),
-                                    const DropdownMenuItem(
+                                    DropdownMenuItem(
                                       value: 'FEMALE',
-                                      child: Text('Female'),
+                                      child: Text(l10n.genderFemale),
                                     ),
-                                    const DropdownMenuItem(
+                                    DropdownMenuItem(
                                       value: 'MALE',
-                                      child: Text('Male'),
+                                      child: Text(l10n.genderMale),
                                     ),
-                                    const DropdownMenuItem(
+                                    DropdownMenuItem(
                                       value: 'OTHER',
-                                      child: Text('Other'),
+                                      child: Text(l10n.genderOther),
                                     ),
                                   ],
                                   onChanged: (value) => _gender = value,
@@ -241,7 +242,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 Divider(
                                   height: 1,
                                   indent: 58,
-                                  color: ProfilePalette.border(context),
+                                  color: context.riksa.outline,
                                 ),
                                 _ReadOnlyAccountRow(
                                   icon: Icons.email_outlined,
@@ -251,7 +252,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 Divider(
                                   height: 1,
                                   indent: 58,
-                                  color: ProfilePalette.border(context),
+                                  color: context.riksa.outline,
                                 ),
                                 _ReadOnlyAccountRow(
                                   icon: Icons.phone_outlined,
@@ -265,7 +266,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           Text(
                             l10n.accountIdentifiersReadOnly,
                             style: TextStyle(
-                              color: ProfilePalette.muted(context),
+                              color: context.riksa.inkMuted,
                               fontSize: 12,
                               height: 1.4,
                             ),
@@ -291,8 +292,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           TextButton(
                             key: const ValueKey('delete-account'),
                             style: TextButton.styleFrom(
-                              foregroundColor: ProfilePalette.muted(context),
-                              backgroundColor: ProfilePalette.panel(context),
+                              foregroundColor: context.riksa.inkMuted,
+                              backgroundColor: context.riksa.surface,
                               minimumSize: const Size.fromHeight(50),
                             ),
                             onPressed: () => _confirmDelete(context),
@@ -338,7 +339,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (user == null) return;
     final selected = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: ProfilePalette.panel(context),
+      backgroundColor: context.riksa.surface,
       showDragHandle: true,
       isScrollControlled: true,
       builder: (sheetContext) => FractionallySizedBox(
@@ -367,7 +368,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: ProfilePalette.greenSoft(context),
+                        color: context.riksa.brandSoft,
                         borderRadius: AppRadii.smallBorder,
                       ),
                       child: Text(
@@ -385,7 +386,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 Text(
                   l10n.humationAvatarSubtitle,
                   style: TextStyle(
-                    color: ProfilePalette.muted(context),
+                    color: context.riksa.inkMuted,
                     fontSize: 13,
                   ),
                 ),
@@ -420,15 +421,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         label: '${l10n.chooseAvatar} ${index + 1}',
                         child: Material(
                           color: selected
-                              ? ProfilePalette.greenSoft(context)
-                              : ProfilePalette.panelSoft(context),
+                              ? context.riksa.brandSoft
+                              : context.riksa.surfaceRaised,
                           clipBehavior: Clip.antiAlias,
                           shape: RoundedRectangleBorder(
                             borderRadius: AppRadii.mediumBorder,
                             side: BorderSide(
                               color: selected
                                   ? ProfilePalette.green(context)
-                                  : ProfilePalette.border(context),
+                                  : context.riksa.outline,
                               width: selected ? 2 : 1,
                             ),
                           ),
@@ -445,9 +446,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       label: user.displayName,
                                       size: 66,
                                       backgroundColor: Colors.transparent,
-                                      foregroundColor: ProfilePalette.text(
-                                        context,
-                                      ),
+                                      foregroundColor: context.riksa.ink,
                                     ),
                                   ),
                                 ),
@@ -463,7 +462,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       child: Icon(
                                         Icons.check_rounded,
                                         size: 13,
-                                        color: Colors.white,
+                                        color: context.riksa.onBrand,
                                       ),
                                     ),
                                   ),
@@ -494,7 +493,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final current = ref.read(profileCoverProvider);
     final selected = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: ProfilePalette.panel(context),
+      backgroundColor: context.riksa.surface,
       showDragHandle: true,
       isScrollControlled: true,
       builder: (sheetContext) => FractionallySizedBox(
@@ -517,7 +516,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 Text(
                   l10n.profileCoverSubtitle,
                   style: TextStyle(
-                    color: ProfilePalette.muted(context),
+                    color: context.riksa.inkMuted,
                     fontSize: 13,
                   ),
                 ),
@@ -566,7 +565,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     padding: const EdgeInsets.all(7),
                                     child: CircleAvatar(
                                       radius: 10,
-                                      backgroundColor: Colors.white,
+                                      backgroundColor: context.riksa.onBrand,
                                       child: Icon(
                                         Icons.check_rounded,
                                         size: 15,
@@ -688,15 +687,15 @@ class _ReadOnlyAccountRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-    leading: Icon(icon, color: ProfilePalette.muted(context)),
+    leading: Icon(icon, color: context.riksa.inkMuted),
     title: Text(
       label,
-      style: TextStyle(color: ProfilePalette.muted(context), fontSize: 12),
+      style: TextStyle(color: context.riksa.inkMuted, fontSize: 12),
     ),
     subtitle: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis),
     trailing: Icon(
       Icons.lock_outline_rounded,
-      color: ProfilePalette.muted(context),
+      color: context.riksa.inkMuted,
       size: 17,
     ),
   );

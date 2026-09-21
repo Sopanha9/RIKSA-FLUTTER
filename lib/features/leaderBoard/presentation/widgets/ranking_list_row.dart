@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
+import '../../../../l10n/gen/app_localizations.dart';
 
 /// One ranked learner. The top three get a medal-coloured rank number and the
 /// signed-in learner's row is lime, as on the reference board.
@@ -36,7 +37,7 @@ class RankingListRow extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final medal = _medals[rank];
     return Semantics(
-      label: 'Rank $rank, $name, $xp XP',
+      label: AppLocalizations.of(context)!.leaderboardRowLabel(rank, name, xp),
       button: onTap != null,
       child: Material(
         color: isCurrentUser ? palette.accentSoft : palette.surface,

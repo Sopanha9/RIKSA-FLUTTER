@@ -171,7 +171,7 @@ class _OnboardingSplashScreenState extends ConsumerState<OnboardingSplashScreen>
                               titles[index],
                               theme.textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
-                                letterSpacing: -.4,
+                                letterSpacing: 0,
                               ),
                               khmerHeight: 1.35,
                             ),

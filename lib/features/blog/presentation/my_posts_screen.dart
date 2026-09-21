@@ -8,6 +8,7 @@ import '../data/blog_api.dart';
 import '../data/blog_models.dart';
 import '../providers/blog_provider.dart';
 import 'widgets/blog_ui.dart';
+import '../../../l10n/gen/app_localizations.dart';
 
 /// The author's own posts, including the ones still waiting on moderation.
 class MyPostsScreen extends ConsumerStatefulWidget {
@@ -96,7 +97,9 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
     } catch (_) {
       if (!mounted || requestedStatus != _status) return;
       setState(() {
-        if (page == 0) _error = 'Could not load your posts';
+        if (page == 0) {
+          _error = AppLocalizations.of(context)!.blogMyPostsFailed;
+        }
         _loading = false;
         _loadingMore = false;
       });
@@ -118,14 +121,20 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
       if (!mounted) return;
       ref.read(blogFeedProvider.notifier).removePost(post.id);
       setState(() => _posts.removeWhere((item) => item.id == post.id));
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Post deleted')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.blogPostDeleted)),
+      );
     } on DioException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(blogOwnerActionError(e, BlogOwnerAction.delete)),
+          content: Text(
+            blogOwnerActionError(
+              e,
+              BlogOwnerAction.delete,
+              l10n: AppLocalizations.of(context)!,
+            ),
+          ),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -138,7 +147,10 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
       backgroundColor: blogSheetColor(context),
       body: Column(
         children: [
-          BlogTopBar(title: 'Your posts', onBack: () => context.pop()),
+          BlogTopBar(
+            title: AppLocalizations.of(context)!.blogYourPosts,
+            onBack: () => context.pop(),
+          ),
           SizedBox(
             height: 46,
             child: ListView.builder(
@@ -173,21 +185,25 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
     }
     if (_error != null) {
       return BlogNotice(
-        title: 'Could not load your posts',
+        title: AppLocalizations.of(context)!.blogMyPostsFailed,
         body: _error!,
         icon: Icons.cloud_off_outlined,
-        actionLabel: 'Try again',
+        actionLabel: AppLocalizations.of(context)!.tryAgain,
         onAction: () => _load(page: 0),
       );
     }
     if (_posts.isEmpty) {
       return BlogNotice(
-        title: _status == null ? 'No posts yet' : 'Nothing here',
+        title: _status == null
+            ? AppLocalizations.of(context)!.blogMyPostsEmptyTitle
+            : AppLocalizations.of(context)!.blogMyPostsFilteredTitle,
         body: _status == null
-            ? 'Everything you write shows up here, with its review status.'
-            : 'You have no posts with this status right now.',
+            ? AppLocalizations.of(context)!.blogMyPostsEmptyBody
+            : AppLocalizations.of(context)!.blogMyPostsFilteredBody,
         icon: Icons.edit_note_rounded,
-        actionLabel: _status == null ? 'Write a post' : null,
+        actionLabel: _status == null
+            ? AppLocalizations.of(context)!.blogWritePost
+            : null,
         onAction: _status == null
             ? () async {
                 final created = await context.push<bool>('/blog/create');
@@ -275,9 +291,9 @@ class _MyPostRow extends StatelessWidget {
                     style: RiksaTypography.bodyStyleFor(
                       post.title,
                       theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                         height: 1.3,
-                        letterSpacing: -.2,
+                        letterSpacing: 0,
                       ),
                     ),
                   ),

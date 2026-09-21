@@ -40,19 +40,19 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
       child: Builder(
         builder: (context) => Scaffold(
           key: const ValueKey('public-profile-scaffold'),
-          backgroundColor: ProfilePalette.canvas(context),
+          backgroundColor: context.riksa.canvas,
           appBar: AppBar(
-            backgroundColor: ProfilePalette.canvas(context),
-            foregroundColor: ProfilePalette.text(context),
+            backgroundColor: context.riksa.canvas,
+            foregroundColor: context.riksa.ink,
             leading: IconButton(
               key: const ValueKey('public-profile-back'),
               tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               style: IconButton.styleFrom(
-                backgroundColor: ProfilePalette.panel(context),
+                backgroundColor: context.riksa.surface,
                 foregroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? ProfilePalette.text(context)
+                    ? context.riksa.ink
                     : ProfilePalette.aubergine(context),
-                side: BorderSide(color: ProfilePalette.border(context)),
+                side: BorderSide(color: context.riksa.outline),
               ),
               icon: const Icon(Icons.arrow_back_rounded),
               onPressed: () {
@@ -65,9 +65,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
               l10n.publicProfile,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? ProfilePalette.text(context)
+                    ? context.riksa.ink
                     : ProfilePalette.aubergine(context),
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -193,7 +193,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
               pinned: true,
               delegate: ProfileTabsHeaderDelegate(
                 extent: ProfileTabs.heightFor(context),
-                color: ProfilePalette.canvas(context),
+                color: context.riksa.canvas,
                 tabs: ProfileTabs(
                   selected: _tab,
                   postsLabel: l10n.posts,
@@ -311,7 +311,7 @@ class _PublicCover extends StatelessWidget {
   Widget build(BuildContext context) {
     final fallback = Container(
       key: const ValueKey('public-profile-default-cover'),
-      color: ProfilePalette.greenSoft(context),
+      color: context.riksa.brandSoft,
     );
     return ClipRRect(
       borderRadius: AppRadii.largeBorder,
@@ -348,8 +348,8 @@ class _PublicAvatar extends StatelessWidget {
       value: value,
       label: label,
       size: hasFrame ? 88 : 82,
-      backgroundColor: ProfilePalette.panelSoft(context),
-      foregroundColor: ProfilePalette.text(context),
+      backgroundColor: context.riksa.surfaceRaised,
+      foregroundColor: context.riksa.ink,
       frameTier: tier,
     );
     return Container(
@@ -361,9 +361,9 @@ class _PublicAvatar extends StatelessWidget {
           ? null
           : BoxDecoration(
               shape: BoxShape.circle,
-              color: ProfilePalette.canvas(context),
+              color: context.riksa.canvas,
               border: Border.all(
-                color: ProfilePalette.canvas(context),
+                color: context.riksa.canvas,
                 width: 2,
               ),
             ),
@@ -500,7 +500,9 @@ class _PublicRank extends StatelessWidget {
       children: [
         if (rank!.countryRank != null)
           ProfileRankCard(
-            icon: Icons.public_rounded,
+            iconWidget: const ProfileRankPixelIcon(
+              kind: ProfileRankIconKind.country,
+            ),
             label: l10n.countryRank,
             rank: rank!.countryRank,
             unrankedLabel: l10n.unranked,
@@ -509,7 +511,9 @@ class _PublicRank extends StatelessWidget {
           const SizedBox(height: 12),
         if (rank!.provinceRank != null)
           ProfileRankCard(
-            icon: Icons.location_on_outlined,
+            iconWidget: const ProfileRankPixelIcon(
+              kind: ProfileRankIconKind.province,
+            ),
             label: l10n.provinceRank,
             rank: rank!.provinceRank,
             unrankedLabel: l10n.unranked,

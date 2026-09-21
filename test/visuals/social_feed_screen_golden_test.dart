@@ -22,18 +22,8 @@ import 'package:riksa_app/features/learning/providers/learning_home_provider.dar
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 Future<void> _loadFonts() async {
-  final poppins = FontLoader(RiksaTypography.latinFamily);
-  for (final name in [
-    'Light',
-    'Regular',
-    'Medium',
-    'SemiBold',
-    'Bold',
-    'ExtraBold',
-    'Black',
-  ]) {
-    poppins.addFont(rootBundle.load('assets/fonts/Poppins-$name.ttf'));
-  }
+  final redditSans = FontLoader(RiksaTypography.latinFamily)
+    ..addFont(rootBundle.load('assets/fonts/RedditSans-Variable.ttf'));
 
   final configuredRoot = Platform.environment['FLUTTER_ROOT'];
   final flutterRoot =
@@ -53,7 +43,7 @@ Future<void> _loadFonts() async {
   final khmerFallback = FontLoader(RiksaTypography.khmerFamily)
     ..addFont(rootBundle.load('assets/fonts/NotoSansKhmer-Variable.ttf'));
   await Future.wait([
-    poppins.load(),
+    redditSans.load(),
     materialIcons.load(),
     khmerBody.load(),
     khmerDisplay.load(),

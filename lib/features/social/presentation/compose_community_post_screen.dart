@@ -14,7 +14,6 @@ import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
 import 'widgets/community_avatar.dart';
 import 'widgets/post_image_field.dart';
-import 'widgets/social_palette.dart';
 
 /// Writes a community post, or rewrites one the reader already owns.
 ///
@@ -725,10 +724,10 @@ class _SocialPostEditScreenState extends ConsumerState<SocialPostEditScreen> {
     if (post != null) return ComposeCommunityPostScreen(post: post);
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: SocialPalette.canvas(context),
+      backgroundColor: context.riksa.canvas,
       appBar: AppBar(
-        backgroundColor: SocialPalette.canvas(context),
-        foregroundColor: SocialPalette.aubergine(context),
+        backgroundColor: context.riksa.canvas,
+        foregroundColor: context.riksa.brand,
         surfaceTintColor: Colors.transparent,
         title: Text(
           l10n.editPost,
@@ -747,7 +746,7 @@ class _SocialPostEditScreenState extends ConsumerState<SocialPostEditScreen> {
                       _error ?? l10n.actionFailed,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: SocialPalette.muted(context),
+                        color: context.riksa.inkMuted,
                       ),
                     ),
                     const SizedBox(height: 16),

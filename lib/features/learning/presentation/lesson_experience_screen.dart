@@ -563,16 +563,20 @@ class _LessonExperienceScreenState
 
     final exercise = flow.exercise;
     return switch (flow.phase) {
-      _LessonPhase.reading => LearningActionBar(
-        primaryKey: ValueKey('start-section-${flow.section.index}'),
-        primaryLabel: flow.section.exercises.any((e) => !_isCorrect(e))
+      _LessonPhase.reading => () {
+        final hasPractice = flow.section.exercises.any((e) => !_isCorrect(e));
+        final label = hasPractice
             ? l10n.lessonTrySection
             : flow.following == null
             ? l10n.lessonReflectAction
-            : l10n.continueLabel,
-        primaryIcon: Icons.arrow_forward_rounded,
-        onPrimary: () => _changeStep(() => _showPractice = true),
-      ),
+            : l10n.continueLabel;
+        return LearningActionBar(
+          primaryKey: ValueKey('start-section-${flow.section.index}'),
+          primaryLabel: label,
+          primaryIcon: hasPractice ? null : Icons.arrow_forward_rounded,
+          onPrimary: () => _changeStep(() => _showPractice = true),
+        );
+      }(),
       _LessonPhase.practising => LearningActionBar(
         primaryKey: const ValueKey('check-answer'),
         primaryLabel: l10n.lessonCheckAnswer,
@@ -669,10 +673,11 @@ class _LessonExperienceScreenState
                 color: theme.colorScheme.errorContainer.withValues(alpha: 0.7),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.warning_amber_rounded,
-                color: theme.colorScheme.error,
-                size: 22,
+              child: Center(
+                child: _PixelAlertIcon(
+                  color: theme.colorScheme.error,
+                  size: 24,
+                ),
               ),
             ),
             const SizedBox(width: RiksaSpacing.sm),
@@ -909,6 +914,73 @@ class _LessonExperienceScreenState
   void _showError(Object error) => ScaffoldMessenger.of(
     context,
   ).showSnackBar(SnackBar(content: Text(_friendlyLessonError(error))));
+}
+
+class _PixelAlertIcon extends StatelessWidget {
+  const _PixelAlertIcon({required this.color, this.size = 24});
+
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: size,
+    child: CustomPaint(painter: _PixelAlertIconPainter(color)),
+  );
+}
+
+class _PixelAlertIconPainter extends CustomPainter {
+  const _PixelAlertIconPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final unit = size.width / 16;
+    final outline = Paint()
+      ..color = Color.lerp(color, Colors.black, .24)!
+      ..style = PaintingStyle.fill;
+    final fill = Paint()
+      ..color = color.withValues(alpha: .2)
+      ..style = PaintingStyle.fill;
+    final main = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final shine = Paint()
+      ..color = Colors.white.withValues(alpha: .48)
+      ..style = PaintingStyle.fill;
+
+    void px(Paint paint, int x, int y, [int w = 1, int h = 1]) {
+      canvas.drawRect(
+        Rect.fromLTWH(x * unit, y * unit, w * unit, h * unit),
+        paint,
+      );
+    }
+
+    px(outline, 7, 1, 2, 1);
+    px(outline, 6, 2, 4, 2);
+    px(outline, 5, 4, 6, 2);
+    px(outline, 4, 6, 8, 2);
+    px(outline, 3, 8, 10, 2);
+    px(outline, 2, 10, 12, 3);
+    px(outline, 1, 13, 14, 2);
+
+    px(fill, 7, 3, 2, 1);
+    px(fill, 6, 4, 4, 2);
+    px(fill, 5, 6, 6, 2);
+    px(fill, 4, 8, 8, 2);
+    px(fill, 3, 10, 10, 2);
+    px(fill, 2, 13, 12, 1);
+
+    px(main, 7, 5, 2, 5);
+    px(main, 7, 12, 2, 2);
+    px(shine, 6, 5, 1, 2);
+    px(shine, 5, 8, 1, 1);
+  }
+
+  @override
+  bool shouldRepaint(covariant _PixelAlertIconPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 class _LessonSection {
@@ -1375,9 +1447,10 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
             data: widget.exercise.question,
             inlineSyntaxes: RiksaMathText.markdownSyntaxes,
             builders: RiksaMathText.markdownBuilders,
-            styleSheet: MarkdownStyleSheet.fromTheme(
-              Theme.of(context),
-            ).copyWith(p: Theme.of(context).textTheme.bodyLarge),
+            styleSheet: _lessonMarkdownStyleSheet(
+              context,
+              hasKhmer: RiksaTypography.containsKhmer(widget.exercise.question),
+            ),
           ),
           const SizedBox(height: RiksaSpacing.md),
           if (isText) ...[
@@ -1880,12 +1953,7 @@ class _AskTutorButton extends StatelessWidget {
         ),
         icon: const Icon(Icons.auto_awesome_rounded, size: 18),
         label: Text(l10n.aiAskAboutLesson),
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(48),
-          shape: const StadiumBorder(),
-          side: BorderSide(color: context.riksa.outline),
-          foregroundColor: context.riksa.ink,
-        ),
+        style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
       ),
     );
   }

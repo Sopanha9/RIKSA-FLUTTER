@@ -8,6 +8,7 @@ import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../core/widgets/riksa_components.dart';
 import '../../../userProfile/data/public_profile.dart';
 import '../../providers/blog_provider.dart';
+import '../../../../l10n/gen/app_localizations.dart';
 
 /// Shared metrics for the timeline-style blog surfaces.
 ///
@@ -30,12 +31,10 @@ Color blogAvatarForeground(BuildContext context) =>
     Theme.of(context).colorScheme.primary;
 
 /// Name shown for an author whose public profile could not be resolved.
-const String blogUnknownAuthor = 'Riksa writer';
-
-String blogAuthorName(PublicProfile? profile) =>
+String blogAuthorName(BuildContext context, PublicProfile? profile) =>
     profile?.preferredName.isNotEmpty ?? false
     ? profile!.preferredName
-    : blogUnknownAuthor;
+    : AppLocalizations.of(context)!.blogUnknownAuthor;
 
 /// Short relative stamp in the shape X uses: `4m`, `7h`, `12 Jan`.
 String blogTimeLabel(BuildContext context, DateTime date) {
@@ -86,7 +85,7 @@ class BlogAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final avatar = RiksaAvatarImage(
       value: profile?.avatarUrl,
-      label: blogAuthorName(profile),
+      label: blogAuthorName(context, profile),
       size: size,
       backgroundColor: blogAvatarBackground(context),
       foregroundColor: blogAvatarForeground(context),
@@ -116,7 +115,7 @@ class BlogAuthorMetaLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = context.riksa;
-    final name = blogAuthorName(profile);
+    final name = blogAuthorName(context, profile);
     final handle = profile?.username.trim() ?? '';
     final trailing = handle.isEmpty
         ? blogTimeLabel(context, createdAt)
@@ -132,7 +131,7 @@ class BlogAuthorMetaLine extends StatelessWidget {
             style: RiksaTypography.bodyStyleFor(
               name,
               theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
                 color: palette.ink,
               ),
             ),
@@ -163,7 +162,7 @@ class BlogVerifiedBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: 'Verified',
+    label: AppLocalizations.of(context)!.blogVerified,
     child: Icon(
       Icons.verified_rounded,
       size: size,
@@ -325,8 +324,8 @@ class BlogTopBar extends StatelessWidget {
                 style: RiksaTypography.bodyStyleFor(
                   title,
                   Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -.3,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0,
                   ),
                 ),
               ),
@@ -419,7 +418,7 @@ class BlogOwnerMenu extends StatelessWidget {
         shape: const CircleBorder(),
       ),
       child: PopupMenuButton<_OwnerAction>(
-        tooltip: 'Post options',
+        tooltip: AppLocalizations.of(context)!.blogPostOptions,
         icon: Icon(
           Icons.more_horiz_rounded,
           size: 22,
@@ -434,13 +433,13 @@ class BlogOwnerMenu extends StatelessWidget {
           _OwnerAction.delete => onDelete(),
         },
         itemBuilder: (context) => [
-          const PopupMenuItem(
+          PopupMenuItem(
             value: _OwnerAction.edit,
             child: ListTile(
               dense: true,
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.edit_outlined, size: 20),
-              title: Text('Edit post'),
+              leading: const Icon(Icons.edit_outlined, size: 20),
+              title: Text(AppLocalizations.of(context)!.blogEditPost),
             ),
           ),
           PopupMenuItem(
@@ -454,7 +453,7 @@ class BlogOwnerMenu extends StatelessWidget {
                 color: theme.colorScheme.error,
               ),
               title: Text(
-                'Delete post',
+                AppLocalizations.of(context)!.blogDeletePost,
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ),
@@ -469,25 +468,23 @@ enum _OwnerAction { edit, delete }
 
 /// Deleting is permanent on the server, so it always goes through here.
 Future<bool> confirmBlogPostDeletion(BuildContext context) async {
+  final l10n = AppLocalizations.of(context)!;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Delete this post?'),
-      content: const Text(
-        'The post and its likes and views are removed for everyone. This '
-        'cannot be undone.',
-      ),
+      title: Text(l10n.blogDeleteConfirmTitle),
+      content: Text(l10n.blogDeleteConfirmBody),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Keep post'),
+          child: Text(l10n.blogKeepPost),
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(true),
           style: TextButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.error,
           ),
-          child: const Text('Delete'),
+          child: Text(l10n.discardAction),
         ),
       ],
     ),
@@ -523,6 +520,7 @@ class BlogCoverImage extends StatelessWidget {
           child: Image.network(
             url,
             fit: BoxFit.cover,
+            excludeFromSemantics: true,
             errorBuilder: (_, _, _) => ColoredBox(
               color: palette.surfaceRaised,
               child: Icon(
@@ -582,8 +580,8 @@ class BlogNotice extends StatelessWidget {
                 style: RiksaTypography.titleStyleFor(
                   title,
                   theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -.4,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0,
                   ),
                 ),
               ),
@@ -681,25 +679,25 @@ MarkdownStyleSheet blogMarkdownStyleSheet(
   final paragraph = blogStyle(
     theme.textTheme.bodyLarge?.copyWith(
       color: palette.ink,
-      fontSize: 17 * textScale,
+      fontSize: 15 * textScale,
       height: 1.75,
     ),
   );
   final heading = blogStyle(
     theme.textTheme.titleLarge?.copyWith(
       color: palette.ink,
-      fontWeight: FontWeight.w800,
+      fontWeight: FontWeight.w600,
       height: hasKhmer ? 1.5 : 1.35,
-      letterSpacing: -.3,
+      letterSpacing: 0,
     ),
   );
 
   return MarkdownStyleSheet.fromTheme(theme).copyWith(
     p: paragraph,
     pPadding: const EdgeInsets.only(bottom: 6),
-    h1: heading.copyWith(fontSize: 24 * textScale),
-    h2: heading.copyWith(fontSize: 21 * textScale),
-    h3: heading.copyWith(fontSize: 19 * textScale),
+    h1: heading.copyWith(fontSize: 21 * textScale),
+    h2: heading.copyWith(fontSize: 19 * textScale),
+    h3: heading.copyWith(fontSize: 17 * textScale),
     h1Padding: const EdgeInsets.only(top: 14, bottom: 6),
     h2Padding: const EdgeInsets.only(top: 12, bottom: 5),
     h3Padding: const EdgeInsets.only(top: 10, bottom: 4),
@@ -708,7 +706,7 @@ MarkdownStyleSheet blogMarkdownStyleSheet(
     code: blogStyle(
       theme.textTheme.bodyMedium?.copyWith(
         color: palette.ink,
-        fontSize: 14 * textScale,
+        fontSize: 13 * textScale,
         backgroundColor: palette.surfaceRaised,
       ),
     ),

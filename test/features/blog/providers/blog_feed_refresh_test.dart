@@ -72,7 +72,11 @@ void main() {
     await notifier.refreshIfStale(maxAge: Duration.zero);
 
     verify(
-      () => api.listPosts(categoryId: 'c1', page: 0, size: any(named: 'size')),
+      () => api.listPosts(
+        categoryId: 'c1',
+        page: 0,
+        size: any(named: 'size'),
+      ),
     ).called(2);
   });
 

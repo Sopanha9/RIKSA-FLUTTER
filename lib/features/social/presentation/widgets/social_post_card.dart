@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -45,6 +46,7 @@ class SocialPostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final isReacted = post.myReaction != null;
@@ -60,16 +62,17 @@ class SocialPostCard extends StatelessWidget {
           key: ValueKey('post-${post.id}'),
           color: tinted
               ? (isDark
-                    ? SocialPalette.editorialSurface(context)
+                    ? context.riksa.surface
                     : Color.lerp(
-                        SocialPalette.surface(context),
-                        SocialPalette.pinkSoft(context),
+                        context.riksa.surface,
+                        context.riksa.brandSoft,
                         .18,
                       ))
-              : SocialPalette.surface(context),
+              : context.riksa.surface,
           elevation: 0,
-          shape: const RoundedRectangleBorder(
+          shape: RoundedRectangleBorder(
             borderRadius: AppRadii.largeBorder,
+            side: BorderSide(color: context.riksa.outline),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
@@ -92,11 +95,11 @@ class SocialPostCard extends StatelessWidget {
                     style: RiksaTypography.bodyStyleFor(
                       post.title,
                       theme.textTheme.titleLarge?.copyWith(
-                        fontSize: 20,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        height: 1.28,
-                        letterSpacing: -.35,
-                        color: SocialPalette.text(context),
+                        height: 1.35,
+                        letterSpacing: 0,
+                        color: context.riksa.ink,
                       ),
                     ),
                   ),
@@ -109,8 +112,9 @@ class SocialPostCard extends StatelessWidget {
                       style: RiksaTypography.bodyStyleFor(
                         post.plainTextPreview,
                         theme.textTheme.bodyMedium?.copyWith(
-                          color: SocialPalette.muted(context),
-                          height: 1.65,
+                          fontSize: 15,
+                          color: context.riksa.inkMuted,
+                          height: 1.42,
                         ),
                       ),
                     ),
@@ -129,7 +133,7 @@ class SocialPostCard extends StatelessWidget {
                                 color: colors.surfaceContainer,
                                 child: Icon(
                                   Icons.image_not_supported_outlined,
-                                  color: SocialPalette.muted(context),
+                                  color: context.riksa.inkMuted,
                                   size: 32,
                                 ),
                               ),
@@ -144,20 +148,25 @@ class SocialPostCard extends StatelessWidget {
                         key: ValueKey('react-${post.id}'),
                         count: post.reactionCount,
                         selected: isReacted,
+                        semanticLabel: l10n.socialLikeLabel(post.reactionCount),
                         onPressed: onReact,
                       ),
                       const SizedBox(width: 10),
                       _LightAction(
                         key: ValueKey('comment-${post.id}'),
-                        icon: Icons.mode_comment_outlined,
+                        icon: CupertinoIcons.chat_bubble,
                         count: post.commentCount,
+                        semanticLabel: l10n.socialCommentLabel(
+                          post.commentCount,
+                        ),
                         onPressed: onTap,
                       ),
                       const Spacer(),
                       _LightAction(
                         key: ValueKey('share-${post.id}'),
-                        icon: Icons.ios_share_rounded,
+                        icon: Icons.share_rounded,
                         count: post.shareCount,
+                        semanticLabel: l10n.socialShareLabel(post.shareCount),
                         onPressed: onShare,
                       ),
                     ],
@@ -201,16 +210,22 @@ class _PostMetadata extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        GestureDetector(
-          key: ValueKey('author-avatar-${post.author.id}'),
-          behavior: HitTestBehavior.opaque,
-          onTap: onAuthorTap,
-          child: SocialAuthorAvatar(
-            imageUrl: post.author.avatarUrl,
-            label: authorName,
-            seed: post.author.username.isEmpty
-                ? post.author.id
-                : post.author.username,
+        Semantics(
+          button: true,
+          enabled: onAuthorTap != null,
+          label: AppLocalizations.of(context)!.socialOpenProfile(authorName),
+          excludeSemantics: true,
+          child: GestureDetector(
+            key: ValueKey('author-avatar-${post.author.id}'),
+            behavior: HitTestBehavior.opaque,
+            onTap: onAuthorTap,
+            child: SocialAuthorAvatar(
+              imageUrl: post.author.avatarUrl,
+              label: authorName,
+              seed: post.author.username.isEmpty
+                  ? post.author.id
+                  : post.author.username,
+            ),
           ),
         ),
         const SizedBox(width: 12),
@@ -221,19 +236,27 @@ class _PostMetadata extends StatelessWidget {
               Row(
                 children: [
                   Flexible(
-                    child: GestureDetector(
-                      key: ValueKey('author-name-${post.author.id}'),
-                      behavior: HitTestBehavior.opaque,
-                      onTap: onAuthorTap,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Text(
-                          authorName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: SocialPalette.text(context),
-                            fontWeight: FontWeight.w800,
+                    child: Semantics(
+                      button: true,
+                      enabled: onAuthorTap != null,
+                      label: AppLocalizations.of(
+                        context,
+                      )!.socialOpenProfile(authorName),
+                      excludeSemantics: true,
+                      child: GestureDetector(
+                        key: ValueKey('author-name-${post.author.id}'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: onAuthorTap,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Text(
+                            authorName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: context.riksa.ink,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
@@ -252,15 +275,15 @@ class _PostMetadata extends StatelessWidget {
                     TextSpan(
                       text: categoryPrefix(post.category),
                       style: TextStyle(
-                        color: SocialPalette.pink(context),
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -.2,
+                        color: context.riksa.ink,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0,
                       ),
                     ),
                     TextSpan(
                       text: ' ${post.category.name} · $date',
                       style: TextStyle(
-                        color: SocialPalette.muted(context),
+                        color: context.riksa.inkMuted,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -307,7 +330,7 @@ class _OfficialBadge extends StatelessWidget {
       key: const ValueKey('official-account-badge'),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: SocialPalette.pinkSoft(context),
+        color: context.riksa.brandSoft,
         borderRadius: AppRadii.fullBorder,
       ),
       child: Row(
@@ -322,9 +345,9 @@ class _OfficialBadge extends StatelessWidget {
           Text(
             AppLocalizations.of(context)!.official,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: SocialPalette.aubergine(context),
+              color: context.riksa.brand,
               fontSize: 10,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
               height: 1,
             ),
           ),
@@ -424,7 +447,7 @@ class SocialAuthorAvatar extends StatelessWidget {
         ? (
             background: Color.alphaBlend(
               light.foreground.withValues(alpha: .35),
-              SocialPalette.surface(context),
+              context.riksa.surface,
             ),
             foreground: light.background,
           )
@@ -471,11 +494,15 @@ class _PrimaryReactionButton extends StatelessWidget {
     super.key,
     required this.count,
     required this.selected,
+    required this.semanticLabel,
     required this.onPressed,
   });
 
   final int count;
   final bool selected;
+
+  /// What a screen reader says: the count alone never explains the action.
+  final String semanticLabel;
   final VoidCallback onPressed;
 
   @override
@@ -483,36 +510,41 @@ class _PrimaryReactionButton extends StatelessWidget {
     final isSelected = selected;
     return Semantics(
       button: true,
-      selected: isSelected,
+      toggled: isSelected,
+      label: semanticLabel,
+      excludeSemantics: true,
       child: Material(
-        color: isSelected
-            ? SocialPalette.pinkSoft(context)
-            : Colors.transparent,
+        color: Colors.transparent,
         borderRadius: AppRadii.fullBorder,
         child: InkWell(
           borderRadius: AppRadii.fullBorder,
           onTap: onPressed,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Container(
+            // The icon stays small; the target a thumb has to hit does not.
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  isSelected ? Icons.thumb_up_rounded : Icons.thumb_up_outlined,
+                  isSelected
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
                   size: 17,
                   color: isSelected
-                      ? SocialPalette.pink(context)
-                      : SocialPalette.muted(context),
+                      ? AppColors.socialLike
+                      : context.riksa.inkMuted,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   _compactCount(count),
                   style: TextStyle(
                     color: isSelected
-                        ? SocialPalette.aubergine(context)
-                        : SocialPalette.muted(context),
+                        ? AppColors.socialLike
+                        : context.riksa.inkMuted,
                     fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w600,
                   ),
                 ),
               ],
@@ -529,24 +561,28 @@ class _LightAction extends StatelessWidget {
     super.key,
     required this.icon,
     required this.count,
+    required this.semanticLabel,
     this.onPressed,
   });
 
   final IconData icon;
   final int count;
+  final String semanticLabel;
   final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
-    final mutedColor = SocialPalette.muted(context);
+    final mutedColor = context.riksa.inkMuted;
     final content = Material(
       color: Colors.transparent,
       borderRadius: AppRadii.fullBorder,
       child: InkWell(
         borderRadius: AppRadii.fullBorder,
         onTap: onPressed,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -565,8 +601,13 @@ class _LightAction extends StatelessWidget {
         ),
       ),
     );
-    if (onPressed == null) return content;
-    return Semantics(button: true, child: content);
+    if (onPressed == null) return ExcludeSemantics(child: content);
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      excludeSemantics: true,
+      child: content,
+    );
   }
 }
 

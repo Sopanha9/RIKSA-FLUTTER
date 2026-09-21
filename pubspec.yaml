@@ -106,6 +106,24 @@ flutter:
     - assets/audio/
 
   fonts:
+    - family: Reddit Sans
+      fonts:
+        - asset: assets/fonts/RedditSans-Variable.ttf
+          weight: 200
+        - asset: assets/fonts/RedditSans-Variable.ttf
+          weight: 300
+        - asset: assets/fonts/RedditSans-Variable.ttf
+          weight: 400
+        - asset: assets/fonts/RedditSans-Variable.ttf
+          weight: 500
+        - asset: assets/fonts/RedditSans-Variable.ttf
+          weight: 600
+        - asset: assets/fonts/RedditSans-Variable.ttf
+          weight: 700
+        - asset: assets/fonts/RedditSans-Variable.ttf
+          weight: 800
+        - asset: assets/fonts/RedditSans-Variable.ttf
+          weight: 900
     - family: Poppins
       fonts:
         - asset: assets/fonts/Poppins-Light.ttf

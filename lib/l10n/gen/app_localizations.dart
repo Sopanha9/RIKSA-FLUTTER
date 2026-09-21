@@ -2879,7 +2879,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeGreeting.
   ///
   /// In en, this message translates to:
-  /// **'Hello, {name}! 👋'**
+  /// **'Hello, {name}!'**
   String homeGreeting(String name);
 
   /// No description provided for @homeSubtitle.
@@ -3427,6 +3427,918 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No topics are available yet.'**
   String get blogTopicsEmpty;
+
+  /// No description provided for @recoveryErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t reach Riksa. Check your internet and try again.'**
+  String get recoveryErrorNetwork;
+
+  /// No description provided for @recoveryErrorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'That’s a lot of tries! Take a short break, then try again.'**
+  String get recoveryErrorRateLimited;
+
+  /// No description provided for @recoveryErrorServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong on our side. Please try again in a moment.'**
+  String get recoveryErrorServer;
+
+  /// No description provided for @recoveryErrorPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost there! Your password needs at least 8 characters, with an uppercase letter, a lowercase letter and a number.'**
+  String get recoveryErrorPassword;
+
+  /// No description provided for @recoveryErrorCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That code didn’t work. It may have expired, so ask for a new one and try again.'**
+  String get recoveryErrorCode;
+
+  /// No description provided for @recoveryErrorAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t find that account. Check the spelling and try again.'**
+  String get recoveryErrorAccount;
+
+  /// No description provided for @recoveryErrorDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'That didn’t work. Please check your details and try again.'**
+  String get recoveryErrorDetails;
+
+  /// No description provided for @recoveryErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get recoveryErrorGeneric;
+
+  /// No description provided for @recoveryNeedIdentifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us your username, email or Telegram ID so we know whose account to help with.'**
+  String get recoveryNeedIdentifier;
+
+  /// No description provided for @recoveryCodeLength.
+  ///
+  /// In en, this message translates to:
+  /// **'The code has 6 digits. Check your message and try again.'**
+  String get recoveryCodeLength;
+
+  /// No description provided for @recoveryChecklistIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost there! Your password just needs everything in the checklist ticked.'**
+  String get recoveryChecklistIncomplete;
+
+  /// No description provided for @recoveryPasswordsDiffer.
+  ///
+  /// In en, this message translates to:
+  /// **'The two passwords don’t match yet. Try typing them again.'**
+  String get recoveryPasswordsDiffer;
+
+  /// No description provided for @recoveryPasswordSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'All set! Sign in with your new password.'**
+  String get recoveryPasswordSaved;
+
+  /// No description provided for @recoveryStepIdentifierTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot your password?'**
+  String get recoveryStepIdentifierTitle;
+
+  /// No description provided for @recoveryStepIdentifierSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No worries, it happens to everyone. Tell us who you are and we’ll send you a code.'**
+  String get recoveryStepIdentifierSubtitle;
+
+  /// No description provided for @recoveryStepCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your messages'**
+  String get recoveryStepCodeTitle;
+
+  /// No description provided for @recoveryStepCodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a 6-digit code to your email or Telegram. Enter it below.'**
+  String get recoveryStepCodeSubtitle;
+
+  /// No description provided for @recoveryStepPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new password'**
+  String get recoveryStepPasswordTitle;
+
+  /// No description provided for @recoveryStepPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick something you will remember but others can’t guess.'**
+  String get recoveryStepPasswordSubtitle;
+
+  /// No description provided for @recoveryIdentifierLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Username, email or Telegram ID'**
+  String get recoveryIdentifierLabel;
+
+  /// No description provided for @recoveryNewPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get recoveryNewPasswordLabel;
+
+  /// No description provided for @recoveryConfirmPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type it again'**
+  String get recoveryConfirmPasswordLabel;
+
+  /// No description provided for @recoverySendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send me a code'**
+  String get recoverySendCode;
+
+  /// No description provided for @recoveryVerifyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify code'**
+  String get recoveryVerifyCode;
+
+  /// No description provided for @recoverySavePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Save new password'**
+  String get recoverySavePassword;
+
+  /// No description provided for @recoveryResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn’t get it? Send a new code'**
+  String get recoveryResend;
+
+  /// No description provided for @recoveryResendSent.
+  ///
+  /// In en, this message translates to:
+  /// **'A fresh code is on its way.'**
+  String get recoveryResendSent;
+
+  /// No description provided for @recoveryBackToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'I remember it — back to sign in'**
+  String get recoveryBackToSignIn;
+
+  /// No description provided for @recoveryIllustrationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Account recovery, step {step}'**
+  String recoveryIllustrationLabel(int step);
+
+  /// No description provided for @recoveryStepProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of {total}'**
+  String recoveryStepProgress(int step, int total);
+
+  /// No description provided for @passwordRuleLength.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters'**
+  String get passwordRuleLength;
+
+  /// No description provided for @passwordRuleUppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'An uppercase letter (A–Z)'**
+  String get passwordRuleUppercase;
+
+  /// No description provided for @passwordRuleLowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'A lowercase letter (a–z)'**
+  String get passwordRuleLowercase;
+
+  /// No description provided for @passwordRuleDigit.
+  ///
+  /// In en, this message translates to:
+  /// **'A number (0–9)'**
+  String get passwordRuleDigit;
+
+  /// No description provided for @passwordRuleMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Both passwords match'**
+  String get passwordRuleMatch;
+
+  /// No description provided for @checklistItemDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{item}, done'**
+  String checklistItemDone(String item);
+
+  /// No description provided for @checklistItemPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{item}, not yet'**
+  String checklistItemPending(String item);
+
+  /// No description provided for @emailVerifiedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Email verified'**
+  String get emailVerifiedTitle;
+
+  /// No description provided for @emailVerifiedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Riksa account email is now verified.'**
+  String get emailVerifiedBody;
+
+  /// No description provided for @emailVerifyFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification failed'**
+  String get emailVerifyFailedTitle;
+
+  /// No description provided for @emailVerifyFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This verification link is invalid or expired.'**
+  String get emailVerifyFailedBody;
+
+  /// No description provided for @socialLikeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Like this post} =1{Like this post, 1 like} other{Like this post, {count} likes}}'**
+  String socialLikeLabel(int count);
+
+  /// No description provided for @socialCommentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Comment on this post} =1{View 1 comment} other{View {count} comments}}'**
+  String socialCommentLabel(int count);
+
+  /// No description provided for @socialShareLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Share this post} other{Share this post, shared {count} times}}'**
+  String socialShareLabel(int count);
+
+  /// No description provided for @socialOpenProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {name}’s profile'**
+  String socialOpenProfile(String name);
+
+  /// No description provided for @socialReplyTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply to {name}'**
+  String socialReplyTo(String name);
+
+  /// No description provided for @socialDeleteComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this comment'**
+  String get socialDeleteComment;
+
+  /// No description provided for @socialCancelReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel reply'**
+  String get socialCancelReply;
+
+  /// No description provided for @genderFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get genderFemale;
+
+  /// No description provided for @genderMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get genderMale;
+
+  /// No description provided for @genderOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get genderOther;
+
+  /// No description provided for @loadingProvincesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading provinces'**
+  String get loadingProvincesTitle;
+
+  /// No description provided for @loadingProvincesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing local learning options.'**
+  String get loadingProvincesBody;
+
+  /// No description provided for @leaderboardNational.
+  ///
+  /// In en, this message translates to:
+  /// **'National'**
+  String get leaderboardNational;
+
+  /// No description provided for @leaderboardProvince.
+  ///
+  /// In en, this message translates to:
+  /// **'Province'**
+  String get leaderboardProvince;
+
+  /// No description provided for @leaderboardRankings.
+  ///
+  /// In en, this message translates to:
+  /// **'Rankings'**
+  String get leaderboardRankings;
+
+  /// No description provided for @leaderboardYourRank.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rank'**
+  String get leaderboardYourRank;
+
+  /// No description provided for @leaderboardRowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank {rank}, {name}, {xp} XP'**
+  String leaderboardRowLabel(int rank, String name, int xp);
+
+  /// No description provided for @leaderboardYourRankLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rank is {rank}. {name}, {scope}, {tier}, {xp} XP.'**
+  String leaderboardYourRankLabel(
+    int rank,
+    String name,
+    String scope,
+    String tier,
+    int xp,
+  );
+
+  /// No description provided for @progressHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress history'**
+  String get progressHistoryTitle;
+
+  /// No description provided for @progressHistoryXpTab.
+  ///
+  /// In en, this message translates to:
+  /// **'XP activity'**
+  String get progressHistoryXpTab;
+
+  /// No description provided for @progressHistoryRankTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank changes'**
+  String get progressHistoryRankTab;
+
+  /// No description provided for @progressHistoryXpFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load your XP history'**
+  String get progressHistoryXpFailed;
+
+  /// No description provided for @progressHistoryRankFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load your rank history'**
+  String get progressHistoryRankFailed;
+
+  /// No description provided for @progressHistoryXpEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No XP yet'**
+  String get progressHistoryXpEmptyTitle;
+
+  /// No description provided for @progressHistoryXpEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a lesson to start your history.'**
+  String get progressHistoryXpEmptyBody;
+
+  /// No description provided for @progressHistoryRankEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No rank changes yet'**
+  String get progressHistoryRankEmptyTitle;
+
+  /// No description provided for @progressHistoryRankEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep earning XP to move up the leaderboard.'**
+  String get progressHistoryRankEmptyBody;
+
+  /// No description provided for @progressHistoryRankRow.
+  ///
+  /// In en, this message translates to:
+  /// **'{scope} rank'**
+  String progressHistoryRankRow(String scope);
+
+  /// No description provided for @xpAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} XP'**
+  String xpAmount(int amount);
+
+  /// No description provided for @xpSourceLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson completed'**
+  String get xpSourceLesson;
+
+  /// No description provided for @xpSourceExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise answered'**
+  String get xpSourceExercise;
+
+  /// No description provided for @xpSourceAchievement.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievement earned'**
+  String get xpSourceAchievement;
+
+  /// No description provided for @xpSourceStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak bonus'**
+  String get xpSourceStreak;
+
+  /// No description provided for @xpSourceReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward'**
+  String get xpSourceReward;
+
+  /// No description provided for @profileSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your profile'**
+  String get profileSetupTitle;
+
+  /// No description provided for @profileSetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A few details help classmates recognise you and keep your progress yours.'**
+  String get profileSetupSubtitle;
+
+  /// No description provided for @profileSetupCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up profile'**
+  String get profileSetupCta;
+
+  /// No description provided for @profileSetupStepPhotoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo'**
+  String get profileSetupStepPhotoTitle;
+
+  /// No description provided for @profileSetupStepPhotoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an avatar or upload your own picture.'**
+  String get profileSetupStepPhotoBody;
+
+  /// No description provided for @profileSetupStepNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get profileSetupStepNameTitle;
+
+  /// No description provided for @profileSetupStepNameBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The name classmates see on posts and rankings.'**
+  String get profileSetupStepNameBody;
+
+  /// No description provided for @profileSetupStepBioTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A short bio'**
+  String get profileSetupStepBioTitle;
+
+  /// No description provided for @profileSetupStepBioBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Say what you are studying for in a line or two.'**
+  String get profileSetupStepBioBody;
+
+  /// No description provided for @profileSetupStepProvinceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your province'**
+  String get profileSetupStepProvinceTitle;
+
+  /// No description provided for @profileSetupStepProvinceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for provincial rankings and local communities.'**
+  String get profileSetupStepProvinceBody;
+
+  /// No description provided for @supportDocumentComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get supportDocumentComingSoon;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @blogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Blog'**
+  String get blogTitle;
+
+  /// No description provided for @blogWritePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a post'**
+  String get blogWritePost;
+
+  /// No description provided for @blogYourPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Your posts'**
+  String get blogYourPosts;
+
+  /// No description provided for @blogFeedFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts are taking a break'**
+  String get blogFeedFailedTitle;
+
+  /// No description provided for @blogFeedEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing posted yet'**
+  String get blogFeedEmptyTitle;
+
+  /// No description provided for @blogFeedEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first learner to share something useful with the Riksa community.'**
+  String get blogFeedEmptyBody;
+
+  /// No description provided for @blogPostDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Post deleted'**
+  String get blogPostDeleted;
+
+  /// No description provided for @blogLikeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Like, {count} likes'**
+  String blogLikeLabel(int count);
+
+  /// No description provided for @blogUnlikeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlike, {count} likes'**
+  String blogUnlikeLabel(int count);
+
+  /// No description provided for @blogMyPostsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your posts'**
+  String get blogMyPostsFailed;
+
+  /// No description provided for @blogMyPostsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts yet'**
+  String get blogMyPostsEmptyTitle;
+
+  /// No description provided for @blogMyPostsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything you write shows up here, with its review status.'**
+  String get blogMyPostsEmptyBody;
+
+  /// No description provided for @blogMyPostsFilteredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here'**
+  String get blogMyPostsFilteredTitle;
+
+  /// No description provided for @blogMyPostsFilteredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no posts with this status right now.'**
+  String get blogMyPostsFilteredBody;
+
+  /// No description provided for @blogStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'In review'**
+  String get blogStatusPending;
+
+  /// No description provided for @blogStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get blogStatusApproved;
+
+  /// No description provided for @blogStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get blogStatusRejected;
+
+  /// No description provided for @blogEditPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit post'**
+  String get blogEditPost;
+
+  /// No description provided for @blogDeletePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete post'**
+  String get blogDeletePost;
+
+  /// No description provided for @blogDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this post?'**
+  String get blogDeleteConfirmTitle;
+
+  /// No description provided for @blogDeleteConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The post and its likes and views are removed for everyone. This cannot be undone.'**
+  String get blogDeleteConfirmBody;
+
+  /// No description provided for @blogKeepPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep post'**
+  String get blogKeepPost;
+
+  /// No description provided for @blogPostOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Post options'**
+  String get blogPostOptions;
+
+  /// No description provided for @blogVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get blogVerified;
+
+  /// No description provided for @blogUnknownAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Riksa writer'**
+  String get blogUnknownAuthor;
+
+  /// No description provided for @blogOwnerEditFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only edit your own posts'**
+  String get blogOwnerEditFailed;
+
+  /// No description provided for @blogOwnerDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only delete your own posts'**
+  String get blogOwnerDeleteFailed;
+
+  /// No description provided for @blogPostGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This post no longer exists'**
+  String get blogPostGone;
+
+  /// No description provided for @blogReviewPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'In review'**
+  String get blogReviewPendingTitle;
+
+  /// No description provided for @blogReviewBackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back in review'**
+  String get blogReviewBackTitle;
+
+  /// No description provided for @blogReviewBackBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your changes were saved. The post returns to the blog once a moderator approves this version.'**
+  String get blogReviewBackBody;
+
+  /// No description provided for @blogReviewSubmittedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your post was submitted. It appears in the blog once a moderator approves it, and you can follow its status under Your posts.'**
+  String get blogReviewSubmittedBody;
+
+  /// No description provided for @blogDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get blogDone;
+
+  /// No description provided for @blogSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get blogSave;
+
+  /// No description provided for @blogPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get blogPublish;
+
+  /// No description provided for @blogNothingToPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to preview yet.'**
+  String get blogNothingToPreview;
+
+  /// No description provided for @blogTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get blogTitleHint;
+
+  /// No description provided for @blogBodyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Share what you learned. Markdown works here.'**
+  String get blogBodyHint;
+
+  /// No description provided for @blogCoverUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover image URL (optional)'**
+  String get blogCoverUrlLabel;
+
+  /// No description provided for @blogRemoveCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove cover'**
+  String get blogRemoveCover;
+
+  /// No description provided for @blogCoverImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover image'**
+  String get blogCoverImage;
+
+  /// No description provided for @blogPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get blogPreview;
+
+  /// No description provided for @blogBackToWriting.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to writing'**
+  String get blogBackToWriting;
+
+  /// No description provided for @blogOpenForEditFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open this post for editing'**
+  String get blogOpenForEditFailed;
+
+  /// No description provided for @blogPostUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Post unavailable'**
+  String get blogPostUnavailableTitle;
+
+  /// No description provided for @blogPostUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This post could not be loaded.'**
+  String get blogPostUnavailableBody;
+
+  /// No description provided for @blogLoadPostFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this post'**
+  String get blogLoadPostFailed;
+
+  /// No description provided for @blogLikeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update like'**
+  String get blogLikeFailed;
+
+  /// No description provided for @blogOpenPostFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This post would not open'**
+  String get blogOpenPostFailedTitle;
+
+  /// No description provided for @blogTextSizeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust text size'**
+  String get blogTextSizeTooltip;
+
+  /// No description provided for @blogTextSizeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size: Default (1.0x)'**
+  String get blogTextSizeDefault;
+
+  /// No description provided for @blogTextSizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size: Large (1.18x)'**
+  String get blogTextSizeLarge;
+
+  /// No description provided for @blogTextSizeExtraLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size: Extra Large (1.35x)'**
+  String get blogTextSizeExtraLarge;
+
+  /// No description provided for @blogProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get blogProfile;
+
+  /// No description provided for @blogSomethingWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get blogSomethingWentWrong;
+
+  /// No description provided for @markdownBold.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold'**
+  String get markdownBold;
+
+  /// No description provided for @markdownItalic.
+  ///
+  /// In en, this message translates to:
+  /// **'Italic'**
+  String get markdownItalic;
+
+  /// No description provided for @markdownHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading'**
+  String get markdownHeading;
+
+  /// No description provided for @markdownQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote'**
+  String get markdownQuote;
+
+  /// No description provided for @markdownBulletList.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulleted list'**
+  String get markdownBulletList;
+
+  /// No description provided for @markdownNumberedList.
+  ///
+  /// In en, this message translates to:
+  /// **'Numbered list'**
+  String get markdownNumberedList;
+
+  /// No description provided for @markdownCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get markdownCode;
+
+  /// No description provided for @markdownLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get markdownLink;
 }
 
 class _AppLocalizationsDelegate

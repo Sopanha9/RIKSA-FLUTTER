@@ -182,8 +182,8 @@ class ProvincePrompt extends StatelessWidget {
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 15,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -.2,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 6),
@@ -226,15 +226,16 @@ class RankGapIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Center(
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Text(
           '• • •',
           style: TextStyle(
-            color: Color(0xFF70695E),
+            color: isDark ? context.riksa.inkMuted : AppColors.editorialMuted,
             fontSize: 14,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             letterSpacing: 4,
           ),
         ),

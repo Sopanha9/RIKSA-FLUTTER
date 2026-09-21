@@ -56,10 +56,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('blog-markdown-quote')));
     await tester.pump();
 
-    expect(
-      tester.widget<TextField>(body).controller!.text,
-      'first\n> second',
-    );
+    expect(tester.widget<TextField>(body).controller!.text, 'first\n> second');
   });
 
   testWidgets('preview renders the markdown and hides the toolbar', (

@@ -3,10 +3,12 @@ import '../../../core/sound/sound_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/notifications/streak_reminder_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_mode_provider.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/profile_cover_provider.dart';
@@ -40,9 +42,9 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     final streakReminderEnabled = streakReminderAsync.value ?? true;
 
     return Scaffold(
-      backgroundColor: ProfilePalette.canvas(context),
+      backgroundColor: context.riksa.canvas,
       appBar: AppBar(
-        backgroundColor: ProfilePalette.canvas(context),
+        backgroundColor: context.riksa.canvas,
         centerTitle: false,
         title: Text(
           l10n.settings,
@@ -78,7 +80,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                       ),
                       subtitle: Text(
                         '@${user.username}',
-                        style: TextStyle(color: ProfilePalette.muted(context)),
+                        style: TextStyle(color: context.riksa.inkMuted),
                       ),
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: () => context.push('/profile/edit'),
@@ -143,7 +145,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                       ListTile(
                         leading: Icon(
                           Icons.translate_rounded,
-                          color: ProfilePalette.muted(context),
+                          color: context.riksa.inkMuted,
                         ),
                         title: Text(l10n.language),
                         subtitle: Text(
@@ -151,7 +153,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                               ? l10n.languageKm
                               : l10n.languageEn,
                           style: TextStyle(
-                            color: ProfilePalette.muted(context),
+                            color: context.riksa.inkMuted,
                           ),
                         ),
                         trailing: Switch.adaptive(
@@ -168,7 +170,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                 Text(
                   l10n.helpAndLegal,
                   style: TextStyle(
-                    color: ProfilePalette.muted(context),
+                    color: context.riksa.inkMuted,
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                   ),
@@ -181,20 +183,19 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                       _DocumentRow(
                         icon: Icons.help_outline_rounded,
                         label: l10n.faq,
-                        onTap: () => _showDocument(context, l10n.faq),
+                        url: _supportDocuments.faq,
                       ),
                       const _SettingsDivider(),
                       _DocumentRow(
                         icon: Icons.description_outlined,
                         label: l10n.termsOfService,
-                        onTap: () =>
-                            _showDocument(context, l10n.termsOfService),
+                        url: _supportDocuments.terms,
                       ),
                       const _SettingsDivider(),
                       _DocumentRow(
                         icon: Icons.privacy_tip_outlined,
                         label: l10n.privacyPolicy,
-                        onTap: () => _showDocument(context, l10n.privacyPolicy),
+                        url: _supportDocuments.privacy,
                       ),
                     ],
                   ),
@@ -203,9 +204,11 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                 OutlinedButton.icon(
                   key: const ValueKey('settings-logout'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFFF7B8B),
-                    backgroundColor: ProfilePalette.panel(context),
-                    side: const BorderSide(color: Color(0xFF593139)),
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                    backgroundColor: context.riksa.surface,
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                   onPressed: () async {
                     await ref.read(authProvider.notifier).logout();
@@ -221,24 +224,13 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
       ),
     );
   }
-
-  Future<void> _showDocument(BuildContext context, String title) async {
-    final l10n = AppLocalizations.of(context)!;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(title),
-        content: Text(l10n.supportDocumentUnavailable),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
 }
+
+/// Where the published documents live. A row without an address here is shown
+/// as not yet available instead of pretending to be a link: tapping one only
+/// to be told the document does not exist is worse than seeing that up front.
+/// Fill these in and the rows become ordinary links.
+const _supportDocuments = (faq: null, terms: null, privacy: null);
 
 class _SettingsSwitchRow extends StatelessWidget {
   const _SettingsSwitchRow({
@@ -258,11 +250,11 @@ class _SettingsSwitchRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-    leading: Icon(icon, color: ProfilePalette.muted(context)),
+    leading: Icon(icon, color: context.riksa.inkMuted),
     title: Text(title),
     subtitle: Text(
       subtitle,
-      style: TextStyle(color: ProfilePalette.muted(context), fontSize: 12),
+      style: TextStyle(color: context.riksa.inkMuted, fontSize: 12),
     ),
     trailing: Switch.adaptive(
       value: value,
@@ -276,20 +268,49 @@ class _DocumentRow extends StatelessWidget {
   const _DocumentRow({
     required this.icon,
     required this.label,
-    required this.onTap,
+    required this.url,
   });
 
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+
+  /// Null while the document has no published address.
+  final String? url;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    leading: Icon(icon, color: ProfilePalette.muted(context)),
-    title: Text(label),
-    trailing: const Icon(Icons.chevron_right_rounded),
-    onTap: onTap,
-  );
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final address = url;
+    final muted = context.riksa.inkMuted;
+    if (address == null) {
+      return ListTile(
+        enabled: false,
+        leading: Icon(icon, color: muted),
+        title: Text(label),
+        trailing: Text(
+          l10n.supportDocumentComingSoon,
+          style: TextStyle(color: muted, fontWeight: FontWeight.w600),
+        ),
+      );
+    }
+    return ListTile(
+      leading: Icon(icon, color: muted),
+      title: Text(label),
+      trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+      onTap: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        final opened = await launchUrl(
+          Uri.parse(address),
+          mode: LaunchMode.externalApplication,
+        );
+        if (!opened) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.supportDocumentUnavailable)),
+          );
+        }
+      },
+    );
+  }
 }
 
 class _SettingsDivider extends StatelessWidget {
@@ -297,5 +318,5 @@ class _SettingsDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      Divider(height: 1, indent: 56, color: ProfilePalette.border(context));
+      Divider(height: 1, indent: 56, color: context.riksa.outline);
 }

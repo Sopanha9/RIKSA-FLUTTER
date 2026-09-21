@@ -29,7 +29,9 @@ class AppColors {
   static const warmSurfaceRaised = Color(0xFFF3F0FB);
   static const ink = Color(0xFF1D1533);
   static const inkMuted = Color(0xFF6E6886);
-  static const inkFaint = Color(0xFFA7A1BA);
+  // Readable-text minimum: 4.8:1 on the light canvas. A fainter tone would
+  // fail WCAG AA for the hints, timestamps and locked labels drawn with it.
+  static const inkFaint = Color(0xFF706A88);
   static const warmOutline = Color(0xFFE8E4F3);
 
   static const brandJade = Color(0xFF237A5B);
@@ -201,7 +203,7 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     surfaceRaised: AppColors.editorialField,
     ink: AppColors.editorialInk,
     inkMuted: AppColors.editorialMuted,
-    inkFaint: Color(0xFFA6A2AA),
+    inkFaint: Color(0xFF706A88),
     outline: AppColors.editorialOutline,
     jade: AppColors.brandJade,
     jadeStrong: AppColors.brandJadeStrong,
@@ -234,7 +236,7 @@ class RiksaPalette extends ThemeExtension<RiksaPalette> {
     surfaceRaised: AppColors.darkSurfaceRaised,
     ink: AppColors.darkInk,
     inkMuted: AppColors.darkInkMuted,
-    inkFaint: Color(0xFF5C5C64),
+    inkFaint: Color(0xFF90909A),
     outline: AppColors.darkOutline,
     jade: Color(0xFF69B893),
     jadeStrong: Color(0xFF9AD4B7),
@@ -376,6 +378,42 @@ extension RiksaThemeContext on BuildContext {
             ? RiksaPalette.dark
             : RiksaPalette.light);
   }
+
+  RiksaGlass get riksaGlass => RiksaGlass.resolve(this);
+}
+
+@immutable
+class RiksaGlass {
+  const RiksaGlass({
+    required this.fill,
+    required this.border,
+    required this.selectedFill,
+    required this.selectedBorder,
+    this.blurSigma = 14,
+  });
+
+  factory RiksaGlass.resolve(BuildContext context) {
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return RiksaGlass(
+      fill: isDark
+          ? palette.surface.withValues(alpha: 0.46)
+          : Colors.white.withValues(alpha: 0.58),
+      border: isDark
+          ? Colors.white.withValues(alpha: 0.12)
+          : Colors.white.withValues(alpha: 0.72),
+      selectedFill: isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.white.withValues(alpha: 0.54),
+      selectedBorder: Colors.white.withValues(alpha: 0.36),
+    );
+  }
+
+  final Color fill;
+  final Color border;
+  final Color selectedFill;
+  final Color selectedBorder;
+  final double blurSigma;
 }
 
 class RiksaSpacing {
@@ -384,6 +422,7 @@ class RiksaSpacing {
   static const double xs = 8;
   static const double sm = 12;
   static const double md = 16;
+  static const double gutter = 20;
   static const double lg = 24;
   static const double xl = 32;
   static const double xxl = 48;
@@ -394,7 +433,11 @@ class AppRadii {
   static const double small = 8;
   static const double badge = 13;
   static const double medium = 14;
+
+  /// Intentional 16px row alias; prefer this for new row-shaped surfaces.
   static const double row = 16;
+
+  /// Intentional 16px general alias; prefer this for other new surfaces.
   static const double large = 16;
   static const double panel = 20;
   static const double extraLarge = 28;
@@ -420,6 +463,30 @@ class RiksaElevation {
       ),
       blurRadius: 10,
       offset: const Offset(0, 3),
+    ),
+  ];
+
+  static List<BoxShadow> raised(Brightness brightness) => [
+    BoxShadow(
+      color: (brightness == Brightness.dark
+              ? RiksaPalette.dark.ink
+              : RiksaPalette.light.ink)
+          .withValues(alpha: 0.06),
+      blurRadius: 10,
+      offset: const Offset(0, 4),
+    ),
+  ];
+
+  static List<BoxShadow> overlay(Brightness brightness) => [
+    BoxShadow(
+      color: (brightness == Brightness.dark
+              ? RiksaPalette.dark.ink
+              : RiksaPalette.light.ink)
+          .withValues(
+            alpha: brightness == Brightness.dark ? 0.18 : 0.08,
+          ),
+      blurRadius: 18,
+      offset: const Offset(0, 8),
     ),
   ];
 }
@@ -448,14 +515,14 @@ class RiksaMotion {
 class RiksaTypography {
   RiksaTypography._();
   static const latinFamily = 'Poppins';
-  static const khmerFamily = 'Noto Sans Khmer';
-  static const khmerTitleFamily = 'Koulen';
-  static const khmerLegacyBodyFamily = 'Kantumruy Pro';
+  static const legacyLatinFamily = 'Reddit Sans';
+  static const khmerFamily = 'Khmer OS Siemreap';
+  static const khmerTitleFamily = 'Khmer OS Siemreap';
+  static const khmerLegacyBodyFamily = 'Khmer OS Siemreap';
   static const khmerBodyFamily = 'Khmer OS Siemreap';
-  static const fallback = <String>[khmerFamily];
+  static const fallback = <String>[latinFamily, khmerBodyFamily];
   static const khmerTitleFallback = <String>[
     khmerBodyFamily,
-    khmerLegacyBodyFamily,
     khmerFamily,
     latinFamily,
   ];
@@ -483,30 +550,34 @@ class RiksaTypography {
     return style.copyWith(
       fontFamily: khmerBodyFamily,
       fontFamilyFallback: const [
-        khmerLegacyBodyFamily,
+        khmerBodyFamily,
         khmerFamily,
         latinFamily,
+        legacyLatinFamily,
       ],
       letterSpacing: 0,
     );
   }
 
+  /// [TextTheme.displaySmall] intentionally aliases
+  /// [TextTheme.headlineLarge] at 21px/w600; prefer `headlineLarge` for new
+  /// headings and reserve `displaySmall` for display semantics.
   static TextTheme textTheme(Color ink, Color muted) => TextTheme(
-    displayLarge: _style(36, FontWeight.w700, ink, 1.12),
-    displayMedium: _style(32, FontWeight.w700, ink, 1.15),
-    displaySmall: _style(24, FontWeight.w600, ink, 1.18),
-    headlineLarge: _style(22, FontWeight.w600, ink, 1.22),
-    headlineMedium: _style(20, FontWeight.w600, ink, 1.25),
-    headlineSmall: _style(18, FontWeight.w600, ink, 1.27),
-    titleLarge: _style(16, FontWeight.w600, ink, 1.3),
-    titleMedium: _style(16, FontWeight.w600, ink, 1.35),
-    titleSmall: _style(15, FontWeight.w600, ink, 1.38),
-    bodyLarge: _style(16, FontWeight.w400, ink, 1.55),
-    bodyMedium: _style(14, FontWeight.w400, ink, 1.55),
-    bodySmall: _style(12, FontWeight.w400, muted, 1.5),
-    labelLarge: _style(14, FontWeight.w600, ink, 1.35),
-    labelMedium: _style(12, FontWeight.w600, ink, 1.35),
-    labelSmall: _style(11, FontWeight.w600, muted, 1.35),
+    displayLarge: _style(26, FontWeight.w600, ink, 32 / 26),
+    displayMedium: _style(24, FontWeight.w600, ink, 30 / 24),
+    displaySmall: _style(21, FontWeight.w600, ink, 27 / 21),
+    headlineLarge: _style(21, FontWeight.w600, ink, 27 / 21),
+    headlineMedium: _style(18, FontWeight.w600, ink, 24 / 18),
+    headlineSmall: _style(16, FontWeight.w600, ink, 22 / 16),
+    titleLarge: _style(17, FontWeight.w500, ink, 23 / 17),
+    titleMedium: _style(15, FontWeight.w500, ink, 21 / 15),
+    titleSmall: _style(14, FontWeight.w500, ink, 19 / 14),
+    bodyLarge: _style(15, FontWeight.w400, ink, 23 / 15),
+    bodyMedium: _style(13.5, FontWeight.w400, ink, 20 / 13.5),
+    bodySmall: _style(11.5, FontWeight.w400, muted, 17 / 11.5),
+    labelLarge: _style(13, FontWeight.w500, ink, 19 / 13),
+    labelMedium: _style(11.5, FontWeight.w500, ink, 16 / 11.5),
+    labelSmall: _style(10.5, FontWeight.w400, muted, 14 / 10.5),
   );
 
   static TextStyle _style(
@@ -521,6 +592,37 @@ class RiksaTypography {
     fontWeight: weight,
     color: color,
     height: height,
+    letterSpacing: 0,
+  );
+}
+
+extension RiksaTextThemeRoles on TextTheme {
+  TextStyle? get labelLargeBold => labelLarge?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get labelMediumBold => labelMedium?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get labelSmallBold => labelSmall?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get titleLargeBold => titleLarge?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get titleMediumBold => titleMedium?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get titleSmallBold => titleSmall?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get bodyLargeBold => bodyLarge?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get bodyMediumBold => bodyMedium?.copyWith(
+    fontWeight: FontWeight.w700,
+  );
+  TextStyle? get bodySmallBold => bodySmall?.copyWith(
+    fontWeight: FontWeight.w700,
   );
 }
 
@@ -541,6 +643,59 @@ class AppTheme {
 
   static ThemeData get light => _theme(Brightness.light, RiksaPalette.light);
   static ThemeData get dark => _theme(Brightness.dark, RiksaPalette.dark);
+
+  static ButtonStyle _glassPillButtonStyle({
+    required RiksaPalette palette,
+    required bool isDark,
+    required TextStyle? textStyle,
+    EdgeInsetsGeometry padding = const EdgeInsets.symmetric(
+      horizontal: RiksaSpacing.lg,
+    ),
+    Size minimumSize = const Size(0, 46),
+  }) {
+    final fill = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.54);
+    final border = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.72);
+    final disabledFill = palette.outline.withValues(alpha: isDark ? 0.18 : 0.5);
+    final pressedFill = isDark
+        ? Colors.white.withValues(alpha: 0.14)
+        : Colors.white.withValues(alpha: 0.72);
+
+    return ButtonStyle(
+      minimumSize: WidgetStateProperty.all(minimumSize),
+      padding: WidgetStateProperty.all(padding),
+      shape: WidgetStateProperty.all(const StadiumBorder()),
+      textStyle: WidgetStateProperty.all(textStyle),
+      elevation: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.disabled) ? 0 : 2,
+      ),
+      shadowColor: WidgetStateProperty.all(
+        palette.ink.withValues(alpha: isDark ? 0.18 : 0.08),
+      ),
+      surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
+      overlayColor: WidgetStateProperty.all(
+        palette.brand.withValues(alpha: isDark ? 0.14 : 0.08),
+      ),
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) return disabledFill;
+        if (states.contains(WidgetState.pressed)) return pressedFill;
+        return fill;
+      }),
+      foregroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) return palette.inkMuted;
+        return palette.brand;
+      }),
+      side: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return BorderSide(color: palette.outline.withValues(alpha: 0.6));
+        }
+        return BorderSide(color: border);
+      }),
+    );
+  }
 
   static ThemeData _theme(Brightness brightness, RiksaPalette palette) {
     final isDark = brightness == Brightness.dark;
@@ -616,6 +771,10 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         titleTextStyle: textTheme.titleLarge,
       ),
+      actionIconTheme: ActionIconThemeData(
+        backButtonIconBuilder: (BuildContext context) =>
+            const Icon(Icons.arrow_back_ios_new),
+      ),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
           minimumSize: const Size.square(48),
@@ -675,41 +834,41 @@ class AppTheme {
         hintStyle: textTheme.bodyMedium?.copyWith(color: palette.inkMuted),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: palette.brand,
-          foregroundColor: palette.onBrand,
-          disabledBackgroundColor: palette.outline,
-          disabledForegroundColor: palette.inkMuted,
-          minimumSize: const Size(0, 48),
-          padding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.lg),
-          shape: const StadiumBorder(),
-          textStyle: textTheme.labelLarge,
+        style: _glassPillButtonStyle(
+          palette: palette,
+          isDark: isDark,
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: palette.anchor,
-          foregroundColor: palette.onAnchor,
-          minimumSize: const Size(0, 48),
-          shape: const StadiumBorder(),
-          textStyle: textTheme.labelLarge,
-          elevation: 0,
+        style: _glassPillButtonStyle(
+          palette: palette,
+          isDark: isDark,
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          backgroundColor: palette.surface,
-          foregroundColor: palette.ink,
-          minimumSize: const Size(0, 48),
-          side: BorderSide(color: palette.outline),
-          shape: const StadiumBorder(),
-          textStyle: textTheme.labelLarge,
+        style: _glassPillButtonStyle(
+          palette: palette,
+          isDark: isDark,
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: palette.brand,
-          textStyle: textTheme.labelLarge,
+        style: _glassPillButtonStyle(
+          palette: palette,
+          isDark: isDark,
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.md),
+          minimumSize: const Size(0, 40),
         ),
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(

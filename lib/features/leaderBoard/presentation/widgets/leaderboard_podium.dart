@@ -7,6 +7,7 @@ import '../../../../core/widgets/riksa_interactions.dart';
 import '../../../../core/widgets/riksa_rank_badge.dart';
 import '../../../userProfile/data/profile_models.dart';
 import '../../../userProfile/presentation/public_profile_navigation.dart';
+import '../../../../l10n/gen/app_localizations.dart';
 
 class LeaderboardPodium extends StatelessWidget {
   const LeaderboardPodium({
@@ -173,7 +174,9 @@ class _PodiumColumn extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: 'Rank ${row.rank}, $displayName, ${row.score} XP',
+      label: AppLocalizations.of(
+        context,
+      )!.leaderboardRowLabel(row.rank, displayName, row.score),
       child: RiksaTapFeedback(
         child: InkWell(
           key: ValueKey('podium-place-${row.rank}'),
@@ -258,8 +261,8 @@ class _PodiumColumn extends StatelessWidget {
                   style: TextStyle(
                     color: palette.ink,
                     fontSize: isWinner ? 13 : 12,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -.2,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0,
                   ),
                 ),
               ),
@@ -302,7 +305,7 @@ class _PodiumColumn extends StatelessWidget {
                                   : context.riksa.brandStrong)
                             : palette.ink,
                         fontSize: 11,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -331,7 +334,7 @@ class _PodiumColumn extends StatelessWidget {
                         : 'You',
                     style: TextStyle(
                       fontSize: 9.5,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                       color: context.riksa.brand,
                     ),
                   ),
@@ -371,7 +374,7 @@ class _PodiumColumn extends StatelessWidget {
                           '${row.rank}',
                           style: TextStyle(
                             fontSize: isWinner ? 46 : 34,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             color: pillarTextColor.withValues(alpha: 0.35),
                             fontFamily: RiksaTypography.latinFamily,
                             height: 1.0,
@@ -472,7 +475,7 @@ class _RankMedalBadge extends StatelessWidget {
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 11.5,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   fontFamily: RiksaTypography.latinFamily,
                   height: 1.0,
                 ),
@@ -574,8 +577,8 @@ class _EmptyPodium extends StatelessWidget {
             style: TextStyle(
               color: isDark ? context.riksa.ink : AppColors.editorialAubergine,
               fontSize: 16,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -.2,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 6),

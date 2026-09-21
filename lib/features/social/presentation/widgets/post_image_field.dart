@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/gen/app_localizations.dart';
-import 'social_palette.dart';
 
 /// The image attached to a post being written, in one of three states:
 /// absent, uploading, or held as a URL the API returned.
@@ -75,7 +74,7 @@ class PostImageField extends StatelessWidget {
                 child: Center(
                   child: Icon(
                     Icons.broken_image_outlined,
-                    color: SocialPalette.muted(context),
+                    color: context.riksa.inkMuted,
                   ),
                 ),
               ),
@@ -118,7 +117,7 @@ class _Frame extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     decoration: BoxDecoration(
       borderRadius: AppRadii.mediumBorder,
-      border: Border.all(color: SocialPalette.muted(context).withValues(alpha: .3)),
+      border: Border.all(color: context.riksa.inkMuted.withValues(alpha: .3)),
     ),
     child: child,
   );

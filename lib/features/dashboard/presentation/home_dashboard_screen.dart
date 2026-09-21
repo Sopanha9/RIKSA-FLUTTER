@@ -5,6 +5,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../../userProfile/providers/profile_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
+import '../../../l10n/gen/app_localizations.dart';
 
 class HomeDashboardScreen extends ConsumerWidget {
   const HomeDashboardScreen({super.key});
@@ -12,6 +13,7 @@ class HomeDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
     final profile = ref.watch(profileDashboardProvider);
+    final l10n = AppLocalizations.of(context)!;
     final name = auth is Authenticated ? auth.user.displayName : 'Learner';
     return Scaffold(
       body: CustomScrollView(
@@ -28,7 +30,13 @@ class HomeDashboardScreen extends ConsumerWidget {
               children: [
                 profile.when(
                   loading: () => const LinearProgressIndicator(),
-                  error: (_, _) => const SizedBox.shrink(),
+                  error: (_, _) => RiksaStateView(
+                    icon: Icons.cloud_off_rounded,
+                    title: l10n.profileLoadFailed,
+                    body: l10n.recoveryErrorGeneric,
+                    actionLabel: l10n.tryAgain,
+                    onAction: () => ref.invalidate(profileDashboardProvider),
+                  ),
                   data: (data) => RiksaPastelCard(
                     tone: RiksaPastelTone.saffron,
                     child: Row(

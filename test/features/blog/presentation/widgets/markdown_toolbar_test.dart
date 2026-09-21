@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/features/blog/presentation/widgets/markdown_toolbar.dart';
+import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 TextEditingValue valueOf(String text, {int? base, int? extent}) =>
     TextEditingValue(
@@ -130,9 +132,14 @@ void main() {
     final tapped = <BlogMarkdownAction>[];
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: BlogMarkdownToolbar(onAction: tapped.add),
-        ),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('km')],
+        home: Scaffold(body: BlogMarkdownToolbar(onAction: tapped.add)),
       ),
     );
 

@@ -21,12 +21,12 @@ class ProfileCoverStyle {
 const profileCoverStyles = <ProfileCoverStyle>[
   ProfileCoverStyle(
     id: 'violet',
-    colors: [Color(0xFF4B32B8), Color(0xFF7657EE), Color(0xFFB9A6FF)],
-    accent: Color(0xFFD5F06A),
+    colors: [Color(0xFF4B32B8), AppColors.violet, Color(0xFFB9A6FF)],
+    accent: AppColors.lime,
   ),
   ProfileCoverStyle(
     id: 'jade',
-    colors: [Color(0xFF123D31), Color(0xFF237A5B), Color(0xFF6BBF8E)],
+    colors: [Color(0xFF123D31), AppColors.brandJade, Color(0xFF6BBF8E)],
     accent: Color(0xFFFFD88A),
   ),
   ProfileCoverStyle(

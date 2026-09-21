@@ -44,7 +44,7 @@ class SocialCreateMenuSheet extends StatelessWidget {
           24 + MediaQuery.paddingOf(context).bottom,
         ),
         decoration: BoxDecoration(
-          color: SocialPalette.panel(context),
+          color: context.riksa.surface,
           borderRadius: const BorderRadius.vertical(
             top: Radius.circular(AppRadii.large),
           ),
@@ -58,7 +58,7 @@ class SocialCreateMenuSheet extends StatelessWidget {
                 width: 42,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: SocialPalette.border(context),
+                  color: context.riksa.outline,
                   borderRadius: AppRadii.fullBorder,
                 ),
               ),
@@ -67,14 +67,14 @@ class SocialCreateMenuSheet extends StatelessWidget {
             Text(
               l10n.createCommunityContent,
               style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: SocialPalette.text(context),
+                fontWeight: FontWeight.w600,
+                color: context.riksa.ink,
               ),
             ),
             const SizedBox(height: 14),
             SocialCreateOption(
               key: const ValueKey('create-post-option'),
-              icon: Icons.edit_note_rounded,
+              artwork: SocialCreateArtwork.post,
               title: l10n.createPost,
               subtitle: l10n.createPostSubtitle,
               color: SocialPalette.pink(context),
@@ -83,16 +83,16 @@ class SocialCreateMenuSheet extends StatelessWidget {
             const SizedBox(height: 10),
             SocialCreateOption(
               key: const ValueKey('create-question-option'),
-              icon: Icons.help_outline_rounded,
+              artwork: SocialCreateArtwork.question,
               title: l10n.askCommunity,
               subtitle: l10n.askCommunitySubtitle,
-              color: SocialPalette.aubergine(context),
+              color: context.riksa.brand,
               onTap: () => Navigator.pop(context, SocialCreateAction.question),
             ),
             const SizedBox(height: 10),
             SocialCreateOption(
               key: const ValueKey('create-article-option'),
-              icon: Icons.auto_stories_rounded,
+              artwork: SocialCreateArtwork.article,
               title: l10n.writeArticle,
               subtitle: l10n.writeArticleSubtitle,
               color: theme.colorScheme.primary,
@@ -108,14 +108,14 @@ class SocialCreateMenuSheet extends StatelessWidget {
 class SocialCreateOption extends StatelessWidget {
   const SocialCreateOption({
     super.key,
-    required this.icon,
+    required this.artwork,
     required this.title,
     required this.subtitle,
     required this.color,
     required this.onTap,
   });
 
-  final IconData icon;
+  final SocialCreateArtwork artwork;
   final String title;
   final String subtitle;
   final Color color;
@@ -125,7 +125,7 @@ class SocialCreateOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Material(
-      color: SocialPalette.editorialSurface(context),
+      color: context.riksa.surface,
       borderRadius: AppRadii.mediumBorder,
       child: InkWell(
         borderRadius: AppRadii.mediumBorder,
@@ -141,7 +141,9 @@ class SocialCreateOption extends StatelessWidget {
                   color: color.withValues(alpha: .14),
                   borderRadius: AppRadii.smallBorder,
                 ),
-                child: Icon(icon, color: color),
+                child: Center(
+                  child: SocialCreatePixelIcon(artwork: artwork, color: color),
+                ),
               ),
               const SizedBox(width: 13),
               Expanded(
@@ -151,15 +153,15 @@ class SocialCreateOption extends StatelessWidget {
                     Text(
                       title,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: SocialPalette.text(context),
+                        fontWeight: FontWeight.w600,
+                        color: context.riksa.ink,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: SocialPalette.muted(context),
+                        color: context.riksa.inkMuted,
                       ),
                     ),
                   ],
@@ -167,7 +169,7 @@ class SocialCreateOption extends StatelessWidget {
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: SocialPalette.muted(context),
+                color: context.riksa.inkMuted,
               ),
             ],
           ),
@@ -175,4 +177,156 @@ class SocialCreateOption extends StatelessWidget {
       ),
     );
   }
+}
+
+enum SocialCreateArtwork { post, question, article }
+
+class SocialCreatePixelIcon extends StatelessWidget {
+  const SocialCreatePixelIcon({
+    super.key,
+    required this.artwork,
+    required this.color,
+    this.size = 34,
+  });
+
+  final SocialCreateArtwork artwork;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: size,
+    child: CustomPaint(painter: _SocialCreatePixelPainter(artwork, color)),
+  );
+}
+
+class _SocialCreatePixelPainter extends CustomPainter {
+  const _SocialCreatePixelPainter(this.artwork, this.color);
+
+  final SocialCreateArtwork artwork;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final unit = size.width / 16;
+    final outline = Paint()
+      ..color = color.withValues(alpha: .95)
+      ..style = PaintingStyle.fill;
+    final dark = Paint()
+      ..color = Color.lerp(color, Colors.black, .22)!
+      ..style = PaintingStyle.fill;
+    final light = Paint()
+      ..color = Color.lerp(color, Colors.white, .44)!
+      ..style = PaintingStyle.fill;
+    final paper = Paint()
+      ..color = Colors.white.withValues(alpha: .86)
+      ..style = PaintingStyle.fill;
+    final glow = Paint()
+      ..color = color.withValues(alpha: .2)
+      ..style = PaintingStyle.fill;
+
+    void px(Paint paint, int x, int y, [int w = 1, int h = 1]) {
+      canvas.drawRect(
+        Rect.fromLTWH(x * unit, y * unit, w * unit, h * unit),
+        paint,
+      );
+    }
+
+    switch (artwork) {
+      case SocialCreateArtwork.post:
+        _paintPost(px, outline, dark, light, paper, glow);
+      case SocialCreateArtwork.question:
+        _paintQuestion(px, outline, dark, light, paper, glow);
+      case SocialCreateArtwork.article:
+        _paintArticle(px, outline, dark, light, paper, glow);
+    }
+  }
+
+  void _paintPost(
+    void Function(Paint paint, int x, int y, [int w, int h]) px,
+    Paint outline,
+    Paint dark,
+    Paint light,
+    Paint paper,
+    Paint glow,
+  ) {
+    px(glow, 2, 2, 12, 12);
+    px(dark, 3, 2, 8, 1);
+    px(dark, 2, 3, 1, 11);
+    px(dark, 3, 14, 8, 1);
+    px(dark, 11, 3, 1, 10);
+    px(paper, 3, 3, 8, 11);
+    px(light, 4, 4, 6, 1);
+    px(outline, 4, 6, 5, 1);
+    px(outline, 4, 8, 4, 1);
+    px(outline, 4, 10, 3, 1);
+    px(dark, 9, 11, 1, 1);
+    px(dark, 10, 10, 1, 1);
+    px(outline, 11, 8, 1, 1);
+    px(outline, 12, 7, 1, 1);
+    px(light, 12, 6, 2, 1);
+    px(outline, 13, 5, 1, 1);
+    px(dark, 13, 6, 1, 1);
+    px(outline, 8, 12, 2, 1);
+    px(outline, 7, 13, 1, 1);
+  }
+
+  void _paintQuestion(
+    void Function(Paint paint, int x, int y, [int w, int h]) px,
+    Paint outline,
+    Paint dark,
+    Paint light,
+    Paint paper,
+    Paint glow,
+  ) {
+    px(glow, 2, 2, 12, 11);
+    px(dark, 4, 3, 8, 1);
+    px(dark, 3, 4, 1, 6);
+    px(dark, 12, 4, 1, 6);
+    px(dark, 4, 10, 5, 1);
+    px(dark, 7, 11, 1, 2);
+    px(dark, 8, 12, 2, 1);
+    px(paper, 4, 4, 8, 6);
+    px(light, 5, 5, 6, 1);
+    px(outline, 6, 5, 4, 1);
+    px(outline, 10, 6, 1, 2);
+    px(outline, 8, 8, 2, 1);
+    px(outline, 8, 9, 1, 1);
+    px(outline, 8, 11, 1, 1);
+    px(light, 5, 6, 1, 1);
+    px(dark, 6, 12, 1, 1);
+  }
+
+  void _paintArticle(
+    void Function(Paint paint, int x, int y, [int w, int h]) px,
+    Paint outline,
+    Paint dark,
+    Paint light,
+    Paint paper,
+    Paint glow,
+  ) {
+    px(glow, 1, 3, 14, 10);
+    px(dark, 2, 4, 5, 1);
+    px(dark, 9, 4, 5, 1);
+    px(dark, 1, 5, 1, 8);
+    px(dark, 14, 5, 1, 8);
+    px(dark, 7, 5, 1, 9);
+    px(dark, 8, 5, 1, 9);
+    px(dark, 2, 13, 5, 1);
+    px(dark, 9, 13, 5, 1);
+    px(paper, 2, 5, 5, 8);
+    px(paper, 9, 5, 5, 8);
+    px(light, 3, 6, 3, 1);
+    px(light, 10, 6, 3, 1);
+    px(outline, 3, 8, 3, 1);
+    px(outline, 3, 10, 3, 1);
+    px(outline, 10, 8, 3, 1);
+    px(outline, 10, 10, 3, 1);
+    px(dark, 6, 12, 1, 1);
+    px(dark, 9, 12, 1, 1);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SocialCreatePixelPainter oldDelegate) =>
+      oldDelegate.artwork != artwork || oldDelegate.color != color;
 }

@@ -1,5 +1,8 @@
+import 'dart:ui';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -35,6 +38,7 @@ class UserProfileScreen extends ConsumerStatefulWidget {
 class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   final _scrollController = ScrollController();
   ProfileTab _tab = ProfileTab.posts;
+  bool _showSavedShortcut = false;
 
   @override
   void dispose() {
@@ -54,95 +58,129 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       child: Builder(
         builder: (context) => Scaffold(
           key: const ValueKey('personal-profile-scaffold'),
-          backgroundColor: ProfilePalette.canvas(context),
-          body: RefreshIndicator(
-            color: ProfilePalette.green(context),
-            onRefresh: () async {
-              ref
-                ..invalidate(profileDashboardProvider)
-                ..invalidate(profileRankProvider);
-              if (user != null) ref.invalidate(userPostsProvider(user.id));
-              await ref.read(profileDashboardProvider.future);
+          backgroundColor: context.riksa.canvas,
+          floatingActionButton: AnimatedSlide(
+            duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+            curve: RiksaMotion.standardCurve,
+            offset: _showSavedShortcut ? Offset.zero : const Offset(1.2, 0),
+            child: AnimatedOpacity(
+              duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+              opacity: _showSavedShortcut ? 1 : 0,
+              child: IgnorePointer(
+                ignoring: !_showSavedShortcut,
+                child: _SavedLessonsSideShortcut(
+                  label: l10n.menuSavedLessons,
+                  onTap: () => context.push('/learn/saved'),
+                ),
+              ),
+            ),
+          ),
+          body: NotificationListener<UserScrollNotification>(
+            onNotification: (notification) {
+              if (notification.direction == ScrollDirection.reverse) {
+                if (!_showSavedShortcut) {
+                  setState(() => _showSavedShortcut = true);
+                }
+              } else if (notification.direction == ScrollDirection.forward) {
+                if (_showSavedShortcut) {
+                  setState(() => _showSavedShortcut = false);
+                }
+              }
+              return false;
             },
-            child: CustomScrollView(
-              key: const PageStorageKey('user-profile-scroll'),
-              controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverSafeArea(
-                  bottom: false,
-                  sliver: SliverToBoxAdapter(
+            child: RefreshIndicator(
+              color: ProfilePalette.green(context),
+              onRefresh: () async {
+                ref
+                  ..invalidate(profileDashboardProvider)
+                  ..invalidate(profileRankProvider);
+                if (user != null) ref.invalidate(userPostsProvider(user.id));
+                await ref.read(profileDashboardProvider.future);
+              },
+              child: CustomScrollView(
+                key: const PageStorageKey('user-profile-scroll'),
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverSafeArea(
+                    bottom: false,
+                    sliver: SliverToBoxAdapter(
+                      child: centeredProfileColumn(
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 4, 18, 8),
+                          child: _ProfileTopBar(
+                            shareLabel: l10n.shareProfile,
+                            settingsLabel: l10n.settings,
+                            editLabel: l10n.editProfile,
+                            onShare: user == null ? null : () => _share(user),
+                            onSettings: () => context.push('/profile/settings'),
+                            onEdit: () => context.push('/profile/edit'),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
                     child: centeredProfileColumn(
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(18, 4, 18, 8),
-                        child: _ProfileTopBar(
-                          shareLabel: l10n.shareProfile,
-                          settingsLabel: l10n.settings,
-                          editLabel: l10n.editProfile,
-                          onShare: user == null ? null : () => _share(user),
-                          onSettings: () => context.push('/profile/settings'),
-                          onEdit: () => context.push('/profile/edit'),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: centeredProfileColumn(
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                      child: user == null
-                          ? const _ProfileLoading()
-                          : _ProfileHeader(user: user, dashboard: dashboard),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: centeredProfileColumn(
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
-                      child: _ProfileMenu(),
-                    ),
-                  ),
-                ),
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: ProfileTabsHeaderDelegate(
-                    extent: ProfileTabs.heightFor(context),
-                    color: ProfilePalette.canvas(context),
-                    tabs: ProfileTabs(
-                      selected: _tab,
-                      postsLabel: l10n.myPosts,
-                      achievementsLabel: l10n.achievements,
-                      rankLabel: l10n.currentRank,
-                      onSelected: (tab) => setState(() => _tab = tab),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: centeredProfileColumn(
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
-                      child: AnimatedSwitcher(
-                        duration: RiksaMotion.resolve(
-                          context,
-                          RiksaMotion.standard,
-                        ),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                         child: user == null
                             ? const _ProfileLoading()
-                            : switch (_tab) {
-                                ProfileTab.posts => _PostsTab(user: user),
-                                ProfileTab.achievements => _AchievementsTab(
-                                  dashboard: dashboard,
-                                ),
-                                ProfileTab.rank => const _RankTab(),
-                              },
+                            : _ProfileHeader(user: user, dashboard: dashboard),
                       ),
                     ),
                   ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-              ],
+
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: ProfileTabsHeaderDelegate(
+                      extent: ProfileTabs.heightFor(context),
+                      color: context.riksa.canvas,
+                      tabs: ProfileTabs(
+                        selected: _tab,
+                        postsLabel: l10n.myPosts,
+                        achievementsLabel: l10n.achievements,
+                        rankLabel: l10n.currentRank,
+                        onSelected: (tab) => setState(() => _tab = tab),
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: centeredProfileColumn(
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+                        child: AnimatedSwitcher(
+                          duration: RiksaMotion.resolve(
+                            context,
+                            RiksaMotion.standard,
+                          ),
+                          layoutBuilder: (currentChild, previousChildren) => Stack(
+                            alignment: Alignment.topCenter,
+                            children: <Widget>[
+                              ...previousChildren,
+                              if (currentChild != null) currentChild,
+                            ],
+                          ),
+                          child: user == null
+                              ? const _ProfileLoading()
+                              : switch (_tab) {
+                                  ProfileTab.posts => _PostsTab(user: user),
+                                  ProfileTab.achievements => _AchievementsTab(
+                                    dashboard: dashboard,
+                                  ),
+                                  ProfileTab.rank => const _RankTab(),
+                                },
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: _bottomInteractiveClearance(context),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -161,80 +199,91 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         ),
       );
   }
+
+  double _bottomInteractiveClearance(BuildContext context) {
+    if (_tab == ProfileTab.posts) {
+      final auth = ref.watch(authProvider);
+      final user = auth is Authenticated ? auth.user : null;
+      if (user != null) {
+        final posts = ref.watch(userPostsProvider(user.id));
+        if (posts.asData?.value.posts.isEmpty == true) {
+          return MediaQuery.paddingOf(context).bottom + 24;
+        }
+      }
+    }
+    return MediaQuery.paddingOf(context).bottom + 112;
+  }
 }
 
-/// The learner's own places, one row each, as in the reference profile.
-class _ProfileMenu extends StatelessWidget {
-  const _ProfileMenu();
+class _SavedLessonsSideShortcut extends StatelessWidget {
+  const _SavedLessonsSideShortcut({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final palette = context.riksa;
-    final items = [
-      (
-        key: 'profile-menu-progress',
-        icon: Icons.insights_rounded,
-        label: l10n.menuMyProgress,
-        path: '/progress',
-      ),
-      (
-        key: 'profile-menu-saved',
-        icon: Icons.bookmark_border_rounded,
-        label: l10n.menuSavedLessons,
-        path: '/learn/saved',
-      ),
-      (
-        key: 'profile-menu-communities',
-        icon: Icons.groups_outlined,
-        label: l10n.menuCommunities,
-        path: '/communities',
-      ),
-      (
-        key: 'profile-menu-settings',
-        icon: Icons.settings_outlined,
-        label: l10n.settings,
-        path: '/profile/settings',
-      ),
-    ];
-    return Container(
-      decoration: BoxDecoration(
-        color: palette.surface,
-        borderRadius: AppRadii.largeBorder,
-        border: Border.all(color: palette.outline),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          for (final (index, item) in items.indexed) ...[
-            if (index > 0)
-              Divider(height: 1, indent: 58, color: palette.outline),
-            Material(
-              color: Colors.transparent,
-              child: ListTile(
-                key: ValueKey(item.key),
-                onTap: () => context.push(item.path),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                minLeadingWidth: 26,
-                shape: const RoundedRectangleBorder(),
-                leading: Icon(item.icon, size: 22, color: palette.ink),
-                title: Text(
-                  item.label,
-                  style: RiksaTypography.bodyStyleFor(
-                    item.label,
-                    Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fill = isDark
+        ? palette.surface.withValues(alpha: .46)
+        : Colors.white.withValues(alpha: .58);
+    final border = isDark
+        ? Colors.white.withValues(alpha: .12)
+        : Colors.white.withValues(alpha: .72);
+
+    return Tooltip(
+      message: label,
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: ShapeDecoration(
+          shape: CircleBorder(side: BorderSide(color: border)),
+          shadows: [
+            BoxShadow(
+              color: palette.ink.withValues(alpha: isDark ? .18 : .08),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+          color: fill,
+        ),
+        child: ClipOval(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.white.withValues(alpha: 0.54),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.36),
+                  ),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    key: const ValueKey('profile-saved-lessons-side-shortcut'),
+                    customBorder: const CircleBorder(),
+                    onTap: onTap,
+                    child: Center(
+                      child: Icon(
+                        Icons.bookmark_border_rounded,
+                        color: palette.brand,
+                        size: 24,
+                      ),
                     ),
                   ),
                 ),
-                trailing: Icon(
-                  Icons.chevron_right_rounded,
-                  color: palette.inkFaint,
-                ),
               ),
             ),
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }
@@ -316,9 +365,6 @@ class _ProfileEditButton extends StatelessWidget {
     style: OutlinedButton.styleFrom(
       minimumSize: const Size(0, 44),
       padding: const EdgeInsets.symmetric(horizontal: 18),
-      foregroundColor: ProfilePalette.text(context),
-      side: BorderSide(color: ProfilePalette.border(context)),
-      shape: const RoundedRectangleBorder(borderRadius: AppRadii.fullBorder),
     ),
     // Styled on the child so the label keeps the theme's font family.
     child: Text(
@@ -366,99 +412,111 @@ class _ProfileHeader extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          key: const ValueKey('profile-learning-card'),
-          decoration: BoxDecoration(
-            color: ProfilePalette.panel(context),
-            borderRadius: AppRadii.largeBorder,
-            border: Border.all(color: ProfilePalette.border(context)),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
+        ClipRRect(
+          borderRadius: AppRadii.largeBorder,
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              key: const ValueKey('profile-learning-card'),
+              decoration: BoxDecoration(
+                color: context.riksa.surface.withValues(alpha: 0.6),
+                borderRadius: AppRadii.largeBorder,
+                border: Border.all(
+                  color: context.riksa.outline.withValues(alpha: 0.5),
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ProfileCover(
-                    key: const ValueKey('profile-cover'),
-                    coverId: coverId,
-                    height: _coverHeight,
-                    borderRadius: BorderRadius.zero,
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      ProfileCover(
+                        key: const ValueKey('profile-cover'),
+                        coverId: coverId,
+                        height: _coverHeight,
+                        borderRadius: BorderRadius.zero,
+                      ),
+                      PositionedDirectional(
+                        start: 14,
+                        top: _coverHeight - _avatarRadius,
+                        child: RiksaProfileAvatar(
+                          key: const ValueKey('profile-hero-avatar'),
+                          user: user,
+                          radius: _avatarRadius,
+                          avatarPath: localAvatar,
+                          frameTier: game?.currentTier,
+                          borderColor: context.riksa.surface,
+                          ringColor: context.riksa.surface,
+                        ),
+                      ),
+                    ],
                   ),
-                  PositionedDirectional(
-                    start: 14,
-                    top: _coverHeight - _avatarRadius,
-                    child: RiksaProfileAvatar(
-                      key: const ValueKey('profile-hero-avatar'),
-                      user: user,
-                      radius: _avatarRadius,
-                      avatarPath: localAvatar,
-                      frameTier: game?.currentTier,
-                      borderColor: ProfilePalette.panel(context),
-                      ringColor: ProfilePalette.panel(context),
+                  Padding(
+                    // Clears the half of the avatar that hangs below the cover.
+                    padding: EdgeInsetsDirectional.fromSTEB(
+                      14 + _avatarRadius * 2 + 12,
+                      8,
+                      14,
+                      0,
                     ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        minHeight: _avatarRadius,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: RiksaTypography.titleStyleFor(
+                                    name,
+                                    theme.textTheme.titleMedium?.copyWith(
+                                      color: context.riksa.ink,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (user.emailVerified) ...[
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.verified_rounded,
+                                  key: const ValueKey(
+                                    'profile-verification-badge',
+                                  ),
+                                  size: 17,
+                                  color: ProfilePalette.green(context),
+                                ),
+                              ],
+                            ],
+                          ),
+                          if (handle.isNotEmpty)
+                            Text(
+                              '@$handle',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: context.riksa.inkMuted,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                    child: _ProfileTierProgress(gamification: game),
                   ),
                 ],
               ),
-              Padding(
-                // Clears the half of the avatar that hangs below the cover.
-                padding: EdgeInsetsDirectional.fromSTEB(
-                  14 + _avatarRadius * 2 + 12,
-                  8,
-                  14,
-                  0,
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: _avatarRadius),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: RiksaTypography.titleStyleFor(
-                                name,
-                                theme.textTheme.titleMedium?.copyWith(
-                                  color: ProfilePalette.text(context),
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (user.emailVerified) ...[
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.verified_rounded,
-                              key: const ValueKey('profile-verification-badge'),
-                              size: 17,
-                              color: ProfilePalette.green(context),
-                            ),
-                          ],
-                        ],
-                      ),
-                      if (handle.isNotEmpty)
-                        Text(
-                          '@$handle',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: ProfilePalette.muted(context),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-                child: _ProfileTierProgress(gamification: game),
-              ),
-            ],
+            ),
           ),
         ),
         if (user.bio?.trim().isNotEmpty == true || meta.isNotEmpty) ...[
@@ -476,7 +534,7 @@ class _ProfileHeader extends ConsumerWidget {
                     style: RiksaTypography.bodyStyleFor(
                       user.bio!.trim(),
                       theme.textTheme.bodyMedium?.copyWith(
-                        color: ProfilePalette.text(context),
+                        color: context.riksa.ink,
                       ),
                     ),
                   ),
@@ -486,7 +544,7 @@ class _ProfileHeader extends ConsumerWidget {
                     style: RiksaTypography.bodyStyleFor(
                       meta,
                       theme.textTheme.bodySmall?.copyWith(
-                        color: ProfilePalette.muted(context),
+                        color: context.riksa.inkMuted,
                       ),
                     ),
                   ),
@@ -574,7 +632,7 @@ class _ProfileTierProgress extends StatelessWidget {
           )
         : null;
     final small = Theme.of(context).textTheme.labelSmall?.copyWith(
-      color: ProfilePalette.muted(context),
+      color: context.riksa.inkMuted,
       fontWeight: FontWeight.w500,
     );
 
@@ -665,56 +723,64 @@ class _ProfileStats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      key: const ValueKey('profile-stats'),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: ProfilePalette.panel(context),
-        borderRadius: AppRadii.largeBorder,
-        border: Border.all(color: ProfilePalette.border(context)),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            for (final (index, item) in items.indexed) ...[
-              if (index > 0)
-                VerticalDivider(
-                  width: 1,
-                  thickness: 1,
-                  color: ProfilePalette.border(context),
-                ),
-              Expanded(
-                child: Column(
-                  key: item.key,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      item.value,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: ProfilePalette.text(context),
-                        fontWeight: FontWeight.w700,
-                      ),
+    return ClipRRect(
+      borderRadius: AppRadii.largeBorder,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          key: const ValueKey('profile-stats'),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: context.riksa.surface.withValues(alpha: 0.6),
+            borderRadius: AppRadii.largeBorder,
+            border: Border.all(
+              color: context.riksa.outline.withValues(alpha: 0.5),
+            ),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                for (final (index, item) in items.indexed) ...[
+                  if (index > 0)
+                    VerticalDivider(
+                      width: 1,
+                      thickness: 1,
+                      color: context.riksa.outline,
                     ),
-                    const SizedBox(height: 2),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Text(
-                        item.label,
-                        textAlign: TextAlign.center,
-                        style: RiksaTypography.bodyStyleFor(
-                          item.label,
-                          theme.textTheme.labelSmall?.copyWith(
-                            color: ProfilePalette.muted(context),
-                            fontWeight: FontWeight.w500,
+                  Expanded(
+                    child: Column(
+                      key: item.key,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          item.value,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: context.riksa.ink,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 2),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(
+                            item.label,
+                            textAlign: TextAlign.center,
+                            style: RiksaTypography.bodyStyleFor(
+                              item.label,
+                              theme.textTheme.labelSmall?.copyWith(
+                                color: context.riksa.inkMuted,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            ],
-          ],
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -733,6 +799,8 @@ class _PostsTab extends ConsumerStatefulWidget {
 }
 
 class _PostsTabState extends ConsumerState<_PostsTab> {
+  bool _creating = false;
+
   @override
   Widget build(BuildContext context) {
     final posts = ref.watch(userPostsProvider(widget.user.id));
@@ -822,15 +890,21 @@ class _PostsTabState extends ConsumerState<_PostsTab> {
   /// tab — it waits for moderation — so the author is taken to the one list
   /// that shows it.
   Future<void> _create() async {
-    final action = await showSocialCreateMenu(context);
-    if (!mounted || action == null) return;
-    final created = await context.push<bool>(socialCreateRoute(action));
-    if (created != true || !mounted) return;
-    if (action == SocialCreateAction.article) {
-      await context.push<void>('/blog/my-posts');
-      return;
+    if (_creating) return;
+    setState(() => _creating = true);
+    try {
+      final action = await showSocialCreateMenu(context);
+      if (!mounted || action == null) return;
+      final created = await context.push<bool>(socialCreateRoute(action));
+      if (created != true || !mounted) return;
+      if (action == SocialCreateAction.article) {
+        await context.push<void>('/blog/my-posts');
+        return;
+      }
+      _refresh();
+    } finally {
+      if (mounted) setState(() => _creating = false);
     }
-    _refresh();
   }
 
   Future<void> _manage(SocialPost post) async {
@@ -937,7 +1011,7 @@ class _RankTab extends ConsumerWidget {
         key: const ValueKey('profile-rank'),
         children: [
           _RankCard(
-            icon: Icons.public_rounded,
+            icon: const ProfileRankPixelIcon(kind: ProfileRankIconKind.country),
             label: l10n.countryRank,
             rank: data.countryRank,
             score: data.countryScore,
@@ -945,7 +1019,9 @@ class _RankTab extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           _RankCard(
-            icon: Icons.location_on_outlined,
+            icon: const ProfileRankPixelIcon(
+              kind: ProfileRankIconKind.province,
+            ),
             label: l10n.provinceRank,
             rank: data.provinceRank ?? 0,
             score: data.provinceScore ?? 0,
@@ -966,7 +1042,7 @@ class _RankCard extends StatelessWidget {
     this.tier,
   });
 
-  final IconData icon;
+  final Widget icon;
   final String label;
   final int rank;
   final int score;
@@ -976,7 +1052,7 @@ class _RankCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return ProfileRankCard(
-      icon: icon,
+      iconWidget: icon,
       label: label,
       rank: rank,
       unrankedLabel: l10n.unranked,

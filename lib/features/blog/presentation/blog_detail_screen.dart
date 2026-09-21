@@ -15,6 +15,7 @@ import '../data/blog_api.dart';
 import '../data/blog_models.dart';
 import '../providers/blog_provider.dart';
 import 'widgets/blog_ui.dart';
+import '../../../l10n/gen/app_localizations.dart';
 
 /// Long-form reading view for a single post.
 ///
@@ -117,7 +118,7 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'Could not load this post';
+        _error = AppLocalizations.of(context)!.blogLoadPostFailed;
         _loading = false;
       });
     }
@@ -134,9 +135,9 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
       ref.read(blogFeedProvider.notifier).applyUpdate(updated);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Could not update like')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.blogLikeFailed)),
+        );
       }
     } finally {
       if (mounted) setState(() => _liking = false);
@@ -157,15 +158,21 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
       await ref.read(blogApiProvider).deletePost(post.id);
       if (!mounted) return;
       ref.read(blogFeedProvider.notifier).removePost(post.id);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Post deleted')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.blogPostDeleted)),
+      );
       context.pop();
     } on DioException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(blogOwnerActionError(e, BlogOwnerAction.delete)),
+          content: Text(
+            blogOwnerActionError(
+              e,
+              BlogOwnerAction.delete,
+              l10n: AppLocalizations.of(context)!,
+            ),
+          ),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -187,7 +194,7 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
           : _error != null
           ? _ChromeScaffold(
               child: BlogNotice(
-                title: 'This post would not open',
+                title: AppLocalizations.of(context)!.blogOpenPostFailedTitle,
                 body: _error!,
                 icon: Icons.cloud_off_outlined,
                 actionLabel: 'Try again',
@@ -247,7 +254,7 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
                 style: RiksaTypography.bodyStyleFor(
                   post.title,
                   theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -282,7 +289,7 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
                     tooltip:
                         Localizations.localeOf(context).languageCode == 'km'
                         ? 'ប្តូរទំហំអក្សរ'
-                        : 'Adjust text size',
+                        : AppLocalizations.of(context)!.blogTextSizeTooltip,
                     onPressed: _cycleFontSize,
                     onImage: post.hasCover && !_collapsed,
                   ),
@@ -346,10 +353,10 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
                         style: RiksaTypography.titleStyleFor(
                           post.title,
                           theme.textTheme.displaySmall?.copyWith(
-                            fontSize: 30 * _textScale,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 26 * _textScale,
+                            fontWeight: FontWeight.w600,
                             height: 1.18,
-                            letterSpacing: -.6,
+                            letterSpacing: 0,
                             color: palette.ink,
                           ),
                         ),
@@ -513,7 +520,7 @@ class _AuthorHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = context.riksa;
-    final name = blogAuthorName(profile);
+    final name = blogAuthorName(context, profile);
     final handle = profile?.username.trim() ?? '';
     final date = blogFullDate(context, post.createdAt);
 
@@ -542,7 +549,7 @@ class _AuthorHeader extends StatelessWidget {
                         style: RiksaTypography.bodyStyleFor(
                           name,
                           theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -571,13 +578,13 @@ class _AuthorHeader extends StatelessWidget {
           FilledButton(
             onPressed: onOpenProfile,
             style: FilledButton.styleFrom(
-              minimumSize: const Size(0, 38),
+              minimumSize: const Size(0, 48),
               padding: const EdgeInsets.symmetric(horizontal: RiksaSpacing.md),
               textStyle: theme.textTheme.labelMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
-            child: const Text('Profile'),
+            child: Text(AppLocalizations.of(context)!.blogProfile),
           ),
         ],
       ],
@@ -612,8 +619,10 @@ class _MetricsBar extends StatelessWidget {
               activeIcon: Icons.favorite_rounded,
               label: blogCountLabel(post.likeCount),
               semanticLabel: post.liked
-                  ? 'Unlike, ${post.likeCount} likes'
-                  : 'Like, ${post.likeCount} likes',
+                  ? AppLocalizations.of(
+                      context,
+                    )!.blogUnlikeLabel(post.likeCount)
+                  : AppLocalizations.of(context)!.blogLikeLabel(post.likeCount),
               selected: post.liked,
               selectedColor: theme.colorScheme.error,
               onTap: onLike,

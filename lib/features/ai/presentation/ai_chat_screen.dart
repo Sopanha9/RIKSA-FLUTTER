@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -493,6 +495,12 @@ class _Composer extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final palette = context.riksa;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final glass = context.riksaGlass;
+    final sendOuterFill = isDark
+        ? glass.selectedFill
+        : glass.fill;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: Container(
@@ -530,19 +538,53 @@ class _Composer extends StatelessWidget {
             ),
             RiksaTapFeedback(
               enabled: enabled,
-              child: IconButton.filled(
-                key: const ValueKey('send-ai-message'),
-                tooltip: l10n.aiSendMessage,
-                onPressed: enabled ? onSend : null,
-                iconSize: 20,
-                style: IconButton.styleFrom(
-                  backgroundColor: palette.brand,
-                  foregroundColor: palette.onBrand,
-                  disabledBackgroundColor: palette.brandSoft,
-                  disabledForegroundColor: palette.brand.withValues(alpha: .5),
-                  minimumSize: const Size.square(42),
+              child: SizedBox.square(
+                dimension: 50,
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    color: sendOuterFill,
+                    shape: CircleBorder(
+                      side: BorderSide(color: glass.border),
+                    ),
+                    shadows: RiksaElevation.overlay(theme.brightness),
+                  ),
+                  child: ClipOval(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(
+                        sigmaX: glass.blurSigma,
+                        sigmaY: glass.blurSigma,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: DecoratedBox(
+                          decoration: ShapeDecoration(
+                            color: glass.selectedFill,
+                            shape: CircleBorder(
+                              side: BorderSide(
+                                color: glass.selectedBorder,
+                              ),
+                            ),
+                            shadows: RiksaElevation.raised(theme.brightness),
+                          ),
+                          child: IconButton(
+                            key: const ValueKey('send-ai-message'),
+                            tooltip: l10n.aiSendMessage,
+                            onPressed: enabled ? onSend : null,
+                            iconSize: 20,
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: palette.brand,
+                              disabledForegroundColor: palette.inkMuted,
+                              minimumSize: const Size.square(42),
+                              shape: const CircleBorder(),
+                            ),
+                            icon: const Icon(Icons.send_rounded),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                icon: const Icon(Icons.send_rounded),
               ),
             ),
           ],

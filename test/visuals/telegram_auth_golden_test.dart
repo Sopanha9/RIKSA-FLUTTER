@@ -21,7 +21,7 @@ void main() {
         ))
         .load();
     for (final entry in {
-      'Poppins': 'assets/fonts/Poppins-Regular.ttf',
+      'Reddit Sans': 'assets/fonts/RedditSans-Variable.ttf',
       'Kantumruy Pro': 'assets/fonts/KantumruyPro-Variable.ttf',
       'Noto Sans Khmer': 'assets/fonts/NotoSansKhmer-Variable.ttf',
       'Koulen': 'assets/fonts/Koulen-Regular.ttf',

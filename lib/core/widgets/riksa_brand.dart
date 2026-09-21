@@ -138,9 +138,9 @@ class _MascotPainter extends CustomPainter {
 
   static const _bodyLight = Color(0xFFC3B2FF);
   static const _bodyDark = Color(0xFF8566F2);
-  static const _eye = Color(0xFF1D1533);
+  static const _eye = AppColors.ink;
   static const _blush = Color(0xFFFF9BC6);
-  static const _spark = Color(0xFF9D86F7);
+  static const _spark = AppColors.editorialPink;
 
   @override
   void paint(Canvas canvas, Size size) {
