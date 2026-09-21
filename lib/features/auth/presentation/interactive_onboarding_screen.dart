@@ -54,7 +54,7 @@ class _InteractiveOnboardingScreenState
   bool _isStepComplete(OnboardingSetupData data) {
     return switch (_currentPage) {
       0 => data.goal != null,
-      1 => data.subject != null,
+      1 => data.subject != null || data.subjectOption != null,
       2 => data.provinceId != null,
       3 => data.pace != null,
       4 => data.quizAnswer1Index != null,
@@ -155,7 +155,9 @@ class _InteractiveOnboardingScreenState
     final setup = ref.watch(onboardingProvider);
     final canContinue = _isStepComplete(setup);
 
-    final subject = setup.subject ?? OnboardingSubject.math;
+    final subject = setup.subject ??
+        setup.subjectOption?.onboardingSubject ??
+        OnboardingSubject.math;
     final questions = OnboardingCuratedQuestions.forSubject(subject);
     final isPayoffScreen = _currentPage == 6;
 
@@ -192,11 +194,12 @@ class _InteractiveOnboardingScreenState
                         ),
                         _SubjectStep(
                           selectedSubject: setup.subject,
+                          selectedSubjectOption: setup.subjectOption,
                           lang: lang,
-                          onSelect: (subject) {
+                          onSelect: (option) {
                             ref
                                 .read(onboardingProvider.notifier)
-                                .setSubject(subject);
+                                .setSubjectOption(option);
                           },
                         ),
                         _ProvinceStep(
@@ -506,21 +509,26 @@ class _GoalStep extends StatelessWidget {
   }
 }
 
-class _SubjectStep extends StatelessWidget {
+class _SubjectStep extends ConsumerWidget {
   const _SubjectStep({
     required this.selectedSubject,
+    this.selectedSubjectOption,
     required this.lang,
     required this.onSelect,
   });
 
   final OnboardingSubject? selectedSubject;
+  final OnboardingSubjectOption? selectedSubjectOption;
   final String lang;
-  final ValueChanged<OnboardingSubject> onSelect;
+  final ValueChanged<OnboardingSubjectOption> onSelect;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final palette = context.riksa;
+    final subjectsAsync = ref.watch(onboardingSubjectsProvider);
+    final subjects =
+        subjectsAsync.asData?.value ?? OnboardingSubjectOption.defaults;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -546,11 +554,14 @@ class _SubjectStep extends StatelessWidget {
         const SizedBox(height: 24),
         Expanded(
           child: ListView.separated(
-            itemCount: OnboardingSubject.values.length,
+            itemCount: subjects.length,
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final subject = OnboardingSubject.values[index];
-              final isSelected = selectedSubject == subject;
+              final subject = subjects[index];
+              final isSelected = (selectedSubjectOption != null &&
+                      selectedSubjectOption!.id == subject.id) ||
+                  (selectedSubject != null &&
+                      selectedSubject == subject.onboardingSubject);
               final accent = subject.accentColor(context);
 
               return RiksaTapFeedback(

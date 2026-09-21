@@ -153,20 +153,17 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Keep units consistent.'), findsWidgets);
       await tapKey(tester, 'start-section-1');
-      expect(find.byKey(const ValueKey('lesson-option-0')), findsNothing);
-      await tapKey(tester, 'compare-answers');
-      expect(find.byKey(const ValueKey('lesson-option-0')), findsNothing);
+      expect(find.byKey(const ValueKey('lesson-option-0')), findsOneWidget);
+      expect(find.byKey(const ValueKey('lesson-option-1')), findsOneWidget);
+
+      await tapKey(tester, 'toggle-working-force-1');
       await tester.enterText(
         find.byKey(const ValueKey('lesson-working-force-1')),
         '2 × 3 = 6 N',
       );
-      await tapKey(tester, 'compare-answers');
       await tapKey(tester, 'lesson-option-0');
       await tapKey(tester, 'check-answer');
       expect(find.text('Try again.'), findsOneWidget);
-      await tapKey(tester, 'lesson-edit-working-force-1');
-      expect(find.text('2 × 3 = 6 N'), findsOneWidget);
-      await tapKey(tester, 'compare-answers');
       await tapKey(tester, 'lesson-option-1');
       await tapKey(tester, 'check-answer');
       expect(find.text('Correct.'), findsOneWidget);
@@ -222,11 +219,11 @@ void main() {
       expect(tester.takeException(), isNull);
       await tapKey(tester, 'start-section-1');
       expect(tester.takeException(), isNull);
+      await tapKey(tester, 'toggle-working-force-1');
       await tester.enterText(
         find.byKey(const ValueKey('lesson-working-force-1')),
         '2 × 3 = 6 N',
       );
-      await tapKey(tester, 'compare-answers');
       expect(tester.takeException(), isNull);
       await tapKey(tester, 'lesson-option-1');
       await tapKey(tester, 'check-answer');
@@ -241,4 +238,158 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets(
+    'renders multi-section STEM lesson with LaTeX formulas and maps exercises to sections',
+    (tester) async {
+      tester.view.physicalSize = const Size(393, 852);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final api = StemMultiSectionApi();
+      final router = GoRouter(
+        initialLocation: '/learn/stem-multi',
+        routes: [
+          GoRoute(
+            path: '/learn/stem-multi',
+            builder: (_, _) => const LessonExperienceScreen(lessonId: 'stem-multi'),
+          ),
+          GoRoute(
+            path: '/learn/completion',
+            builder: (_, state) => Scaffold(
+              body: Text('Completed: ${(state.extra as Map)['xpEarned']} XP'),
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [learningApiProvider.overrideWithValue(api)],
+          child: MaterialApp.router(
+            routerConfig: router,
+            theme: AppTheme.light,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('km')],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Verify Section 1 reading is rendered with heading
+      expect(find.textContaining('Introduction to Force'), findsWidgets);
+      await tapKey(tester, 'start-section-1');
+
+      // Section 1 has Exercise 1 (force)
+      expect(find.byKey(const ValueKey('lesson-exercise-stem-ex-1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('lesson-exercise-stem-ex-2')), findsNothing);
+
+      // Tap formula option ($6\text{ N}$) and check answer
+      await tapKey(tester, 'lesson-option-1');
+      await tapKey(tester, 'check-answer');
+      expect(find.text('Correct!'), findsOneWidget);
+
+      // Complete Section 1 and proceed to Section 2
+      await tapKey(tester, 'continue-after-answer');
+      await tapKey(tester, 'continue-to-section-2');
+      expect(find.textContaining('Momentum and Impulse'), findsWidgets);
+      await tapKey(tester, 'start-section-2');
+
+      // Section 2 has Exercise 2 (momentum)
+      expect(find.byKey(const ValueKey('lesson-exercise-stem-ex-2')), findsOneWidget);
+
+      // Tap formula option ($20\text{ kg}\cdot\text{m/s}$) and check answer
+      await tapKey(tester, 'lesson-option-0');
+      await tapKey(tester, 'check-answer');
+      expect(find.text('Correct!'), findsOneWidget);
+
+      // Continue to reflection
+      await tapKey(tester, 'continue-after-answer');
+      await tapKey(tester, 'complete-lesson');
+      await tester.enterText(
+        find.byKey(const ValueKey('lesson-reflection')),
+        'Momentum is conserved in isolated physical collisions.',
+      );
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      await tapKey(tester, 'lesson-reflection-review');
+      await tapKey(tester, 'complete-lesson');
+
+      expect(find.text('Completed: 50 XP'), findsOneWidget);
+      expect(api.submitted, [r'$6\text{ N}$', r'$20\text{ kg}\cdot\text{m/s}$']);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
+
+class StemMultiSectionApi implements LearningApi {
+  final submitted = <String>[];
+
+  @override
+  Future<LessonDetail> lesson(String id) async => const LessonDetail(
+    id: 'stem-multi',
+    title: 'Newtonian Dynamics',
+    categoryId: 'physics',
+    categoryName: 'Physics',
+    description:
+        '## Introduction to Force\nForce is a vector quantity: \$F = m \\cdot a\$.\n\n## Momentum and Impulse\nMomentum is mass times velocity: \$p = m \\cdot v\$.',
+    difficulty: LessonDifficulty.medium,
+    baseXp: 30,
+    reflectionPrompt: 'Reflect on momentum in daily life.',
+    exercises: [
+      LessonExercise(
+        id: 'stem-ex-1',
+        question: r'Given $m = 2\text{ kg}$ and $a = 3\text{ m/s}^2$, find $F$.',
+        difficulty: LessonDifficulty.easy,
+        points: 10,
+        completed: false,
+        sectionIndex: 1,
+        type: LessonExerciseType.multipleChoice,
+        options: [r'$5\text{ N}$', r'$6\text{ N}$'],
+      ),
+      LessonExercise(
+        id: 'stem-ex-2',
+        question: r'Given $m = 4\text{ kg}$ and $v = 5\text{ m/s}$, find $p$.',
+        difficulty: LessonDifficulty.easy,
+        points: 10,
+        completed: false,
+        sectionIndex: 2,
+        type: LessonExerciseType.multipleChoice,
+        options: [r'$20\text{ kg}\cdot\text{m/s}$', r'$9\text{ kg}\cdot\text{m/s}$'],
+      ),
+    ],
+  );
+
+  @override
+  Future<LessonAnswerResult> submitAnswer({
+    required String lessonId,
+    required String exerciseId,
+    required String answer,
+  }) async {
+    submitted.add(answer);
+    final isCorrect = answer == r'$6\text{ N}$' || answer == r'$20\text{ kg}\cdot\text{m/s}$';
+    return LessonAnswerResult(
+      exerciseId: exerciseId,
+      correct: isCorrect,
+      points: 10,
+      message: isCorrect ? 'Correct!' : 'Try again.',
+      explanation: 'Computed using fundamental formula.',
+    );
+  }
+
+  @override
+  Future<LessonCompletionResult> completeLesson({
+    required String lessonId,
+    required String reflectionText,
+  }) async => const LessonCompletionResult(xpEarned: 50);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+

@@ -6,12 +6,21 @@ library;
 bool isStemLearningCategory(String name) {
   final normalized = name.trim().toLowerCase();
   return normalized.contains('math') ||
-      normalized.contains('computer science') ||
+      normalized.contains('គណិត') ||
+      normalized.contains('computer') ||
       normalized.contains('technology') ||
       normalized.contains('engineering') ||
+      normalized.contains('កុំព្យូទ័រ') ||
+      normalized.contains('បច្ចេក') ||
       normalized.contains('physics') ||
+      normalized.contains('phys') ||
+      normalized.contains('រូបវិទ្យា') ||
       normalized.contains('chemistry') ||
-      normalized.contains('biology');
+      normalized.contains('chem') ||
+      normalized.contains('គីមី') ||
+      normalized.contains('biology') ||
+      normalized.contains('bio') ||
+      normalized.contains('ជីវ');
 }
 
 enum LessonDifficulty {
@@ -77,15 +86,27 @@ enum LessonExerciseType {
 }
 
 class LearningCategory {
-  const LearningCategory({required this.id, required this.name});
+  const LearningCategory({
+    required this.id,
+    required this.name,
+    this.slug = '',
+    this.description,
+    this.iconUrl,
+  });
 
   final String id;
   final String name;
+  final String slug;
+  final String? description;
+  final String? iconUrl;
 
   factory LearningCategory.fromJson(Map<String, dynamic> json) =>
       LearningCategory(
         id: json['id']?.toString() ?? '',
         name: json['name'] as String? ?? '',
+        slug: json['slug'] as String? ?? '',
+        description: json['description'] as String?,
+        iconUrl: json['iconUrl'] as String?,
       );
 }
 

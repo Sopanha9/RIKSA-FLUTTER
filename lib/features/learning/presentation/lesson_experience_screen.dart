@@ -12,7 +12,9 @@ import '../../../core/sound/sound_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_brand.dart';
 import '../../../core/widgets/riksa_components.dart';
+import '../../../core/widgets/riksa_math_text.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../social/providers/social_feed_provider.dart';
 import '../../userProfile/providers/profile_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
@@ -89,7 +91,6 @@ class _LessonExperienceScreenState
   bool _showPractice = false;
   bool _completing = false;
   final _working = <String, TextEditingController>{};
-  final _comparedAnswers = <String>{};
   final _scroll = ScrollController();
   final _feedbackAnchor = GlobalKey();
   String? _feedbackExerciseId;
@@ -291,7 +292,6 @@ class _LessonExperienceScreenState
                   flow.section.index,
                   flow.phase,
                   flow.exercise?.id,
-                  _comparedAnswers.contains(flow.exercise?.id),
                 ),
                 child: switch (flow.phase) {
                   _LessonPhase.reading => _contentView(flow),
@@ -382,6 +382,8 @@ class _LessonExperienceScreenState
         data: section.content.trim().isEmpty ? section.title : section.content,
         selectable: true,
         softLineBreak: true,
+        inlineSyntaxes: RiksaMathText.markdownSyntaxes,
+        builders: RiksaMathText.markdownBuilders,
         styleSheet: _lessonMarkdownStyleSheet(
           context,
           hasKhmer: RiksaTypography.containsKhmer(section.content),
@@ -420,9 +422,6 @@ class _LessonExperienceScreenState
             TextEditingController.new,
           ),
           working: _working.putIfAbsent(exercise.id, TextEditingController.new),
-          showChoices: _comparedAnswers.contains(exercise.id),
-          onEditWorking: () =>
-              _changeStep(() => _comparedAnswers.remove(exercise.id)),
           feedbackKey: _feedbackAnchor,
           result: _results[exercise.id],
           submitting: _submitting.contains(exercise.id),
@@ -563,13 +562,6 @@ class _LessonExperienceScreenState
         : _answers[flow.exercise!.id]?.text.trim() ?? '';
 
     final exercise = flow.exercise;
-    final comparing =
-        exercise != null &&
-        exercise.type != LessonExerciseType.text &&
-        !_comparedAnswers.contains(exercise.id);
-    final working = exercise == null
-        ? ''
-        : _working[exercise.id]?.text.trim() ?? '';
     return switch (flow.phase) {
       _LessonPhase.reading => LearningActionBar(
         primaryKey: ValueKey('start-section-${flow.section.index}'),
@@ -582,16 +574,10 @@ class _LessonExperienceScreenState
         onPrimary: () => _changeStep(() => _showPractice = true),
       ),
       _LessonPhase.practising => LearningActionBar(
-        primaryKey: ValueKey(comparing ? 'compare-answers' : 'check-answer'),
-        primaryLabel: comparing
-            ? l10n.lessonCompareAnswers
-            : l10n.lessonCheckAnswer,
+        primaryKey: const ValueKey('check-answer'),
+        primaryLabel: l10n.lessonCheckAnswer,
         busy: _submitting.contains(exercise!.id),
-        onPrimary: comparing
-            ? working.isEmpty
-                  ? null
-                  : () => _changeStep(() => _comparedAnswers.add(exercise.id))
-            : answer.isEmpty
+        onPrimary: answer.isEmpty
             ? null
             : () => _submitAnswer(exercise, flow.section),
       ),
@@ -805,7 +791,8 @@ class _LessonExperienceScreenState
       ref.playSound(LearningSound.lessonComplete);
       ref
         ..invalidate(profileDashboardProvider)
-        ..invalidate(profileRankProvider);
+        ..invalidate(profileRankProvider)
+        ..invalidate(communityStreakProvider);
       await ref.read(lessonCatalogProvider.notifier).load();
       // The roadmap owns this lesson's completed state, and the home screen
       // derives its counts and its resume target from every roadmap. Both are
@@ -1294,7 +1281,7 @@ class _JourneyStages extends StatelessWidget {
 /// It deliberately does not own a submit button: the single "Check answer" for
 /// the screen lives in the pinned bar, so the card never competes with it and
 /// the action stays in the same place for every question in the lesson.
-class _ExerciseCard extends StatelessWidget {
+class _ExerciseCard extends StatefulWidget {
   const _ExerciseCard({
     required this.number,
     required this.exercise,
@@ -1304,8 +1291,6 @@ class _ExerciseCard extends StatelessWidget {
     required this.submitting,
     required this.onAnswerChanged,
     required this.working,
-    required this.showChoices,
-    required this.onEditWorking,
     required this.feedbackKey,
   });
   final int number;
@@ -1316,20 +1301,25 @@ class _ExerciseCard extends StatelessWidget {
   final bool submitting;
   final VoidCallback onAnswerChanged;
   final TextEditingController working;
-  final bool showChoices;
-  final VoidCallback onEditWorking;
   final Key feedbackKey;
 
+  @override
+  State<_ExerciseCard> createState() => _ExerciseCardState();
+}
+
+class _ExerciseCardState extends State<_ExerciseCard> {
+  bool _scratchpadOpen = false;
+
   void _askAiHint(BuildContext context) {
-    final optionsText = exercise.options.isNotEmpty
-        ? '\nOptions: ${exercise.options.join(", ")}'
+    final optionsText = widget.exercise.options.isNotEmpty
+        ? '\nOptions: ${widget.exercise.options.join(", ")}'
         : '';
     final hintContext =
         '''
 Exercise Hint Request:
-Lesson: ${lessonTitle ?? "STEM Lesson"}
-Question: ${exercise.question}
-Type: ${exercise.type.name}$optionsText
+Lesson: ${widget.lessonTitle ?? "STEM Lesson"}
+Question: ${widget.exercise.question}
+Type: ${widget.exercise.type.name}$optionsText
 
 Learner Goal: Provide a progressive Socratic hint in Khmer/English to help the student think through this question without giving away the direct answer.
 ''';
@@ -1337,14 +1327,14 @@ Learner Goal: Provide a progressive Socratic hint in Khmer/English to help the s
   }
 
   void _explainErrorWithAi(BuildContext context) {
-    final userAnswer = controller.text.trim();
+    final userAnswer = widget.controller.text.trim();
     final explainContext =
         '''
 Exercise Error Analysis:
-Lesson: ${lessonTitle ?? "STEM Lesson"}
-Question: ${exercise.question}
+Lesson: ${widget.lessonTitle ?? "STEM Lesson"}
+Question: ${widget.exercise.question}
 Learner Selected Answer: ${userAnswer.isEmpty ? "None selected" : userAnswer}
-${exercise.hint != null ? "Static Hint: ${exercise.hint}" : ""}
+${widget.exercise.hint != null ? "Static Hint: ${widget.exercise.hint}" : ""}
 
 Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAnswer}' is incorrect, breakdown the core concept step-by-step in Khmer/English, and guide the student to the correct solution.
 ''';
@@ -1355,10 +1345,12 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
   Widget build(BuildContext context) {
     final palette = context.riksa;
     final l10n = AppLocalizations.of(context)!;
-    final correct = result?.correct == true;
-    final incorrect = result != null && !correct;
+    final correct = widget.result?.correct == true;
+    final incorrect = widget.result != null && !correct;
+    final isText = widget.exercise.type == LessonExerciseType.text;
+
     return Container(
-      key: ValueKey('lesson-exercise-${exercise.id}'),
+      key: ValueKey('lesson-exercise-${widget.exercise.id}'),
       padding: const EdgeInsets.all(RiksaSpacing.md + 2),
       decoration: BoxDecoration(
         color: palette.surface,
@@ -1370,7 +1362,7 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
           Row(
             children: [
               Text(
-                l10n.lessonExerciseNumber(number),
+                l10n.lessonExerciseNumber(widget.number),
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   color: palette.ink,
@@ -1380,43 +1372,23 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
           ),
           const SizedBox(height: RiksaSpacing.sm),
           MarkdownBody(
-            data: exercise.question,
+            data: widget.exercise.question,
+            inlineSyntaxes: RiksaMathText.markdownSyntaxes,
+            builders: RiksaMathText.markdownBuilders,
             styleSheet: MarkdownStyleSheet.fromTheme(
               Theme.of(context),
             ).copyWith(p: Theme.of(context).textTheme.bodyLarge),
           ),
           const SizedBox(height: RiksaSpacing.md),
-          if (exercise.type != LessonExerciseType.text && !showChoices) ...[
-            Text(
-              l10n.lessonWorkFirst,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 8),
+          if (isText) ...[
             TextField(
-              key: ValueKey('lesson-working-${exercise.id}'),
-              controller: working,
-              style: RiksaTypography.bodyStyleFor(
-                l10n.lessonWorkHint,
-                Theme.of(context).textTheme.bodyLarge,
-              ),
-              minLines: 3,
-              maxLines: 6,
-              onChanged: (_) => onAnswerChanged(),
-              decoration: InputDecoration(
-                hintText: l10n.lessonWorkHint,
-                filled: true,
-                fillColor: palette.surfaceRaised,
-              ),
-            ),
-          ] else if (exercise.type == LessonExerciseType.text)
-            TextField(
-              key: ValueKey('lesson-answer-${exercise.id}'),
+              key: ValueKey('lesson-answer-${widget.exercise.id}'),
               minLines: 2,
               maxLines: 6,
-              controller: controller,
-              enabled: !correct && !submitting,
+              controller: widget.controller,
+              enabled: !correct && !widget.submitting,
               textInputAction: TextInputAction.done,
-              onChanged: (_) => onAnswerChanged(),
+              onChanged: (_) => widget.onAnswerChanged(),
               decoration: InputDecoration(
                 hintText: l10n.lessonAnswerHint,
                 filled: true,
@@ -1430,40 +1402,73 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
                   borderSide: BorderSide.none,
                 ),
               ),
-            )
-          else ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _Feedback(
-                    label: l10n.lessonYourWork,
-                    text: working.text,
+            ),
+          ] else ...[
+            _ChoiceAnswers(
+              exercise: widget.exercise,
+              controller: widget.controller,
+              enabled: !correct && !widget.submitting,
+              result: widget.result,
+              onChanged: widget.onAnswerChanged,
+            ),
+            const SizedBox(height: RiksaSpacing.xs),
+            if (!correct) ...[
+              if (!_scratchpadOpen && widget.working.text.isEmpty)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    key: ValueKey('toggle-working-${widget.exercise.id}'),
+                    onPressed: () => setState(() => _scratchpadOpen = true),
+                    icon: const Icon(Icons.edit_note_rounded, size: 18),
+                    label: Text(
+                      l10n.lessonWorkFirst,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: palette.inkMuted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: palette.inkMuted,
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                    ),
                   ),
                 ),
-                if (!correct)
-                  IconButton(
-                    key: ValueKey('lesson-edit-working-${exercise.id}'),
-                    tooltip: l10n.lessonEditWorking,
-                    onPressed: onEditWorking,
-                    icon: const Icon(Icons.edit_outlined, size: 18),
+              if (_scratchpadOpen || widget.working.text.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                TextField(
+                  key: ValueKey('lesson-working-${widget.exercise.id}'),
+                  controller: widget.working,
+                  style: RiksaTypography.bodyStyleFor(
+                    l10n.lessonWorkHint,
+                    Theme.of(context).textTheme.bodyMedium,
                   ),
+                  minLines: 2,
+                  maxLines: 5,
+                  onChanged: (_) => widget.onAnswerChanged(),
+                  decoration: InputDecoration(
+                    hintText: l10n.lessonWorkHint,
+                    filled: true,
+                    fillColor: palette.surfaceRaised,
+                    border: OutlineInputBorder(
+                      borderRadius: AppRadii.largeBorder,
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: AppRadii.largeBorder,
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
               ],
-            ),
-            const SizedBox(height: 12),
-            if (!correct)
-              Text(
-                l10n.lessonChooseAnswer,
-                style: Theme.of(context).textTheme.bodySmall,
+            ] else if (widget.working.text.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _Feedback(
+                label: l10n.lessonYourWork,
+                text: widget.working.text,
               ),
-            const SizedBox(height: 12),
-            _ChoiceAnswers(
-              exercise: exercise,
-              controller: controller,
-              enabled: !correct && !submitting,
-              result: result,
-              onChanged: onAnswerChanged,
-            ),
+            ],
           ],
           if (!correct) ...[
             const SizedBox(height: RiksaSpacing.sm),
@@ -1484,10 +1489,10 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
               ),
             ),
           ],
-          if (result != null) ...[
+          if (widget.result != null) ...[
             const SizedBox(height: RiksaSpacing.sm),
             Semantics(
-              key: feedbackKey,
+              key: widget.feedbackKey,
               liveRegion: true,
               child: Container(
                 padding: const EdgeInsets.all(14),
@@ -1523,9 +1528,12 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
                 ),
               ),
             ),
-            if (result!.message.trim().isNotEmpty) ...[
+            if (widget.result!.message.trim().isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(result!.message, style: TextStyle(color: palette.inkMuted)),
+              Text(
+                widget.result!.message,
+                style: TextStyle(color: palette.inkMuted),
+              ),
             ],
             if (incorrect) ...[
               const SizedBox(height: RiksaSpacing.xs),
@@ -1540,19 +1548,19 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
               ),
             ],
             if (incorrect &&
-                (result!.hint ?? exercise.hint)?.trim().isNotEmpty == true)
+                (widget.result!.hint ?? widget.exercise.hint)?.trim().isNotEmpty == true)
               _Feedback(
                 label: l10n.lessonHint,
-                text: result!.hint ?? exercise.hint!,
+                text: widget.result!.hint ?? widget.exercise.hint!,
               ),
             if ((incorrect || correct) &&
-                (result!.explanation ?? exercise.explanation)
+                (widget.result!.explanation ?? widget.exercise.explanation)
                         ?.trim()
                         .isNotEmpty ==
                     true)
               _Feedback(
                 label: l10n.lessonWhy,
-                text: result!.explanation ?? exercise.explanation!,
+                text: widget.result!.explanation ?? widget.exercise.explanation!,
               ),
           ],
         ],
@@ -1700,16 +1708,13 @@ class _ChoiceAnswersState extends State<_ChoiceAnswers> {
                 ),
                 const SizedBox(width: RiksaSpacing.sm),
                 Expanded(
-                  child: Text(
-                    option,
-                    style: RiksaTypography.bodyStyleFor(
-                      option,
-                      theme.textTheme.bodyMedium?.copyWith(
-                        color: ink,
-                        fontWeight: isSelected
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                      ),
+                  child: RiksaMathText(
+                    text: option,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: ink,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
                     ),
                   ),
                 ),
@@ -1730,8 +1735,8 @@ class _Feedback extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(top: RiksaSpacing.xs),
-    child: Text(
-      '$label: $text',
+    child: RiksaMathText(
+      text: '$label: $text',
       style: TextStyle(color: context.riksa.inkMuted, fontSize: 13),
     ),
   );

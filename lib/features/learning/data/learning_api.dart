@@ -34,7 +34,7 @@ class LearningApi {
   Future<List<LearningCategory>> categories() async {
     final response = await _client.dio.post(
       '${ApiConfig.baseUrl}/graphql',
-      data: const {'query': '{ categories { id name } }'},
+      data: const {'query': '{ categories { id name slug description iconUrl } }'},
     );
     final body = response.data as Map<String, dynamic>;
     final categories =

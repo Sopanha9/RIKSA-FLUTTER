@@ -223,6 +223,38 @@ void main() {
       plain,
     );
   });
+
+  testWidgets('shows report option for non-owned posts', (tester) async {
+    await initializeDateFormatting('en');
+    var reported = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('km')],
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: SocialPostCard(
+              post: _officialPost,
+              onTap: () {},
+              onReact: () {},
+              onShare: () {},
+              onReport: () => reported = true,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('post-report-post-10')));
+    await tester.pumpAndSettle();
+    expect(reported, isTrue);
+  });
 }
 
 final _ownedPost = SocialPost(

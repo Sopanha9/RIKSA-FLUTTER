@@ -46,7 +46,10 @@ void main() {
     final surface = find.byKey(const ValueKey('bottom-nav-surface'));
     // A translucent glass pill floats off the screen edges, with the round AI
     // Tutor button beside it.
-    final surfaceColor = tester.widget<Material>(surface).color!;
+    final surfaceWidget = tester.widget<Container>(surface);
+    final decoration = surfaceWidget.decoration as ShapeDecoration;
+    final gradient = decoration.gradient as LinearGradient;
+    final surfaceColor = gradient.colors.first;
     expect(surfaceColor.a, lessThan(1));
     expect(surfaceColor.r, AppColors.editorialNeutralSurface.r);
     expect(surfaceColor.g, AppColors.editorialNeutralSurface.g);

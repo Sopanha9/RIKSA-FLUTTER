@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../social/providers/social_feed_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_roadmap_provider.dart';
 import '../providers/lesson_catalog_provider.dart';
@@ -37,6 +38,8 @@ class LessonCompletionScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final palette = context.riksa;
     final theme = Theme.of(context);
+    final streak = ref.watch(communityStreakProvider);
+    final streakDays = streak.asData?.value.current ?? 0;
     final roadmap = roadmapCategoryId == null
         ? null
         : ref.watch(learningRoadmapProvider(roadmapCategoryId!)).asData?.value;
@@ -99,12 +102,52 @@ class LessonCompletionScreen extends ConsumerWidget {
                           style: theme.textTheme.bodyMedium,
                         ),
                         const SizedBox(height: 16),
-                        RiksaCountUp(
-                          value: xpEarned,
-                          format: l10n.xpRewardAmount,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: palette.jadeStrong,
-                          ),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            RiksaCountUp(
+                              value: xpEarned,
+                              format: l10n.xpRewardAmount,
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: palette.jadeStrong,
+                              ),
+                            ),
+                            if (streakDays > 0)
+                              Container(
+                                key: const ValueKey('lesson-completion-streak-chip'),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: palette.surface,
+                                  borderRadius: AppRadii.fullBorder,
+                                  border: Border.all(
+                                    color: palette.outline,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.local_fire_department_rounded,
+                                      size: 16,
+                                      color: Color(0xFFE65100),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      l10n.streakDays(streakDays),
+                                      style: theme.textTheme.labelMedium?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: palette.ink,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),

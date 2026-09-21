@@ -18,6 +18,7 @@ class SocialPostCard extends StatelessWidget {
     this.onAuthorTap,
     this.onEdit,
     this.onDelete,
+    this.onReport,
     this.highlightOfficial = true,
   });
 
@@ -30,6 +31,9 @@ class SocialPostCard extends StatelessWidget {
   /// Set only for the reader's own posts; both together show the owner menu.
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+
+  /// Optional override for reporting the post; defaults to opening RiksaReportSheet.
+  final VoidCallback? onReport;
 
   /// Whether an official Riksa post gets its tinted surface.
   ///
@@ -80,6 +84,7 @@ class SocialPostCard extends StatelessWidget {
                     onAuthorTap: onAuthorTap,
                     onEdit: onEdit,
                     onDelete: onDelete,
+                    onReport: onReport,
                   ),
                   const SizedBox(height: 14),
                   Text(
@@ -173,12 +178,14 @@ class _PostMetadata extends StatelessWidget {
     this.onAuthorTap,
     this.onEdit,
     this.onDelete,
+    this.onReport,
   });
 
   final SocialPost post;
   final VoidCallback? onAuthorTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final VoidCallback? onReport;
 
   @override
   Widget build(BuildContext context) {
@@ -271,6 +278,19 @@ class _PostMetadata extends StatelessWidget {
             postId: post.id,
             onEdit: onEdit!,
             onDelete: onDelete!,
+          )
+        else if (onReport != null)
+          IconButton(
+            key: ValueKey('post-report-${post.id}'),
+            icon: Icon(
+              Icons.flag_outlined,
+              size: 20,
+              color: SocialPalette.muted(context),
+            ),
+            tooltip: Localizations.localeOf(context).languageCode == 'km'
+                ? 'រាយការណ៍'
+                : 'Report post',
+            onPressed: onReport,
           ),
       ],
     );

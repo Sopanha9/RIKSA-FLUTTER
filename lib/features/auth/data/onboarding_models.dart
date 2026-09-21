@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 
+import '../../learning/data/learning_models.dart';
+import '../../learning/presentation/learning_design.dart';
+
 /// Academic goal or focus chosen during onboarding.
 enum OnboardingGoal {
   bacII(
@@ -335,12 +338,149 @@ class OnboardingCuratedQuestions {
   }
 }
 
+/// Dynamic subject option used during onboarding, hydratable from live Admin/GraphQL categories.
+@immutable
+class OnboardingSubjectOption {
+  const OnboardingSubjectOption({
+    required this.id,
+    required this.onboardingSubject,
+    required this.stemSubject,
+    required this.titleEn,
+    required this.titleKm,
+    required this.subtitleEn,
+    required this.subtitleKm,
+    required this.icon,
+    this.categoryId,
+    this.categorySlug,
+  });
+
+  final String id;
+  final String? categoryId;
+  final String? categorySlug;
+  final OnboardingSubject onboardingSubject;
+  final StemSubject stemSubject;
+  final String titleEn;
+  final String titleKm;
+  final String subtitleEn;
+  final String subtitleKm;
+  final IconData icon;
+
+  String title(String languageCode) => languageCode == 'km' ? titleKm : titleEn;
+  String subtitle(String languageCode) =>
+      languageCode == 'km' ? subtitleKm : subtitleEn;
+
+  Color accentColor(BuildContext context) {
+    final palette = context.riksa;
+    return switch (stemSubject) {
+      StemSubject.mathematics => palette.math,
+      StemSubject.physics => palette.science,
+      StemSubject.chemistry => const Color(0xFF237A5B),
+      StemSubject.biology => const Color(0xFFD2674A),
+      StemSubject.technology => const Color(0xFF1F7D6B),
+      StemSubject.other => palette.brand,
+    };
+  }
+
+  Color softColor(BuildContext context) {
+    return switch (stemSubject) {
+      StemSubject.mathematics => AppColors.tileLavender,
+      StemSubject.physics => AppColors.tileMint,
+      StemSubject.chemistry => AppColors.tileGreen,
+      StemSubject.biology => AppColors.tilePeach,
+      StemSubject.technology => AppColors.tileMint,
+      StemSubject.other => AppColors.tileYellow,
+    };
+  }
+
+  factory OnboardingSubjectOption.fromEnum(OnboardingSubject subject) {
+    final stem = switch (subject) {
+      OnboardingSubject.math => StemSubject.mathematics,
+      OnboardingSubject.physics => StemSubject.physics,
+      OnboardingSubject.chemistry => StemSubject.chemistry,
+      OnboardingSubject.biology => StemSubject.biology,
+    };
+    return OnboardingSubjectOption(
+      id: subject.id,
+      onboardingSubject: subject,
+      stemSubject: stem,
+      titleEn: subject.titleEn,
+      titleKm: subject.titleKm,
+      subtitleEn: subject.subtitleEn,
+      subtitleKm: subject.subtitleKm,
+      icon: subject.icon,
+    );
+  }
+
+  factory OnboardingSubjectOption.fromCategory(LearningCategory category) {
+    final stem = stemSubjectFor(category.name);
+    final matchedEnum = switch (stem) {
+      StemSubject.mathematics => OnboardingSubject.math,
+      StemSubject.physics => OnboardingSubject.physics,
+      StemSubject.chemistry => OnboardingSubject.chemistry,
+      StemSubject.biology => OnboardingSubject.biology,
+      _ => OnboardingSubject.math,
+    };
+
+    final (titleEn, titleKm, subtitleEn, subtitleKm) = switch (stem) {
+      StemSubject.mathematics => (
+        OnboardingSubject.math.titleEn,
+        OnboardingSubject.math.titleKm,
+        OnboardingSubject.math.subtitleEn,
+        OnboardingSubject.math.subtitleKm,
+      ),
+      StemSubject.physics => (
+        OnboardingSubject.physics.titleEn,
+        OnboardingSubject.physics.titleKm,
+        OnboardingSubject.physics.subtitleEn,
+        OnboardingSubject.physics.subtitleKm,
+      ),
+      StemSubject.chemistry => (
+        OnboardingSubject.chemistry.titleEn,
+        OnboardingSubject.chemistry.titleKm,
+        OnboardingSubject.chemistry.subtitleEn,
+        OnboardingSubject.chemistry.subtitleKm,
+      ),
+      StemSubject.biology => (
+        OnboardingSubject.biology.titleEn,
+        OnboardingSubject.biology.titleKm,
+        OnboardingSubject.biology.subtitleEn,
+        OnboardingSubject.biology.subtitleKm,
+      ),
+      _ => (
+        category.name,
+        category.name,
+        category.description ?? 'STEM Foundation & Practice',
+        category.description ?? 'មូលដ្ឋានគ្រឹះវិទ្យាសាស្ត្រ និងលំហាត់អនុវត្ត',
+      ),
+    };
+
+    return OnboardingSubjectOption(
+      id: category.id,
+      categoryId: category.id,
+      categorySlug: category.slug,
+      onboardingSubject: matchedEnum,
+      stemSubject: stem,
+      titleEn: titleEn,
+      titleKm: titleKm,
+      subtitleEn: subtitleEn,
+      subtitleKm: subtitleKm,
+      icon: stemSubjectIcon(stem),
+    );
+  }
+
+  static List<OnboardingSubjectOption> get defaults =>
+      OnboardingSubject.values.map(OnboardingSubjectOption.fromEnum).toList();
+}
+
 /// Immutable data state capturing the learner's initial choices.
 @immutable
 class OnboardingSetupData {
   const OnboardingSetupData({
     this.goal,
     this.subject,
+    this.subjectOption,
+    this.subjectCategoryId,
+    this.subjectCategoryName,
     this.provinceId,
     this.provinceNameLatin,
     this.provinceNameKhmer,
@@ -352,6 +492,9 @@ class OnboardingSetupData {
 
   final OnboardingGoal? goal;
   final OnboardingSubject? subject;
+  final OnboardingSubjectOption? subjectOption;
+  final String? subjectCategoryId;
+  final String? subjectCategoryName;
   final String? provinceId;
   final String? provinceNameLatin;
   final String? provinceNameKhmer;
@@ -363,6 +506,9 @@ class OnboardingSetupData {
   OnboardingSetupData copyWith({
     OnboardingGoal? goal,
     OnboardingSubject? subject,
+    OnboardingSubjectOption? subjectOption,
+    String? subjectCategoryId,
+    String? subjectCategoryName,
     String? provinceId,
     String? provinceNameLatin,
     String? provinceNameKhmer,
@@ -374,6 +520,9 @@ class OnboardingSetupData {
     return OnboardingSetupData(
       goal: goal ?? this.goal,
       subject: subject ?? this.subject,
+      subjectOption: subjectOption ?? this.subjectOption,
+      subjectCategoryId: subjectCategoryId ?? this.subjectCategoryId,
+      subjectCategoryName: subjectCategoryName ?? this.subjectCategoryName,
       provinceId: provinceId ?? this.provinceId,
       provinceNameLatin: provinceNameLatin ?? this.provinceNameLatin,
       provinceNameKhmer: provinceNameKhmer ?? this.provinceNameKhmer,

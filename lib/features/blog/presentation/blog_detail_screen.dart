@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../social/presentation/widgets/riksa_report_sheet.dart';
 import '../../userProfile/data/public_profile.dart';
 import '../../userProfile/presentation/public_profile_navigation.dart';
 import '../data/blog_api.dart';
@@ -293,6 +294,25 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
                   child: BlogOwnerMenu(
                     onEdit: () => _edit(post),
                     onDelete: () => _delete(post),
+                    onImage: post.hasCover && !_collapsed,
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(right: RiksaSpacing.xs),
+                  child: _ChromeButton(
+                    key: const ValueKey('blog-report-button'),
+                    icon: Icons.flag_outlined,
+                    tooltip:
+                        Localizations.localeOf(context).languageCode == 'km'
+                            ? 'រាយការណ៍អត្ថបទ'
+                            : 'Report article',
+                    onPressed: () => showRiksaReportSheet(
+                      context,
+                      targetType: 'BLOG',
+                      targetId: post.id,
+                      targetTitle: post.title,
+                    ),
                     onImage: post.hasCover && !_collapsed,
                   ),
                 ),

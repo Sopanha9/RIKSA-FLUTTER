@@ -5,8 +5,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/core/providers/locale_provider.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
+import 'package:riksa_app/features/auth/data/onboarding_models.dart';
 import 'package:riksa_app/features/auth/presentation/interactive_onboarding_screen.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
+import 'package:riksa_app/features/auth/providers/onboarding_provider.dart';
+import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -230,5 +233,106 @@ void main() {
     expect(find.text('តើអ្នកចង់សម្រេចគោលដៅអ្វី?'), findsOneWidget);
     expect(find.text('ត្រៀមប្រឡងបាក់ឌុប (ថ្នាក់ទី១២)'), findsOneWidget);
     expect(find.text('បន្ត'), findsOneWidget);
+  });
+
+  testWidgets('selecting Physics category drives Physics challenge questions and persists subject id', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          localeProvider.overrideWith(() => _TestLocaleNotifier()),
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          provinceOptionsProvider.overrideWith((ref) async => _testProvinces),
+          onboardingSubjectsProvider.overrideWith(
+            (ref) async => [
+              OnboardingSubjectOption.fromCategory(
+                const LearningCategory(
+                  id: 'physics-uuid-live',
+                  name: 'Physics',
+                  slug: 'physics',
+                ),
+              ),
+              OnboardingSubjectOption.fromCategory(
+                const LearningCategory(
+                  id: 'math-uuid-live',
+                  name: 'Mathematics',
+                  slug: 'mathematics',
+                ),
+              ),
+            ],
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: InteractiveOnboardingScreen(onComplete: () {}),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Step 1: Goal
+    await tester.tap(find.text('BacII National Exam Prep'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('onboarding_continue_btn')));
+    await tester.pumpAndSettle();
+
+    // Step 2: Subject (live options)
+    expect(find.text('Physics'), findsOneWidget);
+    await tester.tap(find.text('Physics'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('onboarding_continue_btn')));
+    await tester.pumpAndSettle();
+
+    // Step 3: Province
+    await tester.tap(find.text('Phnom Penh'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('onboarding_continue_btn')));
+    await tester.pumpAndSettle();
+
+    // Step 4: Pace
+    await tester.tap(find.text('Regular'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('onboarding_continue_btn')));
+    await tester.pumpAndSettle();
+
+    // Step 5: Quiz - should be Physics question!
+    expect(find.textContaining('Newton\'s Second Law'), findsOneWidget);
+    await tester.tap(find.text('F = m × a'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('onboarding_continue_btn')));
+    await tester.pumpAndSettle();
+
+    // Step 6: Quiz - question 2 should also be Physics!
+    expect(find.textContaining('SI unit of Energy and Work'), findsOneWidget);
+    await tester.tap(find.text('Joule (J)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('onboarding_continue_btn')));
+    await tester.pumpAndSettle();
+
+    // Step 7: Payoff
+    await tester.tap(find.byKey(const Key('onboarding_save_telegram')));
+    await tester.pumpAndSettle();
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('riksa_onboarding_subject'), 'PHYSICS');
+    expect(prefs.getString('riksa_onboarding_subject_id'), 'physics-uuid-live');
+    expect(prefs.getString('riksa_onboarding_subject_name'), 'Physics');
   });
 }

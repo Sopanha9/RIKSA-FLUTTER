@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/learning_models.dart';
 import '../presentation/learning_design.dart';
@@ -169,7 +170,44 @@ final learningHomeProvider = FutureProvider.autoDispose<LearningHomeData>((
     throw StateError('No subject roadmap could be loaded');
   }
 
-  final resumeSubject = _pickResumeSubject(subjects);
+  final prefs = await SharedPreferences.getInstance();
+  final preferredCategoryId = prefs.getString('riksa_onboarding_subject_id');
+  final preferredSubjectName = prefs.getString('riksa_onboarding_subject');
+
+  final resumeSubject = _pickResumeSubject(
+    subjects,
+    preferredCategoryId: preferredCategoryId,
+    preferredSubjectName: preferredSubjectName,
+  );
+
+  final hasStartedAny = subjects.any((s) => (s.resumable?.progress ?? 0) > 0);
+  if (!hasStartedAny &&
+      (preferredCategoryId != null || preferredSubjectName != null)) {
+    subjects.sort((a, b) {
+      final aPreferred =
+          (preferredCategoryId != null && a.category.id == preferredCategoryId) ||
+              (preferredSubjectName != null &&
+                  (a.category.name
+                          .toLowerCase()
+                          .contains(preferredSubjectName.toLowerCase()) ||
+                      a.subject.name
+                          .toLowerCase() ==
+                          preferredSubjectName.toLowerCase()));
+      final bPreferred =
+          (preferredCategoryId != null && b.category.id == preferredCategoryId) ||
+              (preferredSubjectName != null &&
+                  (b.category.name
+                          .toLowerCase()
+                          .contains(preferredSubjectName.toLowerCase()) ||
+                      b.subject.name
+                          .toLowerCase() ==
+                          preferredSubjectName.toLowerCase()));
+      if (aPreferred && !bPreferred) return -1;
+      if (!aPreferred && bPreferred) return 1;
+      return 0;
+    });
+  }
+
   return LearningHomeData(
     subjects: subjects,
     resumeSubject: resumeSubject,
@@ -178,9 +216,14 @@ final learningHomeProvider = FutureProvider.autoDispose<LearningHomeData>((
 });
 
 /// Prefers a subject the learner has already opened a lesson in, so "continue"
-/// means continue. Falls back to the subject furthest along that is not yet
-/// finished, which is the one they are most likely working through.
-SubjectProgress? _pickResumeSubject(List<SubjectProgress> subjects) {
+/// means continue. If no lesson has been started yet, prioritizes the onboarding
+/// preferred subject. Otherwise falls back to the subject furthest along that is
+/// not yet finished.
+SubjectProgress? _pickResumeSubject(
+  List<SubjectProgress> subjects, {
+  String? preferredCategoryId,
+  String? preferredSubjectName,
+}) {
   final open = subjects
       .where((subject) => subject.resumable != null)
       .toList(growable: false);
@@ -189,9 +232,31 @@ SubjectProgress? _pickResumeSubject(List<SubjectProgress> subjects) {
   final started = open
       .where((subject) => (subject.resumable!.progress ?? 0) > 0)
       .toList(growable: false);
-  final pool = started.isNotEmpty ? started : open;
 
-  return pool.reduce((a, b) {
+  if (started.isNotEmpty) {
+    return started.reduce((a, b) {
+      if (a.isFinished != b.isFinished) return a.isFinished ? b : a;
+      return a.fraction >= b.fraction ? a : b;
+    });
+  }
+
+  if (preferredCategoryId != null && preferredCategoryId.isNotEmpty) {
+    final match =
+        open.where((s) => s.category.id == preferredCategoryId).firstOrNull;
+    if (match != null) return match;
+  }
+
+  if (preferredSubjectName != null && preferredSubjectName.isNotEmpty) {
+    final norm = preferredSubjectName.toLowerCase();
+    final match = open.where((s) {
+      final name = s.category.name.toLowerCase();
+      final stem = s.subject.name.toLowerCase();
+      return name.contains(norm) || stem.contains(norm);
+    }).firstOrNull;
+    if (match != null) return match;
+  }
+
+  return open.reduce((a, b) {
     if (a.isFinished != b.isFinished) return a.isFinished ? b : a;
     return a.fraction >= b.fraction ? a : b;
   });

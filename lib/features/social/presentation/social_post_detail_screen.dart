@@ -16,6 +16,7 @@ import '../../userProfile/presentation/public_profile_navigation.dart';
 import '../data/social_api.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
+import 'widgets/riksa_report_sheet.dart';
 import 'widgets/social_owner_menu.dart';
 import 'widgets/social_palette.dart';
 
@@ -323,13 +324,27 @@ class _SocialPostDetailScreenState
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: [
-          if (_post != null &&
-              _post!.author.id == ref.watch(currentUserIdProvider))
-            SocialOwnerMenu(
-              postId: _post!.id,
-              onEdit: _edit,
-              onDelete: _delete,
-            ),
+          if (_post != null)
+            if (_post!.author.id == ref.watch(currentUserIdProvider))
+              SocialOwnerMenu(
+                postId: _post!.id,
+                onEdit: _edit,
+                onDelete: _delete,
+              )
+            else
+              IconButton(
+                key: ValueKey('post-report-${_post!.id}'),
+                tooltip: Localizations.localeOf(context).languageCode == 'km'
+                    ? 'រាយការណ៍'
+                    : 'Report post',
+                icon: const Icon(Icons.flag_outlined),
+                onPressed: () => showRiksaReportSheet(
+                  context,
+                  targetType: 'POST',
+                  targetId: _post!.id,
+                  targetTitle: _post!.title,
+                ),
+              ),
           const SizedBox(width: 4),
         ],
       ),

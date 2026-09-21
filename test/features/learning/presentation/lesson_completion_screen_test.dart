@@ -7,6 +7,8 @@ import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/learning_result_screens.dart';
 import 'package:riksa_app/features/learning/providers/learning_roadmap_provider.dart';
+import 'package:riksa_app/features/social/data/social_models.dart';
+import 'package:riksa_app/features/social/providers/social_feed_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 LearningRoadmap roadmap({String status = 'AVAILABLE'}) =>
@@ -33,6 +35,7 @@ Widget completionApp({
   bool failed = false,
   String status = 'AVAILABLE',
   TextScaler textScaler = TextScaler.noScaling,
+  CommunityStreak? streak,
 }) {
   final router = GoRouter(
     initialLocation: '/complete',
@@ -68,6 +71,9 @@ Widget completionApp({
         if (failed) throw Exception('offline');
         return roadmap(status: status);
       }),
+      communityStreakProvider.overrideWith(
+        (_) async => streak ?? const CommunityStreak(current: 0, highest: 0),
+      ),
     ],
     child: MaterialApp.router(
       routerConfig: router,
@@ -149,5 +155,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Start next lesson'), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('displays celebratory streak flame chip when streak > 0', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      completionApp(
+        streak: const CommunityStreak(current: 5, highest: 12),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('lesson-completion-streak-chip')), findsOneWidget);
+    expect(find.text('5 days'), findsOneWidget);
+    expect(find.byIcon(Icons.local_fire_department_rounded), findsOneWidget);
   });
 }

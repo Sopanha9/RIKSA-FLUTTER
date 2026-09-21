@@ -327,6 +327,31 @@ class SocialApi {
     );
   }
 
+  Future<void> fileReport({
+    required String targetType,
+    required String targetId,
+    required String reason,
+    String? details,
+  }) async {
+    try {
+      await _client.dio.post(
+        '/reports',
+        data: {
+          'targetType': targetType,
+          'targetId': targetId,
+          'reason': reason,
+          if (details != null && details.trim().isNotEmpty)
+            'details': details.trim(),
+        },
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        throw const SocialApiException('You have already reported this content');
+      }
+      throw SocialApiException(dioErrorMessage(e));
+    }
+  }
+
   Future<Map<String, dynamic>> _query(
     String query, {
     Map<String, dynamic> variables = const {},

@@ -2,11 +2,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/providers/locale_provider.dart';
+import '../../learning/data/learning_models.dart';
+import '../../learning/providers/lesson_catalog_provider.dart';
 import '../data/onboarding_models.dart';
 
 class OnboardingNotifier extends Notifier<OnboardingSetupData> {
   static const String _goalKey = 'riksa_onboarding_goal';
   static const String _subjectKey = 'riksa_onboarding_subject';
+  static const String _subjectIdKey = 'riksa_onboarding_subject_id';
+  static const String _subjectNameKey = 'riksa_onboarding_subject_name';
   static const String _paceKey = 'riksa_onboarding_pace';
   static const String _xpKey = 'riksa_onboarding_earned_xp';
 
@@ -20,6 +24,8 @@ class OnboardingNotifier extends Notifier<OnboardingSetupData> {
     final prefs = await SharedPreferences.getInstance();
     final goalId = prefs.getString(_goalKey);
     final subjectId = prefs.getString(_subjectKey);
+    final subjectCategoryId = prefs.getString(_subjectIdKey);
+    final subjectCategoryName = prefs.getString(_subjectNameKey);
     final paceMins = prefs.getInt(_paceKey);
     final earnedXp = prefs.getInt(_xpKey) ?? 0;
 
@@ -37,6 +43,11 @@ class OnboardingNotifier extends Notifier<OnboardingSetupData> {
       }
     }
 
+    OnboardingSubjectOption? restoredOption;
+    if (restoredSubject != null) {
+      restoredOption = OnboardingSubjectOption.fromEnum(restoredSubject);
+    }
+
     OnboardingPace? restoredPace;
     if (paceMins != null) {
       for (final p in OnboardingPace.values) {
@@ -47,6 +58,9 @@ class OnboardingNotifier extends Notifier<OnboardingSetupData> {
     state = state.copyWith(
       goal: restoredGoal,
       subject: restoredSubject,
+      subjectOption: restoredOption,
+      subjectCategoryId: subjectCategoryId,
+      subjectCategoryName: subjectCategoryName,
       pace: restoredPace,
       earnedXp: earnedXp,
     );
@@ -57,7 +71,22 @@ class OnboardingNotifier extends Notifier<OnboardingSetupData> {
   }
 
   void setSubject(OnboardingSubject subject) {
-    state = state.copyWith(subject: subject);
+    final option = OnboardingSubjectOption.fromEnum(subject);
+    state = state.copyWith(
+      subject: subject,
+      subjectOption: option,
+      subjectCategoryId: option.categoryId,
+      subjectCategoryName: option.titleEn,
+    );
+  }
+
+  void setSubjectOption(OnboardingSubjectOption option) {
+    state = state.copyWith(
+      subject: option.onboardingSubject,
+      subjectOption: option,
+      subjectCategoryId: option.categoryId ?? option.id,
+      subjectCategoryName: option.titleEn,
+    );
   }
 
   void setProvince({
@@ -104,6 +133,16 @@ class OnboardingNotifier extends Notifier<OnboardingSetupData> {
     if (state.subject != null) {
       futures.add(prefs.setString(_subjectKey, state.subject!.id));
     }
+    final categoryId = state.subjectCategoryId ?? state.subjectOption?.categoryId;
+    if (categoryId != null && categoryId.isNotEmpty) {
+      futures.add(prefs.setString(_subjectIdKey, categoryId));
+    }
+    final categoryName = state.subjectCategoryName ??
+        state.subjectOption?.titleEn ??
+        state.subject?.name;
+    if (categoryName != null && categoryName.isNotEmpty) {
+      futures.add(prefs.setString(_subjectNameKey, categoryName));
+    }
     if (state.pace != null) {
       futures.add(prefs.setInt(_paceKey, state.pace!.minutes));
     }
@@ -122,3 +161,24 @@ final onboardingProvider =
     NotifierProvider<OnboardingNotifier, OnboardingSetupData>(
       OnboardingNotifier.new,
     );
+
+final onboardingSubjectsProvider =
+    FutureProvider<List<OnboardingSubjectOption>>((ref) async {
+  try {
+    final api = ref.watch(learningApiProvider);
+    final categories = await api.categories();
+    final stemCategories = categories
+        .where((c) => isStemLearningCategory(c.name))
+        .toList(growable: false);
+
+    if (stemCategories.isEmpty) {
+      return OnboardingSubjectOption.defaults;
+    }
+
+    return stemCategories
+        .map(OnboardingSubjectOption.fromCategory)
+        .toList(growable: false);
+  } catch (_) {
+    return OnboardingSubjectOption.defaults;
+  }
+});
