@@ -335,6 +335,7 @@ class _SocialPostDetailScreenState
                   onAuthorTap: _authorTap(_post!.author),
                   onReact: _react,
                   onShare: _share,
+                  onCommentTap: () => _commentFocus.requestFocus(),
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -503,12 +504,14 @@ class _PostBody extends StatelessWidget {
     this.onAuthorTap,
     required this.onReact,
     required this.onShare,
+    this.onCommentTap,
   });
 
   final SocialPost post;
   final VoidCallback? onAuthorTap;
   final VoidCallback onReact;
   final VoidCallback onShare;
+  final VoidCallback? onCommentTap;
 
   @override
   Widget build(BuildContext context) {
@@ -576,6 +579,13 @@ class _PostBody extends StatelessWidget {
                 count: post.reactionCount,
                 selected: post.myReaction != null,
                 onTap: onReact,
+              ),
+              const SizedBox(width: 10),
+              _DetailAction(
+                key: const ValueKey('post-detail-comment-button'),
+                icon: Icons.mode_comment_outlined,
+                count: post.commentCount,
+                onTap: onCommentTap,
               ),
               const Spacer(),
               _DetailAction(
@@ -987,6 +997,7 @@ class _Avatar extends StatelessWidget {
 
 class _DetailAction extends StatelessWidget {
   const _DetailAction({
+    super.key,
     required this.icon,
     required this.count,
     this.selected = false,

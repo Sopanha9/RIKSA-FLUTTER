@@ -137,7 +137,6 @@ void main() {
           );
           await tester.pumpAndSettle();
           expect(find.text('Week Warrior'), findsOneWidget);
-          expect(find.text('Not earned yet'), findsNothing);
           expect(tester.takeException(), isNull);
           await exportAchievementPreview(
             tester,

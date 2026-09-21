@@ -268,6 +268,17 @@ class _DrawerIdentity extends ConsumerWidget {
                             fontSize: 13,
                           ),
                         ),
+                        const SizedBox(height: 2),
+                        Text(
+                          l10n.gradeStemLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: palette.inkMuted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
                   ),

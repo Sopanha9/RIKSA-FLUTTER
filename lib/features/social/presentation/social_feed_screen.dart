@@ -924,7 +924,6 @@ class _GlassBlogCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isOwner = ref.watch(currentUserIdProvider) == post.authorId;
     final authorState = ref.watch(publicProfileProvider(post.authorId));
     final profile = authorState.profile;
 

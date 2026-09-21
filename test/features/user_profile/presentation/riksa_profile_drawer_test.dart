@@ -140,8 +140,8 @@ void main() {
           ),
         ),
         GoRoute(
-          path: '/leaderboard',
-          builder: (_, _) => const Scaffold(body: Text('leaderboard screen')),
+          path: '/progress',
+          builder: (_, _) => const Scaffold(body: Text('progress screen')),
         ),
       ],
     );
@@ -151,10 +151,10 @@ void main() {
     await tester.pumpAndSettle();
     await _openDrawer(tester);
 
-    await tester.tap(find.byKey(const ValueKey('drawer-leaderboard')));
+    await tester.tap(find.byKey(const ValueKey('drawer-progress')));
     await tester.pumpAndSettle();
 
-    expect(find.text('leaderboard screen'), findsOneWidget);
+    expect(find.text('progress screen'), findsOneWidget);
     // Popping the drawer before pushing is what stops the learner returning
     // home onto an open menu.
     expect(find.byType(RiksaProfileDrawer), findsNothing);
@@ -203,7 +203,7 @@ void main() {
     expect(find.byKey(const ValueKey('drawer-logout')), findsNothing);
     expect(find.byKey(const ValueKey('drawer-counts')), findsNothing);
     // Navigation is still offered: signing in is reachable from those screens.
-    expect(find.byKey(const ValueKey('drawer-profile')), findsOneWidget);
+    expect(find.byKey(const ValueKey('drawer-progress')), findsOneWidget);
   });
 
   testWidgets('renders academic grade STEM label in identity', (tester) async {

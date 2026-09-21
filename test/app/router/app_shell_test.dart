@@ -59,7 +59,7 @@ void main() {
       tester
           .widget<Scaffold>(find.byKey(const ValueKey('main-app-shell')))
           .extendBody,
-      isFalse,
+      isTrue,
     );
     final navigationElement = tester.element(persistentNavigation);
 
@@ -84,6 +84,16 @@ void main() {
     await tester.drag(
       find.byKey(const ValueKey('scroll-Home')),
       const Offset(0, -420),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('collapsed-bottom-nav-fab')),
+      findsOneWidget,
+    );
+
+    await tester.drag(
+      find.byKey(const ValueKey('scroll-Home')),
+      const Offset(0, 420),
     );
     await tester.pumpAndSettle();
     expect(tester.getRect(persistentNavigation), barBefore);

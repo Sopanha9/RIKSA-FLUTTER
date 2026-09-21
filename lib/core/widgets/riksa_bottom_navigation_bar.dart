@@ -30,6 +30,7 @@ class RiksaBottomNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final palette = context.riksa;
     final tabs = <(int, _RiksaNavigationItem)>[
       (
         0,
@@ -47,7 +48,14 @@ class RiksaBottomNavigationBar extends StatelessWidget {
           activeIcon: Icons.auto_stories_rounded,
         ),
       ),
-
+      (
+        3,
+        _RiksaNavigationItem(
+          label: l10n.ranksTab,
+          icon: Icons.leaderboard_outlined,
+          activeIcon: Icons.leaderboard_rounded,
+        ),
+      ),
       (
         4,
         _RiksaNavigationItem(
@@ -185,7 +193,7 @@ class RiksaBottomNavigationBar extends StatelessWidget {
           alignment: Alignment.bottomLeft,
           children: <Widget>[
             ...previousChildren,
-            if (currentChild != null) currentChild,
+            ?currentChild,
           ],
         );
       },
@@ -218,6 +226,7 @@ class _PillTabTrack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.riksa;
     final selectedSlot = tabs.indexWhere((tab) => tab.$1 == currentIndex);
     final duration = RiksaMotion.resolve(
       context,

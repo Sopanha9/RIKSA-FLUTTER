@@ -14,6 +14,8 @@ import 'package:riksa_app/features/learning/presentation/lesson_experience_scree
 import 'package:riksa_app/features/learning/presentation/learning_result_screens.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.dart';
+import 'package:riksa_app/features/social/data/social_models.dart';
+import 'package:riksa_app/features/social/providers/social_feed_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 const _description = '''
@@ -159,7 +161,12 @@ Widget _previewApp({
   Locale locale = const Locale('en'),
   TextScaler scaler = TextScaler.noScaling,
 }) => ProviderScope(
-  overrides: [learningApiProvider.overrideWithValue(_PreviewLearningApi())],
+  overrides: [
+    learningApiProvider.overrideWithValue(_PreviewLearningApi()),
+    communityStreakProvider.overrideWith(
+      (ref) async => const CommunityStreak(current: 5, highest: 10),
+    ),
+  ],
   child: MaterialApp(
     debugShowCheckedModeBanner: false,
     theme: theme ?? AppTheme.light,
@@ -208,12 +215,15 @@ void main() {
       find.byType(LessonExperienceScreen),
       matchesGoldenFile('goldens/lesson_working_en_light.png'),
     );
+    final toggle1 = find.byKey(const ValueKey('toggle-working-ex-1'));
+    if (toggle1.evaluate().isNotEmpty) {
+      await tester.tap(toggle1);
+      await tester.pumpAndSettle();
+    }
     await tester.enterText(
       find.byKey(const ValueKey('lesson-working-ex-1')),
       'F = m × a = 2 × 3 = 6 N',
     );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('compare-answers')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const ValueKey('lesson-option-2')));
     await tester.tap(find.byKey(const ValueKey('lesson-option-2')));
@@ -236,12 +246,15 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('start-section-2')));
     await tester.pumpAndSettle();
+    final toggle2 = find.byKey(const ValueKey('toggle-working-ex-2'));
+    if (toggle2.evaluate().isNotEmpty) {
+      await tester.tap(toggle2);
+      await tester.pumpAndSettle();
+    }
     await tester.enterText(
       find.byKey(const ValueKey('lesson-working-ex-2')),
       'a = F / m, so twice the mass gives half the acceleration.',
     );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('compare-answers')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const ValueKey('lesson-option-0')));
     await tester.tap(find.byKey(const ValueKey('lesson-option-0')));

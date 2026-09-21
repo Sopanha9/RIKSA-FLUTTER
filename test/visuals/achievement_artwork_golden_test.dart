@@ -84,12 +84,15 @@ void main() {
                               children: [
                                 Text(
                                   names[icon]!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                     fontSize: 12,
+                                    height: 1.1,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(height: 5),
+                                const SizedBox(height: 4),
                                 for (final theme in [
                                   AppTheme.light,
                                   AppTheme.dark,

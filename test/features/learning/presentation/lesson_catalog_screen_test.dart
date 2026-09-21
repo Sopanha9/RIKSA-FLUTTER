@@ -181,7 +181,10 @@ void main() {
       lessThanOrEqualTo(120),
     );
     expect(
-      find.byKey(const ValueKey('subject-artwork-mathematics')),
+      find.descendant(
+        of: find.byKey(const ValueKey('subject-tile-math')),
+        matching: find.byKey(const ValueKey('subject-artwork-mathematics')),
+      ),
       findsOneWidget,
     );
     expect(

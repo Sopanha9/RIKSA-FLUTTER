@@ -158,7 +158,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                             alignment: Alignment.topCenter,
                             children: <Widget>[
                               ...previousChildren,
-                              if (currentChild != null) currentChild,
+                              ?currentChild,
                             ],
                           ),
                           child: user == null
@@ -645,29 +645,35 @@ class _ProfileTierProgress extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsetsDirectional.fromSTEB(4, 3, 10, 3),
-                decoration: BoxDecoration(
-                  color: palette.brandSoft,
-                  borderRadius: AppRadii.fullBorder,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    RiksaRankBadge(tier: game?.currentTier, size: 20),
-                    const SizedBox(width: 4),
-                    Text(
-                      tier,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: palette.brand,
-                        fontWeight: FontWeight.w700,
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsetsDirectional.fromSTEB(4, 3, 10, 3),
+                  decoration: BoxDecoration(
+                    color: palette.brandSoft,
+                    borderRadius: AppRadii.fullBorder,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RiksaRankBadge(tier: game?.currentTier, size: 20),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          tier,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: palette.brand,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(width: 10),
-              if (band != null)
+              if (band != null) ...[
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     band,
@@ -678,6 +684,7 @@ class _ProfileTierProgress extends StatelessWidget {
                     style: small,
                   ),
                 ),
+              ],
             ],
           ),
           // At the top of the ladder there is nothing left to fill, and a

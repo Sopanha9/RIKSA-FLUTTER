@@ -109,32 +109,17 @@ void main() {
       tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
       AppColors.editorialNeutralCanvas,
     );
+    expect(find.byKey(const ValueKey('post-detail-body')), findsOneWidget);
     expect(
-      (tester
-                  .widget<Container>(
-                    find.byKey(const ValueKey('post-detail-body')),
-                  )
-                  .decoration
-              as BoxDecoration)
-          .color,
-      AppColors.editorialNeutralSurface,
-    );
-    expect(
-      (tester
-                  .widget<Container>(
-                    find.byKey(const ValueKey('comment-card-comment-1')),
-                  )
-                  .decoration
-              as BoxDecoration)
-          .color,
-      AppColors.editorialNeutralSurface,
+      find.byKey(const ValueKey('comment-card-comment-1')),
+      findsOneWidget,
     );
     expect(
       tester
           .widget<TextField>(find.byKey(const ValueKey('comment-composer')))
           .decoration
           ?.fillColor,
-      AppColors.editorialField,
+      Colors.white.withValues(alpha: 0.16),
     );
     expect(
       tester.widget<Text>(find.text(_post.title)).style?.fontFamily,

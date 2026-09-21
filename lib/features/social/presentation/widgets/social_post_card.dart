@@ -308,7 +308,7 @@ class _PostMetadata extends StatelessWidget {
             icon: Icon(
               Icons.flag_outlined,
               size: 20,
-              color: SocialPalette.muted(context),
+              color: context.riksa.inkMuted,
             ),
             tooltip: Localizations.localeOf(context).languageCode == 'km'
                 ? 'រាយការណ៍'

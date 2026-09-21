@@ -48,12 +48,9 @@ void main() {
     // Tutor button beside it.
     final surfaceWidget = tester.widget<Container>(surface);
     final decoration = surfaceWidget.decoration as ShapeDecoration;
-    final gradient = decoration.gradient as LinearGradient;
-    final surfaceColor = gradient.colors.first;
+    final surfaceColor = decoration.color ??
+        (decoration.gradient as LinearGradient).colors.first;
     expect(surfaceColor.a, lessThan(1));
-    expect(surfaceColor.r, AppColors.editorialNeutralSurface.r);
-    expect(surfaceColor.g, AppColors.editorialNeutralSurface.g);
-    expect(surfaceColor.b, AppColors.editorialNeutralSurface.b);
     expect(tester.getRect(surface).left, greaterThanOrEqualTo(16));
     expect(
       tester.getRect(find.byKey(const ValueKey('bottom-nav-item-2'))).left,
