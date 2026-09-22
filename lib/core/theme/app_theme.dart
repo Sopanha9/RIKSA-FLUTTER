@@ -119,6 +119,7 @@ class AppColors {
   static const success = brandJade;
   static const warning = achievementSaffron;
   static const info = subjectTechnology;
+  static const telegram = Color(0xFF2AABEE);
   static const socialRepost = success;
   static const socialLike = error;
 }

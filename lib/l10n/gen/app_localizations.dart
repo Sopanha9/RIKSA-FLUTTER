@@ -1223,37 +1223,37 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingLearningBody.
   ///
   /// In en, this message translates to:
-  /// **'Discover quality education, modern learning experiences, and knowledge that grows with you.'**
+  /// **'Lessons, an AI coach, and friends who explain things their way. Studying feels lighter with company.'**
   String get onboardingLearningBody;
 
   /// No description provided for @onboardingAchievementBody.
   ///
   /// In en, this message translates to:
-  /// **'Keep your streak alive, celebrate progress, and turn every small win into momentum.'**
+  /// **'Keep your streak, climb the leaderboard, and let your buddy cheer every win.'**
   String get onboardingAchievementBody;
 
   /// No description provided for @onboardingCommunityBody.
   ///
   /// In en, this message translates to:
-  /// **'Learn with a supportive community that shares ideas, answers questions, and grows together.'**
+  /// **'Join communities, share what you are working on, and ask anything. Someone always has your back.'**
   String get onboardingCommunityBody;
 
-  /// Onboarding page 1 headline. Two short lines when wrapped.
+  /// Onboarding page 2 headline (learning together).
   ///
   /// In en, this message translates to:
-  /// **'Learn Without Limits'**
+  /// **'Learn together, not alone'**
   String get onboardingLearningTitle;
 
-  /// Onboarding page 2 headline.
+  /// Onboarding page 3 headline (progress with the buddy).
   ///
   /// In en, this message translates to:
-  /// **'Progress You Can See'**
+  /// **'Grow with your buddy'**
   String get onboardingAchievementTitle;
 
-  /// Onboarding page 3 headline.
+  /// Onboarding page 1 headline (the community).
   ///
   /// In en, this message translates to:
-  /// **'Never Study Alone'**
+  /// **'Your people are here'**
   String get onboardingCommunityTitle;
 
   /// Primary action on the last onboarding page.
@@ -2864,6 +2864,78 @@ abstract class AppLocalizations {
   /// **'Your Grade 12 STEM learning companion for a brighter Cambodia.'**
   String get splashDescription;
 
+  /// Heading of the first-run mascot picker
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your study buddy'**
+  String get mascotSelectTitle;
+
+  /// No description provided for @mascotSelectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'They\'ll cheer you on and celebrate every win with you.'**
+  String get mascotSelectSubtitle;
+
+  /// No description provided for @mascotCrocodile.
+  ///
+  /// In en, this message translates to:
+  /// **'Crocodile'**
+  String get mascotCrocodile;
+
+  /// No description provided for @mascotCapybara.
+  ///
+  /// In en, this message translates to:
+  /// **'Capybara'**
+  String get mascotCapybara;
+
+  /// No description provided for @mascotCrocodileTraits.
+  ///
+  /// In en, this message translates to:
+  /// **'Cute · Friendly · Smart'**
+  String get mascotCrocodileTraits;
+
+  /// No description provided for @mascotCapybaraTraits.
+  ///
+  /// In en, this message translates to:
+  /// **'Calm · Kind · Hardworking'**
+  String get mascotCapybaraTraits;
+
+  /// No description provided for @mascotNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name your buddy'**
+  String get mascotNameLabel;
+
+  /// No description provided for @mascotTapHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to say hi'**
+  String get mascotTapHint;
+
+  /// No description provided for @mascotSemantic.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, your study buddy'**
+  String mascotSemantic(String name);
+
+  /// No description provided for @languageSelectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which language should {name} speak?'**
+  String languageSelectTitle(String name);
+
+  /// No description provided for @languageSelectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will use it in lessons, reminders and chats. You can change it anytime.'**
+  String languageSelectSubtitle(String name);
+
+  /// What the learner's mascot says to preview a language
+  ///
+  /// In en, this message translates to:
+  /// **'Hi! I\'m {name}. Let\'s learn together!'**
+  String languageMascotGreeting(String name);
+
   /// No description provided for @skipLabel.
   ///
   /// In en, this message translates to:
@@ -4339,6 +4411,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Link'**
   String get markdownLink;
+
+  /// No description provided for @authBuddyWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back, {name}! I missed you.'**
+  String authBuddyWelcome(String name);
+
+  /// No description provided for @authBuddyRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'New here? Let\'s make your account!'**
+  String get authBuddyRegister;
+
+  /// No description provided for @authBuddyPasswordHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m not looking!'**
+  String get authBuddyPasswordHidden;
+
+  /// No description provided for @authBuddyPasswordShown.
+  ///
+  /// In en, this message translates to:
+  /// **'Oh! I can see it now.'**
+  String get authBuddyPasswordShown;
+
+  /// No description provided for @authBuddyChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get authBuddyChecking;
+
+  /// No description provided for @authBuddyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Oh no! {message}'**
+  String authBuddyError(String message);
+
+  /// No description provided for @authBuddyValidationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Oops! Check the highlighted fields.'**
+  String get authBuddyValidationHint;
+
+  /// No description provided for @authBuddyForgotHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Still stuck? Try Forgot password?'**
+  String get authBuddyForgotHint;
+
+  /// No description provided for @authBuddySuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Yay, you\'re in!'**
+  String get authBuddySuccess;
 }
 
 class _AppLocalizationsDelegate

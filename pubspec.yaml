@@ -96,6 +96,12 @@ flutter:
     - assets/images/achievements/
     - assets/images/avatars/humation/
     - assets/images/splashScreen/
+    - assets/images/mascots/crocodile/
+    - assets/images/mascots/capybara/
+    - assets/images/mascots/crocodile/faces/
+    - assets/images/mascots/capybara/faces/
+    - assets/images/mascots/scenes/
+    - assets/images/rewards/
     - assets/images/onboarding/
     - assets/images/lessonsCard/
     - assets/images/subjects/

@@ -56,8 +56,24 @@ class OnboardingNotifier extends Notifier<OnboardingSetupData> {
     state = state.copyWith(goal: goal);
   }
 
+  /// The warm-up questions come from the subject, so switching subject
+  /// clears any answers (and the XP they earned) given to the old ones.
   void setSubject(OnboardingSubject subject) {
-    state = state.copyWith(subject: subject);
+    if (subject == state.subject) return;
+    final answered =
+        state.quizAnswer1Index != null || state.quizAnswer2Index != null;
+    if (!answered) {
+      state = state.copyWith(subject: subject);
+      return;
+    }
+    state = OnboardingSetupData(
+      goal: state.goal,
+      subject: subject,
+      provinceId: state.provinceId,
+      provinceNameLatin: state.provinceNameLatin,
+      provinceNameKhmer: state.provinceNameKhmer,
+      pace: state.pace,
+    );
   }
 
   void setProvince({
@@ -78,18 +94,12 @@ class OnboardingNotifier extends Notifier<OnboardingSetupData> {
 
   void setQuizAnswer1(int index, bool isCorrect) {
     final newXp = (state.earnedXp) + (isCorrect ? 10 : 5);
-    state = state.copyWith(
-      quizAnswer1Index: index,
-      earnedXp: newXp,
-    );
+    state = state.copyWith(quizAnswer1Index: index, earnedXp: newXp);
   }
 
   void setQuizAnswer2(int index, bool isCorrect) {
     final newXp = (state.earnedXp) + (isCorrect ? 10 : 5);
-    state = state.copyWith(
-      quizAnswer2Index: index,
-      earnedXp: newXp,
-    );
+    state = state.copyWith(quizAnswer2Index: index, earnedXp: newXp);
   }
 
   /// Commits choices to SharedPreferences and updates the locale provider
@@ -111,7 +121,9 @@ class OnboardingNotifier extends Notifier<OnboardingSetupData> {
 
     final provinceId = state.provinceId;
     if (provinceId != null) {
-      futures.add(ref.read(localeProvider.notifier).savePendingProvince(provinceId));
+      futures.add(
+        ref.read(localeProvider.notifier).savePendingProvince(provinceId),
+      );
     }
 
     await Future.wait(futures);

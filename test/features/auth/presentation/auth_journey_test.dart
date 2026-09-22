@@ -52,6 +52,8 @@ class AuthServer implements HttpClientAdapter {
   int pollIntervalSeconds = 1;
   int expiresInSeconds = 300;
   bool failStart = false;
+  int? loginErrorStatus;
+  String loginErrorMessage = 'Wrong password';
 
   /// Body returned by `/auth/telegram/code`, or an error when [codeErrorStatus] is set.
   Map<String, Object?> codeResult = authenticated;
@@ -118,6 +120,12 @@ class AuthServer implements HttpClientAdapter {
           body = sessionJson;
         }
       case '/auth/login':
+        if (loginErrorStatus case final int code) {
+          status = code;
+          body = {'message': loginErrorMessage};
+        } else {
+          body = sessionJson;
+        }
       case '/auth/register':
         body = sessionJson;
       case '/auth/me':
@@ -241,16 +249,28 @@ Future<ProviderContainer> mountAuth(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          data:
+              MediaQuery.of(
+                context,
+                // The buddy on the auth screens animates forever; still it so
+                // pumpAndSettle can settle.
+              ).copyWith(
+                textScaler: TextScaler.linear(textScale),
+                disableAnimations: true,
+              ),
           child: child!,
         ),
         routerConfig: router,
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  if (startAtLogin) {
+    // The login buddy is intentionally always alive, so wait for startup
+    // work without asking the frame scheduler to become permanently idle.
+    await pumpFor(tester, const Duration(milliseconds: 600));
+  } else {
+    await tester.pumpAndSettle();
+  }
   return container;
 }
 
@@ -792,13 +812,54 @@ void main() {
     },
   );
 
+  testWidgets('auth error appears in the buddy bubble and error banner', (
+    tester,
+  ) async {
+    final server = AuthServer()
+      ..loginErrorStatus = 401
+      ..loginErrorMessage = 'Wrong password';
+    await mountAuth(tester, server, startAtLogin: true);
+    await tester.enterText(find.byKey(const Key('login_username')), 'sophea');
+    await tester.enterText(
+      find.byKey(const Key('login_password')),
+      'WrongPassword123',
+    );
+    await tapKey(tester, 'login_submit');
+    await pumpFor(tester, const Duration(milliseconds: 700));
+
+    expect(find.text('Wrong password'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('auth_buddy_bubble')),
+        matching: find.text('Oh no! Wrong password'),
+      ),
+      findsWidgets,
+    );
+  });
+
+  testWidgets('validation failure gives a hint in the buddy bubble', (
+    tester,
+  ) async {
+    await mountAuth(tester, AuthServer(), startAtLogin: true);
+    await tapKey(tester, 'login_submit');
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('auth_buddy_bubble')),
+        matching: find.text('Oops! Check the highlighted fields.'),
+      ),
+      findsWidgets,
+    );
+    expect(find.text('This field is required'), findsNWidgets(2));
+  });
+
   testWidgets('password registration submits valid details and signs in', (
     tester,
   ) async {
     final server = AuthServer();
     await mountAuth(tester, server, startAtLogin: true);
     await tapKey(tester, 'register_toggle');
-    await tester.pumpAndSettle();
+    await pumpFor(tester, const Duration(milliseconds: 350));
     await tester.enterText(
       find.byKey(const Key('register_username')),
       'sophea',

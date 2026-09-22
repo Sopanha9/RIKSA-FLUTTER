@@ -8,6 +8,7 @@ import '../../features/dashboard/presentation/home_dashboard_screen.dart';
 import '../../features/auth/presentation/auth_switcher_screen.dart';
 import '../../features/auth/presentation/account_recovery_screen.dart';
 import '../../features/auth/presentation/splash_animation_screen.dart';
+import '../../features/mascot/presentation/mascot_select_screen.dart';
 import '../../features/auth/presentation/language_select_screen.dart';
 import '../../features/auth/presentation/onboarding_splash_screen.dart';
 import '../../features/auth/presentation/interactive_onboarding_screen.dart';
@@ -61,10 +62,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isSplash = state.matchedLocation == '/splash';
       final isLanguage = state.matchedLocation == '/language-select';
+      final isMascot = state.matchedLocation == '/mascot-select';
       final isOnboarding = state.matchedLocation.startsWith('/onboarding');
       final isProvince = state.matchedLocation == '/province-select';
       final isPublicRoute =
-          isSplash || isLanguage || isOnboarding || isProvince || isAuthRoute;
+          isSplash ||
+          isMascot ||
+          isLanguage ||
+          isOnboarding ||
+          isProvince ||
+          isAuthRoute;
 
       if ((authState is AuthInitial || authState is AuthUnavailable) &&
           !isSplash) {
@@ -80,6 +87,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashAnimationScreen(),
+      ),
+      GoRoute(
+        path: '/mascot-select',
+        builder: (context, state) => const MascotSelectScreen(),
       ),
       GoRoute(
         path: '/language-select',

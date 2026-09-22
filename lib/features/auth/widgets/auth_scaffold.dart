@@ -175,9 +175,25 @@ class AuthPanel extends StatelessWidget {
       data: theme.copyWith(
         inputDecorationTheme: theme.inputDecorationTheme.copyWith(
           floatingLabelBehavior: FloatingLabelBehavior.never,
+          filled: true,
+          fillColor: palette.surface,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 17,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: AppRadii.largeBorder,
+            borderSide: BorderSide(color: palette.outline),
+          ),
+          disabledBorder: OutlineInputBorder(
+            borderRadius: AppRadii.largeBorder,
+            borderSide: BorderSide(
+              color: palette.outline.withValues(alpha: .7),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: AppRadii.largeBorder,
+            borderSide: BorderSide(color: palette.brand, width: 2),
           ),
           labelStyle: theme.textTheme.bodyMedium?.copyWith(
             color: palette.inkFaint,

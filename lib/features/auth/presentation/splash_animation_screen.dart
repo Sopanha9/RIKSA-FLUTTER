@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/language_toggle.dart';
 import '../../../core/widgets/riksa_brand.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../providers/auth_provider.dart';
@@ -12,9 +11,9 @@ import '../providers/auth_provider.dart';
 /// Launch screen and deterministic app bootstrap gate.
 ///
 /// A returning learner sees the wordmark while the session restores and is
-/// sent on automatically. On first run the screen becomes the welcome: the
-/// learner picks a language with the toggle, which previews it live, and
-/// taps Get Started to begin the introduction.
+/// sent on automatically. On first run the screen becomes the welcome, and
+/// Get Started leads to the mascot picker, then language selection, which
+/// then starts the introduction.
 class SplashAnimationScreen extends ConsumerStatefulWidget {
   const SplashAnimationScreen({super.key});
 
@@ -32,7 +31,6 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
   /// Set once bootstrap finds no saved language: the learner is new, and the
   /// screen waits for Get Started instead of moving on by itself.
   bool _welcoming = false;
-  bool _starting = false;
 
   @override
   void initState() {
@@ -79,15 +77,13 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
     });
   }
 
-  Future<void> _getStarted() async {
-    if (_starting) return;
-    setState(() => _starting = true);
-    // Saving the language the toggle shows records the choice even when the
-    // learner never touched the toggle.
-    final notifier = ref.read(localeProvider.notifier);
-    await notifier.setLocale(ref.read(localeProvider).locale);
-    if (mounted) context.go('/onboarding');
-  }
+  /// New learners hear the intro first; anyone who already saw it goes
+  /// straight on to picking a buddy.
+  void _getStarted() => context.go(
+    ref.read(localeProvider).hasViewedOnboarding
+        ? '/mascot-select'
+        : '/onboarding',
+  );
 
   @override
   void dispose() {
@@ -174,7 +170,10 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
                     ),
                   ),
                   AnimatedSwitcher(
-                    duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+                    duration: RiksaMotion.resolve(
+                      context,
+                      RiksaMotion.standard,
+                    ),
                     child: switch ((unavailable, _welcoming)) {
                       (final AuthUnavailable offline, _) => _OfflineActions(
                         key: const ValueKey('offline'),
@@ -190,7 +189,6 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
                       (_, true) => _WelcomeActions(
                         key: const ValueKey('welcome'),
                         label: strings.onboardingGetStarted,
-                        busy: _starting,
                         onStart: _getStarted,
                       ),
                       _ => _BootstrapIndicator(
@@ -282,55 +280,58 @@ class _WelcomeActions extends StatelessWidget {
   const _WelcomeActions({
     super.key,
     required this.label,
-    required this.busy,
     required this.onStart,
   });
 
   final String label;
-  final bool busy;
   final VoidCallback onStart;
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 440),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // A solid Material 3 filled pill rather than the theme's glass
+          // one: the deep violet is the primary tone the reference uses for
+          // its main call to action.
           FilledButton(
             key: const Key('splash_get_started'),
-            onPressed: busy ? null : onStart,
+            onPressed: onStart,
             style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(56),
+              backgroundColor: isDark ? palette.brand : palette.brandStrong,
+              foregroundColor: palette.onBrand,
+              shadowColor: Colors.transparent,
+              elevation: 0,
+              side: BorderSide.none,
+              shape: const StadiumBorder(),
+              minimumSize: const Size.fromHeight(52),
               padding: const EdgeInsets.symmetric(horizontal: 24),
             ),
-            child: busy
-                ? const SizedBox.square(
-                    dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Row(
-                    children: [
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: Text(
-                          label,
-                          textAlign: TextAlign.center,
-                          style: RiksaTypography.bodyStyleFor(
-                            label,
-                            const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: RiksaTypography.bodyStyleFor(
+                      label,
+                      const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const Icon(Icons.arrow_forward_rounded, size: 22),
-                    ],
+                    ),
                   ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(Icons.arrow_forward_rounded, size: 20),
+              ],
+            ),
           ),
-          const SizedBox(height: 28),
-          const LanguageToggle(),
           const SizedBox(height: 8),
         ],
       ),
@@ -363,8 +364,8 @@ class _BootstrapIndicator extends StatelessWidget {
             child: LinearProgressIndicator(
               minHeight: 4,
               borderRadius: AppRadii.fullBorder,
-              backgroundColor: palette.brandSoft,
-              color: palette.brand,
+              backgroundColor: palette.outline,
+              color: palette.jade,
             ),
           ),
           const SizedBox(height: 12),
@@ -372,9 +373,9 @@ class _BootstrapIndicator extends StatelessWidget {
             label,
             style: RiksaTypography.bodyStyleFor(
               label,
-              Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: palette.inkMuted,
-              ),
+              Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(color: palette.inkMuted),
             ),
           ),
         ],

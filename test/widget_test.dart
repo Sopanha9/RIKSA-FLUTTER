@@ -258,18 +258,18 @@ void main() {
       'sophea@example.com',
     );
     await tester.tap(find.byKey(const Key('register_toggle')));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 350));
     await tester.enterText(
       find.byKey(const Key('register_username')),
       'sophea',
     );
     await tester.tap(find.byKey(const Key('login_toggle')));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 350));
 
     expect(find.text('sophea@example.com'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('register_toggle')));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 350));
     expect(find.text('sophea'), findsOneWidget);
   });
 
@@ -286,7 +286,7 @@ void main() {
       find.byKey(const Key('login_toggle')),
       warnIfMissed: false,
     );
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 350));
 
     expect(find.byKey(const Key('register_username')), findsOneWidget);
     expect(find.byKey(const Key('login_username')), findsNothing);

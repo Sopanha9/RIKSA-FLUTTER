@@ -215,7 +215,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    // The subject bubbles float forever; still them so the frame settles.
+    // The bubbles and buddies move forever; still them so the frame settles.
     await tester.pumpWidget(
       _previewApp(
         Builder(
@@ -231,6 +231,16 @@ void main() {
     expect(tester.takeException(), isNull);
     await expectLater(
       find.byType(OnboardingSplashScreen),
+      matchesGoldenFile('goldens/onboarding_community_en_light.png'),
+    );
+
+    await tester.drag(
+      find.byKey(const Key('onboarding_pages')),
+      const Offset(-360, 0),
+    );
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(OnboardingSplashScreen),
       matchesGoldenFile('goldens/onboarding_learning_en_light.png'),
     );
 
@@ -242,16 +252,6 @@ void main() {
     await expectLater(
       find.byType(OnboardingSplashScreen),
       matchesGoldenFile('goldens/onboarding_achievement_en_light.png'),
-    );
-
-    await tester.drag(
-      find.byKey(const Key('onboarding_pages')),
-      const Offset(-360, 0),
-    );
-    await tester.pumpAndSettle();
-    await expectLater(
-      find.byType(OnboardingSplashScreen),
-      matchesGoldenFile('goldens/onboarding_community_en_light.png'),
     );
   });
 }

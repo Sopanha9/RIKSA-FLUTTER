@@ -647,24 +647,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingLearningBody =>
-      'Discover quality education, modern learning experiences, and knowledge that grows with you.';
+      'Lessons, an AI coach, and friends who explain things their way. Studying feels lighter with company.';
 
   @override
   String get onboardingAchievementBody =>
-      'Keep your streak alive, celebrate progress, and turn every small win into momentum.';
+      'Keep your streak, climb the leaderboard, and let your buddy cheer every win.';
 
   @override
   String get onboardingCommunityBody =>
-      'Learn with a supportive community that shares ideas, answers questions, and grows together.';
+      'Join communities, share what you are working on, and ask anything. Someone always has your back.';
 
   @override
-  String get onboardingLearningTitle => 'Learn Without Limits';
+  String get onboardingLearningTitle => 'Learn together, not alone';
 
   @override
-  String get onboardingAchievementTitle => 'Progress You Can See';
+  String get onboardingAchievementTitle => 'Grow with your buddy';
 
   @override
-  String get onboardingCommunityTitle => 'Never Study Alone';
+  String get onboardingCommunityTitle => 'Your people are here';
 
   @override
   String get onboardingGetStarted => 'Get started';
@@ -1601,6 +1601,51 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your Grade 12 STEM learning companion for a brighter Cambodia.';
 
   @override
+  String get mascotSelectTitle => 'Choose your study buddy';
+
+  @override
+  String get mascotSelectSubtitle =>
+      'They\'ll cheer you on and celebrate every win with you.';
+
+  @override
+  String get mascotCrocodile => 'Crocodile';
+
+  @override
+  String get mascotCapybara => 'Capybara';
+
+  @override
+  String get mascotCrocodileTraits => 'Cute · Friendly · Smart';
+
+  @override
+  String get mascotCapybaraTraits => 'Calm · Kind · Hardworking';
+
+  @override
+  String get mascotNameLabel => 'Name your buddy';
+
+  @override
+  String get mascotTapHint => 'Tap to say hi';
+
+  @override
+  String mascotSemantic(String name) {
+    return '$name, your study buddy';
+  }
+
+  @override
+  String languageSelectTitle(String name) {
+    return 'Which language should $name speak?';
+  }
+
+  @override
+  String languageSelectSubtitle(String name) {
+    return '$name will use it in lessons, reminders and chats. You can change it anytime.';
+  }
+
+  @override
+  String languageMascotGreeting(String name) {
+    return 'Hi! I\'m $name. Let\'s learn together!';
+  }
+
+  @override
   String get skipLabel => 'Skip';
 
   @override
@@ -2450,4 +2495,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get markdownLink => 'Link';
+
+  @override
+  String authBuddyWelcome(String name) {
+    return 'Welcome back, $name! I missed you.';
+  }
+
+  @override
+  String get authBuddyRegister => 'New here? Let\'s make your account!';
+
+  @override
+  String get authBuddyPasswordHidden => 'I\'m not looking!';
+
+  @override
+  String get authBuddyPasswordShown => 'Oh! I can see it now.';
+
+  @override
+  String get authBuddyChecking => 'Checking…';
+
+  @override
+  String authBuddyError(String message) {
+    return 'Oh no! $message';
+  }
+
+  @override
+  String get authBuddyValidationHint => 'Oops! Check the highlighted fields.';
+
+  @override
+  String get authBuddyForgotHint => 'Still stuck? Try Forgot password?';
+
+  @override
+  String get authBuddySuccess => 'Yay, you\'re in!';
 }

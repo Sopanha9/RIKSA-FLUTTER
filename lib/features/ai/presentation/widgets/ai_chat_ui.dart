@@ -5,9 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/riksa_brand.dart';
 import '../../../../core/widgets/riksa_components.dart';
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../mascot/domain/mascot.dart';
+import '../../../mascot/presentation/widgets/mascot_face.dart';
 
 const _userRadius = BorderRadius.only(
   topLeft: Radius.circular(AppRadii.panel),
@@ -237,23 +238,26 @@ class AiTutorBubble extends StatelessWidget {
   }
 }
 
-/// The coach's face beside each of its answers.
+/// The coach's face beside each of its answers: the learner's own study
+/// buddy, showing [face].
+///
+/// Beside an answer the face plays [loops] times and then rests, so a long
+/// conversation is not a wall of moving heads.
 class AiCoachAvatar extends StatelessWidget {
-  const AiCoachAvatar({super.key, this.size = 34});
+  const AiCoachAvatar({
+    super.key,
+    this.size = 34,
+    this.face = MascotFace.happy,
+    this.loops = 1,
+  });
 
   final double size;
+  final MascotFace face;
+  final int? loops;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(
-      color: context.riksa.brandSoft,
-      shape: BoxShape.circle,
-    ),
-    alignment: Alignment.center,
-    child: RiksaMascot(size: size * .86, showSparkles: false),
-  );
+  Widget build(BuildContext context) =>
+      MascotFaceAvatar(face: face, size: size, loops: loops);
 }
 
 /// Waiting state in the tutor's own position, so the answer does not arrive
@@ -274,7 +278,7 @@ class AiThinkingBubble extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const AiCoachAvatar(),
+            const AiCoachAvatar(face: MascotFace.thinking, loops: null),
             const SizedBox(width: RiksaSpacing.xs),
             DecoratedBox(
               decoration: BoxDecoration(

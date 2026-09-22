@@ -17,6 +17,7 @@ class SocialAuthSection extends ConsumerStatefulWidget {
     super.key,
     this.showDivider = true,
     this.compact = false,
+    this.cleanPills = false,
   });
 
   final bool showDivider;
@@ -24,6 +25,7 @@ class SocialAuthSection extends ConsumerStatefulWidget {
   /// Puts Telegram and Google side by side with just the provider names, as
   /// under the login form. The full-width buttons read better on sign-up.
   final bool compact;
+  final bool cleanPills;
 
   @override
   ConsumerState<SocialAuthSection> createState() => _SocialAuthSectionState();
@@ -97,12 +99,41 @@ class _SocialAuthSectionState extends ConsumerState<SocialAuthSection> {
 
     // One flow for sign-in and sign-up: the server signs existing Telegram
     // accounts in and asks new ones for a username afterwards.
-    Widget telegram(String label) => OutlinedButton.icon(
-      key: const Key('telegram_auth_button'),
-      onPressed: loading ? null : () => context.push('/auth/telegram'),
-      icon: const TelegramLogo(),
-      label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+    final palette = context.riksa;
+    final cleanStyle = OutlinedButton.styleFrom(
+      backgroundColor: palette.canvas,
+      foregroundColor: palette.ink,
+      shadowColor: Colors.transparent,
+      elevation: 0,
+      side: BorderSide(color: palette.outline),
+      shape: const StadiumBorder(),
+      minimumSize: const Size.fromHeight(48),
     );
+
+    Widget telegram(String label) => widget.cleanPills
+        ? FilledButton.icon(
+            key: const Key('telegram_auth_button'),
+            onPressed: loading ? null : () => context.push('/auth/telegram'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.telegram,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: AppColors.telegram,
+              disabledForegroundColor: Colors.white.withValues(alpha: .6),
+              shadowColor: Colors.transparent,
+              elevation: 0,
+              side: BorderSide.none,
+              shape: const StadiumBorder(),
+              minimumSize: const Size.fromHeight(48),
+            ),
+            icon: const TelegramLogo(),
+            label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          )
+        : OutlinedButton.icon(
+            key: const Key('telegram_auth_button'),
+            onPressed: loading ? null : () => context.push('/auth/telegram'),
+            icon: const TelegramLogo(),
+            label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          );
 
     Widget google(String label) => _googleReady
         ? buildGoogleProviderButton(
@@ -125,7 +156,7 @@ class _SocialAuthSectionState extends ConsumerState<SocialAuthSection> {
             label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
           );
 
-    return Column(
+    final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (widget.showDivider) ...[
@@ -176,5 +207,11 @@ class _SocialAuthSectionState extends ConsumerState<SocialAuthSection> {
         ],
       ],
     );
+    return widget.cleanPills
+        ? OutlinedButtonTheme(
+            data: OutlinedButtonThemeData(style: cleanStyle),
+            child: content,
+          )
+        : content;
   }
 }

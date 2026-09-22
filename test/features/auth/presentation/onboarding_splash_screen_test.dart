@@ -114,14 +114,14 @@ void main() {
     await tester.pumpWidget(_app(const LanguageSelectScreen()));
     await tester.pump();
 
-    expect(find.text('Select Language'), findsOneWidget);
+    expect(find.byKey(const Key('language_title')), findsOneWidget);
     expect(find.text('ខ្មែរ'), findsOneWidget);
     expect(find.text('English'), findsOneWidget);
     expect(find.byKey(const Key('language_continue')), findsOneWidget);
   });
 
   testWidgets(
-    'continues through all three illustrations and records intro viewing',
+    'tells the community, learning and buddy story, then records viewing',
     (tester) async {
       tester.view.physicalSize = const Size(393, 852);
       tester.view.devicePixelRatio = 1;
@@ -132,48 +132,58 @@ void main() {
       await tester.pumpWidget(
         _app(OnboardingSplashScreen(onComplete: () => completed = true)),
       );
-      await tester.pumpAndSettle();
+      await tester.pump();
 
-      expect(
-        find.byKey(const ValueKey('assets/images/onboarding/learning.svg')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey('onboarding-art-learning')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('intro_page_0')), findsOneWidget);
+      expect(find.text('Your people are here'), findsOneWidget);
+      expect(find.byKey(const Key('onboarding_skip')), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('onboarding_continue')));
-      await tester.pumpAndSettle();
-      expect(
-        find.byKey(const ValueKey('assets/images/onboarding/achievement.svg')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey('onboarding-art-achievement')),
-        findsOneWidget,
-      );
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const Key('intro_page_1')), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('onboarding_continue')));
-      await tester.pumpAndSettle();
-      expect(
-        find.byKey(const ValueKey('assets/images/onboarding/community.svg')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey('onboarding-art-community')),
-        findsOneWidget,
-      );
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const Key('intro_page_2')), findsOneWidget);
+      expect(find.text('Get started'), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('onboarding_continue')));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump();
 
       expect(completed, isTrue);
       final preferences = await SharedPreferences.getInstance();
       expect(preferences.getBool('riksa_onboarding_viewed'), isTrue);
       expect(preferences.getBool('riksa_onboarding_completed'), isNot(true));
+
+      // Let the buddies' reactions finish before the test tears down.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 3));
     },
   );
+
+  testWidgets('swiping the sheet turns the page', (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(_app(const OnboardingSplashScreen()));
+    await tester.pump();
+    await tester.fling(
+      find.byKey(const Key('intro_copy_0')),
+      const Offset(-300, 0),
+      1000,
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(find.byKey(const Key('intro_page_1')), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
+  });
 
   testWidgets('selected Khmer locale localizes the splash content', (
     tester,
@@ -181,13 +191,13 @@ void main() {
     await tester.pumpWidget(
       _app(const OnboardingSplashScreen(), locale: const Locale('km')),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
 
-    expect(find.text('រៀនដោយគ្មានព្រំដែន'), findsOneWidget);
-    expect(
-      find.textContaining('ស្វែងយល់ពីការអប់រំប្រកបដោយគុណភាព'),
-      findsOneWidget,
-    );
+    expect(find.text('មិត្តភក្តិរបស់អ្នកនៅទីនេះ'), findsOneWidget);
+    expect(find.textContaining('ចូលរួមសហគមន៍'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('province is queued locally before authentication', (
