@@ -6,7 +6,7 @@ import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../core/widgets/riksa_rank_badge.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 
-/// The learner's own standing, on lime as on the reference board: the rank
+/// The learner's own standing, on the accent surface: the rank
 /// leads, XP follows, and the framed avatar carries the tier badge.
 class CurrentUserRankCard extends StatelessWidget {
   const CurrentUserRankCard({
@@ -32,8 +32,7 @@ class CurrentUserRankCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ink = isDark ? context.riksa.accent : AppColors.limeInk;
+    final ink = context.riksa.reward;
     final textTheme = Theme.of(context).textTheme;
 
     return Semantics(
@@ -42,7 +41,7 @@ class CurrentUserRankCard extends StatelessWidget {
         context,
       )!.leaderboardYourRankLabel(rank, name, scopeLabel, tier, xp),
       child: Material(
-        color: isDark ? context.riksa.accentSoft : AppColors.limeSoft,
+        color: context.riksa.rewardSoft,
         borderRadius: AppRadii.largeBorder,
         child: InkWell(
           onTap: onTap,

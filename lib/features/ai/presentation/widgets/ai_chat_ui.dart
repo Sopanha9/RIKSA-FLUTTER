@@ -156,7 +156,7 @@ class AiTutorBubble extends StatelessWidget {
                                 borderRadius: AppRadii.mediumBorder,
                               ),
                               blockquoteDecoration: BoxDecoration(
-                                color: palette.brandSoft,
+                                color: palette.learningSoft,
                                 borderRadius: AppRadii.mediumBorder,
                               ),
                             ),
@@ -324,13 +324,17 @@ class AiContextChip extends StatelessWidget {
         vertical: RiksaSpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: palette.brandSoft,
+        color: palette.learningSoft,
         borderRadius: AppRadii.fullBorder,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.menu_book_rounded, size: 14, color: palette.inkMuted),
+          Icon(
+            Icons.menu_book_rounded,
+            size: 14,
+            color: palette.learningStrong,
+          ),
           const SizedBox(width: RiksaSpacing.xxs),
           Flexible(
             child: Text(

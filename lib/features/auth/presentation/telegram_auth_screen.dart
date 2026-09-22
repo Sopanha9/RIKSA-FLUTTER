@@ -779,7 +779,6 @@ class _Step extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -789,17 +788,13 @@ class _Step extends StatelessWidget {
             height: 28,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: dark
-                  ? AppColors.violetDarkSoft
-                  : AppColors.editorialPinkSoft,
+              color: context.riksa.brandSoft,
               shape: BoxShape.circle,
             ),
             child: Text(
               '$number',
               style: theme.textTheme.labelLarge?.copyWith(
-                color: dark
-                    ? AppColors.editorialPink
-                    : AppColors.editorialAubergine,
+                color: context.riksa.brand,
                 fontWeight: FontWeight.w700,
               ),
             ),

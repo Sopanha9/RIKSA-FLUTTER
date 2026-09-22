@@ -388,7 +388,7 @@ class _InteractiveOnboardingScreenState
         submitting: _submitting,
         onSaveTelegram: () => _saveAndNavigate('/auth/telegram'),
         onSaveGoogle: _handleGoogleAuth,
-        onSaveEmail: () => _saveAndNavigate('/auth/login'),
+        onSaveEmail: () => _saveAndNavigate('/auth/register'),
         onLogin: () => _saveAndNavigate('/auth/login'),
       ),
     };
@@ -881,14 +881,15 @@ class _GoalStep extends StatelessWidget {
   final String lang;
   final ValueChanged<OnboardingGoal> onSelect;
 
-  static (Color, Color) _colors(OnboardingGoal goal) => switch (goal) {
-    OnboardingGoal.bacII => (
-      AppColors.tileYellow,
-      AppColors.achievementSaffron,
-    ),
-    OnboardingGoal.stemClass => (AppColors.tileLavender, AppColors.violet),
-    OnboardingGoal.curiosity => (AppColors.tileMint, AppColors.brandJade),
-  };
+  static (Color, Color) _colors(OnboardingGoal goal, RiksaPalette palette) =>
+      switch (goal) {
+        OnboardingGoal.bacII => (
+          AppColors.tileYellow,
+          AppColors.achievementSaffron,
+        ),
+        OnboardingGoal.stemClass => (AppColors.tileLavender, palette.brand),
+        OnboardingGoal.curiosity => (AppColors.tileMint, AppColors.brandJade),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -914,7 +915,7 @@ class _GoalStep extends StatelessWidget {
           Builder(
             builder: (context) {
               final selected = selectedGoal == goal;
-              final (soft, accent) = _colors(goal);
+              final (soft, accent) = _colors(goal, palette);
               return _ChoiceSurface(
                 selected: selected,
                 accent: accent,
@@ -1330,11 +1331,7 @@ class _SquadCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
-              Icons.emoji_events_rounded,
-              color: AppColors.lime,
-              size: 26,
-            ),
+            Icon(Icons.emoji_events_rounded, color: palette.reward, size: 26),
           ],
         ),
       ),
@@ -1481,15 +1478,15 @@ class _PaceStep extends StatelessWidget {
                                         vertical: 3,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppColors.lime,
+                                        color: palette.reward,
                                         borderRadius: AppRadii.fullBorder,
                                       ),
                                       child: Text(
                                         _t(lang, 'Popular', 'ណែនាំ'),
                                         style: RiksaTypography.bodyStyleFor(
                                           _t(lang, 'Popular', 'ណែនាំ'),
-                                          const TextStyle(
-                                            color: AppColors.limeInk,
+                                          TextStyle(
+                                            color: palette.onAccent,
                                             fontWeight: FontWeight.w800,
                                             fontSize: 11,
                                           ),
@@ -1792,29 +1789,29 @@ class _QuizStep extends StatelessWidget {
 
     if (answered) {
       if (isSelected && isTargetCorrect) {
-        accent = AppColors.brandJade;
-        tint = AppColors.tileMint;
-        letterBg = AppColors.brandJade;
-        letterColor = Colors.white;
-        trailingIcon = const Icon(
+        accent = palette.semantic.success;
+        tint = palette.semantic.successContainer;
+        letterBg = palette.semantic.success;
+        letterColor = palette.semantic.onSuccess;
+        trailingIcon = Icon(
           Icons.check_circle_rounded,
-          color: AppColors.brandJade,
+          color: palette.semantic.success,
           size: 24,
         );
       } else if (isSelected && !isTargetCorrect) {
-        accent = AppColors.error;
-        tint = const Color(0xFFFDECEE);
-        letterBg = AppColors.error;
-        letterColor = Colors.white;
-        trailingIcon = const Icon(
+        accent = palette.semantic.error;
+        tint = palette.semantic.errorContainer;
+        letterBg = palette.semantic.error;
+        letterColor = palette.semantic.onError;
+        trailingIcon = Icon(
           Icons.cancel_rounded,
-          color: AppColors.error,
+          color: palette.semantic.error,
           size: 24,
         );
       } else if (isTargetCorrect) {
-        trailingIcon = const Icon(
+        trailingIcon = Icon(
           Icons.check_circle_outline_rounded,
-          color: AppColors.brandJade,
+          color: palette.semantic.success,
           size: 22,
         );
       }
@@ -1940,21 +1937,22 @@ class _XpBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const label = '+10 XP';
+    final foreground = earned ? context.riksa.onAccent : context.riksa.reward;
     final badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: earned ? AppColors.lime : AppColors.limeSoft,
+        color: earned ? context.riksa.reward : context.riksa.rewardSoft,
         borderRadius: AppRadii.fullBorder,
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.auto_awesome_rounded, size: 14, color: AppColors.limeInk),
-          SizedBox(width: 4),
+          Icon(Icons.auto_awesome_rounded, size: 14, color: foreground),
+          const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
-              color: AppColors.limeInk,
+              color: foreground,
               fontWeight: FontWeight.w800,
               fontSize: 12,
             ),
@@ -2341,11 +2339,7 @@ class _PayoffStep extends StatelessWidget {
                 background: const Color(0xFF2AABEE),
                 foreground: Colors.white,
                 leading: const TelegramLogo(size: 22),
-                label: _t(
-                  lang,
-                  'Save with Telegram',
-                  'រក្សាទុកតាម Telegram',
-                ),
+                label: _t(lang, 'Save with Telegram', 'រក្សាទុកតាម Telegram'),
                 busy: submitting,
               ),
               const SizedBox(height: 10),

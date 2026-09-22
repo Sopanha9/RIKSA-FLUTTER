@@ -465,7 +465,9 @@ class _Dot extends StatelessWidget {
     height: size,
     decoration: BoxDecoration(
       shape: BoxShape.circle,
-      color: lime ? AppColors.lime : context.riksa.brand.withValues(alpha: .45),
+      color: lime
+          ? context.riksa.reward
+          : context.riksa.brand.withValues(alpha: .45),
     ),
   );
 }
@@ -559,8 +561,7 @@ class _ChecklistRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.riksa;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final doneColor = isDark ? AppColors.lime : const Color(0xFF2E9E5B);
+    final doneColor = palette.jade;
     return Semantics(
       label: done
           ? AppLocalizations.of(context)!.checklistItemDone(label)
@@ -581,11 +582,7 @@ class _ChecklistRow extends StatelessWidget {
               ),
             ),
             child: done
-                ? Icon(
-                    Icons.check_rounded,
-                    size: 14,
-                    color: isDark ? AppColors.limeInk : Colors.white,
-                  )
+                ? Icon(Icons.check_rounded, size: 14, color: palette.onJade)
                 : null,
           ),
           const SizedBox(width: 10),
@@ -612,11 +609,9 @@ class _FriendlyNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark
-        ? const Color(0xFF3A2E14)
-        : const Color(0xFFFFF4DC);
-    final ink = isDark ? const Color(0xFFFFD98A) : const Color(0xFF7A4B00);
+    final semantic = context.riksa.semantic;
+    final background = semantic.errorContainer;
+    final ink = semantic.onErrorContainer;
     return Semantics(
       liveRegion: true,
       child: Container(

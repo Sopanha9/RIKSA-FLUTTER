@@ -396,14 +396,6 @@ const _subjectSpec = <StemSubject, (Color, Color)>{
   StemSubject.other: (AppColors.tileYellow, Color(0xFFA9760F)),
 };
 
-/// Violet is reserved for "this is the thing you can do right now".
-const _currentPastel = AppColors.violetSoft;
-const _currentAccent = AppColors.violet;
-const _donePastel = Color(0xFFDDF0DC);
-const _doneAccent = Color(0xFF2F7A44);
-const _goalPastel = Color(0xFFFBEBCD);
-const _goalAccent = Color(0xFFB57E14);
-
 /// Dark mode keeps the same hues but composites them onto the raised surface
 /// instead of inverting, so a pastel stays recognisably itself.
 Color _darkSurface(BuildContext context, Color pastel) => Color.alphaBlend(
@@ -450,9 +442,9 @@ LearningTone statusTone(BuildContext context, LearningStatus status) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
 
   (Color, Color) spec = switch (status) {
-    LearningStatus.current => (_currentPastel, _currentAccent),
-    LearningStatus.done => (_donePastel, _doneAccent),
-    LearningStatus.goal => (_goalPastel, _goalAccent),
+    LearningStatus.current => (palette.brandSoft, palette.brand),
+    LearningStatus.done => (palette.jadeSoft, palette.jadeStrong),
+    LearningStatus.goal => (palette.saffronSoft, palette.saffron),
     LearningStatus.todo ||
     LearningStatus.locked => (palette.surface, palette.inkMuted),
   };
@@ -476,14 +468,8 @@ LearningTone statusTone(BuildContext context, LearningStatus status) {
   );
 }
 
-/// The one near-black used for every primary action. Warm, never `#000000`.
-Color learningAnchor(BuildContext context) =>
-    Theme.of(context).brightness == Brightness.dark
-    ? AppColors.editorialPink
-    : AppColors.editorialAubergine;
+/// The inverse surface used for primary actions.
+Color learningAnchor(BuildContext context) => context.riksa.anchor;
 
 /// Foreground for content sitting on [learningAnchor].
-Color onLearningAnchor(BuildContext context) =>
-    Theme.of(context).brightness == Brightness.dark
-    ? AppColors.deepInk
-    : const Color(0xFFFFF7FB);
+Color onLearningAnchor(BuildContext context) => context.riksa.onAnchor;

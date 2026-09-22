@@ -1241,13 +1241,13 @@ class _LessonArtCard extends StatelessWidget {
                 color: tone.accent,
               ),
             ),
-            const Positioned(
+            Positioned(
               left: 150,
               top: 22,
               child: RiksaDoodle(
                 RiksaDoodleKind.squiggle,
                 size: 26,
-                color: AppColors.lime,
+                color: context.riksa.reward,
               ),
             ),
           ],

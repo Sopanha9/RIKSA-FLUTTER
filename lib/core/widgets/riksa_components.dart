@@ -6,7 +6,7 @@ import 'riksa_interactions.dart';
 
 export 'riksa_interactions.dart';
 
-enum RiksaPastelTone { jade, saffron, blush, cream, surface }
+enum RiksaPastelTone { jade, saffron, blush, cream, learning, surface }
 
 Color riksaPastelColor(BuildContext context, RiksaPastelTone tone) {
   final palette = context.riksa;
@@ -15,6 +15,7 @@ Color riksaPastelColor(BuildContext context, RiksaPastelTone tone) {
     RiksaPastelTone.saffron => palette.saffronSoft,
     RiksaPastelTone.blush => palette.blushSoft,
     RiksaPastelTone.cream => palette.creamSoft,
+    RiksaPastelTone.learning => palette.learningSoft,
     RiksaPastelTone.surface => palette.surface,
   };
 }
@@ -593,13 +594,13 @@ class RiksaEmptyArtwork extends StatelessWidget {
                 color: palette.brand,
               ),
             ),
-            const Positioned(
+            Positioned(
               left: 0,
               bottom: 16,
               child: RiksaDoodle(
                 RiksaDoodleKind.squiggle,
                 size: 24,
-                color: AppColors.lime,
+                color: palette.reward,
               ),
             ),
           ],

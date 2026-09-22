@@ -47,7 +47,7 @@ class RiksaSearchBar extends StatelessWidget {
     );
     final glassBorder = isDark
         ? Colors.white.withValues(alpha: .44)
-        : const Color(0xFFD8D4E4);
+        : context.riksa.outline;
     final glassStroke = BorderSide(color: glassBorder, width: 1.2);
     final shadow = BoxShadow(
       color: Colors.black.withValues(alpha: isDark ? .28 : .1),

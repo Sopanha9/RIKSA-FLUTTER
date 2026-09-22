@@ -12,6 +12,7 @@ import 'package:riksa_app/features/ai/presentation/ai_chat_screen.dart';
 import 'package:riksa_app/features/ai/presentation/ai_tutor_screen.dart';
 import 'package:riksa_app/features/ai/providers/ai_chat_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> _loadFonts() async {
   final redditSans = FontLoader(RiksaTypography.latinFamily)
@@ -122,6 +123,7 @@ final _sessions = [
 
 void main() {
   setUpAll(_loadFonts);
+  setUp(() => SharedPreferences.setMockInitialValues({}));
 
   testWidgets('ai tutor chat list', (tester) async {
     tester.view.physicalSize = const Size(430, 900);

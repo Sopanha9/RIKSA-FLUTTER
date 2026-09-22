@@ -40,7 +40,7 @@ class RankingListRow extends StatelessWidget {
       label: AppLocalizations.of(context)!.leaderboardRowLabel(rank, name, xp),
       button: onTap != null,
       child: Material(
-        color: isCurrentUser ? palette.accentSoft : palette.surface,
+        color: isCurrentUser ? palette.rewardSoft : palette.surface,
         borderRadius: AppRadii.mediumBorder,
         child: InkWell(
           onTap: onTap,

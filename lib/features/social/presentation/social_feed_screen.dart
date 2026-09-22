@@ -142,10 +142,10 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
                                 color: Colors.white.withValues(alpha: 0.36),
                               ),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.edit_rounded,
                               size: 24,
-                              color: AppColors.violet,
+                              color: context.riksa.brand,
                             ),
                           ),
                         ),

@@ -162,7 +162,7 @@ class _PixelXpBadge extends StatelessWidget {
           child: CustomPaint(
             painter: _PixelXpPainter(
               color: palette.brand,
-              accent: palette.accent,
+              accent: palette.reward,
             ),
           ),
         ),
@@ -366,10 +366,7 @@ class _ProgressSectionTabsState extends State<_ProgressSectionTabs> {
                     child: const RiksaGlassSelection(),
                   ),
                   Row(
-                    children: [
-                      tab('XP activity', 0),
-                      tab('Rank changes', 1),
-                    ],
+                    children: [tab('XP activity', 0), tab('Rank changes', 1)],
                   ),
                 ],
               );

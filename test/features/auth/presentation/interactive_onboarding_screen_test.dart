@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/providers/locale_provider.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/presentation/interactive_onboarding_screen.dart';
+import 'package:riksa_app/features/auth/presentation/auth_switcher_screen.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -68,6 +70,92 @@ Widget _buildInteractiveOnboardingApp({
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets('Sign up with Email opens the registration form', (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final router = GoRouter(
+      initialLocation: '/onboarding/setup',
+      routes: [
+        GoRoute(
+          path: '/onboarding/setup',
+          builder: (_, _) => const InteractiveOnboardingScreen(),
+        ),
+        GoRoute(
+          path: '/auth/login',
+          builder: (_, _) => const AuthSwitcherScreen(),
+        ),
+        GoRoute(
+          path: '/auth/register',
+          builder: (_, _) =>
+              const AuthSwitcherScreen(initialPage: PageState.register),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          localeProvider.overrideWith(() => _TestLocaleNotifier()),
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          provinceOptionsProvider.overrideWith((ref) async => _testProvinces),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+          theme: AppTheme.light,
+          locale: const Locale('en'),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    Future<void> next() async {
+      await tester.tap(find.byKey(const Key('onboarding_continue_btn')));
+      await tester.pumpAndSettle();
+    }
+
+    await tester.tap(find.text('BacII National Exam Prep'));
+    await tester.pumpAndSettle();
+    await next();
+    await tester.tap(find.text('Mathematics'));
+    await tester.pumpAndSettle();
+    await next();
+    await tester.tap(find.text('Phnom Penh'));
+    await tester.pumpAndSettle();
+    await next();
+    await tester.tap(find.text('Regular'));
+    await tester.pumpAndSettle();
+    await next();
+    await tester.tap(find.text('3'));
+    await tester.pumpAndSettle();
+    await next();
+    await tester.tap(find.text('7'));
+    await tester.pumpAndSettle();
+    await next();
+
+    await tester.ensureVisible(find.byKey(const Key('onboarding_save_email')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('onboarding_save_email')));
+    await tester.pumpAndSettle();
+
+    expect(router.routeInformationProvider.value.uri.path, '/auth/register');
+    expect(find.byKey(const Key('register_email')), findsOneWidget);
+  });
 
   testWidgets(
     'renders Step 1 (Goal) and disables continue until an option is selected',

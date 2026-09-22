@@ -236,7 +236,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   RiksaDoodle(
                     RiksaDoodleKind.sparkle,
                     size: 16,
-                    color: context.riksa.brand,
+                    color: context.riksa.learningStrong,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -429,7 +429,7 @@ class _Opener extends StatelessWidget {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: palette.brandSoft,
+                  color: palette.learningSoft,
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
@@ -498,9 +498,7 @@ class _Composer extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final glass = context.riksaGlass;
-    final sendOuterFill = isDark
-        ? glass.selectedFill
-        : glass.fill;
+    final sendOuterFill = isDark ? glass.selectedFill : glass.fill;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: Container(
@@ -543,9 +541,7 @@ class _Composer extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: ShapeDecoration(
                     color: sendOuterFill,
-                    shape: CircleBorder(
-                      side: BorderSide(color: glass.border),
-                    ),
+                    shape: CircleBorder(side: BorderSide(color: glass.border)),
                     shadows: RiksaElevation.overlay(theme.brightness),
                   ),
                   child: ClipOval(
@@ -560,9 +556,7 @@ class _Composer extends StatelessWidget {
                           decoration: ShapeDecoration(
                             color: glass.selectedFill,
                             shape: CircleBorder(
-                              side: BorderSide(
-                                color: glass.selectedBorder,
-                              ),
+                              side: BorderSide(color: glass.selectedBorder),
                             ),
                             shadows: RiksaElevation.raised(theme.brightness),
                           ),
@@ -633,7 +627,7 @@ class _QuickPromptsBar extends StatelessWidget {
               avatar: Icon(
                 Icons.auto_awesome,
                 size: 13,
-                color: context.riksa.brand,
+                color: context.riksa.learningStrong,
               ),
               label: Text(
                 prompt,

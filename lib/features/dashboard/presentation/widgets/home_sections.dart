@@ -70,13 +70,14 @@ class HomeQuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final palette = context.riksa;
     final actions = [
       (
         'lessons',
         l10n.homeLessons,
         l10n.homeLessonsCaption,
         'assets/images/lessonsCard/home-lessons-3d.png',
-        AppColors.limeSoft,
+        palette.rewardSoft,
         '/learn',
       ),
       (
@@ -84,7 +85,7 @@ class HomeQuickActions extends StatelessWidget {
         l10n.community,
         l10n.homeCommunityCaption,
         'assets/images/lessonsCard/home-community-3d.png',
-        AppColors.violetSoft,
+        palette.brandSoft,
         '/communities',
       ),
 
@@ -217,13 +218,11 @@ class TodaysLearningSection extends ConsumerWidget {
                     child: Container(
                       height: 30,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE64E55),
+                        color: context.riksa.brandStrong,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(
-                              0xFFEF5862,
-                            ).withValues(alpha: 0.22),
+                            color: context.riksa.brand.withValues(alpha: 0.22),
                             blurRadius: 18,
                             offset: const Offset(0, 9),
                           ),
@@ -236,17 +235,18 @@ class TodaysLearningSection extends ConsumerWidget {
                     constraints: const BoxConstraints(minHeight: 118),
                     padding: const EdgeInsets.fromLTRB(18, 18, 128, 20),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [Color(0xFFFF767D), Color(0xFFF4535E)],
+                        colors: [
+                          context.riksa.brand,
+                          context.riksa.brandStrong,
+                        ],
                       ),
                       borderRadius: BorderRadius.circular(22),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(
-                            0xFFEF5862,
-                          ).withValues(alpha: 0.26),
+                          color: context.riksa.brand.withValues(alpha: 0.26),
                           blurRadius: 20,
                           offset: const Offset(0, 12),
                         ),
@@ -272,9 +272,9 @@ class TodaysLearningSection extends ConsumerWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.notifications_none_rounded,
-                              color: Color(0xFFFFEFF0),
+                              color: context.riksa.onBrand,
                               size: 15,
                             ),
                             const SizedBox(width: 6),
@@ -287,7 +287,7 @@ class TodaysLearningSection extends ConsumerWidget {
                                       ? '${lesson.durationMinutes} minutes'
                                       : lesson.categoryName,
                                   style: theme.textTheme.labelMedium?.copyWith(
-                                    color: const Color(0xFFFFF7F7),
+                                    color: context.riksa.onBrand,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),

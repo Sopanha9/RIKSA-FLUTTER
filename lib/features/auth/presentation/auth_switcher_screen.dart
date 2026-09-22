@@ -53,7 +53,8 @@ class _AuthScrollPosition extends ScrollPositionWithSingleContext {
     required Curve curve,
   }) {
     final notificationContext = context.notificationContext;
-    final bool disableAnimations = notificationContext != null &&
+    final bool disableAnimations =
+        notificationContext != null &&
         (MediaQuery.maybeDisableAnimationsOf(notificationContext) ?? false);
     if (disableAnimations) {
       jumpTo(to);
@@ -397,10 +398,7 @@ class _AuthSwitcherScreenState extends ConsumerState<AuthSwitcherScreen> {
       transitionBuilder: _buildTransition,
       layoutBuilder: (current, previous) => Stack(
         alignment: Alignment.topCenter,
-        children: [
-          ...previous,
-          ?current,
-        ],
+        children: [...previous, ?current],
       ),
       child: _pageState == PageState.login
           ? _LoginForm(
@@ -661,7 +659,7 @@ class _AuthLoadingOverlay extends StatelessWidget {
                   dimension: 30,
                   child: LoadingAnimationWidget.twistingDots(
                     leftDotColor: palette.brand,
-                    rightDotColor: AppColors.lime,
+                    rightDotColor: palette.reward,
                     size: 30,
                   ),
                 ),

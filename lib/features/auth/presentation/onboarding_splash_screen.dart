@@ -661,7 +661,7 @@ class _Bubble extends StatelessWidget {
                 padding: const EdgeInsets.all(3),
                 child: MascotFaceView(species: species, face: face, size: 42),
               )
-            : Icon(floater.icon, color: AppColors.violet, size: 24),
+            : Icon(floater.icon, color: palette.brand, size: 24),
       ),
     );
   }

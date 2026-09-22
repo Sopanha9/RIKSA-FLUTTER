@@ -52,9 +52,8 @@ class ProfilePalette {
           ? Theme.of(context).colorScheme.surfaceContainer
           : AppColors.editorialSurface);
 
-  /// This warm near-white has no value-identical Riksa semantic field.
   static Color onAubergine(BuildContext context) =>
-      _scope(context)?.onAubergine ?? const Color(0xFFFFF8FC);
+      _scope(context)?.onAubergine ?? context.riksa.onBrand;
 }
 
 /// Lets an individual profile route opt into a coherent color system without
@@ -81,9 +80,7 @@ class ProfilePaletteScope extends InheritedWidget {
     return ProfilePaletteScope(
       accent: AppColors.editorialPink,
       achievement: AppColors.editorialPink,
-      achievementSoft: isDark
-          ? AppColors.violetDarkSoft
-          : AppColors.editorialPinkSoft,
+      achievementSoft: isDark ? palette.brandSoft : AppColors.editorialPinkSoft,
       aubergine: isDark
           ? AppColors.editorialAubergineRaised
           : AppColors.editorialAubergine,
@@ -91,7 +88,7 @@ class ProfilePaletteScope extends InheritedWidget {
       editorialSurface: isDark
           ? palette.surface
           : AppColors.editorialNeutralSurface,
-      onAubergine: const Color(0xFFFFF8FC),
+      onAubergine: palette.onBrand,
       child: child,
     );
   }

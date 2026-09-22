@@ -92,7 +92,7 @@ class AiFocalChatCard extends StatelessWidget {
     final title = chat.displayTitle(l10n.aiChatFallbackTitle);
     final preview = chat.previewText == title ? null : chat.previewText;
     return RiksaPastelCard(
-      tone: RiksaPastelTone.blush,
+      tone: RiksaPastelTone.learning,
       padding: const EdgeInsets.fromLTRB(
         RiksaSpacing.md,
         RiksaSpacing.sm,
@@ -105,12 +105,12 @@ class AiFocalChatCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.auto_awesome, size: 16, color: palette.brand),
+              Icon(Icons.auto_awesome, size: 16, color: palette.learningStrong),
               const SizedBox(width: RiksaSpacing.xxs),
               Text(
                 l10n.aiContinueChat.toUpperCase(),
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: palette.brand,
+                  color: palette.learningStrong,
                   letterSpacing: .6,
                 ),
               ),
@@ -384,7 +384,7 @@ class AiStarterPrompts extends StatelessWidget {
                           child: Icon(
                             _icons[index % _icons.length],
                             size: 15,
-                            color: palette.brand,
+                            color: palette.learningStrong,
                           ),
                         ),
                         const SizedBox(width: 10),
