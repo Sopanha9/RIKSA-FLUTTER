@@ -25,7 +25,7 @@
 		</dict>
 	</array>
 	<key>CFBundleDisplayName</key>
-	<string>Riksa App</string>
+	<string>Riksa</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -33,7 +33,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>riksa_app</string>
+	<string>Riksa</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
