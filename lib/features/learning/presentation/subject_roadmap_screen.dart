@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../mascot/domain/mascot.dart';
+import '../../mascot/presentation/widgets/buddy_companion.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_roadmap_provider.dart';
 import 'learning_design.dart';
@@ -198,10 +200,22 @@ class _RoadmapHeader extends StatelessWidget {
                     ),
                     if (summary.total > 0) ...[
                       const SizedBox(width: RiksaSpacing.md),
-                      _ProgressRing(
-                        fraction: summary.fraction,
-                        color: context.riksa.ink,
-                        background: tone.accent.withValues(alpha: .25),
+                      Column(
+                        children: [
+                          BuddyFaceReaction(
+                            face: summary.completed > 0
+                                ? MascotFace.proud
+                                : MascotFace.determined,
+                            size: 42,
+                            loops: 1,
+                          ),
+                          const SizedBox(height: RiksaSpacing.xxs),
+                          _ProgressRing(
+                            fraction: summary.fraction,
+                            color: context.riksa.ink,
+                            background: tone.accent.withValues(alpha: .25),
+                          ),
+                        ],
                       ),
                     ],
                   ],

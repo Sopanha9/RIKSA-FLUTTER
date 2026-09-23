@@ -178,12 +178,12 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         SnackBar(
           content: Text(
             isAuth
-                ? 'Please log in to chat with the AI Tutor.'
+                ? AppLocalizations.of(context)!.aiLoginRequired
                 : AppLocalizations.of(context)!.aiReplyFailed,
           ),
           action: isAuth
               ? SnackBarAction(
-                  label: 'Log in',
+                  label: AppLocalizations.of(context)!.login,
                   onPressed: () => context.push('/auth/login'),
                 )
               : null,

@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../mascot/domain/buddy_behavior.dart';
+import '../../mascot/presentation/widgets/buddy_companion.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_roadmap_provider.dart';
 import '../providers/lesson_catalog_provider.dart';
@@ -71,13 +73,20 @@ class LessonCompletionScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: palette.jadeSoft,
+                      color: palette.rewardSoft,
                       borderRadius: AppRadii.featureBorder,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        RiksaSuccessMark(label: l10n.lessonCompletionReward),
+                        Center(
+                          child: BuddyEarnedMoment(
+                            reaction: BuddyBehavior.resolve(
+                              BuddyEvent.lessonCompleted,
+                            ),
+                            speech: l10n.buddyLessonCompleted,
+                          ),
+                        ),
                         const SizedBox(height: 20),
                         Text(
                           l10n.lessonCompletionReward,
@@ -103,7 +112,7 @@ class LessonCompletionScreen extends ConsumerWidget {
                           value: xpEarned,
                           format: l10n.xpRewardAmount,
                           style: theme.textTheme.labelLarge?.copyWith(
-                            color: palette.jadeStrong,
+                            color: palette.reward,
                           ),
                         ),
                       ],
@@ -167,6 +176,13 @@ class LessonCompletionScreen extends ConsumerWidget {
                     ),
                   ],
                   const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    key: const ValueKey('lesson-completion-share'),
+                    onPressed: () => context.push('/community/create'),
+                    icon: const Icon(Icons.ios_share_rounded),
+                    label: Text(l10n.lessonShareLearning),
+                  ),
+                  const SizedBox(height: 8),
                   TextButton(
                     key: const ValueKey('lesson-completion-home'),
                     onPressed: () => context.go('/learn'),
@@ -204,24 +220,20 @@ class ResumeLearningScreen extends ConsumerWidget {
   const ResumeLearningScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(lessonCatalogProvider);
     final active = state.lessons
         .where((lesson) => !lesson.completed && (lesson.progress ?? 0) > 0)
         .toList();
     return Scaffold(
-      appBar: AppBar(title: Text(isKhmer ? 'បន្តការរៀន' : 'Resume learning')),
+      appBar: AppBar(title: Text(l10n.resumeLearningTitle)),
       body: state.isLoading
           ? const Center(child: CircularProgressIndicator())
           : active.isEmpty
           ? IllustratedEmptyState(
-              title: isKhmer
-                  ? 'មិនមានមេរៀនកំពុងរៀនទេ'
-                  : 'No lesson in progress',
-              body: isKhmer
-                  ? 'ជ្រើសរើសមេរៀនដើម្បីចាប់ផ្តើមការសិក្សាជាបន្ត។'
-                  : 'Choose a lesson to begin your next learning streak.',
-              actionLabel: isKhmer ? 'រុករកមេរៀន' : 'Browse lessons',
+              title: l10n.resumeLearningEmptyTitle,
+              body: l10n.resumeLearningEmptyBody,
+              actionLabel: l10n.browseLessons,
               onAction: () => context.go('/learn'),
             )
           : ListView.separated(

@@ -2481,4 +2481,47 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get authBuddySuccess => 'យេ! អ្នកបានចូលហើយ!';
+  @override String get buddyHomeGreeting => 'ត្រៀមបោះជំហានបន្ទាប់ហើយឬនៅ?';
+  @override String get buddyWelcomeBack => 'សូមស្វាគមន៍មកវិញ។ បន្តពីកន្លែងដែលអ្នកបានឈប់។';
+  @override String get buddyLessonCompleted => 'អ្នកសម្រេចបានហើយ!';
+  @override String get buddyRankImproved => 'វឌ្ឍនភាពរបស់អ្នកបានធ្វើឱ្យចំណាត់ថ្នាក់កើនឡើង។';
+  @override String get buddyCommunityJoined => 'សូមស្វាគមន៍មកកាន់សហគមន៍ថ្មីរបស់អ្នក!';
+  @override String homeStreakDays(int count) => '$count ថ្ងៃ';
+  @override String get homeTodaysStudy => 'ការសិក្សាថ្ងៃនេះ';
+  @override String get homeStartHere => 'ចាប់ផ្តើមទីនេះ';
+  @override String get homeStartHereBody => 'ជ្រើសរើសមេរៀនដំបូង ហើយចាប់ផ្តើមម្តងមួយជំហាន។';
+  @override String homeLessonMinutes(int minutes) => '$minutes នាទី';
+  @override String get homeContinue => 'បន្ត';
+  @override String get homeProvinceSquad => 'ក្រុមសិក្សាខេត្តរបស់អ្នក';
+  @override String get homeProvinceMissing => 'ជ្រើសរើសខេត្តដើម្បីមើលក្រុមសិក្សារបស់អ្នក។';
+  @override String get homeSelectProvince => 'ជ្រើសរើសខេត្ត';
+  @override String homeProvinceRank(int rank) => 'អ្នកស្ថិតនៅលេខ #$rank សប្តាហ៍នេះ';
+  @override String homeNearbyLearner(int rank, String name) => '#$rank $name';
+  @override String get homeYou => 'អ្នក';
+  @override String get homeViewProvinceRanks => 'មើលចំណាត់ថ្នាក់ខេត្ត';
+  @override String get homeFromCommunities => 'ពីសហគមន៍របស់អ្នក';
+  @override String homeCommunityPostMeta(String community, String author, int count) => '$community · $author · មតិ $count';
+  @override String get homeSeeCommunityFeed => 'មើលព័ត៌មានសហគមន៍';
+  @override String get lessonShareLearning => 'ចែករំលែកអ្វីដែលខ្ញុំបានរៀន';
+  @override String get resumeLearningTitle => 'បន្តការរៀន';
+  @override String get resumeLearningEmptyTitle => 'មិនមានមេរៀនកំពុងរៀនទេ';
+  @override String get resumeLearningEmptyBody => 'ជ្រើសរើសមេរៀនដើម្បីចាប់ផ្តើមជំហានសិក្សាបន្ទាប់។';
+  @override String get leaderboardNearbyLearners => 'អ្នកសិក្សានៅជិតចំណាត់ថ្នាក់របស់អ្នក';
+  @override String get leaderboardSearchLearners => 'ស្វែងរកអ្នកសិក្សា';
+  @override String get buddyReactions => 'ប្រតិកម្មរបស់មិត្តសិក្សា';
+  @override String get buddyReactionsHint => 'អនុញ្ញាតឱ្យមិត្តសិក្សាបង្ហាញចលនា និងនិយាយ';
+  @override String get profileStudyBuddy => 'មិត្តសិក្សា';
+  @override String profileBuddyNamed(String name) => '$name មិត្តសិក្សារបស់អ្នក';
+  @override String get aiBuddyHandoff => 'មិត្តសិក្សារបស់អ្នកអាចជួយចាប់ផ្តើម ហើយគ្រូ AI នឹងពន្យល់សំណួរ។';
+  @override String homeProvinceSquadNamed(String province) => 'ក្រុមសិក្សា $province';
+  @override String get streakReminderTitle => '🔥 រក្សាខ្សែពិន្ទុបន្តរបស់អ្នក!';
+  @override String get streakReminderBody => 'ចំណាយពេល ៥ នាទីយប់នេះដើម្បីរៀន និងរក្សាការសិក្សាបន្តរបស់អ្នក។';
+  @override String get drawerGeneral => 'ទូទៅ';
+  @override String get drawerAbout => 'អំពី';
+  @override String get drawerUserAgreement => 'កិច្ចព្រមព្រៀងអ្នកប្រើប្រាស់';
+  @override String get drawerPrivacyCenter => 'មជ្ឈមណ្ឌលឯកជនភាព';
+  @override String get aiCopyAnswer => 'ចម្លងចម្លើយ';
+  @override String get aiCopiedClipboard => 'បានចម្លងទៅក្តារតម្កល់';
+  @override String get aiCopy => 'ចម្លង';
+  @override String get aiLoginRequired => 'សូមចូលគណនីដើម្បីជជែកជាមួយគ្រូ AI។';
 }

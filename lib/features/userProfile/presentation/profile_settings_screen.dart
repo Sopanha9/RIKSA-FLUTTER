@@ -11,6 +11,7 @@ import '../../../core/providers/theme_mode_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../mascot/providers/buddy_preferences_provider.dart';
 import '../providers/profile_cover_provider.dart';
 import '../providers/profile_provider.dart';
 import 'widgets/profile_ui.dart';
@@ -31,6 +32,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     final user = auth is Authenticated ? auth.user : null;
     final themeMode = ref.watch(themeModeProvider);
     final soundEnabled = ref.watch(soundEnabledProvider);
+    final buddyReactionsEnabled = ref.watch(buddyReactionsEnabledProvider);
     final locale = ref.watch(localeProvider).locale;
     final localAvatar = ref.watch(profileAvatarProvider);
     final frameTier = ref
@@ -98,21 +100,25 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                         subtitle: l10n.notificationPreferencesHint,
                         value: streakReminderEnabled,
                         onChanged: (value) {
-                          final isKm =
-                              Localizations.localeOf(context).languageCode ==
-                              'km';
                           ref
                               .read(streakReminderStateProvider.notifier)
                               .toggle(
                                 enabled: value,
-                                title: isKm
-                                    ? '🔥 រក្សាខ្សែពិន្ទុបន្ត (Streak) របស់អ្នក!'
-                                    : '🔥 Keep your learning streak alive!',
-                                body: isKm
-                                    ? 'ចំណាយពេល ៥ នាទីយប់នេះដើម្បីរៀន និងការពារ Streak របស់អ្នក។'
-                                    : 'Take 5 minutes tonight to practice and protect your streak.',
+                                title: l10n.streakReminderTitle,
+                                body: l10n.streakReminderBody,
                               );
                         },
+                      ),
+                      const _SettingsDivider(),
+                      _SettingsSwitchRow(
+                        key: const ValueKey('settings-buddy-reactions'),
+                        icon: Icons.emoji_emotions_outlined,
+                        title: l10n.buddyReactions,
+                        subtitle: l10n.buddyReactionsHint,
+                        value: buddyReactionsEnabled,
+                        onChanged: (value) => ref
+                            .read(buddyReactionsEnabledProvider.notifier)
+                            .setEnabled(value),
                       ),
                       const _SettingsDivider(),
                       _SettingsSwitchRow(

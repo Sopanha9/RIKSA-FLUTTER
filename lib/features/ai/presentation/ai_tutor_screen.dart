@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../mascot/domain/mascot.dart';
+import '../../mascot/presentation/widgets/buddy_companion.dart';
 import '../data/ai_chat_models.dart';
 import '../providers/ai_chat_provider.dart';
 import 'widgets/ai_study_coach_hub.dart';
@@ -209,9 +211,31 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
       return [
         SliverFillRemaining(
           hasScrollBody: false,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(top: RiksaSpacing.lg),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const BuddyFaceReaction(
+                    face: MascotFace.thinking,
+                    size: 48,
+                    loops: 1,
+                  ),
+                  const SizedBox(width: RiksaSpacing.sm),
+                  Flexible(
+                    child: Text(
+                      l10n.aiBuddyHandoff,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.riksa.inkMuted,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: RiksaSpacing.sm),
               IllustratedEmptyState(
                 title: l10n.aiChatsEmptyTitle,
                 body: l10n.aiChatsEmptyBody,
@@ -224,8 +248,9 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
                   onSelected: (prompt) => _startChat(prompt: prompt),
                 ),
               ),
-              const SizedBox(height: 110),
-            ],
+                const SizedBox(height: 110),
+              ],
+            ),
           ),
         ),
       ];

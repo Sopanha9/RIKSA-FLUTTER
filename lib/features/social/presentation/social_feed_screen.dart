@@ -13,7 +13,6 @@ import '../../../core/widgets/pixel_fire_icon.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../core/widgets/riksa_search_bar.dart';
 import '../../../core/widgets/riksa_segmented_tabs.dart';
-import '../../dashboard/presentation/widgets/home_sections.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../blog/data/blog_models.dart';
@@ -182,11 +181,15 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
                     setState(() => _searchQuery = value.trim().toLowerCase()),
                 onFilter: _showContentFilter,
               ),
-              const SliverToBoxAdapter(child: HomeQuickActions()),
               SliverToBoxAdapter(
-                child: HomeSectionHeader(
-                  title: 'Feeds',
+                child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 12, 4),
+                  child: Text(
+                    AppLocalizations.of(context)!.communityFeed,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
               SliverToBoxAdapter(
@@ -250,10 +253,8 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
                 itemCount: filteredPosts.length,
                 itemBuilder: (context, index) {
                   final post = filteredPosts[index];
-                  return RiksaEntrance(
-                    index: index,
-                    child: SocialPostCard(
-                      post: post,
+                  return SocialPostCard(
+                    post: post,
                       // Through the router, not Navigator: a raw push leaves
                       // go_router still believing the feed is on screen, and
                       // the shell reads it to decide whether the tab bar
@@ -270,7 +271,6 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
                       onDelete: post.author.id == currentUserId
                           ? () => _deletePost(post)
                           : null,
-                    ),
                   );
                 },
               ),
@@ -323,14 +323,11 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
                 sliver: SliverList.builder(
                   itemCount: filteredPosts.length,
-                  itemBuilder: (context, index) => RiksaEntrance(
-                    index: index,
-                    child: _GlassBlogCard(
-                      post: filteredPosts[index],
-                      onLike: () => ref
-                          .read(blogFeedProvider.notifier)
-                          .toggleLike(filteredPosts[index].id),
-                    ),
+                  itemBuilder: (context, index) => _GlassBlogCard(
+                    post: filteredPosts[index],
+                    onLike: () => ref
+                        .read(blogFeedProvider.notifier)
+                        .toggleLike(filteredPosts[index].id),
                   ),
                 ),
               ),

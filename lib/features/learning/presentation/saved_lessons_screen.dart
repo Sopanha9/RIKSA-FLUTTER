@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../mascot/domain/mascot.dart';
+import '../../mascot/presentation/widgets/buddy_companion.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
 import '../providers/lesson_catalog_provider.dart';
@@ -95,11 +97,24 @@ class _SavedLessonsScreenState extends ConsumerState<SavedLessonsScreen> {
         ),
       ),
       body: savedIds.isEmpty
-          ? IllustratedEmptyState(
-              title: l10n.savedLessonsEmptyTitle,
-              body: l10n.savedLessonsEmptyBody,
-              actionLabel: l10n.browseLessons,
-              onAction: () => context.go('/learn'),
+          ? SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: RiksaSpacing.lg),
+                  const BuddyFaceReaction(
+                    face: MascotFace.thinking,
+                    size: 64,
+                    loops: 1,
+                  ),
+                  IllustratedEmptyState(
+                    title: l10n.savedLessonsEmptyTitle,
+                    body: l10n.savedLessonsEmptyBody,
+                    actionLabel: l10n.browseLessons,
+                    onAction: () => context.go('/learn'),
+                  ),
+                ],
+              ),
             )
           : savedLessons.isEmpty && stillLoading
           ? const Center(child: CircularProgressIndicator())

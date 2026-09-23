@@ -4499,4 +4499,49 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
     'that was used.',
   );
+
+  String get buddyHomeGreeting;
+  String get buddyWelcomeBack;
+  String get buddyLessonCompleted;
+  String get buddyRankImproved;
+  String get buddyCommunityJoined;
+  String homeStreakDays(int count);
+  String get homeTodaysStudy;
+  String get homeStartHere;
+  String get homeStartHereBody;
+  String homeLessonMinutes(int minutes);
+  String get homeContinue;
+  String get homeProvinceSquad;
+  String get homeProvinceMissing;
+  String get homeSelectProvince;
+  String homeProvinceRank(int rank);
+  String homeNearbyLearner(int rank, String name);
+  String get homeYou;
+  String get homeViewProvinceRanks;
+  String get homeFromCommunities;
+  String homeCommunityPostMeta(String community, String author, int count);
+  String get homeSeeCommunityFeed;
+
+  String get lessonShareLearning;
+  String get resumeLearningTitle;
+  String get resumeLearningEmptyTitle;
+  String get resumeLearningEmptyBody;
+  String get leaderboardNearbyLearners;
+  String get leaderboardSearchLearners;
+  String get buddyReactions;
+  String get buddyReactionsHint;
+  String get profileStudyBuddy;
+  String profileBuddyNamed(String name);
+  String get aiBuddyHandoff;
+  String homeProvinceSquadNamed(String province);
+  String get streakReminderTitle;
+  String get streakReminderBody;
+  String get drawerGeneral;
+  String get drawerAbout;
+  String get drawerUserAgreement;
+  String get drawerPrivacyCenter;
+  String get aiCopyAnswer;
+  String get aiCopiedClipboard;
+  String get aiCopy;
+  String get aiLoginRequired;
 }

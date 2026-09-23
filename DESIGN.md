@@ -297,3 +297,9 @@ record the specific typography, spacing or motion behavior being adopted.
   budget for the whole flow.
 - Confetti and mascot celebration.
 - Em dashes in UI copy.
+# Current direction (September 2026)
+
+> **Note:** For post-auth work, Home is a violet-owned daily study hub and
+> buddy appearances follow the shared behavior policy. Older examples below
+> that show a menu-style dashboard, unrestricted mascot placement, or legacy
+> accent usage are reference material rather than current requirements.
