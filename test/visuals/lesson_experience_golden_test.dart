@@ -281,6 +281,25 @@ void main() {
       matchesGoldenFile('goldens/lesson_reading_en_dark.png'),
     );
   });
+
+  testWidgets('lesson flow supports Khmer at 2x text scale', (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      _previewApp(
+        locale: const Locale('km'),
+        scaler: const TextScaler.linear(2),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(LessonExperienceScreen), findsOneWidget);
+  });
+
   testWidgets('completion makes the next lesson clear', (tester) async {
     tester.view.physicalSize = const Size(393, 852);
     tester.view.devicePixelRatio = 1;

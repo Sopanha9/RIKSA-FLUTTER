@@ -118,35 +118,38 @@ class SubjectPixelArtwork extends StatelessWidget {
   Widget build(BuildContext context) => SizedBox.square(
     key: ValueKey('subject-artwork-${subject.name}'),
     dimension: size,
-    child: CustomPaint(painter: _SubjectPixelArtworkPainter(subject)),
+    child: CustomPaint(
+      painter: _SubjectPixelArtworkPainter(subject, context.riksa),
+    ),
   );
 }
 
 class _SubjectPixelArtworkPainter extends CustomPainter {
-  const _SubjectPixelArtworkPainter(this.subject);
+  const _SubjectPixelArtworkPainter(this.subject, this.palette);
 
   final StemSubject subject;
+  final RiksaPalette palette;
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.scale(size.width / 128, size.height / 128);
     final background = switch (subject) {
-      StemSubject.biology => const Color(0xFFE0F4CF),
-      StemSubject.chemistry => const Color(0xFFE9DEFF),
-      StemSubject.technology => const Color(0xFFD6F2E9),
-      StemSubject.mathematics => const Color(0xFFF9DCEA),
-      StemSubject.physics => const Color(0xFFD7ECF9),
-      StemSubject.other => AppColors.tileYellow,
+      StemSubject.biology => palette.jadeSoft,
+      StemSubject.chemistry => palette.brandSoft,
+      StemSubject.technology => palette.jadeSoft,
+      StemSubject.mathematics => palette.blushSoft,
+      StemSubject.physics => palette.surfaceRaised,
+      StemSubject.other => palette.saffronSoft,
     };
 
     canvas.drawRRect(_rr(9, 8, 110, 110, 15), _fill(background));
     canvas.drawRect(
       const Rect.fromLTWH(16, 16, 7, 7),
-      _fill(Colors.white.withValues(alpha: .92)),
+      _fill(palette.surface.withValues(alpha: .92)),
     );
     canvas.drawRect(
       const Rect.fromLTWH(25, 10, 8, 8),
-      _fill(Colors.white.withValues(alpha: .84)),
+      _fill(palette.surface.withValues(alpha: .84)),
     );
 
     switch (subject) {
@@ -166,51 +169,51 @@ class _SubjectPixelArtworkPainter extends CustomPainter {
   }
 
   void _paintBiology(Canvas c) {
-    const edge = Color(0xFF2F5629);
-    c.drawRRect(_rr(34, 33, 59, 62, 9), _fill(const Color(0xFFECFFF0)));
+    final edge = palette.jadeStrong;
+    c.drawRRect(_rr(34, 33, 59, 62, 9), _fill(palette.surface));
     c.drawRRect(_rr(34, 33, 59, 62, 9), _stroke(edge, 4));
     c.drawRect(
       const Rect.fromLTWH(42, 88, 43, 11),
-      _fill(const Color(0xFF76502A)),
+      _fill(palette.saffron),
     );
     c.drawRect(const Rect.fromLTWH(42, 88, 43, 11), _stroke(edge, 3));
     c.drawRect(
       const Rect.fromLTWH(45, 82, 37, 8),
-      _fill(const Color(0xFFB17D45)),
+      _fill(palette.saffron),
     );
     c.drawLine(const Offset(64, 82), const Offset(64, 51), _stroke(edge, 4));
     c.drawOval(
       const Rect.fromLTWH(42, 51, 23, 21),
-      _fill(const Color(0xFF469140)),
+      _fill(palette.jade),
     );
     c.drawOval(const Rect.fromLTWH(42, 51, 23, 21), _stroke(edge, 3));
     c.drawOval(
       const Rect.fromLTWH(63, 43, 27, 23),
-      _fill(const Color(0xFF469140)),
+      _fill(palette.jade),
     );
     c.drawOval(const Rect.fromLTWH(63, 43, 27, 23), _stroke(edge, 3));
     c.drawLine(
       const Offset(47, 66),
       const Offset(60, 57),
-      _stroke(const Color(0xFF8BC55E), 3),
+      _stroke(palette.reward, 3),
     );
     c.drawLine(
       const Offset(69, 59),
       const Offset(83, 49),
-      _stroke(const Color(0xFF8BC55E), 3),
+      _stroke(palette.reward, 3),
     );
   }
 
   void _paintChemistry(Canvas c) {
-    const edge = Color(0xFF4A2B8E);
+    final edge = palette.brandStrong;
     c.drawRect(
       const Rect.fromLTWH(55, 29, 18, 10),
-      _fill(const Color(0xFF8456EE)),
+      _fill(palette.brand),
     );
     c.drawRect(const Rect.fromLTWH(55, 29, 18, 10), _stroke(edge, 4));
     c.drawRect(
       const Rect.fromLTWH(59, 39, 10, 23),
-      _fill(const Color(0xFFF5EEFF)),
+      _fill(palette.brandSoft),
     );
     c.drawRect(const Rect.fromLTWH(59, 39, 10, 23), _stroke(edge, 3));
     final flask = Path()
@@ -219,33 +222,33 @@ class _SubjectPixelArtworkPainter extends CustomPainter {
       ..lineTo(97, 96)
       ..lineTo(31, 96)
       ..close();
-    c.drawPath(flask, _fill(const Color(0xFF8456EE)));
+    c.drawPath(flask, _fill(palette.brand));
     c.drawPath(flask, _stroke(edge, 4));
     c.drawRect(
       const Rect.fromLTWH(42, 79, 44, 9),
-      _fill(const Color(0xFFBEA4FF)),
+      _fill(palette.brandSoft),
     );
     c.drawRect(
       const Rect.fromLTWH(36, 88, 56, 8),
-      _fill(const Color(0xFF5D39C2)),
+      _fill(palette.brandStrong),
     );
     for (final bubble in const [
       Rect.fromLTWH(36, 43, 8, 8),
       Rect.fromLTWH(86, 34, 7, 7),
       Rect.fromLTWH(78, 23, 5, 5),
     ]) {
-      c.drawOval(bubble, _fill(const Color(0xFFBEA4FF)));
+      c.drawOval(bubble, _fill(palette.brandSoft));
       c.drawOval(bubble, _stroke(edge, 2));
     }
   }
 
   void _paintComputer(Canvas c) {
-    const edge = Color(0xFF19564D);
-    c.drawRRect(_rr(26, 34, 76, 47, 6), _fill(const Color(0xFFEFFFFA)));
+    final edge = palette.jadeStrong;
+    c.drawRRect(_rr(26, 34, 76, 47, 6), _fill(palette.surface));
     c.drawRRect(_rr(26, 34, 76, 47, 6), _stroke(edge, 4));
     c.drawRect(
       const Rect.fromLTWH(32, 40, 64, 35),
-      _fill(const Color(0xFFE6FCF6)),
+      _fill(palette.surfaceRaised),
     );
     final base = Path()
       ..moveTo(20, 84)
@@ -253,44 +256,44 @@ class _SubjectPixelArtworkPainter extends CustomPainter {
       ..lineTo(99, 98)
       ..lineTo(29, 98)
       ..close();
-    c.drawPath(base, _fill(const Color(0xFF238F7A)));
+    c.drawPath(base, _fill(palette.jade));
     c.drawPath(base, _stroke(edge, 3));
     c.drawLine(
       const Offset(50, 51),
       const Offset(39, 60),
-      _stroke(const Color(0xFF238F7A), 5),
+      _stroke(palette.jade, 5),
     );
     c.drawLine(
       const Offset(39, 60),
       const Offset(50, 69),
-      _stroke(const Color(0xFF238F7A), 5),
+      _stroke(palette.jade, 5),
     );
     c.drawLine(
       const Offset(78, 51),
       const Offset(89, 60),
-      _stroke(const Color(0xFF238F7A), 5),
+      _stroke(palette.jade, 5),
     );
     c.drawLine(
       const Offset(89, 60),
       const Offset(78, 69),
-      _stroke(const Color(0xFF238F7A), 5),
+      _stroke(palette.jade, 5),
     );
     c.drawLine(const Offset(68, 49), const Offset(59, 72), _stroke(edge, 4));
   }
 
   void _paintMath(Canvas c) {
-    const edge = Color(0xFF862D53);
-    c.drawRRect(_rr(33, 30, 56, 64, 4), _fill(const Color(0xFFFFF6FA)));
+    final edge = palette.math;
+    c.drawRRect(_rr(33, 30, 56, 64, 4), _fill(palette.surface));
     c.drawRRect(_rr(33, 30, 56, 64, 4), _stroke(edge, 4));
     c.drawRect(
       const Rect.fromLTWH(33, 30, 10, 64),
-      _fill(const Color(0xFFF4A6C5)),
+      _fill(palette.blushSoft),
     );
     for (final y in const [45.0, 56.0, 68.0, 80.0]) {
       c.drawLine(
         Offset(49, y),
         Offset(82, y),
-        _stroke(const Color(0xFFE8C4D3), 2),
+        _stroke(palette.outline, 2),
       );
     }
     final sigma = Path()
@@ -301,7 +304,7 @@ class _SubjectPixelArtworkPainter extends CustomPainter {
       ..lineTo(60, 81)
       ..lineTo(73, 62)
       ..close();
-    c.drawPath(sigma, _fill(const Color(0xFFCC467D)));
+    c.drawPath(sigma, _fill(palette.math));
     c.drawPath(sigma, _stroke(edge, 3));
     final ruler = Path()
       ..moveTo(83, 31)
@@ -309,18 +312,18 @@ class _SubjectPixelArtworkPainter extends CustomPainter {
       ..lineTo(59, 104)
       ..lineTo(49, 100)
       ..close();
-    c.drawPath(ruler, _fill(const Color(0xFFECB153)));
+    c.drawPath(ruler, _fill(palette.saffron));
     c.drawPath(ruler, _stroke(edge, 3));
   }
 
   void _paintPhysics(Canvas c) {
-    const edge = Color(0xFF24538B);
+    final edge = palette.science;
     c.drawOval(const Rect.fromLTWH(29, 51, 71, 31), _stroke(edge, 3));
     c.drawOval(const Rect.fromLTWH(37, 35, 55, 65), _stroke(edge, 3));
     c.drawOval(const Rect.fromLTWH(41, 35, 47, 65), _stroke(edge, 3));
     c.drawOval(
       const Rect.fromLTWH(57, 57, 14, 14),
-      _fill(const Color(0xFF70BEEA)),
+      _fill(palette.science),
     );
     c.drawOval(const Rect.fromLTWH(57, 57, 14, 14), _stroke(edge, 3));
     final bolt = Path()
@@ -331,15 +334,15 @@ class _SubjectPixelArtworkPainter extends CustomPainter {
       ..lineTo(86, 53)
       ..lineTo(70, 55)
       ..close();
-    c.drawPath(bolt, _fill(const Color(0xFF3082CA)));
+    c.drawPath(bolt, _fill(palette.science));
     c.drawPath(bolt, _stroke(edge, 3));
   }
 
   void _paintOther(Canvas c) {
-    const edge = Color(0xFF6E470E);
+    final edge = palette.saffron;
     c.drawRect(
       const Rect.fromLTWH(35, 43, 58, 45),
-      _fill(const Color(0xFFECA83A)),
+      _fill(palette.saffron),
     );
     c.drawRect(const Rect.fromLTWH(35, 43, 58, 45), _stroke(edge, 4));
     c.drawLine(const Offset(64, 43), const Offset(64, 88), _stroke(edge, 3));
@@ -363,7 +366,7 @@ class _SubjectPixelArtworkPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SubjectPixelArtworkPainter oldDelegate) =>
-      oldDelegate.subject != subject;
+      oldDelegate.subject != subject || oldDelegate.palette != palette;
 }
 
 /// A flat pastel surface plus the ink that stays legible on it.
@@ -405,7 +408,8 @@ Color _darkSurface(BuildContext context, Color pastel) => Color.alphaBlend(
   context.riksa.surfaceRaised,
 );
 
-Color _darkAccent(Color accent) => Color.lerp(accent, Colors.white, .38)!;
+Color _darkAccent(BuildContext context, Color accent) =>
+    Color.lerp(accent, context.riksa.ink, .38)!;
 
 /// Identity tone. Use on a subject's own tile and on its roadmap header.
 LearningTone subjectTone(BuildContext context, StemSubject subject) {
@@ -414,7 +418,7 @@ LearningTone subjectTone(BuildContext context, StemSubject subject) {
   return LearningTone(
     surface: isDark ? _darkSurface(context, pastel) : pastel,
     ink: context.riksa.ink,
-    accent: isDark ? _darkAccent(accent) : accent,
+    accent: isDark ? _darkAccent(context, accent) : accent,
   );
 }
 
@@ -464,7 +468,7 @@ LearningTone statusTone(BuildContext context, LearningStatus status) {
   return LearningTone(
     surface: isDark ? _darkSurface(context, spec.$1) : spec.$1,
     ink: palette.ink,
-    accent: isDark ? _darkAccent(spec.$2) : spec.$2,
+    accent: isDark ? _darkAccent(context, spec.$2) : spec.$2,
   );
 }
 

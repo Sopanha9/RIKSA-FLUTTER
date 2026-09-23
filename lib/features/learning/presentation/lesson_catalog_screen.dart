@@ -341,11 +341,11 @@ class _SavedLessonsButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
+    final l10n = AppLocalizations.of(context)!;
     final savedCount = ref.watch(savedLessonsProvider).length;
     return Semantics(
       button: true,
-      label: isKhmer ? 'មេរៀនបានរក្សាទុក' : 'Saved Lessons',
+      label: l10n.savedLessonsLabel,
       child: RiksaTapFeedback(
         child: Material(
           color: context.riksa.surface,

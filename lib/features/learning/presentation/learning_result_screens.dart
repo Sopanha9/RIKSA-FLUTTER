@@ -9,7 +9,6 @@ import '../../mascot/domain/buddy_behavior.dart';
 import '../../mascot/presentation/widgets/buddy_companion.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_roadmap_provider.dart';
-import '../providers/lesson_catalog_provider.dart';
 import 'widgets/learning_atoms.dart';
 
 class LessonCompletionScreen extends ConsumerWidget {
@@ -71,7 +70,7 @@ class LessonCompletionScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       color: palette.rewardSoft,
                       borderRadius: AppRadii.featureBorder,
@@ -85,9 +84,10 @@ class LessonCompletionScreen extends ConsumerWidget {
                               BuddyEvent.lessonCompleted,
                             ),
                             speech: l10n.buddyLessonCompleted,
+                            size: 124,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 12),
                         Text(
                           l10n.lessonCompletionReward,
                           style: theme.textTheme.headlineSmall,
@@ -216,53 +216,3 @@ class LessonCompletionScreen extends ConsumerWidget {
   }
 }
 
-class ResumeLearningScreen extends ConsumerWidget {
-  const ResumeLearningScreen({super.key});
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final state = ref.watch(lessonCatalogProvider);
-    final active = state.lessons
-        .where((lesson) => !lesson.completed && (lesson.progress ?? 0) > 0)
-        .toList();
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.resumeLearningTitle)),
-      body: state.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : active.isEmpty
-          ? IllustratedEmptyState(
-              title: l10n.resumeLearningEmptyTitle,
-              body: l10n.resumeLearningEmptyBody,
-              actionLabel: l10n.browseLessons,
-              onAction: () => context.go('/learn'),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.all(20),
-              itemCount: active.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final lesson = active[index];
-                return RiksaPastelCard(
-                  onTap: () =>
-                      context.push('/learn/${lesson.id}', extra: lesson),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        lesson.title,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      LinearProgressIndicator(value: lesson.progress),
-                      const SizedBox(height: 6),
-                      Text(
-                        '${((lesson.progress ?? 0) * 100).round()}% complete',
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-    );
-  }
-}

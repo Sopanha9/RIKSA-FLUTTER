@@ -1508,6 +1508,12 @@ abstract class AppLocalizations {
   /// **'Completed'**
   String get completedLabel;
 
+  /// No description provided for @roadmapCompletedEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed earlier · this unit stays open'**
+  String get roadmapCompletedEarlier;
+
   /// No description provided for @generalSubject.
   ///
   /// In en, this message translates to:
@@ -2804,6 +2810,24 @@ abstract class AppLocalizations {
   /// **'Checked answers are saved. Your unfinished writing will be lost if you leave.'**
   String get lessonExitBody;
 
+  /// No description provided for @lessonExitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave this lesson?'**
+  String get lessonExitTitle;
+
+  /// No description provided for @lessonKeepLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep learning'**
+  String get lessonKeepLearning;
+
+  /// No description provided for @lessonLeaveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave lesson'**
+  String get lessonLeaveAction;
+
   /// No description provided for @lessonAiHint.
   ///
   /// In en, this message translates to:
@@ -2863,6 +2887,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep a good idea for later'**
   String get savedLessonsEmptyTitle;
+
+  /// No description provided for @savedLessonsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved lessons'**
+  String get savedLessonsLabel;
 
   /// No description provided for @savedLessonsEmptyBody.
   ///

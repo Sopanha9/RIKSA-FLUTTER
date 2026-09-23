@@ -101,7 +101,15 @@ class _RoadmapBody extends StatelessWidget {
                 index: index,
                 child: index == stones.length
                     ? _GoalStone(units: stones.length, lessons: summary.total)
-                    : _Stone(stone: stones[index]),
+                    : _Stone(
+                        stone: stones[index],
+                        completedOutOfOrder:
+                            stones[index].status == LearningStatus.done &&
+                            stones.take(index).any(
+                              (earlier) =>
+                                  earlier.status != LearningStatus.done,
+                            ),
+                      ),
               ),
             ),
           ),
@@ -148,7 +156,7 @@ class _RoadmapHeader extends StatelessWidget {
                 LearningCircleButton(
                   icon: Icons.arrow_back_rounded,
                   tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                  onTap: context.pop,
+                  onTap: () => leaveLearningScreen(context),
                 ),
                 const SizedBox(height: RiksaSpacing.md + 2),
                 Row(
@@ -299,12 +307,13 @@ class _ProgressRing extends StatelessWidget {
 /// The connector is drawn by the row itself rather than by a shared painter, so
 /// a stone of any height stays joined to the next one.
 class _Stone extends StatelessWidget {
-  const _Stone({required this.stone});
+  const _Stone({required this.stone, required this.completedOutOfOrder});
 
   static const _nodeSize = 36.0;
   static const _gutter = 48.0;
 
   final RoadmapStone stone;
+  final bool completedOutOfOrder;
 
   @override
   Widget build(BuildContext context) {
@@ -347,7 +356,12 @@ class _Stone extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 14),
-              child: _StoneCard(stone: stone, tone: tone, elevated: isCurrent),
+              child: _StoneCard(
+                stone: stone,
+                tone: tone,
+                elevated: isCurrent,
+                completedOutOfOrder: completedOutOfOrder,
+              ),
             ),
           ),
         ],
@@ -419,11 +433,13 @@ class _StoneCard extends StatefulWidget {
     required this.stone,
     required this.tone,
     required this.elevated,
+    required this.completedOutOfOrder,
   });
 
   final RoadmapStone stone;
   final LearningTone tone;
   final bool elevated;
+  final bool completedOutOfOrder;
 
   @override
   State<_StoneCard> createState() => _StoneCardState();
@@ -546,7 +562,9 @@ class _StoneCardState extends State<_StoneCard> {
   }
 
   String _subtitle(AppLocalizations l10n) => switch (widget.stone.status) {
-    LearningStatus.done => l10n.completedLabel,
+    LearningStatus.done => widget.completedOutOfOrder
+        ? l10n.roadmapCompletedEarlier
+        : l10n.completedLabel,
     LearningStatus.current => l10n.unitProgressShort(
       widget.stone.completedLessons,
       widget.stone.totalLessons,

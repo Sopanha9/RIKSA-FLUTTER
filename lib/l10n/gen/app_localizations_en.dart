@@ -804,6 +804,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get completedLabel => 'Completed';
 
   @override
+  String get roadmapCompletedEarlier =>
+      'Completed earlier · this unit stays open';
+
+  @override
   String get generalSubject => 'General';
 
   @override
@@ -1568,6 +1572,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Checked answers are saved. Your unfinished writing will be lost if you leave.';
 
   @override
+  String get lessonExitTitle => 'Leave this lesson?';
+
+  @override
+  String get lessonKeepLearning => 'Keep learning';
+
+  @override
+  String get lessonLeaveAction => 'Leave lesson';
+
+  @override
   String get lessonAiHint => 'Get a hint';
 
   @override
@@ -1597,6 +1610,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savedLessonsEmptyTitle => 'Keep a good idea for later';
+
+  @override
+  String get savedLessonsLabel => 'Saved lessons';
 
   @override
   String get savedLessonsEmptyBody =>

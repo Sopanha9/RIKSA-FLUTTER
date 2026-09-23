@@ -21,6 +21,10 @@ import 'package:riksa_app/l10n/gen/app_localizations.dart';
 Future<void> _loadFonts() async {
   final redditSans = FontLoader(RiksaTypography.latinFamily)
     ..addFont(rootBundle.load('assets/fonts/Poppins-Regular.ttf'));
+  final khmerBody = FontLoader(RiksaTypography.khmerBodyFamily)
+    ..addFont(rootBundle.load('assets/fonts/KhmerOS_siemreap.ttf'));
+  final khmerTitle = FontLoader(RiksaTypography.khmerTitleFamily)
+    ..addFont(rootBundle.load('assets/fonts/Koulen-Regular.ttf'));
   final configuredRoot = Platform.environment['FLUTTER_ROOT'];
   final flutterRoot =
       configuredRoot ??
@@ -31,7 +35,12 @@ Future<void> _loadFonts() async {
         '$flutterRoot/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
       ).readAsBytes().then(ByteData.sublistView),
     );
-  await Future.wait([redditSans.load(), materialIcons.load()]);
+  await Future.wait([
+    redditSans.load(),
+    khmerBody.load(),
+    khmerTitle.load(),
+    materialIcons.load(),
+  ]);
 }
 
 class _SignedInNotifier extends AuthNotifier {
@@ -158,4 +167,45 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
     });
   }
+
+  testWidgets('learning home supports Khmer at 2x text scale', (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_SignedInNotifier.new),
+          learningHomeProvider.overrideWith((ref) async => _home()),
+          communityStreakProvider.overrideWith(
+            (ref) async => const CommunityStreak(current: 7, highest: 12),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          locale: const Locale('km'),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(2)),
+            child: child!,
+          ),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: const LessonCatalogScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(LessonCatalogScreen), findsOneWidget);
+  });
 }

@@ -35,6 +35,14 @@ class SocialOwnerMenu extends StatelessWidget {
         size: 20,
         color: context.riksa.inkMuted,
       ),
+      // A bare glyph, as on X: the theme's filled disc behind icon buttons
+      // made it read as a second avatar in the author line.
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.transparent,
+        minimumSize: const Size(32, 32),
+        padding: EdgeInsets.zero,
+        tapTargetSize: MaterialTapTargetSize.padded,
+      ),
       color: context.riksa.surface,
       shape: const RoundedRectangleBorder(borderRadius: AppRadii.mediumBorder),
       onSelected: (action) => switch (action) {

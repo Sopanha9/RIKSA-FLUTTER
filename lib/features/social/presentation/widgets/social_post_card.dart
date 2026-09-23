@@ -264,47 +264,58 @@ class _PostMetadata extends StatelessWidget {
         : '@${post.author.username} · ';
     final isOfficial = showOfficial && isOfficialRiksaAuthor(post.author);
 
+    // The name, badge and handle share one inner row so the menu is pushed to
+    // the far edge, where X keeps it; as siblings of the menu, a short name
+    // left its unused share of the width sitting between them.
     return Row(
       children: [
-        Flexible(
-          child: Semantics(
-            button: true,
-            enabled: onAuthorTap != null,
-            label: AppLocalizations.of(context)!.socialOpenProfile(authorName),
-            excludeSemantics: true,
-            child: GestureDetector(
-              key: ValueKey('author-name-${post.author.id}'),
-              behavior: HitTestBehavior.opaque,
-              onTap: onAuthorTap,
-              child: Text(
-                authorName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: RiksaTypography.bodyStyleFor(
-                  authorName,
-                  theme.textTheme.bodyLarge?.copyWith(
-                    fontSize: 15,
-                    color: palette.ink,
-                    fontWeight: FontWeight.w800,
+        Expanded(
+          child: Row(
+            children: [
+              Flexible(
+                child: Semantics(
+                  button: true,
+                  enabled: onAuthorTap != null,
+                  label: AppLocalizations.of(
+                    context,
+                  )!.socialOpenProfile(authorName),
+                  excludeSemantics: true,
+                  child: GestureDetector(
+                    key: ValueKey('author-name-${post.author.id}'),
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onAuthorTap,
+                    child: Text(
+                      authorName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: RiksaTypography.bodyStyleFor(
+                        authorName,
+                        theme.textTheme.bodyLarge?.copyWith(
+                          fontSize: 15,
+                          color: palette.ink,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-        ),
-        if (isOfficial) ...[
-          const SizedBox(width: 3),
-          const _OfficialBadge(),
-        ],
-        const SizedBox(width: 4),
-        Expanded(
-          child: Text(
-            '$handle${socialRelativeTime(context, post.createdAt)}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: palette.inkMuted,
-            ),
+              if (isOfficial) ...[
+                const SizedBox(width: 3),
+                const _OfficialBadge(),
+              ],
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  '$handle${socialRelativeTime(context, post.createdAt)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: palette.inkMuted,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         if (onEdit != null && onDelete != null)

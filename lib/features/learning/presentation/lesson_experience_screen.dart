@@ -13,8 +13,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_brand.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../../mascot/domain/mascot.dart';
-import '../../mascot/presentation/widgets/buddy_companion.dart';
 import '../../userProfile/providers/profile_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
@@ -669,7 +667,6 @@ class _LessonExperienceScreenState
   }
 
   Future<bool> _showExitConfirmationDialog() async {
-    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
     final palette = context.riksa;
     final theme = Theme.of(context);
 
@@ -699,7 +696,7 @@ class _LessonExperienceScreenState
             const SizedBox(width: RiksaSpacing.sm),
             Expanded(
               child: Text(
-                isKhmer ? 'ចាកចេញពីមេរៀន?' : 'Leave this lesson?',
+                  l10n.lessonExitTitle,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -717,7 +714,7 @@ class _LessonExperienceScreenState
             key: const ValueKey('leave-lesson-cancel-button'),
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(
-              isKhmer ? 'បន្តរៀន' : 'Keep Learning',
+              l10n.lessonKeepLearning,
               style: TextStyle(color: palette.ink, fontWeight: FontWeight.w600),
             ),
           ),
@@ -729,7 +726,7 @@ class _LessonExperienceScreenState
               shape: const StadiumBorder(),
             ),
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(isKhmer ? 'ចាកចេញ' : 'Leave Lesson'),
+            child: Text(l10n.lessonLeaveAction),
           ),
         ],
       ),
@@ -1426,6 +1423,7 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
     final l10n = AppLocalizations.of(context)!;
     final correct = result?.correct == true;
     final incorrect = result != null && !correct;
+    final explanation = result?.explanation ?? exercise.explanation;
     return Container(
       key: ValueKey('lesson-exercise-${exercise.id}'),
       padding: const EdgeInsets.all(RiksaSpacing.md + 2),
@@ -1568,12 +1566,6 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    BuddyFaceReaction(
-                      face: correct ? MascotFace.proud : MascotFace.thinking,
-                      size: 40,
-                      loops: 1,
-                    ),
-                    const SizedBox(width: 10),
                     Icon(
                       correct
                           ? Icons.check_circle_rounded
@@ -1583,26 +1575,49 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        correct
-                            ? l10n.lessonAnswerSuccess
-                            : l10n.lessonAnswerRetry,
-                        style: RiksaTypography.bodyStyleFor(
-                          correct
-                              ? l10n.lessonAnswerSuccess
-                              : l10n.lessonAnswerRetry,
-                          Theme.of(context).textTheme.titleSmall,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            correct
+                                ? l10n.lessonAnswerSuccess
+                                : l10n.lessonAnswerRetry,
+                            style: RiksaTypography.bodyStyleFor(
+                              correct
+                                  ? l10n.lessonAnswerSuccess
+                                  : l10n.lessonAnswerRetry,
+                              Theme.of(context).textTheme.titleSmall,
+                            ),
+                          ),
+                          if (result!.message.trim().isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              result!.message,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                          if (explanation?.trim().isNotEmpty == true) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              l10n.lessonWhy,
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              explanation!,
+                              style: RiksaTypography.bodyStyleFor(
+                                explanation,
+                                Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            if (result!.message.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(result!.message, style: TextStyle(color: palette.inkMuted)),
-            ],
             if (incorrect) ...[
               const SizedBox(height: RiksaSpacing.xs),
               Align(
@@ -1620,15 +1635,6 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
               _Feedback(
                 label: l10n.lessonHint,
                 text: result!.hint ?? exercise.hint!,
-              ),
-            if ((incorrect || correct) &&
-                (result!.explanation ?? exercise.explanation)
-                        ?.trim()
-                        .isNotEmpty ==
-                    true)
-              _Feedback(
-                label: l10n.lessonWhy,
-                text: result!.explanation ?? exercise.explanation!,
               ),
           ],
         ],

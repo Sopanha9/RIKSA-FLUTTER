@@ -225,7 +225,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'resume',
-                    builder: (context, state) => const ResumeLearningScreen(),
+                    redirect: (context, state) => '/learn',
                   ),
                   GoRoute(
                     path: 'saved',

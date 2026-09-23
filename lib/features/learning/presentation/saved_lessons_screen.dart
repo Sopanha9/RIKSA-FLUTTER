@@ -15,6 +15,7 @@ import '../providers/learning_home_provider.dart';
 import '../providers/lesson_catalog_provider.dart';
 import '../providers/saved_lessons_provider.dart';
 import 'learning_design.dart';
+import 'widgets/learning_status_bar.dart';
 
 /// Lessons the learner bookmarked, filterable by subject.
 class SavedLessonsScreen extends ConsumerStatefulWidget {
@@ -33,6 +34,11 @@ class _SavedLessonsScreenState extends ConsumerState<SavedLessonsScreen> {
     ref.read(lessonCatalogProvider.notifier).load();
   }
 
+  void _retrySavedIds() {
+    ref.invalidate(savedLessonsProvider);
+    ref.invalidate(savedLessonsRestoredProvider);
+  }
+
   /// Drops bookmarks that no longer match any lesson in the syllabus.
   Future<void> _clearUnavailable(Iterable<String> ids) async {
     final notifier = ref.read(savedLessonsProvider.notifier);
@@ -45,6 +51,7 @@ class _SavedLessonsScreenState extends ConsumerState<SavedLessonsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final savedIds = ref.watch(savedLessonsProvider);
+    final savedIdsRestored = ref.watch(savedLessonsRestoredProvider);
     final catalogState = ref.watch(lessonCatalogProvider);
     final homeState = ref.watch(learningHomeProvider);
     final palette = context.riksa;
@@ -82,7 +89,7 @@ class _SavedLessonsScreenState extends ConsumerState<SavedLessonsScreen> {
       appBar: AppBar(
         backgroundColor: palette.canvas,
         leading: IconButton(
-          onPressed: () => context.pop(),
+          onPressed: () => leaveLearningScreen(context),
           style: IconButton.styleFrom(backgroundColor: Colors.transparent),
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           icon: const Icon(Icons.arrow_back_rounded),
@@ -96,7 +103,17 @@ class _SavedLessonsScreenState extends ConsumerState<SavedLessonsScreen> {
           ),
         ),
       ),
-      body: savedIds.isEmpty
+      body: savedIdsRestored.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : savedIdsRestored.hasError
+          ? IllustratedEmptyState(
+              key: const ValueKey('saved-lessons-restore-failed'),
+              title: l10n.savedLessonsLoadFailed,
+              body: l10n.loadFailedCheckConnection,
+              actionLabel: l10n.tryAgain,
+              onAction: _retrySavedIds,
+            )
+          : savedIds.isEmpty
           ? SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

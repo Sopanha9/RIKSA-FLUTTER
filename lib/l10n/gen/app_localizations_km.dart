@@ -785,6 +785,9 @@ class AppLocalizationsKm extends AppLocalizations {
   String get completedLabel => 'បានបញ្ចប់';
 
   @override
+  String get roadmapCompletedEarlier => 'បានបញ្ចប់ពីមុន · ផ្នែកនេះនៅតែបើក';
+
+  @override
   String get generalSubject => 'ទូទៅ';
 
   @override
@@ -1523,6 +1526,15 @@ class AppLocalizationsKm extends AppLocalizations {
       'ចម្លើយដែលបានពិនិត្យត្រូវបានរក្សាទុក។ សំណេរដែលមិនទាន់បានរក្សាទុកនឹងបាត់បង់ ប្រសិនបើអ្នកចាកចេញ។';
 
   @override
+  String get lessonExitTitle => 'ចាកចេញពីមេរៀន?';
+
+  @override
+  String get lessonKeepLearning => 'បន្តរៀន';
+
+  @override
+  String get lessonLeaveAction => 'ចាកចេញ';
+
+  @override
   String get lessonAiHint => 'ទទួលតម្រុយ';
 
   @override
@@ -1552,6 +1564,9 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get savedLessonsEmptyTitle => 'រក្សាគំនិតល្អទុកសម្រាប់ពេលក្រោយ';
+
+  @override
+  String get savedLessonsLabel => 'មេរៀនបានរក្សាទុក';
 
   @override
   String get savedLessonsEmptyBody =>
