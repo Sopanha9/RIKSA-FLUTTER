@@ -53,7 +53,7 @@ app.*.map.json
 *.g.dart
 *.freezed.dart
 
-
+.env
 # In app ScreenShot
 /screenshots/
 screenshots_redesign_reference
