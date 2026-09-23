@@ -13,6 +13,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_brand.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../mascot/domain/mascot.dart';
+import '../../mascot/presentation/widgets/buddy_companion.dart';
 import '../../userProfile/providers/profile_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
@@ -1189,8 +1191,8 @@ class _LessonIdentity extends StatelessWidget {
   );
 }
 
-/// The picture at the head of a reading step: the subject's pastel, its
-/// icon drawn large, and the mascot taking notes.
+/// Quiet subject artwork at the head of a reading step. The learner's buddy
+/// stays out of reading so the content remains the only focus.
 class _LessonArtCard extends StatelessWidget {
   const _LessonArtCard({required this.subject});
   final String subject;
@@ -1226,11 +1228,6 @@ class _LessonArtCard extends StatelessWidget {
               left: 36,
               top: 26,
               child: StemSubjectTile(subject: stem, size: 108),
-            ),
-            const Positioned(
-              right: 22,
-              bottom: 12,
-              child: RiksaMascot(size: 112, pose: RiksaMascotPose.pencil),
             ),
             Positioned(
               right: 28,
@@ -1571,6 +1568,12 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    BuddyFaceReaction(
+                      face: correct ? MascotFace.proud : MascotFace.thinking,
+                      size: 40,
+                      loops: 1,
+                    ),
+                    const SizedBox(width: 10),
                     Icon(
                       correct
                           ? Icons.check_circle_rounded

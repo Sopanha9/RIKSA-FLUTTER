@@ -6,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_components.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../auth/data/auth_models.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../../../learning/providers/learning_home_provider.dart';
 import '../../../mascot/domain/buddy_behavior.dart';
 import '../../../mascot/presentation/widgets/buddy_companion.dart';
@@ -106,7 +107,7 @@ class HomeStudySection extends ConsumerWidget {
       loading: () => const RiksaSkeleton(height: 210, radius: 24),
       error: (_, _) => RiksaStateView(
         icon: Icons.school_outlined,
-        title: l10n.learningLoadErrorTitle,
+        title: l10n.lessonLoadFailed,
         body: l10n.learningLoadErrorBody,
         actionLabel: l10n.tryAgain,
         onAction: () => ref.invalidate(learningHomeProvider),
@@ -188,12 +189,23 @@ class HomeProvinceSection extends ConsumerWidget {
     }
     final rank = ref.watch(profileRankProvider);
     final board = ref.watch(leaderboardProvider(LeaderboardScope.province));
+    final provinceOptions = ref.watch(provinceOptionsProvider).asData?.value;
+    final province = provinceOptions
+        ?.where((option) => option.id == user!.provinceId)
+        .firstOrNull;
+    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
+    final provinceName = province == null
+        ? null
+        : (isKhmer ? province.nameKhmer : province.nameLatin).trim();
+    final squadTitle = provinceName?.isNotEmpty == true
+        ? l10n.homeProvinceSquadNamed(provinceName!)
+        : l10n.homeProvinceSquad;
     if (rank.isLoading || board.isLoading) {
       return const RiksaSkeleton(height: 170, radius: 24);
     }
     if (rank.hasError || board.hasError) {
       return _CompactRetry(
-        title: l10n.homeProvinceSquad,
+        title: squadTitle,
         onRetry: () {
           ref.invalidate(profileRankProvider);
           ref.invalidate(leaderboardProvider(LeaderboardScope.province));
@@ -205,7 +217,7 @@ class HomeProvinceSection extends ConsumerWidget {
     final nearby = [...rows]..sort((a, b) => (a.rank - (myRank ?? 0)).abs().compareTo((b.rank - (myRank ?? 0)).abs()));
     return _HomeCard(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(l10n.homeProvinceSquad, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        Text(squadTitle, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
         if (myRank != null && myRank > 0) Text(l10n.homeProvinceRank(myRank)),
         const SizedBox(height: RiksaSpacing.sm),
         for (final row in nearby.take(3))

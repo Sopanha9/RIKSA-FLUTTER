@@ -20,6 +20,9 @@ import '../../social/presentation/widgets/social_create_menu.dart';
 import '../../social/presentation/widgets/social_owner_menu.dart';
 import '../../social/presentation/widgets/social_post_card.dart';
 import '../../social/providers/social_feed_provider.dart';
+import '../../mascot/domain/mascot.dart';
+import '../../mascot/presentation/widgets/buddy_companion.dart';
+import '../../mascot/providers/mascot_provider.dart';
 import '../data/profile_models.dart';
 import '../providers/profile_cover_provider.dart';
 import '../providers/profile_provider.dart';
@@ -408,6 +411,7 @@ class _ProfileHeader extends ConsumerWidget {
       if (user.createdAt != null)
         '${l10n.joined} ${DateFormat.yMMMM(locale).format(user.createdAt!.toLocal())}',
     ].join(' • ');
+    final buddy = ref.watch(mascotProvider).profile;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -550,6 +554,39 @@ class _ProfileHeader extends ConsumerWidget {
                   ),
               ],
             ),
+          ),
+        ],
+        if (buddy != null) ...[
+          const SizedBox(height: RiksaSpacing.sm),
+          Row(
+            key: const ValueKey('profile-buddy-identity'),
+            children: [
+              const BuddyFaceReaction(
+                face: MascotFace.proud,
+                size: 44,
+                loops: 1,
+              ),
+              const SizedBox(width: RiksaSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.profileStudyBuddy,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: context.riksa.inkMuted,
+                      ),
+                    ),
+                    Text(
+                      buddy.name,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
         const SizedBox(height: 12),

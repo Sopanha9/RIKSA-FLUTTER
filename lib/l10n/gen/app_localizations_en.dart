@@ -2547,4 +2547,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get homeFromCommunities => 'From your communities';
   @override String homeCommunityPostMeta(String community, String author, int count) => '$community · $author · $count comments';
   @override String get homeSeeCommunityFeed => 'See community feed';
+  @override String get lessonShareLearning => 'Share what I learned';
+  @override String get resumeLearningTitle => 'Resume learning';
+  @override String get resumeLearningEmptyTitle => 'No lesson in progress';
+  @override String get resumeLearningEmptyBody => 'Choose a lesson to begin your next learning step.';
+  @override String get leaderboardNearbyLearners => 'Learners around your rank';
+  @override String get leaderboardSearchLearners => 'Search learners';
+  @override String get buddyReactions => 'Buddy reactions';
+  @override String get buddyReactionsHint => 'Allow animated and speaking buddy reactions';
+  @override String get profileStudyBuddy => 'Study buddy';
+  @override String profileBuddyNamed(String name) => '$name, your study buddy';
+  @override String get aiBuddyHandoff => 'Your buddy can help you start; Kru AI will explain the question.';
+  @override String homeProvinceSquadNamed(String province) => '$province study squad';
+  @override String get streakReminderTitle => '🔥 Keep your learning streak alive!';
+  @override String get streakReminderBody => 'Take 5 minutes tonight to practice and protect your streak.';
+  @override String get drawerGeneral => 'General';
+  @override String get drawerAbout => 'About';
+  @override String get drawerUserAgreement => 'User Agreement';
+  @override String get drawerPrivacyCenter => 'Privacy Center';
+  @override String get aiCopyAnswer => 'Copy answer';
+  @override String get aiCopiedClipboard => 'Copied to clipboard';
+  @override String get aiCopy => 'Copy';
+  @override String get aiLoginRequired => 'Please log in to chat with the AI Tutor.';
 }

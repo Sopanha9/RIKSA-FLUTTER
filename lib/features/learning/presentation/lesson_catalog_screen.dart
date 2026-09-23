@@ -12,6 +12,8 @@ import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../social/providers/social_feed_provider.dart';
+import '../../mascot/domain/mascot.dart';
+import '../../mascot/presentation/widgets/buddy_companion.dart';
 import '../../userProfile/providers/profile_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
@@ -138,9 +140,7 @@ class _GreetingRow extends ConsumerWidget {
         ?.gamification
         .currentTier;
 
-    return Row(
-      children: [
-        Semantics(
+    final avatar = Semantics(
           button: true,
           label: l10n.openProfileMenu,
           child: Tooltip(
@@ -159,17 +159,14 @@ class _GreetingRow extends ConsumerWidget {
               ),
             ),
           ),
-        ),
-        const SizedBox(width: RiksaSpacing.sm),
-        Expanded(
-          child: Column(
+        );
+    final identity = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 name.isEmpty ? l10n.learningTitle : l10n.greetingNamed(name),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
                 style: RiksaTypography.titleStyleFor(
                   name,
                   Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -180,21 +177,48 @@ class _GreetingRow extends ConsumerWidget {
               ),
               Text(
                 l10n.gradeStemLabel,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
                 style: Theme.of(
                   context,
                 ).textTheme.labelSmall?.copyWith(color: palette.inkMuted),
               ),
             ],
+          );
+    const actions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _StreakChip(),
+        SizedBox(width: RiksaSpacing.xs),
+        _SavedLessonsButton(),
+        SizedBox(width: RiksaSpacing.xs),
+        _SearchButton(),
+      ],
+    );
+    final largeText = MediaQuery.textScalerOf(context).scale(1) >= 1.5;
+    if (largeText) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              avatar,
+              const SizedBox(width: RiksaSpacing.sm),
+              Expanded(child: identity),
+            ],
           ),
-        ),
+          const SizedBox(height: RiksaSpacing.xs),
+          Align(alignment: AlignmentDirectional.centerEnd, child: actions),
+        ],
+      );
+    }
+    return Row(
+      children: [
+        avatar,
+        const SizedBox(width: RiksaSpacing.sm),
+        Expanded(child: identity),
         const SizedBox(width: RiksaSpacing.xs),
-        const _StreakChip(),
-        const SizedBox(width: RiksaSpacing.xs),
-        const _SavedLessonsButton(),
-        const SizedBox(width: RiksaSpacing.xs),
-        const _SearchButton(),
+        actions,
       ],
     );
   }
@@ -414,6 +438,12 @@ class _ContinueCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SubjectPixelArtwork(subject: subject.subject, size: 52),
+                    const SizedBox(width: 8),
+                    const BuddyFaceReaction(
+                      face: MascotFace.determined,
+                      size: 42,
+                      loops: 1,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(

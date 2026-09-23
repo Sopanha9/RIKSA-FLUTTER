@@ -27,6 +27,10 @@ class PublicProfileScreen extends ConsumerStatefulWidget {
       _PublicProfileScreenState();
 }
 
+// Public profiles intentionally omit buddy identity. Add it only when the
+// backend PublicProfile contract exposes mascotSpecies and mascotName; using
+// mascotProvider here would incorrectly show the signed-in learner's buddy.
+
 class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   ProfileTab _tab = ProfileTab.posts;
 

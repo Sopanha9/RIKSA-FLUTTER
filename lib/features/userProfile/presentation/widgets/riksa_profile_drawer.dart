@@ -10,6 +10,9 @@ import '../../../../core/providers/theme_mode_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/data/auth_models.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../../mascot/domain/mascot.dart';
+import '../../../mascot/presentation/widgets/buddy_companion.dart';
+import '../../../mascot/providers/mascot_provider.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../providers/profile_cover_provider.dart';
 import '../../providers/profile_provider.dart';
@@ -68,13 +71,13 @@ class RiksaProfileDrawer extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _DrawerSection(
-                          title: 'General',
+                          title: l10n.drawerGeneral,
                           initiallyExpanded: true,
                           children: [
                             _DrawerItem(
                               itemKey: const ValueKey('drawer-progress'),
                               icon: Icons.timeline_rounded,
-                              label: 'Progress',
+                              label: l10n.progressHistory,
                               onTap: () => _go(context, '/progress'),
                             ),
                             _DrawerItem(
@@ -96,7 +99,7 @@ class RiksaProfileDrawer extends ConsumerWidget {
                           child: Divider(height: 1, color: palette.outline),
                         ),
                         _DrawerSection(
-                          title: 'About',
+                          title: l10n.drawerAbout,
                           initiallyExpanded: false,
                           children: [
                             _DrawerItem(
@@ -108,7 +111,7 @@ class RiksaProfileDrawer extends ConsumerWidget {
                             _DrawerItem(
                               itemKey: const ValueKey('drawer-user-agreement'),
                               icon: Icons.check_circle_outline_rounded,
-                              label: 'User Agreement',
+                              label: l10n.drawerUserAgreement,
                               onTap: () =>
                                   _go(context, '/about/user-agreement'),
                             ),
@@ -119,19 +122,19 @@ class RiksaProfileDrawer extends ConsumerWidget {
                           child: Divider(height: 1, color: palette.outline),
                         ),
                         _DrawerSection(
-                          title: 'Setting',
+                          title: l10n.settings,
                           initiallyExpanded: false,
                           children: [
                             _DrawerItem(
                               itemKey: const ValueKey('drawer-privacy-center'),
                               icon: Icons.lock_outline_rounded,
-                              label: 'Privacy Center',
+                              label: l10n.drawerPrivacyCenter,
                               onTap: () => _go(context, '/settings/privacy'),
                             ),
                             _DrawerItem(
                               itemKey: const ValueKey('drawer-settings'),
                               icon: Icons.settings_outlined,
-                              label: 'General Setting',
+                              label: l10n.settings,
                               onTap: () => _go(context, '/profile/settings'),
                             ),
                           ],
@@ -141,7 +144,7 @@ class RiksaProfileDrawer extends ConsumerWidget {
                           child: Divider(height: 1, color: palette.outline),
                         ),
                         _DrawerSection(
-                          title: 'Help and Support',
+                          title: l10n.helpAndLegal,
                           initiallyExpanded: false,
                           children: [
                             _DrawerItem(
@@ -198,7 +201,7 @@ class RiksaProfileDrawer extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('OK'),
+            child: Text(l10n.ok),
           ),
         ],
       ),
@@ -217,6 +220,7 @@ class _DrawerIdentity extends ConsumerWidget {
     final palette = context.riksa;
     final theme = Theme.of(context);
     final dashboard = ref.watch(profileDashboardProvider);
+    final buddy = ref.watch(mascotProvider).profile;
     final decimal = NumberFormat.decimalPattern();
 
     if (user case final AuthUser signedIn) {
@@ -276,6 +280,27 @@ class _DrawerIdentity extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: RiksaSpacing.sm),
+          if (buddy != null) ...[
+            Row(
+              children: [
+                const BuddyFaceReaction(
+                  face: MascotFace.neutral,
+                  size: 38,
+                  loops: 1,
+                ),
+                const SizedBox(width: RiksaSpacing.xs),
+                Expanded(
+                  child: Text(
+                    l10n.profileBuddyNamed(buddy.name),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: RiksaSpacing.sm),
+          ],
           // Where X counts other people, Riksa counts the learner's own work.
           Wrap(
             key: const ValueKey('drawer-counts'),

@@ -5,6 +5,8 @@ import '../../../../core/widgets/riksa_components.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../core/widgets/riksa_rank_badge.dart';
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../mascot/domain/mascot.dart';
+import '../../../mascot/presentation/widgets/buddy_companion.dart';
 
 /// The learner's own standing, on the accent surface: the rank
 /// leads, XP follows, and the framed avatar carries the tier badge.
@@ -89,6 +91,12 @@ class CurrentUserRankCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
+                const BuddyFaceReaction(
+                  face: MascotFace.proud,
+                  size: 48,
+                  loops: 1,
+                ),
+                const SizedBox(width: 8),
                 SizedBox(
                   width: 60,
                   height: 60,
@@ -100,8 +108,8 @@ class CurrentUserRankCard extends StatelessWidget {
                           value: avatarUrl,
                           label: avatarLabel,
                           size: 56,
-                          backgroundColor: AppColors.editorialPinkSoft,
-                          foregroundColor: AppColors.editorialAubergine,
+                          backgroundColor: context.riksa.brandSoft,
+                          foregroundColor: context.riksa.brand,
                           frameTier: tier,
                         ),
                       ),

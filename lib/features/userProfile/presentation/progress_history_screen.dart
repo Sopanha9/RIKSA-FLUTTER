@@ -6,6 +6,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../core/widgets/riksa_glass.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../mascot/domain/mascot.dart';
+import '../../mascot/presentation/widgets/buddy_companion.dart';
 import '../providers/profile_provider.dart';
 
 /// Names an XP source in the learner's language.
@@ -52,6 +54,7 @@ class ProgressHistoryScreen extends ConsumerWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
+          backgroundColor: context.riksa.rewardSoft,
           title: Text(l10n.progressHistoryTitle),
           // His glass tab strip, driven by the same DefaultTabController.
           bottom: const PreferredSize(
@@ -59,6 +62,7 @@ class ProgressHistoryScreen extends ConsumerWidget {
             child: _ProgressSectionTabs(),
           ),
         ),
+        backgroundColor: context.riksa.canvas,
         body: TabBarView(
           children: [
             _XpHistory(ref: ref),
@@ -153,7 +157,7 @@ class _PixelXpBadge extends StatelessWidget {
       width: 46,
       height: 46,
       decoration: BoxDecoration(
-        color: palette.brandSoft,
+        color: palette.rewardSoft,
         shape: BoxShape.circle,
       ),
       child: Center(
@@ -161,7 +165,7 @@ class _PixelXpBadge extends StatelessWidget {
           dimension: 25,
           child: CustomPaint(
             painter: _PixelXpPainter(
-              color: palette.brand,
+              color: palette.reward,
               accent: palette.reward,
             ),
           ),
@@ -256,11 +260,19 @@ class _RankHistory extends StatelessWidget {
                     final item = items[i];
                     final improved = item.newRank < item.oldRank;
                     return ListTile(
-                      leading: CircleAvatar(
-                        child: Icon(
-                          improved ? Icons.trending_up : Icons.trending_down,
-                        ),
-                      ),
+                      leading: i == 0 && improved
+                          ? const BuddyFaceReaction(
+                              face: MascotFace.proud,
+                              size: 42,
+                              loops: 1,
+                            )
+                          : CircleAvatar(
+                              child: Icon(
+                                improved
+                                    ? Icons.trending_up
+                                    : Icons.trending_down,
+                              ),
+                            ),
                       title: Text(
                         l10n.progressHistoryRankRow(
                           rankScopeLabel(l10n, item.scope),

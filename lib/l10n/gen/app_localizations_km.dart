@@ -2502,4 +2502,26 @@ class AppLocalizationsKm extends AppLocalizations {
   @override String get homeFromCommunities => 'ពីសហគមន៍របស់អ្នក';
   @override String homeCommunityPostMeta(String community, String author, int count) => '$community · $author · មតិ $count';
   @override String get homeSeeCommunityFeed => 'មើលព័ត៌មានសហគមន៍';
+  @override String get lessonShareLearning => 'ចែករំលែកអ្វីដែលខ្ញុំបានរៀន';
+  @override String get resumeLearningTitle => 'បន្តការរៀន';
+  @override String get resumeLearningEmptyTitle => 'មិនមានមេរៀនកំពុងរៀនទេ';
+  @override String get resumeLearningEmptyBody => 'ជ្រើសរើសមេរៀនដើម្បីចាប់ផ្តើមជំហានសិក្សាបន្ទាប់។';
+  @override String get leaderboardNearbyLearners => 'អ្នកសិក្សានៅជិតចំណាត់ថ្នាក់របស់អ្នក';
+  @override String get leaderboardSearchLearners => 'ស្វែងរកអ្នកសិក្សា';
+  @override String get buddyReactions => 'ប្រតិកម្មរបស់មិត្តសិក្សា';
+  @override String get buddyReactionsHint => 'អនុញ្ញាតឱ្យមិត្តសិក្សាបង្ហាញចលនា និងនិយាយ';
+  @override String get profileStudyBuddy => 'មិត្តសិក្សា';
+  @override String profileBuddyNamed(String name) => '$name មិត្តសិក្សារបស់អ្នក';
+  @override String get aiBuddyHandoff => 'មិត្តសិក្សារបស់អ្នកអាចជួយចាប់ផ្តើម ហើយគ្រូ AI នឹងពន្យល់សំណួរ។';
+  @override String homeProvinceSquadNamed(String province) => 'ក្រុមសិក្សា $province';
+  @override String get streakReminderTitle => '🔥 រក្សាខ្សែពិន្ទុបន្តរបស់អ្នក!';
+  @override String get streakReminderBody => 'ចំណាយពេល ៥ នាទីយប់នេះដើម្បីរៀន និងរក្សាការសិក្សាបន្តរបស់អ្នក។';
+  @override String get drawerGeneral => 'ទូទៅ';
+  @override String get drawerAbout => 'អំពី';
+  @override String get drawerUserAgreement => 'កិច្ចព្រមព្រៀងអ្នកប្រើប្រាស់';
+  @override String get drawerPrivacyCenter => 'មជ្ឈមណ្ឌលឯកជនភាព';
+  @override String get aiCopyAnswer => 'ចម្លងចម្លើយ';
+  @override String get aiCopiedClipboard => 'បានចម្លងទៅក្តារតម្កល់';
+  @override String get aiCopy => 'ចម្លង';
+  @override String get aiLoginRequired => 'សូមចូលគណនីដើម្បីជជែកជាមួយគ្រូ AI។';
 }

@@ -5,19 +5,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class BuddyPreferencesNotifier extends Notifier<bool> {
   static const storageKey = 'riksa_buddy_reactions_enabled';
+  bool _changedInSession = false;
 
   @override
   bool build() {
     unawaited(_restore());
-    return true;
+    // Stay quiet until persistence resolves so a stored opt-out can never
+    // flash an autonomous reaction during startup.
+    return false;
   }
 
   Future<void> _restore() async {
     final preferences = await SharedPreferences.getInstance();
-    state = preferences.getBool(storageKey) ?? true;
+    if (!_changedInSession) {
+      state = preferences.getBool(storageKey) ?? true;
+    }
   }
 
   Future<void> setEnabled(bool enabled) async {
+    _changedInSession = true;
     state = enabled;
     final preferences = await SharedPreferences.getInstance();
     await preferences.setBool(storageKey, enabled);

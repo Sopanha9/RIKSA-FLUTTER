@@ -30,10 +30,9 @@ class BuddyCompanionInline extends ConsumerWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        MascotFaceAvatar(
+        BuddyFaceReaction(
           face: effective.face,
           size: size,
-          loops: enabled && !MediaQuery.disableAnimationsOf(context) ? 1 : 0,
         ),
         if (line != null && line.isNotEmpty) ...[
           const SizedBox(width: RiksaSpacing.sm),
@@ -48,6 +47,36 @@ class BuddyCompanionInline extends ConsumerWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// A preference-aware everyday buddy face. Turning reactions off produces a
+/// neutral first frame immediately while retaining the learner's identity.
+class BuddyFaceReaction extends ConsumerWidget {
+  const BuddyFaceReaction({
+    super.key,
+    required this.face,
+    this.size = 44,
+    this.loops = 1,
+  });
+
+  final MascotFace face;
+  final double size;
+  final int loops;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(buddyReactionsEnabledProvider);
+    final avatar = MascotFaceAvatar(
+      face: enabled ? face : MascotFace.neutral,
+      size: size,
+      loops: enabled ? loops : 0,
+    );
+    if (enabled || MediaQuery.disableAnimationsOf(context)) return avatar;
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(disableAnimations: true),
+      child: avatar,
     );
   }
 }
@@ -75,14 +104,33 @@ class BuddyEarnedMoment extends ConsumerWidget {
       children: [
         if (enabled && reaction.speechAllowed && speech != null)
           MascotSpeechBubble(line: speech!),
-        MascotView(
+        _StaticWhenDisabled(
+          disabled: !enabled,
+          child: MascotView(
           species: species,
           mood: mood,
           size: size,
           alive: enabled,
           interactive: false,
+          ),
         ),
       ],
+    );
+  }
+}
+
+class _StaticWhenDisabled extends StatelessWidget {
+  const _StaticWhenDisabled({required this.disabled, required this.child});
+
+  final bool disabled;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!disabled || MediaQuery.disableAnimationsOf(context)) return child;
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(disableAnimations: true),
+      child: child,
     );
   }
 }
