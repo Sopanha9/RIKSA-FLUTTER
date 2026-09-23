@@ -98,3 +98,9 @@ Khmer and English are equals, not a translation layer bolted on.
    Layouts must survive text that is 40% longer and taller than the English.
 7. **Cheap phone, tired student.** High contrast, large touch targets, works at
    360dp, readable under a fluorescent tube at 9pm.
+# Current direction (September 2026)
+
+> **Note:** The signed-in product is being rebuilt around a daily study loop,
+> province/community proximity, and the learner's chosen buddy. Older sections
+> below that describe Home as the full social feed or treat features as an
+> equal-weight dashboard are historical and must not override that direction.

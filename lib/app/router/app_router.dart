@@ -141,11 +141,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (context, state) => const SocialFeedScreen(),
+                builder: (context, state) => const HomeDashboardScreen(),
               ),
               GoRoute(
                 path: '/dashboard',
-                builder: (context, state) => const HomeDashboardScreen(),
+                redirect: (context, state) => '/home',
               ),
               GoRoute(
                 path: '/community',

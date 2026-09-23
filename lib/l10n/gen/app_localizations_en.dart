@@ -2526,4 +2526,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authBuddySuccess => 'Yay, you\'re in!';
+  @override String get buddyHomeGreeting => 'Ready for another step?';
+  @override String get buddyWelcomeBack => 'Welcome back. Pick up where you left off.';
+  @override String get buddyLessonCompleted => 'You earned this!';
+  @override String get buddyRankImproved => 'Your progress moved you up.';
+  @override String get buddyCommunityJoined => 'Welcome to your new community!';
+  @override String homeStreakDays(int count) => '$count days';
+  @override String get homeTodaysStudy => "Today's study";
+  @override String get homeStartHere => 'Start here';
+  @override String get homeStartHereBody => 'Choose your first lesson and begin one step at a time.';
+  @override String homeLessonMinutes(int minutes) => '$minutes min';
+  @override String get homeContinue => 'Continue';
+  @override String get homeProvinceSquad => 'Your province study squad';
+  @override String get homeProvinceMissing => 'Choose your province to see your study squad.';
+  @override String get homeSelectProvince => 'Choose province';
+  @override String homeProvinceRank(int rank) => 'You are #$rank this week';
+  @override String homeNearbyLearner(int rank, String name) => '#$rank $name';
+  @override String get homeYou => 'You';
+  @override String get homeViewProvinceRanks => 'View province ranks';
+  @override String get homeFromCommunities => 'From your communities';
+  @override String homeCommunityPostMeta(String community, String author, int count) => '$community · $author · $count comments';
+  @override String get homeSeeCommunityFeed => 'See community feed';
 }
