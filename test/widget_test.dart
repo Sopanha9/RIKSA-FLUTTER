@@ -88,6 +88,60 @@ void main() {
     expect(identical(first, second), isTrue);
   });
 
+  testWidgets('losing authentication redirects an open protected route', (
+    tester,
+  ) async {
+    late GoRouter router;
+    late WidgetRef appRef;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          localeProvider.overrideWith(_TestLocaleNotifier.new),
+        ],
+        child: Consumer(
+          builder: (context, ref, _) {
+            appRef = ref;
+            router = ref.watch(goRouterProvider);
+            return MaterialApp.router(
+              theme: AppTheme.light,
+              routerConfig: router,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('en'), Locale('km')],
+            );
+          },
+        ),
+      ),
+    );
+    (appRef.read(authProvider.notifier) as _TestAuthNotifier).emit(
+      const Authenticated(
+        AuthUser(
+          id: 'user-1',
+          username: 'sophea',
+          displayName: 'Sophea',
+          emailVerified: true,
+          phoneVerified: false,
+          role: 'USER',
+        ),
+      ),
+    );
+    router.go('/home');
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/home');
+
+    (appRef.read(authProvider.notifier) as _TestAuthNotifier).emit(
+      const Unauthenticated(),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/auth/login');
+    await tester.pump(const Duration(seconds: 2));
+  });
+
   test('root path has a safe redirect route', () {
     final container = ProviderContainer(
       overrides: [authProvider.overrideWith(_AuthenticatedAuthNotifier.new)],
@@ -142,7 +196,9 @@ void main() {
     expect(find.byType(LanguageToggle), findsOneWidget);
   });
 
-  testWidgets('login content sits in the upper part of a tall screen', (tester) async {
+  testWidgets('login content sits in the upper part of a tall screen', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(800, 1200);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);

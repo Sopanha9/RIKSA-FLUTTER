@@ -55,6 +55,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
   final router = GoRouter(
     initialLocation: '/splash',
+    refreshListenable: authRefresh,
     redirect: (context, state) {
       final authState = authRefresh.value;
       final isLoggedIn = authState is Authenticated;
@@ -148,7 +149,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: '/community',
-                builder: (context, state) => const SocialFeedScreen(),
+                builder: (context, state) =>
+                    const SocialFeedScreen(startInCommunities: true),
               ),
               GoRoute(
                 path: '/communities',

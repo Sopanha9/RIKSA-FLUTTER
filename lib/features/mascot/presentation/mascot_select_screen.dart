@@ -28,6 +28,7 @@ class _MascotSelectScreenState extends ConsumerState<MascotSelectScreen> {
   /// Whether the learner typed a name. Until then the field follows the
   /// selected species' default name.
   bool _nameEdited = false;
+  bool _selectionEdited = false;
   bool _submitting = false;
 
   @override
@@ -50,6 +51,7 @@ class _MascotSelectScreenState extends ConsumerState<MascotSelectScreen> {
       return;
     }
     setState(() {
+      _selectionEdited = true;
       _species = species;
       if (!_nameEdited) _name.text = MascotProfile.defaultName(species);
     });
@@ -80,6 +82,17 @@ class _MascotSelectScreenState extends ConsumerState<MascotSelectScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<MascotState>(mascotProvider, (previous, next) {
+      final saved = next.profile;
+      if (saved == null || _selectionEdited || _nameEdited || _submitting) {
+        return;
+      }
+      setState(() {
+        _species = saved.species;
+        _name.text = saved.name;
+        _nameEdited = true;
+      });
+    });
     final strings = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final palette = context.riksa;
@@ -153,7 +166,10 @@ class _MascotSelectScreenState extends ConsumerState<MascotSelectScreen> {
                         maxLength: MascotProfile.maxNameLength,
                         textCapitalization: TextCapitalization.words,
                         textInputAction: TextInputAction.done,
-                        onChanged: (_) => _nameEdited = true,
+                        onChanged: (_) {
+                          _nameEdited = true;
+                          _selectionEdited = true;
+                        },
                         onSubmitted: (_) => _continue(),
                         decoration: InputDecoration(
                           labelText: strings.mascotNameLabel,

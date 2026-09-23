@@ -276,12 +276,19 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                               title: l10n.buddyReactions,
                               subtitle: l10n.buddyReactionsHint,
                               value: reactionsEnabled,
-                              onChanged: (value) {
-                                ref
+                              onChanged: (value) async {
+                                final saved = await ref
                                     .read(
                                       buddyReactionsEnabledProvider.notifier,
                                     )
                                     .setEnabled(value);
+                                if (!mounted || !context.mounted) return;
+                                if (!saved) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(l10n.saveFailed)),
+                                  );
+                                  return;
+                                }
                                 if (value) {
                                   // Read the new value directly: the
                                   // provider rebuilds after this frame.

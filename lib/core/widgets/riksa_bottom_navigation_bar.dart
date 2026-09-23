@@ -18,11 +18,14 @@ class RiksaBottomNavigationBar extends StatelessWidget {
     required this.currentIndex,
     required this.onSelected,
     this.isExpanded = true,
-  }) : assert(currentIndex >= 0 && currentIndex < 5);
+    this.onExpand,
+  }) : assert(currentIndex >= 0 && currentIndex < 5),
+       assert(isExpanded || onExpand != null);
 
   final int currentIndex;
   final ValueChanged<int> onSelected;
   final bool isExpanded;
+  final VoidCallback? onExpand;
 
   static const int aiTutorIndex = 2;
   static const double _height = 60;
@@ -136,8 +139,10 @@ class RiksaBottomNavigationBar extends StatelessWidget {
       top: false,
       minimum: const EdgeInsets.fromLTRB(16, 6, 16, 12),
       child: Semantics(
-        label: 'Current Tab',
+        label: MaterialLocalizations.of(context).showMenuTooltip,
         button: true,
+        onTap: onExpand,
+        excludeSemantics: true,
         child: Container(
           width: RiksaBottomNavigationBar._height,
           height: RiksaBottomNavigationBar._height,
@@ -166,7 +171,7 @@ class RiksaBottomNavigationBar extends StatelessWidget {
                     shape: const CircleBorder(),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
-                      onTap: () {},
+                      onTap: onExpand,
                       child: Center(
                         child: Icon(
                           activeTabIcon,

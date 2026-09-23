@@ -38,6 +38,7 @@ class MascotState {
 class MascotNotifier extends Notifier<MascotState> {
   static const String _speciesKey = 'riksa_mascot_species';
   static const String _nameKey = 'riksa_mascot_name';
+  bool _changedInSession = false;
 
   @override
   MascotState build() {
@@ -51,6 +52,7 @@ class MascotNotifier extends Notifier<MascotState> {
     final species = MascotSpecies.values
         .where((value) => value.name == speciesName)
         .firstOrNull;
+    if (_changedInSession) return;
     state = MascotState(
       isReady: true,
       profile: species == null
@@ -66,6 +68,7 @@ class MascotNotifier extends Notifier<MascotState> {
 
   /// Saves the choice. A blank name falls back to the species' default.
   Future<void> choose(MascotSpecies species, String name) async {
+    _changedInSession = true;
     final trimmed = name.trim();
     final profile = MascotProfile(
       species: species,

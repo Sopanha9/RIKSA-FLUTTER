@@ -12,29 +12,39 @@ Widget _testApp({
   Locale locale = const Locale('en'),
   bool dark = false,
   double textScale = 1,
-}) => MaterialApp(
-  theme: dark ? AppTheme.dark : AppTheme.light,
-  locale: locale,
-  builder: (context, child) => MediaQuery(
-    data: MediaQuery.of(
-      context,
-    ).copyWith(textScaler: TextScaler.linear(textScale)),
-    child: child!,
-  ),
-  localizationsDelegates: const [
-    AppLocalizations.delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-  ],
-  supportedLocales: const [Locale('en'), Locale('km')],
-  home: Scaffold(
-    bottomNavigationBar: RiksaBottomNavigationBar(
-      currentIndex: currentIndex,
-      onSelected: onSelected ?? (_) {},
+  bool isExpanded = true,
+}) {
+  var expanded = isExpanded;
+  return MaterialApp(
+    theme: dark ? AppTheme.dark : AppTheme.light,
+    locale: locale,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(textScale)),
+      child: child!,
     ),
-  ),
-);
+    localizationsDelegates: const [
+      AppLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: const [Locale('en'), Locale('km')],
+    home: StatefulBuilder(
+      builder: (context, setState) {
+        return Scaffold(
+          bottomNavigationBar: RiksaBottomNavigationBar(
+            currentIndex: currentIndex,
+            onSelected: onSelected ?? (_) {},
+            isExpanded: expanded,
+            onExpand: () => setState(() => expanded = true),
+          ),
+        );
+      },
+    ),
+  );
+}
 
 void main() {
   testWidgets('floating pill labels every tab and keeps all tabs accessible', (
@@ -84,6 +94,16 @@ void main() {
       await tester.tap(find.byKey(ValueKey('bottom-nav-item-$index')));
       expect(selected, index);
     }
+  });
+
+  testWidgets('collapsed navigation opens the full destination bar', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_testApp(isExpanded: false));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('collapsed-bottom-nav-fab')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('full-bottom-nav-bar')), findsOneWidget);
   });
 
   testWidgets('selection pill slides between non-AI destinations', (

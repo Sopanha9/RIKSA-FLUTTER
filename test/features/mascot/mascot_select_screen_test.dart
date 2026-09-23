@@ -135,6 +135,22 @@ void main() {
     expect(profile.name, 'Mochi');
   });
 
+  testWidgets('picker uses a saved buddy after asynchronous restoration', (
+    tester,
+  ) async {
+    await phone(tester);
+    SharedPreferences.setMockInitialValues({
+      'riksa_mascot_species': 'capybara',
+      'riksa_mascot_name': 'Mochi',
+    });
+    await tester.pumpWidget(_app());
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(_stageName(tester), 'Mochi');
+    final name = tester.widget<TextField>(find.byKey(const Key('mascot_name')));
+    expect(name.controller!.text, 'Mochi');
+  });
+
   test('a blank name falls back to the species default', () async {
     final container = ProviderContainer();
     addTearDown(container.dispose);

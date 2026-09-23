@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,7 +34,9 @@ import 'widgets/streak_details_sheet.dart';
 enum _SocialSection { feed, communities, blog }
 
 class SocialFeedScreen extends ConsumerStatefulWidget {
-  const SocialFeedScreen({super.key});
+  const SocialFeedScreen({super.key, this.startInCommunities = false});
+
+  final bool startInCommunities;
 
   @override
   ConsumerState<SocialFeedScreen> createState() => _SocialFeedScreenState();
@@ -43,13 +44,27 @@ class SocialFeedScreen extends ConsumerStatefulWidget {
 
 class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
   late final ScrollController _scrollController;
-  _SocialSection _section = _SocialSection.feed;
+  late _SocialSection _section;
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
+    _section = widget.startInCommunities
+        ? _SocialSection.communities
+        : _SocialSection.feed;
     _scrollController = ScrollController()..addListener(_loadMoreNearEdge);
+  }
+
+  @override
+  void didUpdateWidget(covariant SocialFeedScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.startInCommunities != widget.startInCommunities) {
+      _section = widget.startInCommunities
+          ? _SocialSection.communities
+          : _SocialSection.feed;
+      if (_scrollController.hasClients) _scrollController.jumpTo(0);
+    }
   }
 
   void _loadMoreNearEdge() {

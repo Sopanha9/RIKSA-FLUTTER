@@ -29,11 +29,16 @@ class BuddyPreferencesNotifier extends Notifier<bool> {
     }
   }
 
-  Future<void> setEnabled(bool enabled) async {
-    _changedInSession = true;
-    state = enabled;
-    final preferences = await SharedPreferences.getInstance();
-    await preferences.setBool(storageKey, enabled);
+  Future<bool> setEnabled(bool enabled) async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      if (!await preferences.setBool(storageKey, enabled)) return false;
+      _changedInSession = true;
+      state = enabled;
+      return true;
+    } on Object {
+      return false;
+    }
   }
 }
 

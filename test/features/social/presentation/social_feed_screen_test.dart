@@ -113,6 +113,35 @@ class _BlogNotifier extends BlogFeedNotifier {
 }
 
 void main() {
+  testWidgets('community entry opens joined-community content', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          socialFeedProvider.overrideWith(_FeedNotifier.new),
+          communityStreakProvider.overrideWith(
+            (ref) async => const CommunityStreak(current: 0, highest: 0),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: const SocialFeedScreen(startInCommunities: true),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Join a community'), findsOneWidget);
+    expect(find.text('The two-minute recall habit'), findsNothing);
+    expect(find.byKey(const ValueKey('home-study-banner')), findsNothing);
+  });
+
   testWidgets('renders the editorial social shell at phone width', (
     tester,
   ) async {

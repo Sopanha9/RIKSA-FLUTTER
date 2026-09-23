@@ -120,6 +120,7 @@ class _AppShellState extends State<AppShell> {
             key: const ValueKey('persistent-bottom-navigation'),
             currentIndex: widget.navigationShell.currentIndex,
             isExpanded: _showNavBar,
+            onExpand: () => setState(() => _showNavBar = true),
             onSelected: (index) {
               widget.navigationShell.goBranch(
                 index,
