@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riksa_app/core/providers/locale_provider.dart';
 import 'package:riksa_app/core/providers/theme_mode_provider.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
@@ -54,6 +55,12 @@ Widget _app(Widget home, {ThemeMode themeMode = ThemeMode.dark}) =>
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: themeMode,
+        // The settings buddy animates for as long as it is on screen; with
+        // motion off it holds a still frame, so pumpAndSettle can settle.
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        ),
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -66,6 +73,8 @@ Widget _app(Widget home, {ThemeMode themeMode = ThemeMode.dark}) =>
     );
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('profile settings follows the application light and dark mode', (
     tester,
   ) async {

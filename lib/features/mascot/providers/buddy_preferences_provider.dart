@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,9 +17,15 @@ class BuddyPreferencesNotifier extends Notifier<bool> {
   }
 
   Future<void> _restore() async {
-    final preferences = await SharedPreferences.getInstance();
-    if (!_changedInSession) {
-      state = preferences.getBool(storageKey) ?? true;
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      if (!_changedInSession) {
+        state = preferences.getBool(storageKey) ?? true;
+      }
+    } on MissingPluginException {
+      // Keep reactions disabled when local preferences cannot be read.
+    } on PlatformException {
+      // A failed read must not interrupt screens that show the buddy.
     }
   }
 

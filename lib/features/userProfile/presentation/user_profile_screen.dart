@@ -14,6 +14,8 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_api.dart';
 import '../../auth/data/auth_models.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../blog/data/blog_models.dart';
+import '../../blog/providers/blog_provider.dart';
 import '../../social/data/social_api.dart';
 import '../../social/data/social_models.dart';
 import '../../social/presentation/widgets/social_create_menu.dart';
@@ -141,9 +143,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       color: context.riksa.canvas,
                       tabs: ProfileTabs(
                         selected: _tab,
-                        postsLabel: l10n.myPosts,
-                        achievementsLabel: l10n.achievements,
-                        rankLabel: l10n.currentRank,
+                        postsLabel: l10n.posts,
+                        articlesLabel: l10n.profileArticlesTab,
+                        achievementsLabel: l10n.profileBadgesTab,
+                        rankLabel: l10n.profileRankTab,
                         onSelected: (tab) => setState(() => _tab = tab),
                       ),
                     ),
@@ -157,17 +160,21 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                             context,
                             RiksaMotion.standard,
                           ),
-                          layoutBuilder: (currentChild, previousChildren) => Stack(
-                            alignment: Alignment.topCenter,
-                            children: <Widget>[
-                              ...previousChildren,
-                              if (currentChild != null) currentChild,
-                            ],
-                          ),
+                          layoutBuilder: (currentChild, previousChildren) =>
+                              Stack(
+                                alignment: Alignment.topCenter,
+                                children: <Widget>[
+                                  ...previousChildren,
+                                  ?currentChild,
+                                ],
+                              ),
                           child: user == null
                               ? const _ProfileLoading()
                               : switch (_tab) {
                                   ProfileTab.posts => _PostsTab(user: user),
+                                  ProfileTab.articles => _ArticlesTab(
+                                    user: user,
+                                  ),
                                   ProfileTab.achievements => _AchievementsTab(
                                     dashboard: dashboard,
                                   ),
@@ -682,30 +689,39 @@ class _ProfileTierProgress extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsetsDirectional.fromSTEB(4, 3, 10, 3),
-                decoration: BoxDecoration(
-                  color: palette.brandSoft,
-                  borderRadius: AppRadii.fullBorder,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    RiksaRankBadge(tier: game?.currentTier, size: 20),
-                    const SizedBox(width: 4),
-                    Text(
-                      tier,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: palette.brand,
-                        fontWeight: FontWeight.w700,
+              Flexible(
+                flex: 2,
+                child: Container(
+                  padding: const EdgeInsetsDirectional.fromSTEB(4, 3, 10, 3),
+                  decoration: BoxDecoration(
+                    color: palette.brandSoft,
+                    borderRadius: AppRadii.fullBorder,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RiksaRankBadge(tier: game?.currentTier, size: 20),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          tier,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                color: palette.brand,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
               if (band != null)
                 Expanded(
+                  flex: 1,
                   child: Text(
                     band,
                     key: const ValueKey('profile-tier-band'),
@@ -815,6 +831,125 @@ class _ProfileStats extends StatelessWidget {
                     ),
                   ),
                 ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Owner-only article preview. The public feed hides pending and rejected
+/// articles, so the profile must show their status instead of losing them.
+class _ArticlesTab extends ConsumerWidget {
+  const _ArticlesTab({required this.user});
+
+  final AuthUser user;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final preview = myArticlesPreviewProvider(user.id);
+    final articles = ref.watch(preview);
+    Future<void> openAll() async {
+      await context.push('/blog/my-posts');
+      ref.invalidate(preview);
+    }
+
+    return Column(
+      key: const ValueKey('profile-articles-content'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.blogYourPosts, style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 12),
+        articles.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, _) => Column(
+            children: [
+              Text(l10n.blogMyPostsFailed),
+              TextButton(
+                onPressed: () => ref.invalidate(preview),
+                child: Text(l10n.tryAgain),
+              ),
+            ],
+          ),
+          data: (page) => page.content.isEmpty
+              ? Column(
+                  children: [
+                    Text(l10n.blogMyPostsEmptyBody),
+                    TextButton.icon(
+                      onPressed: () async {
+                        final created = await context.push<bool>(
+                          '/blog/create',
+                        );
+                        if (created == true) {
+                          ref.invalidate(preview);
+                        }
+                      },
+                      icon: const Icon(Icons.edit_outlined),
+                      label: Text(l10n.writeArticle),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    for (final article in page.content)
+                      _ArticlePreviewRow(article: article, onTap: openAll),
+                    TextButton.icon(
+                      onPressed: openAll,
+                      icon: const Icon(Icons.arrow_forward_rounded),
+                      label: Text(l10n.viewAll),
+                    ),
+                  ],
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ArticlePreviewRow extends StatelessWidget {
+  const _ArticlePreviewRow({required this.article, required this.onTap});
+
+  final BlogPost article;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final status = switch (article.status) {
+      BlogStatus.pending => l10n.blogStatusPending,
+      BlogStatus.approved => l10n.blogStatusApproved,
+      BlogStatus.rejected => l10n.blogStatusRejected,
+    };
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: context.riksa.surface,
+        borderRadius: AppRadii.mediumBorder,
+        child: InkWell(
+          key: ValueKey('profile-article-${article.id}'),
+          borderRadius: AppRadii.mediumBorder,
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  article.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  status,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: context.riksa.inkMuted,
+                  ),
+                ),
               ],
             ),
           ),

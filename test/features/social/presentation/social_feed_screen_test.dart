@@ -149,16 +149,20 @@ void main() {
       tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
       AppColors.editorialNeutralCanvas,
     );
-    expect(find.text('Community'), findsOneWidget);
+    expect(find.text('For you'), findsOneWidget);
+    expect(find.text('Communities'), findsOneWidget);
     expect(find.byKey(const ValueKey('bottom-nav-morph')), findsNothing);
-    // No hamburger, and no drawer of this screen's own: the account menu hangs
-    // off the shell's Scaffold so it covers the floating bottom bar, and it is
-    // opened by the avatar in the header.
+    // The drawer belongs to the outer shell, not this screen.
     expect(find.byKey(const ValueKey('community-drawer-button')), findsNothing);
     expect(find.byType(Drawer), findsNothing);
-    expect(find.byKey(const ValueKey('community-search')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('home-header-search-button')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('community-search-sheet')),
+      findsOneWidget,
+    );
     final communitySearchField = find.descendant(
-      of: find.byKey(const ValueKey('community-search')),
+      of: find.byKey(const ValueKey('community-search-sheet')),
       matching: find.byType(TextField),
     );
     expect(
@@ -170,7 +174,6 @@ void main() {
       find.byKey(const ValueKey('create-community-button')),
       findsOneWidget,
     );
-    expect(find.text('What are your doubts?'), findsOneWidget);
     expect(find.text('7'), findsOneWidget);
     expect(find.byKey(const ValueKey('my-feed-tab')), findsOneWidget);
     expect(find.text('Blog'), findsOneWidget);
@@ -179,43 +182,41 @@ void main() {
 
     await tester.enterText(communitySearchField, 'missing topic');
     await tester.pump();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
     expect(find.text('The two-minute recall habit'), findsNothing);
     expect(find.text('No matching results'), findsOneWidget);
 
-    await tester.enterText(
-      find.byKey(const ValueKey('community-search')),
-      'recall',
-    );
-    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('home-header-search-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'recall');
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
     expect(find.text('The two-minute recall habit'), findsOneWidget);
 
-    await tester.enterText(find.byKey(const ValueKey('community-search')), '');
-    await tester.pump();
-
-    BoxDecoration tabDecoration(Finder tab) {
-      final container = tester.widget<AnimatedContainer>(
-        find.descendant(of: tab, matching: find.byType(AnimatedContainer)),
-      );
-      return container.decoration! as BoxDecoration;
-    }
+    await tester.tap(find.byKey(const ValueKey('home-header-search-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '');
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
 
     final feedTab = find.byKey(const ValueKey('my-feed-tab'));
     final blogTab = find.byKey(const ValueKey('blog-tab'));
-    expect(
-      tester
-          .getTopLeft(find.byKey(const ValueKey('create-community-button')))
-          .dy,
-      greaterThan(tester.getBottomLeft(feedTab).dy),
-    );
-    expect(tabDecoration(feedTab).color, AppColors.editorialAubergine);
-    expect(tabDecoration(blogTab).color, Colors.transparent);
     await tester.tap(find.byKey(const ValueKey('blog-tab')));
     await tester.pumpAndSettle();
-    expect(tabDecoration(blogTab).color, AppColors.editorialAubergine);
-    expect(tabDecoration(feedTab).color, Colors.transparent);
+    expect(feedTab, findsOneWidget);
+    expect(blogTab, findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('How curiosity improves learning'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     expect(find.text('How curiosity improves learning'), findsOneWidget);
     expect(find.text('The two-minute recall habit'), findsNothing);
 
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -350));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('create-community-button')));
     await tester.pumpAndSettle();
     expect(find.text('Create in Community'), findsOneWidget);
@@ -319,6 +320,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -350));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('create-community-button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('create-article-option')));
@@ -504,9 +507,7 @@ void main() {
       findsNothing,
     );
   });
-  testWidgets('the header avatar opens the account menu, not a hamburger', (
-    tester,
-  ) async {
+  testWidgets('the header menu opens the account drawer', (tester) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1;
@@ -546,8 +547,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.menu), findsNothing);
-    await tester.tap(find.byKey(const ValueKey('account-avatar-button')));
+    expect(
+      find.byKey(const ValueKey('home-sidebar-menu-button')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('home-sidebar-menu-button')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('profile-drawer')), findsOneWidget);

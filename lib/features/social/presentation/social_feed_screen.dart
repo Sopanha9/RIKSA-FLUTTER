@@ -1,7 +1,5 @@
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,16 +8,19 @@ import 'package:intl/intl.dart';
 import '../../../app/router/app_shell.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pixel_fire_icon.dart';
-import '../../../core/widgets/riksa_components.dart';
+import '../../../core/widgets/riksa_avatar_image.dart';
+import '../../../core/widgets/riksa_logo.dart';
 import '../../../core/widgets/riksa_search_bar.dart';
-import '../../../core/widgets/riksa_segmented_tabs.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../blog/data/blog_models.dart';
 import '../../blog/presentation/widgets/blog_ui.dart';
 import '../../blog/providers/blog_provider.dart';
+import '../../dashboard/presentation/widgets/home_study_banner.dart';
+import '../../learning/providers/learning_home_provider.dart';
 import '../../userProfile/data/public_profile.dart';
 import '../../userProfile/presentation/public_profile_navigation.dart';
+import '../../userProfile/providers/profile_provider.dart';
 import '../../userProfile/providers/public_profile_provider.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
@@ -29,7 +30,9 @@ import 'widgets/social_palette.dart';
 import 'widgets/social_post_card.dart';
 import 'widgets/streak_details_sheet.dart';
 
-enum _SocialSection { feed, blog }
+/// For you is everything; communities is only the ones you joined, the
+/// closest RIKSA has to X's Following until people can be followed.
+enum _SocialSection { feed, communities, blog }
 
 class SocialFeedScreen extends ConsumerStatefulWidget {
   const SocialFeedScreen({super.key});
@@ -42,7 +45,6 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
   late final ScrollController _scrollController;
   _SocialSection _section = _SocialSection.feed;
   String _searchQuery = '';
-  bool _showFab = false;
 
   @override
   void initState() {
@@ -54,10 +56,10 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
     if (position.extentAfter < 520) {
-      if (_section == _SocialSection.feed) {
-        ref.read(socialFeedProvider.notifier).loadMore();
-      } else {
+      if (_section == _SocialSection.blog) {
         ref.read(blogFeedProvider.notifier).loadMore();
+      } else {
+        ref.read(socialFeedProvider.notifier).loadMore();
       }
     }
   }
@@ -76,143 +78,67 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
     final blogState = _section == _SocialSection.blog
         ? ref.watch(blogFeedProvider)
         : null;
+    final l10n = AppLocalizations.of(context)!;
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: context.riksa.canvas,
-      floatingActionButton: AnimatedSlide(
-        duration: const Duration(milliseconds: 230),
-        curve: Curves.easeInOutCubic,
-        offset: _showFab ? Offset.zero : const Offset(0, 2),
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 230),
-          curve: Curves.easeInOutCubic,
-          opacity: _showFab ? 1.0 : 0.0,
-          child: IgnorePointer(
-            ignoring: !_showFab,
-            child: Semantics(
-              button: true,
-              label: AppLocalizations.of(context)!.communityComposerPrompt,
-              child: Tooltip(
-                message: AppLocalizations.of(context)!.communityComposerPrompt,
-                child: GestureDetector(
-                  key: const ValueKey('create-community-button'),
-                  behavior: HitTestBehavior.opaque,
-                  onTap: _showCreateMenu,
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: ShapeDecoration(
-                      shape: CircleBorder(
-                        side: BorderSide(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white.withValues(alpha: 0.12)
-                              : Colors.white.withValues(alpha: 0.72),
-                        ),
-                      ),
-                      shadows: [
-                        BoxShadow(
-                          color: context.riksa.ink.withValues(
-                            alpha:
-                                Theme.of(context).brightness == Brightness.dark
-                                ? .18
-                                : .08,
-                          ),
-                          blurRadius: 18,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? context.riksa.surface.withValues(alpha: 0.46)
-                          : Colors.white.withValues(alpha: 0.58),
-                    ),
-                    child: ClipOval(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white.withValues(alpha: 0.08)
-                                  : Colors.white.withValues(alpha: 0.54),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.36),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.edit_rounded,
-                              size: 24,
-                              color: context.riksa.brand,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
+      backgroundColor: palette.canvas,
+      // Always there, as on X: posting is the second most common thing done
+      // here, and a button that hides until you scroll is one people miss.
+      floatingActionButton: FloatingActionButton(
+        key: const ValueKey('create-community-button'),
+        // Every tab stays mounted in the shell, so each button needs its own
+        // hero tag or switching tabs throws.
+        heroTag: 'timeline-compose',
+        tooltip: l10n.communityComposerPrompt,
+        onPressed: _showCreateMenu,
+        backgroundColor: isDark ? palette.brand : palette.brandStrong,
+        foregroundColor: palette.onBrand,
+        elevation: 3,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add_rounded, size: 30),
       ),
-      body: NotificationListener<UserScrollNotification>(
-        onNotification: (notification) {
-          if (notification.direction == ScrollDirection.reverse) {
-            if (!_showFab) setState(() => _showFab = true);
-          } else if (notification.direction == ScrollDirection.forward) {
-            if (_showFab) setState(() => _showFab = false);
+      body: RefreshIndicator(
+        color: palette.brand,
+        onRefresh: () async {
+          if (_section == _SocialSection.blog) {
+            await ref.read(blogFeedProvider.notifier).load();
+            return;
           }
-          return false;
+          ref.invalidate(learningHomeProvider);
+          await ref.read(socialFeedProvider.notifier).load();
         },
-        child: RefreshIndicator(
-          color: context.riksa.brand,
-          onRefresh: () => _section == _SocialSection.feed
-              ? ref.read(socialFeedProvider.notifier).load()
-              : ref.read(blogFeedProvider.notifier).load(),
-          child: CustomScrollView(
-            key: PageStorageKey('social-${_section.name}-scroll'),
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              _HomeHeader(
-                onSearchChanged: (value) =>
-                    setState(() => _searchQuery = value.trim().toLowerCase()),
-                onFilter: _showContentFilter,
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 12, 4),
-                  child: Text(
-                    AppLocalizations.of(context)!.communityFeed,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: _FeedSectionTabs(
-                  selected: _section,
-                  onSelected: _selectSection,
-                ),
-              ),
-              if (_section == _SocialSection.blog)
-                SliverToBoxAdapter(
-                  child: _YourArticlesLink(onTap: _openMyPosts),
-                ),
-              if (_section == _SocialSection.feed)
-                ..._contentSlivers(state)
-              else
-                ..._blogSlivers(blogState!),
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-            ],
-          ),
+        child: CustomScrollView(
+          key: PageStorageKey('social-${_section.name}-scroll'),
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            _TimelineHeader(
+              selected: _section,
+              onSelected: _selectSection,
+              searchQuery: _searchQuery,
+              onSearchChanged: (value) =>
+                  setState(() => _searchQuery = value.trim().toLowerCase()),
+              onFilter: _showContentFilter,
+            ),
+            if (_section == _SocialSection.feed && _searchQuery.isEmpty)
+              const SliverToBoxAdapter(child: HomeStudyBanner()),
+            if (_section == _SocialSection.blog)
+              SliverToBoxAdapter(child: _YourArticlesLink(onTap: _openMyPosts)),
+            if (_section == _SocialSection.blog)
+              ..._blogSlivers(blogState!)
+            else
+              ..._contentSlivers(state),
+            // Room for the last post to scroll clear of the post button.
+            const SliverToBoxAdapter(child: SizedBox(height: 96)),
+          ],
         ),
       ),
     );
   }
+
+  String _t(String en, String km) =>
+      Localizations.localeOf(context).languageCode == 'km' ? km : en;
 
   List<Widget> _contentSlivers(SocialFeedState state) {
     final l10n = AppLocalizations.of(context)!;
@@ -231,11 +157,41 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
           ),
         ),
       ],
-      SocialFeedLoaded(:final posts) => [
+      SocialFeedLoaded(:final posts, :final categories) => [
         ...() {
-          final filteredPosts = posts.where(_matchesPostSearch).toList();
+          final joined = {
+            for (final category in categories)
+              if (category.joined) category.id,
+          };
+          final scoped = _section == _SocialSection.communities
+              ? posts.where((post) => joined.contains(post.category.id))
+              : posts;
+          final filteredPosts = scoped.where(_matchesPostSearch).toList();
           return <Widget>[
-            if (filteredPosts.isEmpty)
+            if (filteredPosts.isEmpty &&
+                _section == _SocialSection.communities &&
+                _searchQuery.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _FeedMessage(
+                  icon: Icons.groups_2_outlined,
+                  title: joined.isEmpty
+                      ? _t('Join a community', 'ចូលរួមសហគមន៍')
+                      : _t('Nothing new yet', 'មិនទាន់មានអ្វីថ្មី'),
+                  message: joined.isEmpty
+                      ? _t(
+                          'Posts from the communities you join show up here.',
+                          'ការបង្ហោះពីសហគមន៍ដែលអ្នកចូលរួម នឹងបង្ហាញនៅទីនេះ។',
+                        )
+                      : _t(
+                          'Your communities have been quiet. Start something!',
+                          'សហគមន៍របស់អ្នកនៅស្ងាត់។ ចាប់ផ្ដើមអ្វីមួយ!',
+                        ),
+                  buttonLabel: l10n.communitiesMenu,
+                  onPressed: () => context.push('/communities'),
+                ),
+              )
+            else if (filteredPosts.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: _FeedMessage(
@@ -255,22 +211,22 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
                   final post = filteredPosts[index];
                   return SocialPostCard(
                     post: post,
-                      // Through the router, not Navigator: a raw push leaves
-                      // go_router still believing the feed is on screen, and
-                      // the shell reads it to decide whether the tab bar
-                      // belongs over this screen.
-                      onTap: () => context.push('/community/posts/${post.id}'),
-                      onAuthorTap: publicProfilePath(post.author.id) == null
-                          ? null
-                          : () => _openProfile(post.author.id),
-                      onReact: () => _react(post.id),
-                      onShare: () => _share(post.id),
-                      onEdit: post.author.id == currentUserId
-                          ? () => _editPost(post)
-                          : null,
-                      onDelete: post.author.id == currentUserId
-                          ? () => _deletePost(post)
-                          : null,
+                    // Through the router, not Navigator: a raw push leaves
+                    // go_router still believing the feed is on screen, and
+                    // the shell reads it to decide whether the tab bar
+                    // belongs over this screen.
+                    onTap: () => context.push('/community/posts/${post.id}'),
+                    onAuthorTap: publicProfilePath(post.author.id) == null
+                        ? null
+                        : () => _openProfile(post.author.id),
+                    onReact: () => _react(post.id),
+                    onShare: () => _share(post.id),
+                    onEdit: post.author.id == currentUserId
+                        ? () => _editPost(post)
+                        : null,
+                    onDelete: post.author.id == currentUserId
+                        ? () => _deletePost(post)
+                        : null,
                   );
                 },
               ),
@@ -320,7 +276,7 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
               )
             else
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                padding: EdgeInsets.zero,
                 sliver: SliverList.builder(
                   itemCount: filteredPosts.length,
                   itemBuilder: (context, index) => _GlassBlogCard(
@@ -512,70 +468,102 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
   }
 }
 
-/// Greeting, streak, account avatar and the search field.
-class _HomeHeader extends ConsumerWidget {
-  const _HomeHeader({required this.onSearchChanged, required this.onFilter});
+/// The timeline's top bar, on the X layout: your avatar (the sidebar) on the
+/// left, the wordmark in the middle, streak and search on the right, and the
+/// feed tabs underneath. It slides away as you read down and comes back the
+/// moment you scroll up.
+class _TimelineHeader extends ConsumerWidget {
+  const _TimelineHeader({
+    required this.selected,
+    required this.onSelected,
+    required this.searchQuery,
+    required this.onSearchChanged,
+    required this.onFilter,
+  });
 
+  final _SocialSection selected;
+  final ValueChanged<_SocialSection> onSelected;
+  final String searchQuery;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onFilter;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final auth = ref.watch(authProvider);
-    final name = auth is Authenticated
-        ? auth.user.displayName.trim().split(RegExp(r'\s+')).first
-        : '';
-    // Without a name the greeting drops the gap it would have filled.
-    final greeting = name.isEmpty
-        ? l10n.homeGreeting('').replaceFirst(RegExp(r',?\s*!'), '!')
-        : l10n.homeGreeting(name);
+    final palette = context.riksa;
+    return SliverAppBar(
+      floating: true,
+      snap: true,
+      backgroundColor: palette.canvas,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      automaticallyImplyLeading: false,
+      toolbarHeight: 56,
+      leadingWidth: 60,
+      leading: const Padding(
+        padding: EdgeInsetsDirectional.only(start: 14),
+        child: Center(child: _HeaderAvatarButton()),
+      ),
+      centerTitle: true,
+      title: const RiksaLogo(fontSize: 22),
+      actions: [
+        _StreakPill(
+          key: const ValueKey('streak-pill'),
+          streak: ref.watch(communityStreakProvider),
+        ),
+        _HeaderSearchButton(
+          searchQuery: searchQuery,
+          onSearchChanged: onSearchChanged,
+          onFilter: onFilter,
+        ),
+        const SizedBox(width: 4),
+      ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(49),
+        child: _TimelineTabs(selected: selected, onSelected: onSelected),
+      ),
+    );
+  }
+}
 
-    return SliverToBoxAdapter(
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const _SidebarMenuButton(),
-                  const SizedBox(width: RiksaSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          greeting,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: RiksaTypography.titleStyleFor(
-                            greeting,
-                            theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: RiksaSpacing.sm),
-                  _StreakPill(
-                    key: const ValueKey('streak-pill'),
-                    streak: ref.watch(communityStreakProvider),
-                  ),
-                  const SizedBox(width: RiksaSpacing.xs),
-                  _HeaderSearchButton(
-                    onSearchChanged: onSearchChanged,
-                    onFilter: onFilter,
-                  ),
-                ],
-              ),
-            ],
+/// Your own avatar, which opens the sidebar: the same corner and the same
+/// meaning on every tab.
+class _HeaderAvatarButton extends ConsumerWidget {
+  const _HeaderAvatarButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final palette = context.riksa;
+    final auth = ref.watch(authProvider);
+    final user = auth is Authenticated ? auth.user : null;
+    final name = user == null
+        ? ''
+        : (user.displayName.trim().isEmpty
+              ? user.username
+              : user.displayName.trim());
+    final open = AppShellScope.maybeOf(context)?.openDrawer;
+    return Tooltip(
+      message: l10n.openProfileMenu,
+      child: Semantics(
+        button: true,
+        label: l10n.openProfileMenu,
+        excludeSemantics: true,
+        child: InkWell(
+          key: const ValueKey('home-sidebar-menu-button'),
+          customBorder: const CircleBorder(),
+          onTap: open ?? () => context.push('/profile'),
+          child: RiksaAvatarImage(
+            value: user?.avatarUrl,
+            label: name.isEmpty ? '?' : name,
+            size: 34,
+            backgroundColor: palette.brandSoft,
+            foregroundColor: palette.brandStrong,
+            frameTier: ref
+                .watch(profileDashboardProvider)
+                .value
+                ?.gamification
+                .currentTier,
           ),
         ),
       ),
@@ -583,24 +571,103 @@ class _HomeHeader extends ConsumerWidget {
   }
 }
 
-class _SidebarMenuButton extends StatelessWidget {
-  const _SidebarMenuButton();
+/// For you, your communities, and articles, with X's underline under the
+/// selected one.
+class _TimelineTabs extends StatelessWidget {
+  const _TimelineTabs({required this.selected, required this.onSelected});
+
+  final _SocialSection selected;
+  final ValueChanged<_SocialSection> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    final open = AppShellScope.maybeOf(context)?.openDrawer;
-    if (open == null) return const SizedBox.shrink();
-
     final l10n = AppLocalizations.of(context)!;
-    return Tooltip(
-      message: l10n.openProfileMenu,
-      child: Semantics(
-        button: true,
-        label: l10n.openProfileMenu,
-        child: _HeaderGlassIconButton(
-          key: const ValueKey('home-sidebar-menu-button'),
-          icon: Icons.menu_rounded,
-          onTap: open,
+    final tabs = [
+      (_SocialSection.feed, l10n.forYou, 'my-feed-tab'),
+      (
+        _SocialSection.communities,
+        l10n.communitiesMenu,
+        'communities-feed-tab',
+      ),
+      (_SocialSection.blog, l10n.blog, 'blog-tab'),
+    ];
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.riksa.outline)),
+      ),
+      child: SizedBox(
+        height: 48,
+        child: Row(
+          children: [
+            for (final (section, label, key) in tabs)
+              Expanded(
+                child: _TimelineTab(
+                  key: ValueKey(key),
+                  label: label,
+                  selected: section == selected,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    onSelected(section);
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TimelineTab extends StatelessWidget {
+  const _TimelineTab({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.riksa;
+    final style = Theme.of(context).textTheme.titleSmall?.copyWith(
+      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+      color: selected ? palette.ink : palette.inkMuted,
+    );
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: InkWell(
+        onTap: onTap,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: RiksaTypography.titleStyleFor(label, style),
+              ),
+            ),
+            Positioned(
+              bottom: 0,
+              child: AnimatedContainer(
+                duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+                curve: RiksaMotion.standardCurve,
+                width: selected ? 56 : 0,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: palette.brand,
+                  borderRadius: AppRadii.fullBorder,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -609,26 +676,30 @@ class _SidebarMenuButton extends StatelessWidget {
 
 class _HeaderSearchButton extends StatelessWidget {
   const _HeaderSearchButton({
+    required this.searchQuery,
     required this.onSearchChanged,
     required this.onFilter,
   });
 
+  final String searchQuery;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onFilter;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Tooltip(
-      message: l10n.homeSearchHint,
-      child: Semantics(
-        button: true,
-        label: l10n.homeSearchHint,
-        child: _HeaderGlassIconButton(
-          key: const ValueKey('home-header-search-button'),
-          icon: Icons.search_rounded,
-          onTap: () => _showSearchSheet(context),
-        ),
+    return IconButton(
+      key: const ValueKey('home-header-search-button'),
+      tooltip: l10n.homeSearchHint,
+      // A bare icon, as on X: the theme's default gives icon buttons a
+      // filled disc, which reads as a second avatar in this bar.
+      style: IconButton.styleFrom(backgroundColor: Colors.transparent),
+      onPressed: () => _showSearchSheet(context),
+      icon: Icon(
+        searchQuery.isEmpty
+            ? Icons.search_rounded
+            : Icons.manage_search_rounded,
+        color: context.riksa.ink,
       ),
     );
   }
@@ -650,8 +721,8 @@ class _HeaderSearchButton extends StatelessWidget {
             16,
             16 + MediaQuery.viewInsetsOf(sheetContext).bottom,
           ),
-          child: RiksaSearchBar(
-            key: const ValueKey('community-search-sheet'),
+          child: _CommunitySearchSheet(
+            initialQuery: searchQuery,
             hintText: l10n.homeSearchHint,
             onChanged: onSearchChanged,
             onFilter: onFilter,
@@ -662,61 +733,46 @@ class _HeaderSearchButton extends StatelessWidget {
   }
 }
 
-class _HeaderGlassIconButton extends StatelessWidget {
-  const _HeaderGlassIconButton({
-    super.key,
-    required this.icon,
-    required this.onTap,
+class _CommunitySearchSheet extends StatefulWidget {
+  const _CommunitySearchSheet({
+    required this.initialQuery,
+    required this.hintText,
+    required this.onChanged,
+    required this.onFilter,
   });
 
-  final IconData icon;
-  final VoidCallback onTap;
+  final String initialQuery;
+  final String hintText;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onFilter;
 
   @override
-  Widget build(BuildContext context) {
-    final palette = context.riksa;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fill = isDark
-        ? palette.surface.withValues(alpha: 0.46)
-        : Colors.white.withValues(alpha: 0.58);
-    final border = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.white.withValues(alpha: 0.72);
+  State<_CommunitySearchSheet> createState() => _CommunitySearchSheetState();
+}
 
-    return SizedBox.square(
-      dimension: 48,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          customBorder: const CircleBorder(),
-          child: Center(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: palette.ink.withValues(alpha: isDark ? 0.18 : 0.08),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: fill,
-                shape: CircleBorder(side: BorderSide(color: border)),
-                clipBehavior: Clip.antiAlias,
-                child: SizedBox.square(
-                  dimension: 42,
-                  child: Icon(icon, size: 22, color: palette.ink),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+class _CommunitySearchSheetState extends State<_CommunitySearchSheet> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialQuery);
   }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => RiksaSearchBar(
+    key: const ValueKey('community-search-sheet'),
+    controller: _controller,
+    hintText: widget.hintText,
+    onChanged: widget.onChanged,
+    onFilter: widget.onFilter,
+  );
 }
 
 /// Doorway to the author's own articles, sitting at the top of the blog
@@ -797,42 +853,7 @@ class _YourArticlesLink extends ConsumerWidget {
   }
 }
 
-/// Filter chips over the feed: everything, or articles only.
-class _FeedSectionTabs extends StatelessWidget {
-  const _FeedSectionTabs({required this.selected, required this.onSelected});
-
-  final _SocialSection selected;
-  final ValueChanged<_SocialSection> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
-      child: RiksaSegmentedTabs<_SocialSection>(
-        height: 46,
-        segments: [
-          (
-            value: _SocialSection.feed,
-            label: l10n.community,
-            semanticKey: 'my-feed-tab',
-          ),
-          (
-            value: _SocialSection.blog,
-            label: l10n.blog,
-            semanticKey: 'blog-tab',
-          ),
-        ],
-        selected: selected,
-        onChanged: (section) {
-          HapticFeedback.selectionClick();
-          onSelected(section);
-        },
-      ),
-    );
-  }
-}
-
+/// The streak in the top bar: a flame and a number, opening the streak sheet.
 class _StreakPill extends StatelessWidget {
   const _StreakPill({super.key, required this.streak});
 
@@ -842,64 +863,47 @@ class _StreakPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.riksa;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final fill = isDark
-        ? palette.surface.withValues(alpha: 0.46)
-        : Colors.white.withValues(alpha: 0.58);
-    final border = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.white.withValues(alpha: 0.72);
     final value = streak.value;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
+    return Semantics(
+      button: value != null,
+      label: AppLocalizations.of(context)!.streakDays(value?.current ?? 0),
+      excludeSemantics: true,
+      child: InkWell(
         borderRadius: AppRadii.fullBorder,
-        boxShadow: [
-          BoxShadow(
-            color: palette.ink.withValues(alpha: isDark ? 0.18 : 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+        onTap: value == null
+            ? null
+            : () => showStreakDetailsSheet(context, value),
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: palette.features.rewardSoft,
+            borderRadius: AppRadii.fullBorder,
           ),
-        ],
-      ),
-      child: Material(
-        color: fill,
-        borderRadius: AppRadii.fullBorder,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          borderRadius: AppRadii.fullBorder,
-          onTap: value == null
-              ? null
-              : () => showStreakDetailsSheet(context, value),
-          child: Container(
-            height: 38,
-            constraints: const BoxConstraints(minWidth: 56),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              borderRadius: AppRadii.fullBorder,
-              border: Border.all(color: border),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const PixelFireIcon(size: 20),
-                const SizedBox(width: 4),
-                if (streak.isLoading)
-                  const SizedBox(
-                    width: 13,
-                    height: 13,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                else
-                  Text(
-                    '${value?.current ?? 0}',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: palette.ink,
-                      fontWeight: FontWeight.w700,
-                    ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const PixelFireIcon(size: 18),
+              const SizedBox(width: 4),
+              if (streak.isLoading)
+                const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Text(
+                  '${value?.current ?? 0}',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    // Dark ink suits the pale lime; on the dark theme's olive
+                    // fill it would vanish, so the lime itself carries it.
+                    color: theme.brightness == Brightness.dark
+                        ? palette.features.reward
+                        : palette.features.onReward,
+                    fontWeight: FontWeight.w800,
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),
@@ -921,186 +925,197 @@ class _GlassBlogCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isOwner = ref.watch(currentUserIdProvider) == post.authorId;
     final authorState = ref.watch(publicProfileProvider(post.authorId));
     final profile = authorState.profile;
 
     final authorName = profile != null && profile.preferredName.isNotEmpty
         ? profile.preferredName
-        : (post.author != null && post.author!.displayName.isNotEmpty ? post.author!.displayName : 'Unknown Author');
+        : (post.author != null && post.author!.displayName.isNotEmpty
+              ? post.author!.displayName
+              : 'Unknown Author');
     final username = profile != null && profile.username.isNotEmpty
         ? profile.username
         : (post.author != null ? post.author!.username : 'user');
 
-    final date = DateFormat.MMMd(Localizations.localeOf(context).languageCode).format(post.createdAt.toLocal());
+    final date = DateFormat.MMMd(
+      Localizations.localeOf(context).languageCode,
+    ).format(post.createdAt.toLocal());
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          BlogAvatar(
-            profile: profile,
-            size: BlogMetrics.rowAvatar,
-            onTap: () => _openProfile(context, profile),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () => _openProfile(context, profile),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.riksa.outline)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 12, 14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            BlogAvatar(
+              profile: profile,
+              size: BlogMetrics.rowAvatar,
+              onTap: () => _openProfile(context, profile),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => _openProfile(context, profile),
+                          child: Text(
+                            authorName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: context.riksa.ink,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (profile?.isVerified == true) ...[
+                        const SizedBox(width: 4),
+                        const BlogVerifiedBadge(),
+                      ],
+                      const SizedBox(width: 4),
+                      Flexible(
                         child: Text(
-                          authorName,
+                          '· @$username · $date',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: context.riksa.ink,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: context.riksa.inkMuted,
+                            fontSize: 12,
                           ),
                         ),
                       ),
-                    ),
-                    if (profile?.isVerified == true) ...[
-                      const SizedBox(width: 4),
-                      const BlogVerifiedBadge(),
                     ],
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        '· @$username · $date',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: context.riksa.inkMuted,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Material(
-                  color: context.riksa.surface,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppRadii.largeBorder,
-                    side: BorderSide(color: context.riksa.outline),
                   ),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: () => context.push('/blog/${post.id}'),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (post.hasCover)
-                          Image.network(
-                            post.coverUrl!,
-                            height: 176,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                          ),
-                        Padding(
-                          padding: const EdgeInsets.all(18),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                post.title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: RiksaTypography.bodyStyleFor(
+                  const SizedBox(height: 8),
+                  Material(
+                    color: context.riksa.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadii.largeBorder,
+                      side: BorderSide(color: context.riksa.outline),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () => context.push('/blog/${post.id}'),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (post.hasCover)
+                            Image.network(
+                              post.coverUrl!,
+                              height: 176,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  const SizedBox.shrink(),
+                            ),
+                          Padding(
+                            padding: const EdgeInsets.all(18),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
                                   post.title,
-                                  theme.textTheme.titleLarge?.copyWith(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.35,
-                                    letterSpacing: 0,
-                                    color: context.riksa.ink,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 9),
-                              Text(
-                                post.content,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                                style: RiksaTypography.bodyStyleFor(
-                                  post.content,
-                                  theme.textTheme.bodyMedium?.copyWith(
-                                    fontSize: 15,
-                                    color: context.riksa.inkMuted,
-                                    height: 1.42,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-                              Row(
-                                children: [
-                                  Text(
-                                    DateFormat.yMMMd().format(post.createdAt),
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: context.riksa.inkMuted,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: RiksaTypography.bodyStyleFor(
+                                    post.title,
+                                    theme.textTheme.titleLarge?.copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.35,
+                                      letterSpacing: 0,
+                                      color: context.riksa.ink,
                                     ),
                                   ),
-                                  const Spacer(),
-                                  Material(
-                                    color: context.riksa.surface,
-                                    borderRadius: AppRadii.fullBorder,
-                                    child: InkWell(
+                                ),
+                                const SizedBox(height: 9),
+                                Text(
+                                  post.content,
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: RiksaTypography.bodyStyleFor(
+                                    post.content,
+                                    theme.textTheme.bodyMedium?.copyWith(
+                                      fontSize: 15,
+                                      color: context.riksa.inkMuted,
+                                      height: 1.42,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Row(
+                                  children: [
+                                    Text(
+                                      DateFormat.yMMMd().format(post.createdAt),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: context.riksa.inkMuted,
+                                          ),
+                                    ),
+                                    const Spacer(),
+                                    Material(
+                                      color: context.riksa.surface,
                                       borderRadius: AppRadii.fullBorder,
-                                      onTap: onLike,
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              post.liked
-                                                  ? Icons.favorite_rounded
-                                                  : Icons.favorite_border_rounded,
-                                              size: 16,
-                                              color: post.liked
-                                                  ? Colors.red
-                                                  : context.riksa.inkMuted,
-                                            ),
-                                            const SizedBox(width: 5),
-                                            Text(
-                                              '${post.likeCount}',
-                                              style: TextStyle(
+                                      child: InkWell(
+                                        borderRadius: AppRadii.fullBorder,
+                                        onTap: onLike,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                post.liked
+                                                    ? Icons.favorite_rounded
+                                                    : Icons
+                                                          .favorite_border_rounded,
+                                                size: 16,
                                                 color: post.liked
                                                     ? Colors.red
                                                     : context.riksa.inkMuted,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
                                               ),
-                                            ),
-                                          ],
+                                              const SizedBox(width: 5),
+                                              Text(
+                                                '${post.likeCount}',
+                                                style: TextStyle(
+                                                  color: post.liked
+                                                      ? Colors.red
+                                                      : context.riksa.inkMuted,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

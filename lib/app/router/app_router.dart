@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/ai/presentation/ai_tutor_screen.dart';
 import '../../features/ai/presentation/ai_chat_screen.dart';
-import '../../features/dashboard/presentation/home_dashboard_screen.dart';
 import '../../features/auth/presentation/auth_switcher_screen.dart';
 import '../../features/auth/presentation/account_recovery_screen.dart';
 import '../../features/auth/presentation/splash_animation_screen.dart';
@@ -141,7 +140,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (context, state) => const HomeDashboardScreen(),
+                builder: (context, state) => const SocialFeedScreen(),
               ),
               GoRoute(
                 path: '/dashboard',

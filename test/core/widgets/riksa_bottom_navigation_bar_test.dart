@@ -46,11 +46,13 @@ void main() {
     final surface = find.byKey(const ValueKey('bottom-nav-surface'));
     // A translucent glass pill floats off the screen edges, with the round AI
     // Tutor button beside it.
-    final surfaceColor = tester.widget<Material>(surface).color!;
+    final surfaceColor =
+        (tester.widget<Container>(surface).decoration! as ShapeDecoration)
+            .color!;
     expect(surfaceColor.a, lessThan(1));
-    expect(surfaceColor.r, AppColors.editorialNeutralSurface.r);
-    expect(surfaceColor.g, AppColors.editorialNeutralSurface.g);
-    expect(surfaceColor.b, AppColors.editorialNeutralSurface.b);
+    expect(surfaceColor.r, Colors.white.r);
+    expect(surfaceColor.g, Colors.white.g);
+    expect(surfaceColor.b, Colors.white.b);
     expect(tester.getRect(surface).left, greaterThanOrEqualTo(16));
     expect(
       tester.getRect(find.byKey(const ValueKey('bottom-nav-item-2'))).left,

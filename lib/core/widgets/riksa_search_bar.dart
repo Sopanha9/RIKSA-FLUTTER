@@ -14,6 +14,7 @@ class RiksaSearchBar extends StatelessWidget {
     required this.hintText,
     this.onFilter,
     this.onChanged,
+    this.controller,
     this.onTap,
     this.readOnly = false,
     this.filterCount = 0,
@@ -23,6 +24,7 @@ class RiksaSearchBar extends StatelessWidget {
 
   final String hintText;
   final ValueChanged<String>? onChanged;
+  final TextEditingController? controller;
   final VoidCallback? onTap;
   final VoidCallback? onFilter;
   final bool readOnly;
@@ -54,9 +56,7 @@ class RiksaSearchBar extends StatelessWidget {
       blurRadius: 22,
       offset: const Offset(0, 8),
     );
-    final controlOuterFill = isDark
-        ? glass.selectedFill
-        : glass.fill;
+    final controlOuterFill = isDark ? glass.selectedFill : glass.fill;
 
     return ClipRRect(
       borderRadius: AppRadii.fullBorder,
@@ -74,6 +74,7 @@ class RiksaSearchBar extends StatelessWidget {
             children: [
               Expanded(
                 child: TextField(
+                  controller: controller,
                   readOnly: readOnly,
                   onTap: onTap,
                   onChanged: onChanged,
@@ -130,9 +131,7 @@ class RiksaSearchBar extends StatelessWidget {
                               decoration: ShapeDecoration(
                                 color: glass.selectedFill,
                                 shape: CircleBorder(
-                                  side: BorderSide(
-                                    color: glass.selectedBorder,
-                                  ),
+                                  side: BorderSide(color: glass.selectedBorder),
                                 ),
                                 shadows: RiksaElevation.raised(
                                   theme.brightness,

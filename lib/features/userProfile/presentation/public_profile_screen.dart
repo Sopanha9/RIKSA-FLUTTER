@@ -227,6 +227,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                         onEditPost: (post) => _editPost(post, controller),
                         onDeletePost: (post) => _deletePost(post, controller),
                       ),
+                      ProfileTab.articles => const SizedBox.shrink(),
                       ProfileTab.achievements => _PublicAchievements(
                         achievements: profile.achievements,
                       ),
@@ -366,10 +367,7 @@ class _PublicAvatar extends StatelessWidget {
           : BoxDecoration(
               shape: BoxShape.circle,
               color: context.riksa.canvas,
-              border: Border.all(
-                color: context.riksa.canvas,
-                width: 2,
-              ),
+              border: Border.all(color: context.riksa.canvas, width: 2),
             ),
       child: avatar,
     );

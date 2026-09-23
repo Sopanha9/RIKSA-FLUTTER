@@ -1111,6 +1111,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myPosts => 'My Posts';
 
   @override
+  String get profileArticlesTab => 'Articles';
+
+  @override
+  String get profileBadgesTab => 'Badges';
+
+  @override
+  String get profileRankTab => 'Rank';
+
+  @override
   String get leaderboardRank => 'Leaderboard Rank';
 
   @override
@@ -2301,10 +2310,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blogTitle => 'Blog';
 
   @override
-  String get blogWritePost => 'Write a post';
+  String get blogWritePost => 'Write an article';
 
   @override
-  String get blogYourPosts => 'Your posts';
+  String get blogYourPosts => 'My Articles';
 
   @override
   String get blogFeedFailedTitle => 'Posts are taking a break';
@@ -2330,21 +2339,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get blogMyPostsFailed => 'Could not load your posts';
+  String get blogMyPostsFailed => 'Could not load your articles';
 
   @override
-  String get blogMyPostsEmptyTitle => 'No posts yet';
+  String get blogMyPostsEmptyTitle => 'No articles yet';
 
   @override
   String get blogMyPostsEmptyBody =>
-      'Everything you write shows up here, with its review status.';
+      'Articles you write appear here, including their review status.';
 
   @override
   String get blogMyPostsFilteredTitle => 'Nothing here';
 
   @override
   String get blogMyPostsFilteredBody =>
-      'You have no posts with this status right now.';
+      'You have no articles with this status right now.';
 
   @override
   String get blogStatusPending => 'In review';
@@ -2526,47 +2535,153 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authBuddySuccess => 'Yay, you\'re in!';
-  @override String get buddyHomeGreeting => 'Ready for another step?';
-  @override String get buddyWelcomeBack => 'Welcome back. Pick up where you left off.';
-  @override String get buddyLessonCompleted => 'You earned this!';
-  @override String get buddyRankImproved => 'Your progress moved you up.';
-  @override String get buddyCommunityJoined => 'Welcome to your new community!';
-  @override String homeStreakDays(int count) => '$count days';
-  @override String get homeTodaysStudy => "Today's study";
-  @override String get homeStartHere => 'Start here';
-  @override String get homeStartHereBody => 'Choose your first lesson and begin one step at a time.';
-  @override String homeLessonMinutes(int minutes) => '$minutes min';
-  @override String get homeContinue => 'Continue';
-  @override String get homeProvinceSquad => 'Your province study squad';
-  @override String get homeProvinceMissing => 'Choose your province to see your study squad.';
-  @override String get homeSelectProvince => 'Choose province';
-  @override String homeProvinceRank(int rank) => 'You are #$rank this week';
-  @override String homeNearbyLearner(int rank, String name) => '#$rank $name';
-  @override String get homeYou => 'You';
-  @override String get homeViewProvinceRanks => 'View province ranks';
-  @override String get homeFromCommunities => 'From your communities';
-  @override String homeCommunityPostMeta(String community, String author, int count) => '$community · $author · $count comments';
-  @override String get homeSeeCommunityFeed => 'See community feed';
-  @override String get lessonShareLearning => 'Share what I learned';
-  @override String get resumeLearningTitle => 'Resume learning';
-  @override String get resumeLearningEmptyTitle => 'No lesson in progress';
-  @override String get resumeLearningEmptyBody => 'Choose a lesson to begin your next learning step.';
-  @override String get leaderboardNearbyLearners => 'Learners around your rank';
-  @override String get leaderboardSearchLearners => 'Search learners';
-  @override String get buddyReactions => 'Buddy reactions';
-  @override String get buddyReactionsHint => 'Allow animated and speaking buddy reactions';
-  @override String get profileStudyBuddy => 'Study buddy';
-  @override String profileBuddyNamed(String name) => '$name, your study buddy';
-  @override String get aiBuddyHandoff => 'Your buddy can help you start; Kru AI will explain the question.';
-  @override String homeProvinceSquadNamed(String province) => '$province study squad';
-  @override String get streakReminderTitle => '🔥 Keep your learning streak alive!';
-  @override String get streakReminderBody => 'Take 5 minutes tonight to practice and protect your streak.';
-  @override String get drawerGeneral => 'General';
-  @override String get drawerAbout => 'About';
-  @override String get drawerUserAgreement => 'User Agreement';
-  @override String get drawerPrivacyCenter => 'Privacy Center';
-  @override String get aiCopyAnswer => 'Copy answer';
-  @override String get aiCopiedClipboard => 'Copied to clipboard';
-  @override String get aiCopy => 'Copy';
-  @override String get aiLoginRequired => 'Please log in to chat with the AI Tutor.';
+
+  @override
+  String get buddyHomeGreeting => 'Ready for another step?';
+
+  @override
+  String get buddyWelcomeBack => 'Welcome back. Pick up where you left off.';
+
+  @override
+  String get buddyLessonCompleted => 'You earned this!';
+
+  @override
+  String get buddyRankImproved => 'Your progress moved you up.';
+
+  @override
+  String get buddyCommunityJoined => 'Welcome to your new community!';
+
+  @override
+  String homeStreakDays(int count) {
+    return '$count days';
+  }
+
+  @override
+  String get homeTodaysStudy => 'Today\'s study';
+
+  @override
+  String get homeStartHere => 'Start here';
+
+  @override
+  String get homeStartHereBody =>
+      'Choose your first lesson and begin one step at a time.';
+
+  @override
+  String homeLessonMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get homeContinue => 'Continue';
+
+  @override
+  String get homeProvinceSquad => 'Your province study squad';
+
+  @override
+  String get homeProvinceMissing =>
+      'Choose your province to see your study squad.';
+
+  @override
+  String get homeSelectProvince => 'Choose province';
+
+  @override
+  String homeProvinceRank(int rank) {
+    return 'You are #$rank this week';
+  }
+
+  @override
+  String homeNearbyLearner(int rank, String name) {
+    return '#$rank $name';
+  }
+
+  @override
+  String get homeYou => 'You';
+
+  @override
+  String get homeViewProvinceRanks => 'View province ranks';
+
+  @override
+  String get homeFromCommunities => 'From your communities';
+
+  @override
+  String homeCommunityPostMeta(String community, String author, int count) {
+    return '$community · $author · $count comments';
+  }
+
+  @override
+  String get homeSeeCommunityFeed => 'See community feed';
+
+  @override
+  String get lessonShareLearning => 'Share what I learned';
+
+  @override
+  String get resumeLearningTitle => 'Resume learning';
+
+  @override
+  String get resumeLearningEmptyTitle => 'No lesson in progress';
+
+  @override
+  String get resumeLearningEmptyBody =>
+      'Choose a lesson to begin your next learning step.';
+
+  @override
+  String get leaderboardNearbyLearners => 'Learners around your rank';
+
+  @override
+  String get leaderboardSearchLearners => 'Search learners';
+
+  @override
+  String get buddyReactions => 'Buddy reactions';
+
+  @override
+  String get buddyReactionsHint =>
+      'Allow animated and speaking buddy reactions';
+
+  @override
+  String get profileStudyBuddy => 'Study buddy';
+
+  @override
+  String profileBuddyNamed(String name) {
+    return '$name, your study buddy';
+  }
+
+  @override
+  String get aiBuddyHandoff =>
+      'Your buddy can help you start; Kru AI will explain the question.';
+
+  @override
+  String homeProvinceSquadNamed(String province) {
+    return '$province study squad';
+  }
+
+  @override
+  String get streakReminderTitle => '🔥 Keep your learning streak alive!';
+
+  @override
+  String get streakReminderBody =>
+      'Take 5 minutes tonight to practice and protect your streak.';
+
+  @override
+  String get drawerGeneral => 'General';
+
+  @override
+  String get drawerAbout => 'About';
+
+  @override
+  String get drawerUserAgreement => 'User Agreement';
+
+  @override
+  String get drawerPrivacyCenter => 'Privacy Center';
+
+  @override
+  String get aiCopyAnswer => 'Copy answer';
+
+  @override
+  String get aiCopiedClipboard => 'Copied to clipboard';
+
+  @override
+  String get aiCopy => 'Copy';
+
+  @override
+  String get aiLoginRequired => 'Please log in to chat with the AI Tutor.';
 }

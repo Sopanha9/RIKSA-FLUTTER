@@ -112,7 +112,7 @@ class LessonCompletionScreen extends ConsumerWidget {
                           value: xpEarned,
                           format: l10n.xpRewardAmount,
                           style: theme.textTheme.labelLarge?.copyWith(
-                            color: palette.reward,
+                            color: palette.ink,
                           ),
                         ),
                       ],

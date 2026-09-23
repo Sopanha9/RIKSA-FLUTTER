@@ -9,7 +9,6 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -147,7 +146,10 @@ Future<(ProviderContainer, _Links)> _mount(WidgetTester tester) async {
   tester.view.physicalSize = const Size(430, 1100);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
+  // This file is a test harness outside the conventional test/ directory.
+  // ignore: invalid_use_of_visible_for_testing_member
   FlutterSecureStorage.setMockInitialValues({});
+  // ignore: invalid_use_of_visible_for_testing_member
   SharedPreferences.setMockInitialValues({});
   final client = DioClient(
     SessionStore(const FlutterSecureStorage()),

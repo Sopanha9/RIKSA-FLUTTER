@@ -7,6 +7,8 @@ import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/core/widgets/riksa_achievement_image.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
+import 'package:riksa_app/features/blog/data/blog_models.dart';
+import 'package:riksa_app/features/blog/providers/blog_provider.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 import 'package:riksa_app/features/social/providers/social_feed_provider.dart';
 import 'package:riksa_app/features/userProfile/data/profile_models.dart';
@@ -236,7 +238,7 @@ void main() {
     expect(find.text('1,520 XP'), findsNothing);
     expect(find.byKey(const ValueKey('profile-streak')), findsOneWidget);
     expect(find.text('Gold'), findsOneWidget);
-    expect(find.text('My Posts'), findsOneWidget);
+    expect(find.text('Posts'), findsOneWidget);
     expect(
       find.text('A simple way to remember quadratic formulas'),
       findsOneWidget,
@@ -258,6 +260,67 @@ void main() {
     expect(find.text('#12'), findsOneWidget);
     expect(find.text('#3'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('keeps authored articles visible beside community posts', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 1500);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_AuthNotifier.new),
+          profileDashboardProvider.overrideWith((ref) async => _dashboard),
+          userPostsProvider.overrideWith(
+            (ref, userId) async =>
+                SocialFeedPage(posts: [_post], hasNextPage: false),
+          ),
+          myArticlesPreviewProvider.overrideWith(
+            (ref, userId) async => BlogPage(
+              content: [
+                BlogPost(
+                  id: 'article-1',
+                  authorId: 'user-1',
+                  title: 'How I study physics',
+                  content: 'A short article',
+                  status: BlogStatus.pending,
+                  viewCount: 0,
+                  likeCount: 0,
+                  categoryId: 'physics',
+                  liked: false,
+                  createdAt: DateTime.utc(2026, 9, 1),
+                  updatedAt: DateTime.utc(2026, 9, 1),
+                ),
+              ],
+              page: 0,
+              size: 10,
+              totalElements: 1,
+              totalPages: 1,
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const UserProfileScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text('A simple way to remember quadratic formulas'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('profile-articles-tab')));
+    await tester.pumpAndSettle();
+    expect(find.text('How I study physics'), findsOneWidget);
+    expect(find.text('In review'), findsOneWidget);
   });
 
   testWidgets('posts tab carries the composer, the count and post actions', (

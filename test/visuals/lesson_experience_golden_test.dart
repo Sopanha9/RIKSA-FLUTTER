@@ -12,6 +12,7 @@ import 'package:riksa_app/features/learning/data/learning_api.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_experience_screen.dart';
 import 'package:riksa_app/features/learning/presentation/learning_result_screens.dart';
+import 'package:riksa_app/features/mascot/presentation/widgets/mascot_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
@@ -126,7 +127,7 @@ class _PreviewLearningApi implements LearningApi {
 
 Future<void> _loadFonts() async {
   final redditSans = FontLoader(RiksaTypography.latinFamily)
-    ..addFont(rootBundle.load('assets/fonts/RedditSans-Variable.ttf'));
+    ..addFont(rootBundle.load('assets/fonts/Poppins-Regular.ttf'));
   final khmer = FontLoader(RiksaTypography.khmerFamily)
     ..addFont(rootBundle.load('assets/fonts/NotoSansKhmer-Variable.ttf'));
   final configuredRoot = Platform.environment['FLUTTER_ROOT'];
@@ -165,7 +166,9 @@ Widget _previewApp({
     theme: theme ?? AppTheme.light,
     locale: locale,
     builder: (context, child) => MediaQuery(
-      data: MediaQuery.of(context).copyWith(textScaler: scaler),
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: scaler, disableAnimations: true),
       child: child!,
     ),
     localizationsDelegates: const [
@@ -296,7 +299,18 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
+    final mascotImages = find.descendant(
+      of: find.byType(MascotView, skipOffstage: false),
+      matching: find.byType(Image, skipOffstage: false),
+    );
+    await tester.runAsync(
+      () => Future.wait([
+        for (final element in mascotImages.evaluate())
+          precacheImage((element.widget as Image).image, element),
+      ]),
+    );
+    await tester.pump();
     expect(tester.takeException(), isNull);
     await expectLater(
       find.byType(LessonCompletionScreen),

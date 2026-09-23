@@ -184,7 +184,7 @@ void main() {
     expect(find.text('សរីរាង្គ'), findsOneWidget);
 
     final lessonTitle = tester.widget<Text>(find.text(_detail.title));
-    expect(lessonTitle.style?.fontFamily, 'Koulen');
+    expect(lessonTitle.style?.fontFamily, RiksaTypography.khmerBodyFamily);
 
     final markdownEditableText = find.descendant(
       of: find.byKey(const ValueKey('lesson-description-markdown')),
@@ -226,7 +226,9 @@ void main() {
     ).where((span) => _hasKhmer(span.text)).toList();
     expect(khmerHeadingSpans, isNotEmpty);
     expect(
-      khmerHeadingSpans.every((span) => span.style?.fontFamily == 'Koulen'),
+      khmerHeadingSpans.every(
+        (span) => span.style?.fontFamily == RiksaTypography.khmerTitleFamily,
+      ),
       isTrue,
     );
     expect(tester.takeException(), isNull);

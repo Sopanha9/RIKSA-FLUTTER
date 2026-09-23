@@ -1976,6 +1976,24 @@ abstract class AppLocalizations {
   /// **'My Posts'**
   String get myPosts;
 
+  /// No description provided for @profileArticlesTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Articles'**
+  String get profileArticlesTab;
+
+  /// No description provided for @profileBadgesTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Badges'**
+  String get profileBadgesTab;
+
+  /// No description provided for @profileRankTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank'**
+  String get profileRankTab;
+
   /// No description provided for @leaderboardRank.
   ///
   /// In en, this message translates to:
@@ -4043,13 +4061,13 @@ abstract class AppLocalizations {
   /// No description provided for @blogWritePost.
   ///
   /// In en, this message translates to:
-  /// **'Write a post'**
+  /// **'Write an article'**
   String get blogWritePost;
 
   /// No description provided for @blogYourPosts.
   ///
   /// In en, this message translates to:
-  /// **'Your posts'**
+  /// **'My Articles'**
   String get blogYourPosts;
 
   /// No description provided for @blogFeedFailedTitle.
@@ -4091,19 +4109,19 @@ abstract class AppLocalizations {
   /// No description provided for @blogMyPostsFailed.
   ///
   /// In en, this message translates to:
-  /// **'Could not load your posts'**
+  /// **'Could not load your articles'**
   String get blogMyPostsFailed;
 
   /// No description provided for @blogMyPostsEmptyTitle.
   ///
   /// In en, this message translates to:
-  /// **'No posts yet'**
+  /// **'No articles yet'**
   String get blogMyPostsEmptyTitle;
 
   /// No description provided for @blogMyPostsEmptyBody.
   ///
   /// In en, this message translates to:
-  /// **'Everything you write shows up here, with its review status.'**
+  /// **'Articles you write appear here, including their review status.'**
   String get blogMyPostsEmptyBody;
 
   /// No description provided for @blogMyPostsFilteredTitle.
@@ -4115,7 +4133,7 @@ abstract class AppLocalizations {
   /// No description provided for @blogMyPostsFilteredBody.
   ///
   /// In en, this message translates to:
-  /// **'You have no posts with this status right now.'**
+  /// **'You have no articles with this status right now.'**
   String get blogMyPostsFilteredBody;
 
   /// No description provided for @blogStatusPending.
@@ -4465,6 +4483,264 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yay, you\'re in!'**
   String get authBuddySuccess;
+
+  /// No description provided for @buddyHomeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for another step?'**
+  String get buddyHomeGreeting;
+
+  /// No description provided for @buddyWelcomeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back. Pick up where you left off.'**
+  String get buddyWelcomeBack;
+
+  /// No description provided for @buddyLessonCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'You earned this!'**
+  String get buddyLessonCompleted;
+
+  /// No description provided for @buddyRankImproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your progress moved you up.'**
+  String get buddyRankImproved;
+
+  /// No description provided for @buddyCommunityJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to your new community!'**
+  String get buddyCommunityJoined;
+
+  /// No description provided for @homeStreakDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String homeStreakDays(int count);
+
+  /// No description provided for @homeTodaysStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s study'**
+  String get homeTodaysStudy;
+
+  /// No description provided for @homeStartHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Start here'**
+  String get homeStartHere;
+
+  /// No description provided for @homeStartHereBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your first lesson and begin one step at a time.'**
+  String get homeStartHereBody;
+
+  /// No description provided for @homeLessonMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String homeLessonMinutes(int minutes);
+
+  /// No description provided for @homeContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get homeContinue;
+
+  /// No description provided for @homeProvinceSquad.
+  ///
+  /// In en, this message translates to:
+  /// **'Your province study squad'**
+  String get homeProvinceSquad;
+
+  /// No description provided for @homeProvinceMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your province to see your study squad.'**
+  String get homeProvinceMissing;
+
+  /// No description provided for @homeSelectProvince.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose province'**
+  String get homeSelectProvince;
+
+  /// No description provided for @homeProvinceRank.
+  ///
+  /// In en, this message translates to:
+  /// **'You are #{rank} this week'**
+  String homeProvinceRank(int rank);
+
+  /// No description provided for @homeNearbyLearner.
+  ///
+  /// In en, this message translates to:
+  /// **'#{rank} {name}'**
+  String homeNearbyLearner(int rank, String name);
+
+  /// No description provided for @homeYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get homeYou;
+
+  /// No description provided for @homeViewProvinceRanks.
+  ///
+  /// In en, this message translates to:
+  /// **'View province ranks'**
+  String get homeViewProvinceRanks;
+
+  /// No description provided for @homeFromCommunities.
+  ///
+  /// In en, this message translates to:
+  /// **'From your communities'**
+  String get homeFromCommunities;
+
+  /// No description provided for @homeCommunityPostMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'{community} · {author} · {count} comments'**
+  String homeCommunityPostMeta(String community, String author, int count);
+
+  /// No description provided for @homeSeeCommunityFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'See community feed'**
+  String get homeSeeCommunityFeed;
+
+  /// No description provided for @lessonShareLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Share what I learned'**
+  String get lessonShareLearning;
+
+  /// No description provided for @resumeLearningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume learning'**
+  String get resumeLearningTitle;
+
+  /// No description provided for @resumeLearningEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No lesson in progress'**
+  String get resumeLearningEmptyTitle;
+
+  /// No description provided for @resumeLearningEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a lesson to begin your next learning step.'**
+  String get resumeLearningEmptyBody;
+
+  /// No description provided for @leaderboardNearbyLearners.
+  ///
+  /// In en, this message translates to:
+  /// **'Learners around your rank'**
+  String get leaderboardNearbyLearners;
+
+  /// No description provided for @leaderboardSearchLearners.
+  ///
+  /// In en, this message translates to:
+  /// **'Search learners'**
+  String get leaderboardSearchLearners;
+
+  /// No description provided for @buddyReactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Buddy reactions'**
+  String get buddyReactions;
+
+  /// No description provided for @buddyReactionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow animated and speaking buddy reactions'**
+  String get buddyReactionsHint;
+
+  /// No description provided for @profileStudyBuddy.
+  ///
+  /// In en, this message translates to:
+  /// **'Study buddy'**
+  String get profileStudyBuddy;
+
+  /// No description provided for @profileBuddyNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, your study buddy'**
+  String profileBuddyNamed(String name);
+
+  /// No description provided for @aiBuddyHandoff.
+  ///
+  /// In en, this message translates to:
+  /// **'Your buddy can help you start; Kru AI will explain the question.'**
+  String get aiBuddyHandoff;
+
+  /// No description provided for @homeProvinceSquadNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'{province} study squad'**
+  String homeProvinceSquadNamed(String province);
+
+  /// No description provided for @streakReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🔥 Keep your learning streak alive!'**
+  String get streakReminderTitle;
+
+  /// No description provided for @streakReminderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Take 5 minutes tonight to practice and protect your streak.'**
+  String get streakReminderBody;
+
+  /// No description provided for @drawerGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get drawerGeneral;
+
+  /// No description provided for @drawerAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get drawerAbout;
+
+  /// No description provided for @drawerUserAgreement.
+  ///
+  /// In en, this message translates to:
+  /// **'User Agreement'**
+  String get drawerUserAgreement;
+
+  /// No description provided for @drawerPrivacyCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Center'**
+  String get drawerPrivacyCenter;
+
+  /// No description provided for @aiCopyAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy answer'**
+  String get aiCopyAnswer;
+
+  /// No description provided for @aiCopiedClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get aiCopiedClipboard;
+
+  /// No description provided for @aiCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get aiCopy;
+
+  /// No description provided for @aiLoginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please log in to chat with the AI Tutor.'**
+  String get aiLoginRequired;
 }
 
 class _AppLocalizationsDelegate
@@ -4499,49 +4775,4 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
     'that was used.',
   );
-
-  String get buddyHomeGreeting;
-  String get buddyWelcomeBack;
-  String get buddyLessonCompleted;
-  String get buddyRankImproved;
-  String get buddyCommunityJoined;
-  String homeStreakDays(int count);
-  String get homeTodaysStudy;
-  String get homeStartHere;
-  String get homeStartHereBody;
-  String homeLessonMinutes(int minutes);
-  String get homeContinue;
-  String get homeProvinceSquad;
-  String get homeProvinceMissing;
-  String get homeSelectProvince;
-  String homeProvinceRank(int rank);
-  String homeNearbyLearner(int rank, String name);
-  String get homeYou;
-  String get homeViewProvinceRanks;
-  String get homeFromCommunities;
-  String homeCommunityPostMeta(String community, String author, int count);
-  String get homeSeeCommunityFeed;
-
-  String get lessonShareLearning;
-  String get resumeLearningTitle;
-  String get resumeLearningEmptyTitle;
-  String get resumeLearningEmptyBody;
-  String get leaderboardNearbyLearners;
-  String get leaderboardSearchLearners;
-  String get buddyReactions;
-  String get buddyReactionsHint;
-  String get profileStudyBuddy;
-  String profileBuddyNamed(String name);
-  String get aiBuddyHandoff;
-  String homeProvinceSquadNamed(String province);
-  String get streakReminderTitle;
-  String get streakReminderBody;
-  String get drawerGeneral;
-  String get drawerAbout;
-  String get drawerUserAgreement;
-  String get drawerPrivacyCenter;
-  String get aiCopyAnswer;
-  String get aiCopiedClipboard;
-  String get aiCopy;
-  String get aiLoginRequired;
 }

@@ -193,9 +193,7 @@ class ProfilePanel extends StatelessWidget {
           borderRadius: AppRadii.mediumBorder,
           side: ProfilePaletteScope.maybeOf(context) == null
               ? BorderSide.none
-              : BorderSide(
-                  color: context.riksa.outline.withValues(alpha: 0.5),
-                ),
+              : BorderSide(color: context.riksa.outline.withValues(alpha: 0.5)),
         ),
         elevation: 0,
         clipBehavior: Clip.antiAlias,
@@ -208,7 +206,7 @@ class ProfilePanel extends StatelessWidget {
   );
 }
 
-enum ProfileTab { posts, achievements, rank }
+enum ProfileTab { posts, articles, achievements, rank }
 
 /// One icon + label pair in the metadata line under the bio.
 class ProfileMetaItem {
@@ -362,11 +360,7 @@ class ProfileIdentityHeader extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: RiksaTypography.bodyStyleFor(
               trimmedBio,
-              TextStyle(
-                color: context.riksa.ink,
-                fontSize: 14.5,
-                height: 1.45,
-              ),
+              TextStyle(color: context.riksa.ink, fontSize: 14.5, height: 1.45),
             ),
           ),
         ],
@@ -380,11 +374,7 @@ class ProfileIdentityHeader extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      item.icon,
-                      size: 15,
-                      color: context.riksa.inkMuted,
-                    ),
+                    Icon(item.icon, size: 15, color: context.riksa.inkMuted),
                     const SizedBox(width: 5),
                     Flexible(
                       child: Text(
@@ -538,10 +528,7 @@ class ProfileTierRail extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _RailEndLabel(
-              label: startLabel,
-              color: context.riksa.inkMuted,
-            ),
+            _RailEndLabel(label: startLabel, color: context.riksa.inkMuted),
             _RailEndLabel(label: endLabel, color: context.riksa.ink),
           ],
         ),
@@ -716,6 +703,7 @@ class ProfileTabs extends StatelessWidget {
     required this.selected,
     required this.onSelected,
     required this.postsLabel,
+    this.articlesLabel,
     required this.achievementsLabel,
     required this.rankLabel,
   });
@@ -723,6 +711,7 @@ class ProfileTabs extends StatelessWidget {
   final ProfileTab selected;
   final ValueChanged<ProfileTab> onSelected;
   final String postsLabel;
+  final String? articlesLabel;
   final String achievementsLabel;
   final String rankLabel;
 
@@ -741,9 +730,7 @@ class ProfileTabs extends StatelessWidget {
     child: DecoratedBox(
       decoration: BoxDecoration(
         color: context.riksa.canvas,
-        border: Border(
-          bottom: BorderSide(color: context.riksa.outline),
-        ),
+        border: Border(bottom: BorderSide(color: context.riksa.outline)),
       ),
       child: _strip(context),
     ),
@@ -755,6 +742,8 @@ class ProfileTabs extends StatelessWidget {
       children: [
         for (final (tab, label, key) in [
           (ProfileTab.posts, postsLabel, 'profile-posts-tab'),
+          if (articlesLabel != null)
+            (ProfileTab.articles, articlesLabel!, 'profile-articles-tab'),
           (
             ProfileTab.achievements,
             achievementsLabel,
@@ -819,6 +808,7 @@ class ProfileTabsHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(ProfileTabsHeaderDelegate oldDelegate) =>
       oldDelegate.tabs.selected != tabs.selected ||
       oldDelegate.tabs.postsLabel != tabs.postsLabel ||
+      oldDelegate.tabs.articlesLabel != tabs.articlesLabel ||
       oldDelegate.tabs.achievementsLabel != tabs.achievementsLabel ||
       oldDelegate.tabs.rankLabel != tabs.rankLabel ||
       oldDelegate.color != color ||

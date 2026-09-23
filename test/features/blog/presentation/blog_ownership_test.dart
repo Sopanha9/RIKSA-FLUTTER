@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:riksa_app/app/router/app_shell.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
@@ -20,6 +21,19 @@ import 'package:riksa_app/l10n/gen/app_localizations.dart';
 void main() {
   final mine = _post(id: 'mine', authorId: 'me', title: 'My own post');
   final theirs = _post(id: 'theirs', authorId: 'someone', title: 'Their post');
+
+  testWidgets('blog keeps the account sidebar reachable', (tester) async {
+    var opened = false;
+    await _pumpFeed(
+      tester,
+      posts: [mine],
+      api: _MockBlogApi(),
+      onOpenDrawer: () => opened = true,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('blog-sidebar-menu-button')));
+    expect(opened, isTrue);
+  });
 
   testWidgets('the owner menu appears only on the signed-in author\'s post', (
     tester,
@@ -96,6 +110,7 @@ Future<void> _pumpFeed(
   required List<BlogPost> posts,
   required BlogApi api,
   String? userId = 'me',
+  VoidCallback? onOpenDrawer,
 }) async {
   tester.view.physicalSize = const Size(430, 932);
   tester.view.devicePixelRatio = 1;
@@ -121,7 +136,12 @@ Future<void> _pumpFeed(
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: const [Locale('en'), Locale('km')],
-        home: const BlogFeedScreen(),
+        home: onOpenDrawer == null
+            ? const BlogFeedScreen()
+            : AppShellScope(
+                openDrawer: onOpenDrawer,
+                child: const BlogFeedScreen(),
+              ),
       ),
     ),
   );

@@ -333,6 +333,7 @@ class _SocialPostDetailScreenState
                   post: _post!,
                   onAuthorTap: _authorTap(_post!.author),
                   onReact: _react,
+                  onComment: _commentFocus.requestFocus,
                   onShare: _share,
                 ),
                 const SizedBox(height: 24),
@@ -487,12 +488,14 @@ class _PostBody extends StatelessWidget {
     required this.post,
     this.onAuthorTap,
     required this.onReact,
+    required this.onComment,
     required this.onShare,
   });
 
   final SocialPost post;
   final VoidCallback? onAuthorTap;
   final VoidCallback onReact;
+  final VoidCallback onComment;
   final VoidCallback onShare;
 
   @override
@@ -561,6 +564,12 @@ class _PostBody extends StatelessWidget {
                 count: post.reactionCount,
                 selected: post.myReaction != null,
                 onTap: onReact,
+              ),
+              _DetailAction(
+                key: const ValueKey('post-detail-comment-button'),
+                icon: Icons.mode_comment_outlined,
+                count: post.commentCount,
+                onTap: onComment,
               ),
               const Spacer(),
               _DetailAction(
@@ -972,6 +981,7 @@ class _Avatar extends StatelessWidget {
 
 class _DetailAction extends StatelessWidget {
   const _DetailAction({
+    super.key,
     required this.icon,
     required this.count,
     this.selected = false,
@@ -985,9 +995,7 @@ class _DetailAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected
-        ? AppColors.socialLike
-        : context.riksa.inkMuted;
+    final color = selected ? AppColors.socialLike : context.riksa.inkMuted;
     return InkWell(
       borderRadius: AppRadii.fullBorder,
       onTap: onTap,
@@ -1021,10 +1029,7 @@ class _CountBadge extends StatelessWidget {
     padding: const EdgeInsets.only(left: 4),
     child: Text(
       '$count',
-      style: TextStyle(
-        color: context.riksa.ink,
-        fontWeight: FontWeight.w600,
-      ),
+      style: TextStyle(color: context.riksa.ink, fontWeight: FontWeight.w600),
     ),
   );
 }
@@ -1252,9 +1257,7 @@ class _CommentComposer extends StatelessWidget {
                           ),
                           decoration: InputDecoration(
                             hintText: hint,
-                            hintStyle: TextStyle(
-                              color: context.riksa.inkMuted,
-                            ),
+                            hintStyle: TextStyle(color: context.riksa.inkMuted),
                             counterText: '',
                             filled: true,
                             fillColor: Colors.white.withValues(

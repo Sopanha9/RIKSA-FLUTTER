@@ -34,7 +34,7 @@ class CurrentUserRankCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ink = context.riksa.reward;
+    final ink = context.riksa.onReward;
     final textTheme = Theme.of(context).textTheme;
 
     return Semantics(

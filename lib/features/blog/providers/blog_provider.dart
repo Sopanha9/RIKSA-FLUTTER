@@ -34,6 +34,13 @@ final pendingBlogPostCountProvider = FutureProvider<int>((ref) async {
   }
 });
 
+/// A small owner-only preview for the personal profile. Unlike the public
+/// feed, this includes articles that are still in review or were rejected.
+final myArticlesPreviewProvider = FutureProvider.autoDispose
+    .family<BlogPage, String>((ref, userId) {
+      return ref.watch(blogApiProvider).myPosts(size: 10);
+    });
+
 /// Category for a post, resolved from the already-loaded category list.
 ///
 /// Returns null while categories are loading or when the id is unknown, so

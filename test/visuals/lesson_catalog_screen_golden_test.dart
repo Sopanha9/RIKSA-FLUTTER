@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/core/widgets/riksa_bottom_navigation_bar.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
@@ -19,7 +20,7 @@ import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 Future<void> _loadFonts() async {
   final redditSans = FontLoader(RiksaTypography.latinFamily)
-    ..addFont(rootBundle.load('assets/fonts/RedditSans-Variable.ttf'));
+    ..addFont(rootBundle.load('assets/fonts/Poppins-Regular.ttf'));
   final configuredRoot = Platform.environment['FLUTTER_ROOT'];
   final flutterRoot =
       configuredRoot ??
@@ -85,6 +86,7 @@ LearningHomeData _home() {
 
 void main() {
   setUpAll(_loadFonts);
+  setUp(() => SharedPreferences.setMockInitialValues({}));
 
   for (final dark in [false, true]) {
     testWidgets('learning home ${dark ? 'dark' : 'light'}', (tester) async {
