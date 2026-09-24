@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/core/notifications/streak_reminder_provider.dart';
+import 'package:riksa_app/core/notifications/streak_reminder_service.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/learning/data/learning_api.dart';
@@ -13,6 +15,7 @@ import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.da
 import 'package:riksa_app/features/learning/presentation/widgets/learning_atoms.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class JourneyApi implements LearningApi {
   final submitted = <String>[];
@@ -106,6 +109,40 @@ class _GuestNotifier extends AuthNotifier {
   AuthState build() => const Unauthenticated();
 }
 
+class _TestReminderPlatform implements StreakReminderPlatform {
+  bool permissionGranted = false;
+  int permissionRequests = 0;
+  tz.TZDateTime? scheduledDate;
+
+  @override
+  Future<bool> areNotificationsEnabled() async => permissionGranted;
+
+  @override
+  Future<void> cancel({required int id}) async {}
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  Future<String> localTimezoneIdentifier() async => 'Asia/Phnom_Penh';
+
+  @override
+  Future<bool> requestPermission() async {
+    permissionRequests++;
+    return permissionGranted;
+  }
+
+  @override
+  Future<void> schedule({
+    required int id,
+    required String title,
+    required String body,
+    required tz.TZDateTime date,
+  }) async {
+    scheduledDate = date;
+  }
+}
+
 Widget journeyApp(
   JourneyApi api, {
   Locale locale = const Locale('en'),
@@ -134,6 +171,9 @@ Widget journeyApp(
   return ProviderScope(
     overrides: [
       learningApiProvider.overrideWithValue(api),
+      streakReminderServiceProvider.overrideWithValue(
+        StreakReminderService(platform: _TestReminderPlatform()),
+      ),
       authProvider.overrideWith(
         authenticated ? _AuthenticatedNotifier.new : _GuestNotifier.new,
       ),
@@ -166,6 +206,14 @@ Future<void> tapKey(WidgetTester tester, String key) async {
   await tester.pumpAndSettle();
   await tester.tap(finder);
   await tester.pumpAndSettle();
+}
+
+Future<bool> dismissReminderPromptIfPresent(WidgetTester tester) async {
+  final cancel = find.byKey(const ValueKey('reminder-permission-cancel'));
+  if (cancel.evaluate().isEmpty) return false;
+  await tester.tap(cancel);
+  await tester.pumpAndSettle();
+  return true;
 }
 
 void main() {
@@ -231,6 +279,7 @@ void main() {
       );
       api.failCompletion = false;
       await tapKey(tester, 'complete-lesson');
+      expect(await dismissReminderPromptIfPresent(tester), isTrue);
       expect(
         find.text('Saved: Force grows with mass at the same acceleration.'),
         findsOneWidget,
@@ -283,6 +332,7 @@ void main() {
       );
       expect(enabledSave.onPressed, isNotNull);
       await tapKey(tester, 'complete-lesson');
+      expect(await dismissReminderPromptIfPresent(tester), isTrue);
 
       expect(api.reflections, hasLength(1));
       expect(api.reflections.single, contains('[I can explain it]'));

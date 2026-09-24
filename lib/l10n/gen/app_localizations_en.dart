@@ -2755,6 +2755,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'Take 5 minutes tonight to practice and protect your streak.';
 
   @override
+  String get reminderPermissionTitle => 'A small reminder at 8 PM?';
+
+  @override
+  String reminderPermissionBody(String buddyName) {
+    return '$buddyName: Want me to remind you so your streak doesn\'t break?';
+  }
+
+  @override
+  String get reminderPermissionAllow => 'Turn on reminder';
+
+  @override
+  String reminderNotificationTitle(String buddyName, int streakDays) {
+    return '$buddyName: your $streakDays-day streak ends tonight 😢';
+  }
+
+  @override
+  String reminderNotificationTitleNoStreak(String buddyName) {
+    return '$buddyName: make time for one lesson tonight';
+  }
+
+  @override
+  String get reminderNotificationBody =>
+      'Finish one lesson tonight and keep your streak going.';
+
+  @override
   String get drawerGeneral => 'General';
 
   @override
@@ -2777,4 +2802,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiLoginRequired => 'Please log in to chat with the AI Tutor.';
+
+  @override
+  String get buddyHeadOpenSemantics => 'Open today\'s quests';
+
+  @override
+  String get buddyHeadTodayTitle => 'Today\'s quests';
+
+  @override
+  String buddyHeadGreeting(String name) {
+    return '$name: let\'s make today count!';
+  }
+
+  @override
+  String get buddyHeadCurrentStreak => 'Your current streak';
+
+  @override
+  String buddyHeadStreakDays(int count) {
+    return '$count days';
+  }
+
+  @override
+  String buddyHeadProgress(int progress, int target) {
+    return '$progress of $target';
+  }
+
+  @override
+  String buddyHeadProgressShort(int progress, int target) {
+    return '$progress/$target';
+  }
+
+  @override
+  String get buddyHeadStartLesson => 'Start a lesson';
+
+  @override
+  String get buddyHeadGuestPrompt => 'Save your streak — sign in';
+
+  @override
+  String get buddyHeadSignIn => 'Sign in';
+
+  @override
+  String get buddyHeadHideTitle => 'Hide buddy for today?';
+
+  @override
+  String get buddyHeadHideBody => 'Your buddy will be back tomorrow.';
+
+  @override
+  String get buddyHeadHideAction => 'Hide today';
+
+  @override
+  String get questPreviewLesson => 'Finish 1 lesson';
+
+  @override
+  String get questPreviewAnswers => 'Get 3 answers right';
+
+  @override
+  String get questPreviewSocial => 'React to or comment on a post';
+
+  @override
+  String get questClaim => 'Claim';
+
+  @override
+  String get questClaimed => 'Claimed';
+
+  @override
+  String get questSignInToClaim => 'Sign in to claim';
+
+  @override
+  String get questClaimFailed => 'Could not claim this quest. Try again.';
+
+  @override
+  String get questLoadFailed => 'Today\'s quests could not load.';
+
+  @override
+  String get questPreviewStreak => 'Preview today\'s quests';
+
+  @override
+  String get questRetry => 'Try again';
 }

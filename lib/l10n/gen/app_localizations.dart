@@ -4844,6 +4844,42 @@ abstract class AppLocalizations {
   /// **'Take 5 minutes tonight to practice and protect your streak.'**
   String get streakReminderBody;
 
+  /// No description provided for @reminderPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A small reminder at 8 PM?'**
+  String get reminderPermissionTitle;
+
+  /// No description provided for @reminderPermissionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{buddyName}: Want me to remind you so your streak doesn\'t break?'**
+  String reminderPermissionBody(String buddyName);
+
+  /// No description provided for @reminderPermissionAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on reminder'**
+  String get reminderPermissionAllow;
+
+  /// No description provided for @reminderNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{buddyName}: your {streakDays}-day streak ends tonight 😢'**
+  String reminderNotificationTitle(String buddyName, int streakDays);
+
+  /// No description provided for @reminderNotificationTitleNoStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'{buddyName}: make time for one lesson tonight'**
+  String reminderNotificationTitleNoStreak(String buddyName);
+
+  /// No description provided for @reminderNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish one lesson tonight and keep your streak going.'**
+  String get reminderNotificationBody;
+
   /// No description provided for @drawerGeneral.
   ///
   /// In en, this message translates to:
@@ -4891,6 +4927,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please log in to chat with the AI Tutor.'**
   String get aiLoginRequired;
+
+  /// No description provided for @buddyHeadOpenSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Open today\'s quests'**
+  String get buddyHeadOpenSemantics;
+
+  /// No description provided for @buddyHeadTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s quests'**
+  String get buddyHeadTodayTitle;
+
+  /// No description provided for @buddyHeadGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: let\'s make today count!'**
+  String buddyHeadGreeting(String name);
+
+  /// No description provided for @buddyHeadCurrentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current streak'**
+  String get buddyHeadCurrentStreak;
+
+  /// No description provided for @buddyHeadStreakDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String buddyHeadStreakDays(int count);
+
+  /// No description provided for @buddyHeadProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{progress} of {target}'**
+  String buddyHeadProgress(int progress, int target);
+
+  /// No description provided for @buddyHeadProgressShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{progress}/{target}'**
+  String buddyHeadProgressShort(int progress, int target);
+
+  /// No description provided for @buddyHeadStartLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a lesson'**
+  String get buddyHeadStartLesson;
+
+  /// No description provided for @buddyHeadGuestPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your streak — sign in'**
+  String get buddyHeadGuestPrompt;
+
+  /// No description provided for @buddyHeadSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get buddyHeadSignIn;
+
+  /// No description provided for @buddyHeadHideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide buddy for today?'**
+  String get buddyHeadHideTitle;
+
+  /// No description provided for @buddyHeadHideBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your buddy will be back tomorrow.'**
+  String get buddyHeadHideBody;
+
+  /// No description provided for @buddyHeadHideAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide today'**
+  String get buddyHeadHideAction;
+
+  /// No description provided for @questPreviewLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish 1 lesson'**
+  String get questPreviewLesson;
+
+  /// No description provided for @questPreviewAnswers.
+  ///
+  /// In en, this message translates to:
+  /// **'Get 3 answers right'**
+  String get questPreviewAnswers;
+
+  /// No description provided for @questPreviewSocial.
+  ///
+  /// In en, this message translates to:
+  /// **'React to or comment on a post'**
+  String get questPreviewSocial;
+
+  /// No description provided for @questClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim'**
+  String get questClaim;
+
+  /// No description provided for @questClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Claimed'**
+  String get questClaimed;
+
+  /// No description provided for @questSignInToClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to claim'**
+  String get questSignInToClaim;
+
+  /// No description provided for @questClaimFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not claim this quest. Try again.'**
+  String get questClaimFailed;
+
+  /// No description provided for @questLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s quests could not load.'**
+  String get questLoadFailed;
+
+  /// No description provided for @questPreviewStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview today\'s quests'**
+  String get questPreviewStreak;
+
+  /// No description provided for @questRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get questRetry;
 }
 
 class _AppLocalizationsDelegate

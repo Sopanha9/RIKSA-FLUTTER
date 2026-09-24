@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
@@ -9,6 +10,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/sound/learning_sound.dart';
 import '../../../core/sound/sound_provider.dart';
+import '../../../core/notifications/streak_reminder_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -799,6 +801,7 @@ class _LessonExperienceScreenState
   Future<void> _complete(LessonDetail detail) async {
     if (!requireAccount(context, ref, reason: 'save_progress')) return;
     if (_completing || _needsReview == null) return;
+    final reminderNavigator = Navigator.of(context, rootNavigator: true);
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() => _completing = true);
     try {
@@ -824,6 +827,28 @@ class _LessonExperienceScreenState
       await ref
           .read(buddyCareProvider.notifier)
           .recordLocalGain(BuddyCareSource.lesson, sourceId: detail.id);
+      final buddyName =
+          ref.read(mascotProvider).profile?.name ??
+          MascotProfile.defaultName(MascotSpecies.crocodile);
+      final streak =
+          ref
+              .read(profileDashboardProvider)
+              .value
+              ?.gamification
+              .currentStreak ??
+          0;
+      final reminderTitle = streak > 0
+          ? l10n.reminderNotificationTitle(buddyName, streak)
+          : l10n.reminderNotificationTitleNoStreak(buddyName);
+      final reminderBody = l10n.reminderNotificationBody;
+      final reminderService = ref.read(streakReminderServiceProvider);
+      unawaited(
+        reminderService
+            .recordLessonCompleted(title: reminderTitle, body: reminderBody)
+            .catchError((Object error) {
+              debugPrint('Streak reminder update failed: $error');
+            }),
+      );
       // Sounded before the awaits below: the fanfare should land with the tap,
       // not after the catalog and roadmaps have finished refetching.
       HapticFeedback.mediumImpact();
@@ -856,11 +881,88 @@ class _LessonExperienceScreenState
             'lessonId': detail.id,
           },
         );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!reminderNavigator.mounted) return;
+          unawaited(
+            _maybeOfferReminderPermission(
+              navigator: reminderNavigator,
+              strings: l10n,
+              buddyName: buddyName,
+              title: reminderTitle,
+              body: reminderBody,
+            ).catchError((Object error) {
+              debugPrint('Streak reminder permission prompt failed: $error');
+            }),
+          );
+        });
       }
     } catch (error) {
       if (mounted) _showError(error);
     } finally {
       if (mounted) setState(() => _completing = false);
+    }
+  }
+
+  Future<void> _maybeOfferReminderPermission({
+    required NavigatorState navigator,
+    required AppLocalizations strings,
+    required String buddyName,
+    required String title,
+    required String body,
+  }) async {
+    final service = ref.read(streakReminderServiceProvider);
+    final enabled = await service.isEnabled();
+    final canRequest = await service.canRequestPermission();
+    final hasPermission = await service.hasNotificationPermission();
+    final canPrompt = await service.shouldShowPermissionPromptAfterLesson();
+    if (!enabled ||
+        !canRequest ||
+        hasPermission ||
+        !canPrompt ||
+        !navigator.mounted) {
+      return;
+    }
+    await service.markPermissionPromptShown();
+    if (!navigator.mounted) return;
+    final wantsReminder = await showModalBottomSheet<bool>(
+      context: navigator.context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                strings.reminderPermissionTitle,
+                style: Theme.of(sheetContext).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 10),
+              Text(strings.reminderPermissionBody(buddyName)),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(sheetContext).pop(true),
+                  child: Text(strings.reminderPermissionAllow),
+                ),
+              ),
+              TextButton(
+                key: const ValueKey('reminder-permission-cancel'),
+                onPressed: () => Navigator.of(sheetContext).pop(false),
+                child: Text(strings.cancel),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (wantsReminder != true || !navigator.mounted) return;
+    if (await service.requestPermission()) {
+      await service.rescheduleIfEnabled(title: title, body: body);
     }
   }
 

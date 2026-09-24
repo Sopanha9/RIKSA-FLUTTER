@@ -2712,6 +2712,31 @@ class AppLocalizationsKm extends AppLocalizations {
       'ចំណាយពេល ៥ នាទីយប់នេះដើម្បីរៀន និងរក្សាការសិក្សាបន្តរបស់អ្នក។';
 
   @override
+  String get reminderPermissionTitle => 'តើអ្នកចង់បានការរំលឹកនៅម៉ោង ៨ យប់ទេ?';
+
+  @override
+  String reminderPermissionBody(String buddyName) {
+    return '$buddyName៖ តើខ្ញុំអាចរំលឹកអ្នក ដើម្បីកុំឱ្យស្ទ្រីករបស់អ្នកដាច់បានទេ?';
+  }
+
+  @override
+  String get reminderPermissionAllow => 'បើកការរំលឹក';
+
+  @override
+  String reminderNotificationTitle(String buddyName, int streakDays) {
+    return '$buddyName៖ ស្ទ្រីក $streakDays ថ្ងៃរបស់អ្នកនឹងដាច់នៅយប់នេះ 😢';
+  }
+
+  @override
+  String reminderNotificationTitleNoStreak(String buddyName) {
+    return '$buddyName៖ ចំណាយពេលរៀនមេរៀនមួយនៅយប់នេះ';
+  }
+
+  @override
+  String get reminderNotificationBody =>
+      'បញ្ចប់មេរៀនមួយនៅយប់នេះ ដើម្បីបន្តស្ទ្រីករបស់អ្នក។';
+
+  @override
   String get drawerGeneral => 'ទូទៅ';
 
   @override
@@ -2734,4 +2759,83 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get aiLoginRequired => 'សូមចូលគណនីដើម្បីជជែកជាមួយគ្រូ AI។';
+
+  @override
+  String get buddyHeadOpenSemantics => 'បើកកិច្ចការថ្ងៃនេះ';
+
+  @override
+  String get buddyHeadTodayTitle => 'កិច្ចការថ្ងៃនេះ';
+
+  @override
+  String buddyHeadGreeting(String name) {
+    return '$name៖ តោះធ្វើឱ្យថ្ងៃនេះមានន័យ!';
+  }
+
+  @override
+  String get buddyHeadCurrentStreak => 'ស្ទ្រីកបច្ចុប្បន្នរបស់អ្នក';
+
+  @override
+  String buddyHeadStreakDays(int count) {
+    return '$count ថ្ងៃ';
+  }
+
+  @override
+  String buddyHeadProgress(int progress, int target) {
+    return '$progress ក្នុងចំណោម $target';
+  }
+
+  @override
+  String buddyHeadProgressShort(int progress, int target) {
+    return '$progress/$target';
+  }
+
+  @override
+  String get buddyHeadStartLesson => 'ចាប់ផ្តើមមេរៀន';
+
+  @override
+  String get buddyHeadGuestPrompt => 'រក្សាស្ទ្រីករបស់អ្នក — ចូលគណនី';
+
+  @override
+  String get buddyHeadSignIn => 'ចូលគណនី';
+
+  @override
+  String get buddyHeadHideTitle => 'លាក់មិត្តសិក្សារហូតដល់ថ្ងៃស្អែក?';
+
+  @override
+  String get buddyHeadHideBody =>
+      'មិត្តសិក្សារបស់អ្នកនឹងត្រឡប់មកវិញនៅថ្ងៃស្អែក។';
+
+  @override
+  String get buddyHeadHideAction => 'លាក់ថ្ងៃនេះ';
+
+  @override
+  String get questPreviewLesson => 'បញ្ចប់មេរៀន ១';
+
+  @override
+  String get questPreviewAnswers => 'ឆ្លើយត្រូវ ៣ សំណួរ';
+
+  @override
+  String get questPreviewSocial => 'ប្រតិកម្ម ឬបញ្ចេញមតិលើប្រកាស';
+
+  @override
+  String get questClaim => 'ទទួលរង្វាន់';
+
+  @override
+  String get questClaimed => 'បានទទួលហើយ';
+
+  @override
+  String get questSignInToClaim => 'ចូលគណនីដើម្បីទទួលរង្វាន់';
+
+  @override
+  String get questClaimFailed =>
+      'មិនអាចទទួលកិច្ចការនេះបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get questLoadFailed => 'មិនអាចផ្ទុកកិច្ចការថ្ងៃនេះបានទេ។';
+
+  @override
+  String get questPreviewStreak => 'មើលកិច្ចការថ្ងៃនេះ';
+
+  @override
+  String get questRetry => 'ព្យាយាមម្តងទៀត';
 }

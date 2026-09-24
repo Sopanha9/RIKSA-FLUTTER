@@ -43,12 +43,18 @@ flutter analyze && flutter test
       (Get started → language → buddy → subject → province → start).
 - [x] Fixed: the chosen province was wiped by `completeOnboarding()` before
       sign-in could send it to the profile.
-- [ ] Commit the Flutter working tree (it holds all recent redesign work).
-- [ ] Commit the backend working tree.
-- [ ] Known red: `test/visuals/social_feed_screen_golden_test.dart` post-detail
-      goldens differ 0.03% after the social layout change — regenerate with
-      `flutter test --update-goldens test/visuals/social_feed_screen_golden_test.dart`
-      once the layout is approved.
+- [x] Commit the Flutter working tree (it holds all recent redesign work).
+- [x] Commit the backend working tree.
+- [x] Known red: the social post-detail goldens differed 0.03% after the
+      social layout change. They were regenerated against the current redesign
+      and now pass.
+
+Baseline checks (2026-09-24): Flutter analysis and the full 475-test suite pass.
+The API compiles with Java 21; its full test run has 4 pre-existing failures in
+`ExerciseAttemptServiceTest` and `LessonServiceTest`, and 5 Docker-dependent
+tests skip because Docker is unavailable. In Wave 1, the 7 quest-specific API
+tests pass; the same 4 baseline API failures remain. Keep these separate from
+wave results.
 
 ## Waves (max 3 concurrent workers)
 
@@ -80,6 +86,19 @@ one wave.
 
 **Backlog (after the competition):** follow graph, user-built roadmaps,
 server push notifications (FCM).
+
+## Integration checklist
+
+- [x] Wave 1 — local streak reminders, daily quests, and floating buddy
+      integrated in both repos; Flutter analysis and all 475 tests pass; all 7
+      quest API tests pass. API full suite retains the 4 baseline failures and
+      5 Docker-dependent skips recorded above.
+- [ ] Wave 2 — lesson resources and milestone posts, app and API integrated;
+      checks and commits recorded here.
+- [ ] Wave 3 — milestone UI, guest answer check, and one-tap finish integrated;
+      checks and commits recorded here.
+- [ ] Wave 4 — Computer Skills starter subject seeded; app and API reviews
+      resolved; final checks and commits recorded here.
 
 ## API contracts (source of truth)
 

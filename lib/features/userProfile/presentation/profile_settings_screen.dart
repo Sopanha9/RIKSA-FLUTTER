@@ -330,12 +330,27 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                               subtitle: l10n.notificationPreferencesHint,
                               value: streakReminderEnabled,
                               onChanged: (value) {
+                                final streak =
+                                    ref
+                                        .read(profileDashboardProvider)
+                                        .value
+                                        ?.gamification
+                                        .currentStreak ??
+                                    0;
+                                final reminderTitle = streak > 0
+                                    ? l10n.reminderNotificationTitle(
+                                        buddyName,
+                                        streak,
+                                      )
+                                    : l10n.reminderNotificationTitleNoStreak(
+                                        buddyName,
+                                      );
                                 ref
                                     .read(streakReminderStateProvider.notifier)
                                     .toggle(
                                       enabled: value,
-                                      title: l10n.streakReminderTitle,
-                                      body: l10n.streakReminderBody,
+                                      title: reminderTitle,
+                                      body: l10n.reminderNotificationBody,
                                     );
                                 value
                                     ? _say(
