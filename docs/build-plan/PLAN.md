@@ -66,7 +66,7 @@ wave results.
 | 2 | Lesson resources API | API | `prompts/w2-resources-api.md` | V36 |
 | 2 | Lesson resources section | App | `prompts/w2-resources-ui.md` | — |
 | 2 | Milestone posts — API half | API | `prompts/w2-social-milestones.md` | V37 |
-| 3 | Milestone posts — app half | App | `prompts/w2-social-milestones.md` | — |
+| 2 | Milestone posts — app half | App | `prompts/w2-social-milestones.md` | — |
 | 3 | Guest answer check — API half | API | `prompts/w3-guest-check-lesson-lite.md` | — |
 | 3 | Guest check + one-tap finish — app half | App | `prompts/w3-guest-check-lesson-lite.md` | — |
 | 4 | Computer Skills starter subject | API | `prompts/w3-computer-skills-seed.md` | V38 |
@@ -98,15 +98,40 @@ server push notifications (FCM).
       suite passes all 48 tests; the full API suite runs 412 tests with the same
       4 baseline failures and 5 Docker-dependent skips recorded above. Commit
       checkpoints are recorded in the Wave 2 note below.
-- [ ] Wave 3 — milestone UI, guest answer check, and one-tap finish integrated;
-      checks and commits recorded here.
-- [ ] Wave 4 — Computer Skills starter subject seeded; app and API reviews
-      resolved; final checks and commits recorded here.
+- [x] Wave 3 — guest answer check and one-tap finish integrated. The milestone
+      app half was already integrated with Wave 2 (`7d25542`). App analysis is
+      clean and all 492 Flutter tests pass; all 10 focused API tests pass.
+- [x] Wave 4 — Computer Skills starter subject seeded, catalog visibility
+      fixed, and app/API read-only review findings resolved. Final app and API
+      checks and commits are recorded below.
 
 Wave 2 checkpoints (2026-09-24): Flutter `7d25542` and API `4e5a426`.
 Flutter analysis is clean and all 488 tests pass. The focused API suite passes
 all 48 tests; the full suite has 4 pre-existing learning-service failures and
 5 Docker-dependent skips (412 tests total).
+
+Wave 3 checkpoints (2026-09-24): API `10148ec` and Flutter `c6513af`. Guest
+lesson checks are rate-limited and do not persist attempts or award XP. The
+answer flow hides explanations until a correct response. Flutter analysis is
+clean and all 492 tests pass; the focused API suite passes all 10 tests. This
+API wave also resolves the four learning-service failures recorded at baseline.
+
+Wave 4 checkpoints (2026-09-24): API `faf526c` and Flutter `8925ee4`. The API
+seeds the bilingual Computer Skills category, Digital basics unit, five lessons,
+and fifteen multiple-choice exercises. The app includes that category in the
+learning catalog, and buddy care remains usable when local preference storage
+fails. Flutter analysis is clean and all 492 tests pass. The full API suite
+passes all 417 tests with 5 Docker-dependent skips.
+
+The migration's documented smoke check is to request
+`GET /api/v1/lessons/roadmap?categoryId=c3800000-0000-0000-0000-000000000001`,
+confirm the Digital basics unit has five lessons, then request
+`GET /api/v1/lessons/{lessonId}` for each and confirm each lesson has bilingual
+descriptions and three `MULTIPLE_CHOICE` exercises. The migration could not be
+applied to a live PostgreSQL instance in this environment because Docker was
+unavailable. The only regenerated visual baseline is
+`test/visuals/goldens/lesson_reflection_en_light.png`, reflecting the optional,
+collapsed reflection step.
 
 ## API contracts (source of truth)
 
