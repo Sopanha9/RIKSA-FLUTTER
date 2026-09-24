@@ -94,6 +94,13 @@ class _FakeLearningApi implements LearningApi {
     required String exerciseId,
     required String answer,
   }) => throw UnimplementedError();
+
+  @override
+  Future<LessonAnswerResult> checkAnswer({
+    required String lessonId,
+    required String exerciseId,
+    required String answer,
+  }) => throw UnimplementedError();
 }
 
 class _FakeLearningApiWithExercises extends _FakeLearningApi {

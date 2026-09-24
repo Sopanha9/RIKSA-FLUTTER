@@ -1537,10 +1537,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonNeedsReview => 'I want to revisit it';
 
   @override
-  String get lessonSaveReflection => 'Save and finish';
+  String get lessonFinishAction => 'Finish lesson';
 
   @override
-  String get lessonConfidenceRequired => 'Tap how it went to finish';
+  String get lessonReflectionAddOptional => 'Add an optional note';
+
+  @override
+  String get guestSaveProgressTitle => 'Save your progress';
+
+  @override
+  String get guestSaveProgressBody =>
+      'Sign in to keep your answers and finish this lesson.';
+
+  @override
+  String get guestSaveProgressBuddyLine =>
+      'Your buddy is cheering you on. Sign in to keep your learning progress.';
+
+  @override
+  String get guestSaveProgressSignIn => 'Sign in';
+
+  @override
+  String get guestSaveProgressLater => 'Keep learning as a guest';
 
   @override
   String get lessonSavedReflection => 'Your reflection';

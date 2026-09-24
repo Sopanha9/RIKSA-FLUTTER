@@ -84,6 +84,20 @@ class LearningApi {
     );
   }
 
+  Future<LessonAnswerResult> checkAnswer({
+    required String lessonId,
+    required String exerciseId,
+    required String answer,
+  }) async {
+    final response = await _client.dio.post(
+      '/learning/lessons/$lessonId/exercises/$exerciseId/check',
+      data: {'answer': answer},
+    );
+    return LessonAnswerResult.fromJson(
+      (response.data as Map).cast<String, dynamic>(),
+    );
+  }
+
   Future<LessonCompletionResult> completeLesson({
     required String lessonId,
     required String reflectionText,

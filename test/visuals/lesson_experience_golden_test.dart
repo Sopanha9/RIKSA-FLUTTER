@@ -131,6 +131,14 @@ class _PreviewLearningApi implements LearningApi {
     message: 'Correct.',
     explanation: 'Use the relationship between force, mass and acceleration.',
   );
+
+  @override
+  Future<LessonAnswerResult> checkAnswer({
+    required String lessonId,
+    required String exerciseId,
+    required String answer,
+  }) =>
+      submitAnswer(lessonId: lessonId, exerciseId: exerciseId, answer: answer);
 }
 
 class _PreviewResourcesRepository implements ResourcesRepository {
@@ -144,8 +152,7 @@ class _PreviewResourcesRepository implements ResourcesRepository {
     required String title,
     required String url,
     required LessonResourceKind kind,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> delete(String id) => throw UnimplementedError();
@@ -337,6 +344,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Correct.').hitTestable(), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('continue-after-answer')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('lesson-reflection-toggle')));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('lesson-reflection')),

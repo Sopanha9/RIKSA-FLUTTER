@@ -1493,11 +1493,27 @@ class AppLocalizationsKm extends AppLocalizations {
   String get lessonNeedsReview => 'ខ្ញុំចង់រំលឹកឡើងវិញ';
 
   @override
-  String get lessonSaveReflection => 'រក្សាទុក និងបញ្ចប់';
+  String get lessonFinishAction => 'បញ្ចប់មេរៀន';
 
   @override
-  String get lessonConfidenceRequired =>
-      'ចុចជ្រើសរើសថាអ្នកយល់មេរៀនយ៉ាងណា ដើម្បីបញ្ចប់';
+  String get lessonReflectionAddOptional => 'បន្ថែមកំណត់ចំណាំ (មិនចាំបាច់)';
+
+  @override
+  String get guestSaveProgressTitle => 'រក្សាទុកវឌ្ឍនភាពរបស់អ្នក';
+
+  @override
+  String get guestSaveProgressBody =>
+      'ចូលគណនីដើម្បីរក្សាចម្លើយ និងបញ្ចប់មេរៀននេះ។';
+
+  @override
+  String get guestSaveProgressBuddyLine =>
+      'មិត្តតូចរបស់អ្នកកំពុងលើកទឹកចិត្ត។ ចូលគណនីដើម្បីរក្សាវឌ្ឍនភាពសិក្សារបស់អ្នក។';
+
+  @override
+  String get guestSaveProgressSignIn => 'ចូលគណនី';
+
+  @override
+  String get guestSaveProgressLater => 'បន្តរៀនក្នុងនាមជាភ្ញៀវ';
 
   @override
   String get lessonSavedReflection => 'ការយល់ដឹងរបស់អ្នក';

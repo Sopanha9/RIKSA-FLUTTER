@@ -15,17 +15,20 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/presentation/require_account.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../mascot/domain/buddy_behavior.dart';
 import '../../mascot/domain/buddy_care.dart';
 import '../../mascot/domain/mascot.dart';
 import '../../mascot/presentation/widgets/buddy_companion.dart';
 import '../../mascot/presentation/widgets/mascot_scene.dart';
+import '../../mascot/presentation/widgets/mascot_face.dart';
 import '../../mascot/presentation/widgets/mascot_view.dart';
 import '../../mascot/providers/buddy_preferences_provider.dart';
 import '../../mascot/providers/buddy_care_provider.dart';
 import '../../mascot/providers/mascot_provider.dart';
 import '../../resources/presentation/lesson_resources_sheet.dart';
 import '../../resources/providers/lesson_resources_provider.dart';
+import '../data/guest_answer_check_counter.dart';
 import '../../userProfile/providers/profile_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
@@ -96,11 +99,15 @@ class _LessonExperienceScreenState
     extends ConsumerState<LessonExperienceScreen> {
   final _answers = <String, TextEditingController>{};
   final _results = <String, LessonAnswerResult>{};
+  final _guestCorrectAnswers = <String, String>{};
+  final _syncedGuestAnswers = <String>{};
   final _submitting = <String>{};
   final _reflection = TextEditingController();
   int? _activeSectionIndex;
   bool _showPractice = false;
   bool _completing = false;
+  bool _showReflectionInput = false;
+  Future<void>? _guestAnswerSync;
   final _working = <String, TextEditingController>{};
   final _comparedAnswers = <String>{};
   final _expandedWorking = <String>{};
@@ -132,6 +139,17 @@ class _LessonExperienceScreenState
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (previous is! Authenticated &&
+          next is Authenticated &&
+          _guestCorrectAnswers.isNotEmpty) {
+        unawaited(
+          _syncGuestCorrectAnswers().catchError((Object error) {
+            if (mounted) _showError(error);
+          }),
+        );
+      }
+    });
     final detail = ref.watch(lessonDetailProvider(widget.lessonId));
     final data = detail.value;
     final flow = data == null ? null : _flowFor(data);
@@ -539,39 +557,43 @@ class _LessonExperienceScreenState
             ),
           ],
         ),
-        if (_needsReview == null) ...[
-          const SizedBox(height: 10),
-          Text(
-            l10n.lessonConfidenceRequired,
-            style: theme.textTheme.bodySmall?.copyWith(color: palette.inkMuted),
-          ),
-        ],
-        const SizedBox(height: RiksaSpacing.lg),
-        TextField(
-          key: const ValueKey('lesson-reflection'),
-          controller: _reflection,
-          style: RiksaTypography.bodyStyleFor(
-            l10n.lessonReflectionHint,
-            theme.textTheme.bodyLarge,
-          ),
-          minLines: 4,
-          maxLines: 8,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            hintText: l10n.lessonReflectionOptionalHint,
-            hintStyle: TextStyle(color: palette.inkMuted, fontSize: 13),
-            alignLabelWithHint: true,
-            filled: true,
-            fillColor: palette.surfaceRaised,
-            border: OutlineInputBorder(
-              borderRadius: AppRadii.largeBorder,
-              borderSide: BorderSide.none,
+        const SizedBox(height: RiksaSpacing.md),
+        ExpansionTile(
+          key: const ValueKey('lesson-reflection-toggle'),
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: EdgeInsets.zero,
+          title: Text(l10n.lessonReflectionAddOptional),
+          initiallyExpanded: _showReflectionInput,
+          onExpansionChanged: (expanded) =>
+              setState(() => _showReflectionInput = expanded),
+          children: [
+            TextField(
+              key: const ValueKey('lesson-reflection'),
+              controller: _reflection,
+              style: RiksaTypography.bodyStyleFor(
+                l10n.lessonReflectionHint,
+                theme.textTheme.bodyLarge,
+              ),
+              minLines: 3,
+              maxLines: 6,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                hintText: l10n.lessonReflectionOptionalHint,
+                hintStyle: TextStyle(color: palette.inkMuted, fontSize: 13),
+                alignLabelWithHint: true,
+                filled: true,
+                fillColor: palette.surfaceRaised,
+                border: OutlineInputBorder(
+                  borderRadius: AppRadii.largeBorder,
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: AppRadii.largeBorder,
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: AppRadii.largeBorder,
-              borderSide: BorderSide.none,
-            ),
-          ),
+          ],
         ),
       ],
     );
@@ -655,7 +677,7 @@ class _LessonExperienceScreenState
         primaryKey: const ValueKey('complete-lesson'),
         primaryLabel: isCompleted
             ? l10n.lessonRoadmapAction
-            : l10n.lessonSaveReflection,
+            : l10n.lessonFinishAction,
         primaryIcon: isCompleted ? null : Icons.check_rounded,
         busy: _completing,
         onPrimary: isCompleted
@@ -664,8 +686,6 @@ class _LessonExperienceScreenState
                     ? '/learn'
                     : '/learn/roadmap/${Uri.encodeComponent(detail.categoryId!)}',
               )
-            : _needsReview == null
-            ? null
             : () => _complete(detail),
       ),
     };
@@ -780,18 +800,34 @@ class _LessonExperienceScreenState
     LessonExercise exercise,
     _LessonSection section,
   ) async {
-    if (!requireAccount(context, ref, reason: 'save_progress')) return;
     final answer = _answers[exercise.id]?.text.trim() ?? '';
     if (answer.isEmpty) return;
+    final authenticated = ref.read(authProvider) is Authenticated;
     setState(() => _submitting.add(exercise.id));
     try {
-      final result = await ref
-          .read(learningApiProvider)
-          .submitAnswer(
-            lessonId: widget.lessonId,
-            exerciseId: exercise.id,
-            answer: answer,
-          );
+      if (!authenticated &&
+          await ref.read(guestAnswerCheckCounterProvider).count() >= 3) {
+        await _showSaveProgressPrompt();
+        return;
+      }
+      final api = ref.read(learningApiProvider);
+      final result = authenticated
+          ? await api.submitAnswer(
+              lessonId: widget.lessonId,
+              exerciseId: exercise.id,
+              answer: answer,
+            )
+          : await api.checkAnswer(
+              lessonId: widget.lessonId,
+              exerciseId: exercise.id,
+              answer: answer,
+            );
+      final guestCheckCount = authenticated
+          ? null
+          : await ref.read(guestAnswerCheckCounterProvider).recordCheck();
+      if (!authenticated && result.correct) {
+        _guestCorrectAnswers[exercise.id] = answer;
+      }
       if (mounted) {
         setState(() {
           _activeSectionIndex = section.index;
@@ -810,6 +846,9 @@ class _LessonExperienceScreenState
           );
         });
       }
+      if (!authenticated && result.correct && guestCheckCount! >= 3) {
+        await _showSaveProgressPrompt();
+      }
     } catch (error) {
       if (mounted) _showError(error);
     } finally {
@@ -818,12 +857,16 @@ class _LessonExperienceScreenState
   }
 
   Future<void> _complete(LessonDetail detail) async {
-    if (!requireAccount(context, ref, reason: 'save_progress')) return;
-    if (_completing || _needsReview == null) return;
+    if (_completing) return;
+    if (ref.read(authProvider) is! Authenticated) {
+      await _showSaveProgressPrompt();
+      return;
+    }
     final reminderNavigator = Navigator.of(context, rootNavigator: true);
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() => _completing = true);
     try {
+      await _syncGuestCorrectAnswers();
       final userNotes = _reflection.text.trim();
       final confidence = _needsReview == null
           ? null
@@ -833,9 +876,6 @@ class _LessonExperienceScreenState
       final reflectionPayload = [
         if (confidence != null) '[$confidence]',
         if (userNotes.isNotEmpty) userNotes,
-        for (final exercise in detail.exercises)
-          if (_working[exercise.id]?.text.trim().isNotEmpty == true)
-            '${exercise.question}\n${_working[exercise.id]!.text.trim()}',
       ].join('\n\n');
       final result = await ref
           .read(learningApiProvider)
@@ -920,6 +960,103 @@ class _LessonExperienceScreenState
     } finally {
       if (mounted) setState(() => _completing = false);
     }
+  }
+
+  Future<void> _syncGuestCorrectAnswers() {
+    final active = _guestAnswerSync;
+    if (active != null) return active;
+    final syncing = _performGuestAnswerSync();
+    _guestAnswerSync = syncing;
+    return syncing.whenComplete(() {
+      if (identical(_guestAnswerSync, syncing)) _guestAnswerSync = null;
+    });
+  }
+
+  Future<void> _performGuestAnswerSync() async {
+    final api = ref.read(learningApiProvider);
+    for (final entry in _guestCorrectAnswers.entries) {
+      if (_syncedGuestAnswers.contains(entry.key)) continue;
+      final result = await api.submitAnswer(
+        lessonId: widget.lessonId,
+        exerciseId: entry.key,
+        answer: entry.value,
+      );
+      if (!result.correct) {
+        throw StateError('A guest answer could not be saved to this account.');
+      }
+      _syncedGuestAnswers.add(entry.key);
+      _results[entry.key] = result;
+    }
+  }
+
+  Future<void> _showSaveProgressPrompt() async {
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * .82,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const MascotFaceAvatar(
+                  face: MascotFace.happy,
+                  size: 68,
+                  loops: 1,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.guestSaveProgressBuddyLine,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(sheetContext).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.guestSaveProgressTitle,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(sheetContext).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.guestSaveProgressBody,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(sheetContext).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    key: const ValueKey('guest-save-progress-sign-in'),
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          requireAccount(context, ref, reason: 'save_progress');
+                        }
+                      });
+                    },
+                    icon: const Icon(Icons.login_rounded),
+                    label: Text(l10n.guestSaveProgressSignIn),
+                  ),
+                ),
+                TextButton(
+                  key: const ValueKey('guest-save-progress-later'),
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                  child: Text(l10n.guestSaveProgressLater),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _maybeOfferReminderPermission({

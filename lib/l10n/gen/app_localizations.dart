@@ -2744,17 +2744,47 @@ abstract class AppLocalizations {
   /// **'I want to revisit it'**
   String get lessonNeedsReview;
 
-  /// No description provided for @lessonSaveReflection.
+  /// No description provided for @lessonFinishAction.
   ///
   /// In en, this message translates to:
-  /// **'Save and finish'**
-  String get lessonSaveReflection;
+  /// **'Finish lesson'**
+  String get lessonFinishAction;
 
-  /// No description provided for @lessonConfidenceRequired.
+  /// No description provided for @lessonReflectionAddOptional.
   ///
   /// In en, this message translates to:
-  /// **'Tap how it went to finish'**
-  String get lessonConfidenceRequired;
+  /// **'Add an optional note'**
+  String get lessonReflectionAddOptional;
+
+  /// No description provided for @guestSaveProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your progress'**
+  String get guestSaveProgressTitle;
+
+  /// No description provided for @guestSaveProgressBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to keep your answers and finish this lesson.'**
+  String get guestSaveProgressBody;
+
+  /// No description provided for @guestSaveProgressBuddyLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Your buddy is cheering you on. Sign in to keep your learning progress.'**
+  String get guestSaveProgressBuddyLine;
+
+  /// No description provided for @guestSaveProgressSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get guestSaveProgressSignIn;
+
+  /// No description provided for @guestSaveProgressLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep learning as a guest'**
+  String get guestSaveProgressLater;
 
   /// No description provided for @lessonSavedReflection.
   ///
