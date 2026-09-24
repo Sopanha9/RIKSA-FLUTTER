@@ -2838,4 +2838,126 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get questRetry => 'ព្យាយាមម្តងទៀត';
+
+  @override
+  String get resourceSectionTitle => 'ធនធានសិក្សា';
+
+  @override
+  String resourceEntryCount(int count) {
+    return 'ធនធាន ($count)';
+  }
+
+  @override
+  String get resourceShareAction => 'ចែករំលែកធនធាន';
+
+  @override
+  String get resourceLoadFailed => 'មិនអាចផ្ទុកធនធានបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get resourceSaveFailed => 'មិនអាចកែប្រែធនធានដែលបានរក្សាទុកបានទេ។';
+
+  @override
+  String get resourceOpenFailed => 'មិនអាចបើកតំណនេះបានទេ។';
+
+  @override
+  String get resourceEmptyTitle => 'មិត្តរៀនរបស់អ្នកកំពុងរង់ចាំធនធានល្អមួយ';
+
+  @override
+  String get resourceEmptyBody =>
+      'ចែករំលែកតំណ វីដេអូ ឬឯកសារ PDF ដែលមានប្រយោជន៍សម្រាប់មេរៀននេះ។';
+
+  @override
+  String resourceSaveCount(int count) {
+    return 'បានរក្សាទុក $count ដង';
+  }
+
+  @override
+  String get resourceUnsaveAction => 'ដកធនធានចេញពីធនធានដែលបានរក្សាទុក';
+
+  @override
+  String get resourceSaveAction => 'រក្សាទុកធនធាន';
+
+  @override
+  String get resourceDeleteAction => 'លុបធនធាន';
+
+  @override
+  String get resourceDeleteConfirm => 'លុបធនធាននេះសម្រាប់អ្នករាល់គ្នាមែនទេ?';
+
+  @override
+  String get resourceDeleteFailed => 'មិនអាចលុបធនធាននេះបានទេ។';
+
+  @override
+  String get resourceReportAction => 'រាយការណ៍ធនធាន';
+
+  @override
+  String get resourceReportConfirm => 'រាយការណ៍ធនធាននេះដើម្បីពិនិត្យមែនទេ?';
+
+  @override
+  String get resourceReportSent => 'បានផ្ញើរបាយការណ៍ដើម្បីពិនិត្យហើយ។';
+
+  @override
+  String get resourceReportFailed => 'មិនអាចរាយការណ៍ធនធាននេះបានទេ។';
+
+  @override
+  String get resourceShareTitle => 'ចែករំលែកធនធានសិក្សា';
+
+  @override
+  String get resourceTitleLabel => 'ចំណងជើង';
+
+  @override
+  String get resourceTitleError => 'ប្រើចំណងជើងដែលមានពី ៣ ដល់ ១២០ តួអក្សរ។';
+
+  @override
+  String get resourceUrlLabel => 'អាសយដ្ឋានគេហទំព័រ';
+
+  @override
+  String get resourceUrlError => 'បញ្ចូលអាសយដ្ឋាន http ឬ https ដែលត្រឹមត្រូវ។';
+
+  @override
+  String get resourceKindLabel => 'ប្រភេទ';
+
+  @override
+  String get resourceKindLink => 'តំណ';
+
+  @override
+  String get resourceKindPdf => 'PDF';
+
+  @override
+  String get resourceKindVideo => 'វីដេអូ';
+
+  @override
+  String get resourceRateLimit =>
+      'អ្នកអាចចែករំលែកធនធានបានរហូតដល់ ១០ ក្នុងមួយថ្ងៃ។';
+
+  @override
+  String get resourceShareFailed =>
+      'មិនអាចចែករំលែកធនធាននេះបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get resourceConfirm => 'បញ្ជាក់';
+
+  @override
+  String get milestoneCelebrationLabel => 'សម្រេចបានចំណុចសំខាន់';
+
+  @override
+  String milestoneStreakMessage(String name, int days) {
+    return '$name រៀនជាប់គ្នាបាន $days ថ្ងៃ!';
+  }
+
+  @override
+  String milestoneRankMessage(String name, String rank) {
+    return '$name ឡើងដល់ថ្នាក់ $rank!';
+  }
+
+  @override
+  String milestoneUnitMessage(String name, String unit) {
+    return '$name បានបញ្ចប់ $unit!';
+  }
+
+  @override
+  String get milestoneShareTitle => 'ចែករំលែកចំណុចសំខាន់ៗរបស់ខ្ញុំ';
+
+  @override
+  String get milestoneShareHint =>
+      'ឲ្យមិត្តភក្តិអបអរស្ទ្រីក ថ្នាក់ និងឯកតាមេរៀនដែលអ្នកបានបញ្ចប់។';
 }

@@ -2879,4 +2879,125 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get questRetry => 'Try again';
+
+  @override
+  String get resourceSectionTitle => 'Study resources';
+
+  @override
+  String resourceEntryCount(int count) {
+    return 'Resources ($count)';
+  }
+
+  @override
+  String get resourceShareAction => 'Share a resource';
+
+  @override
+  String get resourceLoadFailed => 'Resources could not load. Try again.';
+
+  @override
+  String get resourceSaveFailed => 'Could not update your saved resources.';
+
+  @override
+  String get resourceOpenFailed => 'This link could not be opened.';
+
+  @override
+  String get resourceEmptyTitle => 'Your buddy is ready for a good resource';
+
+  @override
+  String get resourceEmptyBody =>
+      'Share a helpful link, video, or PDF for this lesson.';
+
+  @override
+  String resourceSaveCount(int count) {
+    return '$count saves';
+  }
+
+  @override
+  String get resourceUnsaveAction => 'Remove saved resource';
+
+  @override
+  String get resourceSaveAction => 'Save resource';
+
+  @override
+  String get resourceDeleteAction => 'Delete resource';
+
+  @override
+  String get resourceDeleteConfirm => 'Delete this resource for everyone?';
+
+  @override
+  String get resourceDeleteFailed => 'This resource could not be deleted.';
+
+  @override
+  String get resourceReportAction => 'Report resource';
+
+  @override
+  String get resourceReportConfirm => 'Report this resource for review?';
+
+  @override
+  String get resourceReportSent => 'Report sent for review.';
+
+  @override
+  String get resourceReportFailed => 'This resource could not be reported.';
+
+  @override
+  String get resourceShareTitle => 'Share a study resource';
+
+  @override
+  String get resourceTitleLabel => 'Title';
+
+  @override
+  String get resourceTitleError => 'Use a title from 3 to 120 characters.';
+
+  @override
+  String get resourceUrlLabel => 'Web address';
+
+  @override
+  String get resourceUrlError => 'Enter a valid http or https address.';
+
+  @override
+  String get resourceKindLabel => 'Type';
+
+  @override
+  String get resourceKindLink => 'Link';
+
+  @override
+  String get resourceKindPdf => 'PDF';
+
+  @override
+  String get resourceKindVideo => 'Video';
+
+  @override
+  String get resourceRateLimit => 'You can share up to 10 resources each day.';
+
+  @override
+  String get resourceShareFailed =>
+      'This resource could not be shared. Try again.';
+
+  @override
+  String get resourceConfirm => 'Confirm';
+
+  @override
+  String get milestoneCelebrationLabel => 'Milestone unlocked';
+
+  @override
+  String milestoneStreakMessage(String name, int days) {
+    return '$name reached a $days-day streak!';
+  }
+
+  @override
+  String milestoneRankMessage(String name, String rank) {
+    return '$name reached $rank rank!';
+  }
+
+  @override
+  String milestoneUnitMessage(String name, String unit) {
+    return '$name finished $unit!';
+  }
+
+  @override
+  String get milestoneShareTitle => 'Share my milestones';
+
+  @override
+  String get milestoneShareHint =>
+      'Let friends celebrate your streaks, ranks, and finished units.';
 }

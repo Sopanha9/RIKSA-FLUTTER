@@ -20,6 +20,9 @@ import 'package:riksa_app/features/mascot/presentation/widgets/mascot_view.dart'
 import 'package:riksa_app/features/mascot/providers/buddy_care_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.dart';
+import 'package:riksa_app/features/resources/data/resource_models.dart';
+import 'package:riksa_app/features/resources/data/resources_api.dart';
+import 'package:riksa_app/features/resources/providers/lesson_resources_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 const _description = '''
@@ -130,6 +133,33 @@ class _PreviewLearningApi implements LearningApi {
   );
 }
 
+class _PreviewResourcesRepository implements ResourcesRepository {
+  @override
+  Future<LessonResourcePage> list(String lessonId, {String? cursor}) async =>
+      const LessonResourcePage(edges: [], hasNextPage: false);
+
+  @override
+  Future<LessonResource> create(
+    String lessonId, {
+    required String title,
+    required String url,
+    required LessonResourceKind kind,
+  }) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> delete(String id) => throw UnimplementedError();
+
+  @override
+  Future<void> report(String id) => throw UnimplementedError();
+
+  @override
+  Future<LessonResource> save(String id) => throw UnimplementedError();
+
+  @override
+  Future<LessonResource> unsave(String id) => throw UnimplementedError();
+}
+
 class _PreviewAuthNotifier extends AuthNotifier {
   @override
   AuthState build() => const Authenticated(
@@ -195,6 +225,9 @@ Widget _previewApp({
 }) => ProviderScope(
   overrides: [
     learningApiProvider.overrideWithValue(_PreviewLearningApi()),
+    resourcesRepositoryProvider.overrideWithValue(
+      _PreviewResourcesRepository(),
+    ),
     authProvider.overrideWith(_PreviewAuthNotifier.new),
     buddyCareProvider.overrideWith(_PreviewBuddyCareNotifier.new),
   ],

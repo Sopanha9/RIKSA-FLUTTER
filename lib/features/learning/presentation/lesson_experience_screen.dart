@@ -24,6 +24,8 @@ import '../../mascot/presentation/widgets/mascot_view.dart';
 import '../../mascot/providers/buddy_preferences_provider.dart';
 import '../../mascot/providers/buddy_care_provider.dart';
 import '../../mascot/providers/mascot_provider.dart';
+import '../../resources/presentation/lesson_resources_sheet.dart';
+import '../../resources/providers/lesson_resources_provider.dart';
 import '../../userProfile/providers/profile_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
@@ -283,6 +285,11 @@ class _LessonExperienceScreenState
             onBack: () => _handleExit(flow),
             onAskAi: onAskAi,
             onSections: () => _showSections(flow),
+            onResources: () => showLessonResourcesSheet(
+              context,
+              lessonId: detail.id,
+              lessonTitle: detail.title,
+            ),
           ),
         ),
         SliverToBoxAdapter(
@@ -318,6 +325,18 @@ class _LessonExperienceScreenState
                 _AskTutorButton(
                   lessonTitle: detail.title,
                   learningContext: '$subject - ${flow.section.title}',
+                ),
+              ],
+              if (flow.phase == _LessonPhase.reflecting) ...[
+                const SizedBox(height: RiksaSpacing.lg),
+                _LessonResourcesCallout(
+                  lessonId: detail.id,
+                  lessonTitle: detail.title,
+                  onOpen: () => showLessonResourcesSheet(
+                    context,
+                    lessonId: detail.id,
+                    lessonTitle: detail.title,
+                  ),
                 ),
               ],
             ],
@@ -1131,6 +1150,40 @@ class _LessonSection {
   final List<LessonExercise> exercises;
 }
 
+class _LessonResourcesCallout extends ConsumerWidget {
+  const _LessonResourcesCallout({
+    required this.lessonId,
+    required this.lessonTitle,
+    required this.onOpen,
+  });
+
+  final String lessonId;
+  final String lessonTitle;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final count =
+        ref.watch(lessonResourcesProvider(lessonId)).value?.resources.length ??
+        0;
+    return Card(
+      child: ListTile(
+        key: const ValueKey('lesson-resources-end-entry'),
+        leading: const Icon(Icons.library_books_outlined),
+        title: Text(l10n.resourceEntryCount(count)),
+        subtitle: Text(
+          lessonTitle,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: onOpen,
+      ),
+    );
+  }
+}
+
 class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
   const _LessonBarDelegate({
     required this.lessonId,
@@ -1143,12 +1196,13 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
     required this.onBack,
     required this.onAskAi,
     required this.onSections,
+    required this.onResources,
   });
   final String lessonId, backTooltip, askAiTooltip;
   final _LessonFlow flow;
   final double topInset, controlsHeight;
   final RiksaPalette palette;
-  final VoidCallback onBack, onAskAi, onSections;
+  final VoidCallback onBack, onAskAi, onSections, onResources;
 
   double get _rowHeight => math.max(48, controlsHeight + 16);
   @override
@@ -1204,6 +1258,13 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
                           .watch(savedLessonsProvider)
                           .contains(lessonId);
                       final sound = ref.watch(soundEnabledProvider);
+                      final resourceCount =
+                          ref
+                              .watch(lessonResourcesProvider(lessonId))
+                              .value
+                              ?.resources
+                              .length ??
+                          0;
                       return PopupMenuButton<String>(
                         key: const ValueKey('lesson-options'),
                         tooltip: l10n.lessonOptions,
@@ -1224,8 +1285,20 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
                           if (value == 'sound') {
                             ref.read(soundEnabledProvider.notifier).toggle();
                           }
+                          if (value == 'resources') onResources();
                         },
                         itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'resources',
+                            key: const ValueKey('lesson-resources-open'),
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: const Icon(Icons.library_books_outlined),
+                              title: Text(
+                                l10n.resourceEntryCount(resourceCount),
+                              ),
+                            ),
+                          ),
                           PopupMenuItem(
                             value: 'save',
                             key: const ValueKey('lesson-bookmark-toggle'),

@@ -57,6 +57,7 @@ class AuthUser {
     this.countryId,
     this.provinceId,
     this.createdAt,
+    this.shareMilestones = true,
   });
 
   final String id;
@@ -73,6 +74,7 @@ class AuthUser {
   final String? countryId;
   final String? provinceId;
   final DateTime? createdAt;
+  final bool shareMilestones;
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
     return AuthUser(
@@ -90,6 +92,7 @@ class AuthUser {
       countryId: json['countryId'] as String?,
       provinceId: json['provinceId']?.toString(),
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+      shareMilestones: json['shareMilestones'] as bool? ?? true,
     );
   }
 }
@@ -101,6 +104,7 @@ class UpdateProfileRequest {
     this.gender,
     this.provinceId,
     this.avatarUrl,
+    this.shareMilestones,
   });
 
   final String? displayName;
@@ -108,6 +112,7 @@ class UpdateProfileRequest {
   final String? gender;
   final String? provinceId;
   final String? avatarUrl;
+  final bool? shareMilestones;
 
   Map<String, dynamic> toJson() => {
     if (displayName != null) 'displayName': displayName,
@@ -115,6 +120,7 @@ class UpdateProfileRequest {
     if (gender != null) 'gender': gender,
     if (provinceId != null) 'provinceId': provinceId,
     if (avatarUrl != null) 'avatarUrl': avatarUrl,
+    if (shareMilestones != null) 'shareMilestones': shareMilestones,
   };
 }
 

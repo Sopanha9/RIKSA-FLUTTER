@@ -5065,6 +5065,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get questRetry;
+
+  /// No description provided for @resourceSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Study resources'**
+  String get resourceSectionTitle;
+
+  /// No description provided for @resourceEntryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Resources ({count})'**
+  String resourceEntryCount(int count);
+
+  /// No description provided for @resourceShareAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a resource'**
+  String get resourceShareAction;
+
+  /// No description provided for @resourceLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Resources could not load. Try again.'**
+  String get resourceLoadFailed;
+
+  /// No description provided for @resourceSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update your saved resources.'**
+  String get resourceSaveFailed;
+
+  /// No description provided for @resourceOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This link could not be opened.'**
+  String get resourceOpenFailed;
+
+  /// No description provided for @resourceEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your buddy is ready for a good resource'**
+  String get resourceEmptyTitle;
+
+  /// No description provided for @resourceEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a helpful link, video, or PDF for this lesson.'**
+  String get resourceEmptyBody;
+
+  /// No description provided for @resourceSaveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} saves'**
+  String resourceSaveCount(int count);
+
+  /// No description provided for @resourceUnsaveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove saved resource'**
+  String get resourceUnsaveAction;
+
+  /// No description provided for @resourceSaveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Save resource'**
+  String get resourceSaveAction;
+
+  /// No description provided for @resourceDeleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete resource'**
+  String get resourceDeleteAction;
+
+  /// No description provided for @resourceDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this resource for everyone?'**
+  String get resourceDeleteConfirm;
+
+  /// No description provided for @resourceDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This resource could not be deleted.'**
+  String get resourceDeleteFailed;
+
+  /// No description provided for @resourceReportAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Report resource'**
+  String get resourceReportAction;
+
+  /// No description provided for @resourceReportConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Report this resource for review?'**
+  String get resourceReportConfirm;
+
+  /// No description provided for @resourceReportSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Report sent for review.'**
+  String get resourceReportSent;
+
+  /// No description provided for @resourceReportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This resource could not be reported.'**
+  String get resourceReportFailed;
+
+  /// No description provided for @resourceShareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a study resource'**
+  String get resourceShareTitle;
+
+  /// No description provided for @resourceTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get resourceTitleLabel;
+
+  /// No description provided for @resourceTitleError.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a title from 3 to 120 characters.'**
+  String get resourceTitleError;
+
+  /// No description provided for @resourceUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Web address'**
+  String get resourceUrlLabel;
+
+  /// No description provided for @resourceUrlError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid http or https address.'**
+  String get resourceUrlError;
+
+  /// No description provided for @resourceKindLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get resourceKindLabel;
+
+  /// No description provided for @resourceKindLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get resourceKindLink;
+
+  /// No description provided for @resourceKindPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF'**
+  String get resourceKindPdf;
+
+  /// No description provided for @resourceKindVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get resourceKindVideo;
+
+  /// No description provided for @resourceRateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You can share up to 10 resources each day.'**
+  String get resourceRateLimit;
+
+  /// No description provided for @resourceShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This resource could not be shared. Try again.'**
+  String get resourceShareFailed;
+
+  /// No description provided for @resourceConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get resourceConfirm;
+
+  /// No description provided for @milestoneCelebrationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Milestone unlocked'**
+  String get milestoneCelebrationLabel;
+
+  /// No description provided for @milestoneStreakMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} reached a {days}-day streak!'**
+  String milestoneStreakMessage(String name, int days);
+
+  /// No description provided for @milestoneRankMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} reached {rank} rank!'**
+  String milestoneRankMessage(String name, String rank);
+
+  /// No description provided for @milestoneUnitMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} finished {unit}!'**
+  String milestoneUnitMessage(String name, String unit);
+
+  /// No description provided for @milestoneShareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share my milestones'**
+  String get milestoneShareTitle;
+
+  /// No description provided for @milestoneShareHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Let friends celebrate your streaks, ranks, and finished units.'**
+  String get milestoneShareHint;
 }
 
 class _AppLocalizationsDelegate

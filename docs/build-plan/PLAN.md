@@ -93,8 +93,11 @@ server push notifications (FCM).
       integrated in both repos; Flutter analysis and all 475 tests pass; all 7
       quest API tests pass. API full suite retains the 4 baseline failures and
       5 Docker-dependent skips recorded above.
-- [ ] Wave 2 — lesson resources and milestone posts, app and API integrated;
-      checks and commits recorded here.
+- [x] Wave 2 — lesson resources and milestone posts, app and API integrated.
+      `flutter analyze` is clean and all 488 Flutter tests pass. The focused API
+      suite passes all 48 tests; the full API suite runs 412 tests with the same
+      4 baseline failures and 5 Docker-dependent skips recorded above. Commit
+      checkpoints are recorded in the Wave 2 note below.
 - [ ] Wave 3 — milestone UI, guest answer check, and one-tap finish integrated;
       checks and commits recorded here.
 - [ ] Wave 4 — Computer Skills starter subject seeded; app and API reviews

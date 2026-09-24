@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../data/social_models.dart';
+import 'milestone_post_card.dart';
 import 'social_owner_menu.dart';
 
 /// One post as a timeline row, on the X layout: the avatar owns a left column,
@@ -95,39 +96,48 @@ class SocialPostCard extends StatelessWidget {
                           post: post,
                           showOfficial: highlightOfficial,
                           onAuthorTap: onAuthorTap,
-                          onEdit: onEdit,
-                          onDelete: onDelete,
+                          onEdit: post.kind == SocialPostKind.user
+                              ? onEdit
+                              : null,
+                          onDelete: post.kind == SocialPostKind.user
+                              ? onDelete
+                              : null,
                         ),
                         _CommunityLine(category: post.category),
                         const SizedBox(height: 6),
-                        Text(
-                          post.title,
-                          style: RiksaTypography.bodyStyleFor(
-                            post.title,
-                            theme.textTheme.bodyLarge?.copyWith(
-                              fontSize: 15.5,
-                              fontWeight: FontWeight.w700,
-                              height: 1.35,
-                              letterSpacing: 0,
-                              color: palette.ink,
-                            ),
-                          ),
-                        ),
-                        if (post.content.trim().isNotEmpty) ...[
-                          const SizedBox(height: 3),
+                        if (post.kind == SocialPostKind.milestone &&
+                            post.milestone != null)
+                          MilestonePostCard(post: post)
+                        else ...[
                           Text(
-                            preview,
-                            maxLines: 4,
-                            overflow: TextOverflow.ellipsis,
+                            post.title,
                             style: RiksaTypography.bodyStyleFor(
-                              preview,
+                              post.title,
                               theme.textTheme.bodyLarge?.copyWith(
-                                fontSize: 15,
-                                height: 1.42,
+                                fontSize: 15.5,
+                                fontWeight: FontWeight.w700,
+                                height: 1.35,
+                                letterSpacing: 0,
                                 color: palette.ink,
                               ),
                             ),
                           ),
+                          if (post.content.trim().isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              preview,
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
+                              style: RiksaTypography.bodyStyleFor(
+                                preview,
+                                theme.textTheme.bodyLarge?.copyWith(
+                                  fontSize: 15,
+                                  height: 1.42,
+                                  color: palette.ink,
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                         if (post.hasMedia) ...[
                           const SizedBox(height: 10),

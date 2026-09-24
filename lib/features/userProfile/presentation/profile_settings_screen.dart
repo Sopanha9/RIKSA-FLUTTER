@@ -10,6 +10,7 @@ import '../../../core/sound/learning_sound.dart';
 import '../../../core/sound/sound_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../auth/data/auth_models.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../mascot/domain/mascot.dart';
 import '../../mascot/presentation/widgets/mascot_face.dart';
@@ -166,6 +167,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
         .currentTier;
     final streakReminderEnabled =
         ref.watch(streakReminderStateProvider).value ?? true;
+    final shareMilestones = user?.shareMilestones ?? true;
     final mascot = ref.watch(mascotProvider).profile;
     final species = mascot?.species ?? MascotSpecies.crocodile;
     final buddyName = mascot?.name ?? MascotProfile.defaultName(species);
@@ -366,6 +368,33 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                               },
                             ),
                             const _Divider(),
+                            if (user != null) ...[
+                              _SwitchRow(
+                                key: const ValueKey(
+                                  'settings-share-milestones',
+                                ),
+                                icon: Icons.celebration_outlined,
+                                title: l10n.milestoneShareTitle,
+                                subtitle: l10n.milestoneShareHint,
+                                value: shareMilestones,
+                                onChanged: (value) async {
+                                  final saved = await ref
+                                      .read(authProvider.notifier)
+                                      .updateProfile(
+                                        UpdateProfileRequest(
+                                          shareMilestones: value,
+                                        ),
+                                      );
+                                  if (!mounted || !context.mounted) return;
+                                  if (!saved) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(l10n.saveFailed)),
+                                    );
+                                  }
+                                },
+                              ),
+                              const _Divider(),
+                            ],
                             _SwitchRow(
                               key: const ValueKey('settings-learning-sounds'),
                               icon: Icons.volume_up_outlined,
