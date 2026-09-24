@@ -103,6 +103,11 @@ server push notifications (FCM).
 - [ ] Wave 4 — Computer Skills starter subject seeded; app and API reviews
       resolved; final checks and commits recorded here.
 
+Wave 2 checkpoints (2026-09-24): Flutter `7d25542` and API `4e5a426`.
+Flutter analysis is clean and all 488 tests pass. The focused API suite passes
+all 48 tests; the full suite has 4 pre-existing learning-service failures and
+5 Docker-dependent skips (412 tests total).
+
 ## API contracts (source of truth)
 
 All JSON, Bearer JWT, base `/api/v1`. Day boundaries use `Asia/Phnom_Penh`.
