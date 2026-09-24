@@ -18,6 +18,18 @@ class AppLocalizationsKm extends AppLocalizations {
   String get loginSubtitle => 'ចូលប្រើប្រាស់ដើម្បីបន្តការសិក្សារបស់អ្នក';
 
   @override
+  String get authReasonSaveProgress =>
+      'ចូលគណនី ដើម្បីរក្សាទុកវឌ្ឍនភាពមេរៀន និងការរៀនជាប់គ្នា។';
+
+  @override
+  String get authReasonSaveLesson =>
+      'ចូលគណនី ដើម្បីរក្សាទុកមេរៀននេះក្នុងបណ្ណាល័យរបស់អ្នក។';
+
+  @override
+  String get authReasonPost =>
+      'ចូលគណនី ដើម្បីចែករំលែកប្រកាសជាមួយសហគមន៍របស់អ្នក។';
+
+  @override
   String get loginEyebrow => 'កន្លែងសិក្សារបស់អ្នក';
 
   @override
@@ -1415,6 +1427,15 @@ class AppLocalizationsKm extends AppLocalizations {
   String get lessonCompareAnswers => 'ប្រៀបធៀបចម្លើយ';
 
   @override
+  String get lessonShowChoices => 'បង្ហាញជម្រើសចម្លើយ';
+
+  @override
+  String get lessonWorkedOnPaper => 'ខ្ញុំបានដោះស្រាយលើក្រដាសរួចហើយ';
+
+  @override
+  String get lessonAddWorkingOptional => 'បន្ថែមវិធីដោះស្រាយ (មិនចាំបាច់)';
+
+  @override
   String get lessonWorkFirst => 'សាកល្បងដោះស្រាយជាមុន';
 
   @override
@@ -1459,6 +1480,10 @@ class AppLocalizationsKm extends AppLocalizations {
       'ខ្ញុំបានយល់ថា… ខ្ញុំនៅចង់សិក្សាបន្ថែមអំពី…';
 
   @override
+  String get lessonReflectionOptionalHint =>
+      'មិនចាំបាច់៖ សរសេរកំណត់ចំណាំសម្រាប់ពេលក្រោយ';
+
+  @override
   String get lessonConfidencePrompt => 'តើអ្នកយល់មេរៀននេះកម្រិតណា?';
 
   @override
@@ -1471,8 +1496,8 @@ class AppLocalizationsKm extends AppLocalizations {
   String get lessonSaveReflection => 'រក្សាទុក និងបញ្ចប់';
 
   @override
-  String get lessonReflectionRequired =>
-      'សរសេរការយល់ដឹងខ្លីមួយ ដើម្បីបញ្ចប់មេរៀននេះ។';
+  String get lessonConfidenceRequired =>
+      'ចុចជ្រើសរើសថាអ្នកយល់មេរៀនយ៉ាងណា ដើម្បីបញ្ចប់';
 
   @override
   String get lessonSavedReflection => 'ការយល់ដឹងរបស់អ្នក';
@@ -1502,6 +1527,9 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get lessonStartAction => 'ចាប់ផ្តើមមេរៀន';
+
+  @override
+  String get startHere => 'ចាប់ផ្តើមទីនេះ';
 
   @override
   String get lessonOptions => 'ជម្រើសមេរៀន';
@@ -2514,6 +2542,58 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get buddyLessonCompleted => 'អ្នកសម្រេចបានហើយ!';
+
+  @override
+  String buddyCareTitle(String name) {
+    return 'TODO(km): Today with $name';
+  }
+
+  @override
+  String get buddyCareLesson => 'TODO(km): Finish a lesson';
+
+  @override
+  String get buddyCareRead => 'TODO(km): Read a story';
+
+  @override
+  String get buddyCareShare => 'TODO(km): Share with the community';
+
+  @override
+  String get buddyChooseAction => 'TODO(km): Choose a buddy';
+
+  @override
+  String buddyCareProgress(int count) {
+    return 'TODO(km): $count of 1 complete';
+  }
+
+  @override
+  String buddyEnergyLively(String name) {
+    return 'TODO(km): $name is full of energy.';
+  }
+
+  @override
+  String buddyEnergySteady(String name) {
+    return 'TODO(km): One lesson keeps $name going.';
+  }
+
+  @override
+  String buddyEnergySleepy(String name) {
+    return 'TODO(km): $name is getting sleepy.';
+  }
+
+  @override
+  String buddyEnergyNapping(String name) {
+    return 'TODO(km): $name is napping. A lesson wakes them up.';
+  }
+
+  @override
+  String buddyLessonEnergyLine(String name) {
+    return 'TODO(km): +35 energy · $name is full of energy';
+  }
+
+  @override
+  String buddyReadEnjoyed(String name) {
+    return 'TODO(km): $name enjoyed that story';
+  }
 
   @override
   String get buddyRankImproved =>

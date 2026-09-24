@@ -101,26 +101,26 @@ abstract final class BuddyBehavior {
         speechKey: 'buddyCommunityJoined',
         speechPolicy: BuddySpeechPolicy.earned,
       ),
-      BuddyEvent.answerCorrect || BuddyEvent.reflectionSubmitted =>
-        const BuddyReaction(
-          presentation: BuddyPresentation.inline,
-          face: MascotFace.proud,
-          priority: 30,
-          speechPolicy: BuddySpeechPolicy.never,
-        ),
+      BuddyEvent.answerCorrect ||
+      BuddyEvent.reflectionSubmitted => const BuddyReaction(
+        presentation: BuddyPresentation.inline,
+        face: MascotFace.proud,
+        priority: 30,
+        speechPolicy: BuddySpeechPolicy.never,
+      ),
       BuddyEvent.answerIncorrect => const BuddyReaction(
         presentation: BuddyPresentation.inline,
         face: MascotFace.thinking,
         priority: 30,
         speechPolicy: BuddySpeechPolicy.never,
       ),
-      BuddyEvent.aiHelpOpened || BuddyEvent.emptyLearningPath =>
-        const BuddyReaction(
-          presentation: BuddyPresentation.inline,
-          face: MascotFace.thinking,
-          priority: 20,
-          speechPolicy: BuddySpeechPolicy.never,
-        ),
+      BuddyEvent.aiHelpOpened ||
+      BuddyEvent.emptyLearningPath => const BuddyReaction(
+        presentation: BuddyPresentation.inline,
+        face: MascotFace.thinking,
+        priority: 20,
+        speechPolicy: BuddySpeechPolicy.never,
+      ),
       BuddyEvent.recoverableError => const BuddyReaction(
         presentation: BuddyPresentation.hidden,
         face: MascotFace.oops,
@@ -139,13 +139,13 @@ abstract final class BuddyBehavior {
         priority: 60,
         speechPolicy: BuddySpeechPolicy.never,
       ),
-      BuddyEvent.postPublished || BuddyEvent.commentPublished =>
-        const BuddyReaction(
-          presentation: BuddyPresentation.inline,
-          face: MascotFace.wink,
-          priority: 25,
-          speechPolicy: BuddySpeechPolicy.never,
-        ),
+      BuddyEvent.postPublished ||
+      BuddyEvent.commentPublished => const BuddyReaction(
+        presentation: BuddyPresentation.inline,
+        face: MascotFace.wink,
+        priority: 25,
+        speechPolicy: BuddySpeechPolicy.never,
+      ),
     };
     return reactionsEnabled ? reaction : reaction.withoutAutonomousReaction();
   }

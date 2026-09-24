@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -64,13 +62,15 @@ class _MascotSelectScreenState extends ConsumerState<MascotSelectScreen> {
     setState(() => _submitting = true);
     await ref.read(mascotProvider.notifier).choose(_species, _name.text);
     if (!mounted) return;
-    // Let the buddy cheer before moving on, unless motion is reduced.
-    if (!MediaQuery.disableAnimationsOf(context)) {
-      _stage.react(MascotMood.celebrate);
-      await Future<void>.delayed(const Duration(milliseconds: 1100));
-      if (!mounted) return;
+    _stage.react(MascotMood.celebrate);
+    // Opened from settings it returns there; on first run, which replaces the
+    // stack, it carries on to setup.
+    final router = GoRouter.of(context);
+    if (router.canPop()) {
+      router.pop();
+    } else {
+      router.go('/onboarding/setup');
     }
-    context.go('/language-select');
   }
 
   @override

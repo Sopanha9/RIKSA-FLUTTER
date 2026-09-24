@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -5,11 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_router.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/google_logo.dart';
 import '../../../core/widgets/riksa_components.dart';
-import '../../../core/widgets/telegram_logo.dart';
 import '../../mascot/domain/mascot.dart';
 import '../../mascot/presentation/widgets/mascot_face.dart';
 import '../../mascot/presentation/widgets/mascot_scene.dart';
@@ -34,14 +34,8 @@ Duration _sizeDuration(BuildContext context) {
 ///
 /// The buddy stands in its home scene at the top, talks the learner through
 /// each step and reacts to every choice; the step itself sits on a sheet
-/// below. The seven steps:
-/// 1. Goal
-/// 2. Starting subject
-/// 3. Province squad
-/// 4. Daily pace, with a preview of the week
-/// 5. Warm-up question 1
-/// 6. Warm-up question 2
-/// 7. Streak and XP payoff, then saving progress with an account
+/// below. The steps are a starting subject, a home province (the learner's
+/// leaderboard squad) and a roadmap confirmation.
 class InteractiveOnboardingScreen extends ConsumerStatefulWidget {
   const InteractiveOnboardingScreen({super.key, this.onComplete});
 
@@ -54,16 +48,16 @@ class InteractiveOnboardingScreen extends ConsumerStatefulWidget {
 
 class _InteractiveOnboardingScreenState
     extends ConsumerState<InteractiveOnboardingScreen> {
-  final TextEditingController _provinceSearchController =
-      TextEditingController();
   final MascotController _buddy = MascotController();
 
   int _currentPage = 0;
   bool _forward = true;
-  static const int _totalPages = 7;
-  static const int _payoffPage = 6;
-  String _provinceQuery = '';
+  static const int _totalPages = 3;
+  static const int _payoffPage = 2;
   bool _submitting = false;
+  final TextEditingController _provinceSearchController =
+      TextEditingController();
+  String _provinceQuery = '';
 
   @override
   void initState() {
@@ -77,21 +71,16 @@ class _InteractiveOnboardingScreenState
 
   @override
   void dispose() {
-    _provinceSearchController.dispose();
     _buddy.dispose();
+    _provinceSearchController.dispose();
     super.dispose();
   }
 
   bool _isStepComplete(OnboardingSetupData data) {
     return switch (_currentPage) {
-      0 => data.goal != null,
-      1 => data.subject != null,
-      2 => data.provinceId != null,
-      3 => data.pace != null,
-      4 => data.quizAnswer1Index != null,
-      5 => data.quizAnswer2Index != null,
-      6 => true,
-      _ => false,
+      0 => data.subject != null,
+      1 => data.provinceId != null,
+      _ => true,
     };
   }
 
@@ -102,14 +91,7 @@ class _InteractiveOnboardingScreenState
       _currentPage = page;
     });
     // The buddy settles into the mood of the new step.
-    _buddy.mood = switch (page) {
-      4 || 5 => MascotMood.thinking,
-      _payoffPage => MascotMood.happy,
-      _ => MascotMood.idle,
-    };
-    if (page == _payoffPage) {
-      _buddy.react(MascotMood.trophy);
-    }
+    _buddy.mood = page == _payoffPage ? MascotMood.happy : MascotMood.idle;
   }
 
   Future<void> _next(OnboardingSetupData data) async {
@@ -118,7 +100,7 @@ class _InteractiveOnboardingScreenState
       _goTo(_currentPage + 1);
       return;
     }
-    await _saveAndNavigate('/auth/telegram');
+    await _saveAndNavigate(kLandingLocation);
   }
 
   Future<void> _back() async {
@@ -135,7 +117,14 @@ class _InteractiveOnboardingScreenState
     if (_submitting) return;
     setState(() => _submitting = true);
     await ref.read(onboardingProvider.notifier).commitSetup();
-    await ref.read(localeProvider.notifier).completeIntro();
+    final provinceId = ref.read(onboardingProvider).provinceId;
+    if (provinceId == null) {
+      await ref.read(localeProvider.notifier).completeOnboarding();
+    } else {
+      // Completing onboarding clears the pending squad, so a guest's province
+      // stays pending until sign-in sends it; a signed-in learner's goes now.
+      await ref.read(authProvider.notifier).saveProvinceSelection(provinceId);
+    }
 
     if (!mounted) return;
     if (widget.onComplete case final callback?) {
@@ -147,148 +136,40 @@ class _InteractiveOnboardingScreenState
     context.go(route);
   }
 
-  Future<void> _handleGoogleAuth() async {
-    if (_submitting) return;
-    setState(() => _submitting = true);
-    await ref.read(onboardingProvider.notifier).commitSetup();
-    await ref.read(localeProvider.notifier).completeIntro();
-
-    try {
-      await ref.read(googleAuthClientProvider).authenticate();
-    } catch (_) {
-      if (mounted) {
-        context.go('/auth/login');
-      }
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
-
-  String _buttonLabel(String lang) {
-    return switch (_currentPage) {
-      3 => _t(lang, 'Start Challenge', 'ចាប់ផ្តើមការសាកល្បង'),
-      4 => _t(lang, 'Next Challenge', 'សំណួរបន្ទាប់'),
-      5 => _t(lang, 'Claim Reward', 'ទទួលយករង្វាន់'),
-      _ => _t(lang, 'Continue', 'បន្ត'),
-    };
-  }
-
   /// What the buddy says: it opens each step, then answers the choice made.
   String _buddyLine(OnboardingSetupData setup, String lang, String name) {
-    final questions = OnboardingCuratedQuestions.forSubject(
-      setup.subject ?? OnboardingSubject.math,
-    );
-    String quizLine(int? answer, OnboardingQuizQuestion question, bool first) {
-      if (answer == null) {
-        return first
-            ? _t(
-                lang,
-                'Quick warm-up! Take your time.',
-                'កំដៅខួរក្បាលបន្តិច! មិនបាច់ប្រញាប់ទេ។',
-              )
-            : _t(lang, 'One more. You\'ve got this!', 'មួយទៀត! អ្នកធ្វើបាន។');
-      }
-      return answer == question.correctIndex
-          ? _t(lang, 'Correct! +10 XP for you!', 'ត្រឹមត្រូវ! ទទួលបាន +10 XP!')
+    if (_currentPage == 0) {
+      final subject = setup.subject;
+      return subject == null
+          ? _t(
+              lang,
+              'Hi, I\'m $name! Which subject should we start with?',
+              'សួស្តី ខ្ញុំឈ្មោះ $name! តើយើងគួរចាប់ផ្តើមពីមុខវិជ្ជាណា?',
+            )
           : _t(
               lang,
-              'So close! Here\'s a hint for next time.',
-              'ជិតត្រូវហើយ! នេះជាតម្រុយសម្រាប់លើកក្រោយ។',
+              '${subject.title(lang)} is a great place to start.',
+              'ចាប់ផ្តើមពី${subject.title(lang)}គឺល្អណាស់។',
             );
     }
-
-    return switch (_currentPage) {
-      0 => switch (setup.goal) {
-        null => _t(
-          lang,
-          'Hi, I\'m $name! What are we working towards?',
-          'សួស្តី ខ្ញុំឈ្មោះ $name! តើយើងកំពុងខិតខំទៅរកអ្វី?',
-        ),
-        OnboardingGoal.bacII => _t(
-          lang,
-          'BacII! Let\'s go for that grade A together.',
-          'បាក់ឌុប! តោះប្រឹងយកនិទ្ទេស A ជាមួយគ្នា។',
-        ),
-        OnboardingGoal.stemClass => _t(
-          lang,
-          'Strong foundations first. Smart move!',
-          'ចាប់ផ្តើមពីមូលដ្ឋានគ្រឹះ។ ជម្រើសឆ្លាតណាស់!',
-        ),
-        OnboardingGoal.curiosity => _t(
-          lang,
-          'A curious mind! We\'ll crack a puzzle every day.',
-          'ចិត្តចង់ដឹង! យើងនឹងដោះស្រាយល្បងប្រាជ្ញារាល់ថ្ងៃ។',
-        ),
-      },
-      1 => switch (setup.subject) {
-        null => _t(
-          lang,
-          'Which subject should we start with?',
-          'តើយើងគួរចាប់ផ្តើមពីមុខវិជ្ជាណា?',
-        ),
-        OnboardingSubject.math => _t(
-          lang,
-          'Math! I love a good equation.',
-          'គណិតវិទ្យា! ខ្ញុំចូលចិត្តសមីការណាស់។',
-        ),
-        OnboardingSubject.physics => _t(
-          lang,
-          'Physics! Let\'s find out how the world moves.',
-          'រូបវិទ្យា! តោះស្វែងយល់ពីចលនានៃពិភពលោក។',
-        ),
-        OnboardingSubject.chemistry => _t(
-          lang,
-          'Chemistry! Let\'s mix up some ideas.',
-          'គីមីវិទ្យា! តោះលាយគំនិតជាមួយគ្នា។',
-        ),
-        OnboardingSubject.biology => _t(
-          lang,
-          'Biology! Life is amazing up close.',
-          'ជីវវិទ្យា! ជីវិតគួរឱ្យអស្ចារ្យណាស់ពេលមើលជិតៗ។',
-        ),
-      },
-      2 =>
-        setup.provinceId == null
-            ? _t(
-                lang,
-                'Where are you from? Your province is your squad.',
-                'តើអ្នកមកពីខេត្តណា? ខេត្តរបស់អ្នកគឺជាក្រុមរបស់អ្នក។',
-              )
-            : _t(
-                lang,
-                'Welcome to the ${setup.provinceNameLatin} squad!',
-                'សូមស្វាគមន៍មកកាន់ក្រុម${setup.provinceNameKhmer}!',
-              ),
-      3 => switch (setup.pace) {
-        null => _t(
-          lang,
-          'How long should we learn together each day?',
-          'តើយើងគួររៀនជាមួយគ្នាប៉ុន្មាននាទីក្នុងមួយថ្ងៃ?',
-        ),
-        OnboardingPace.casual => _t(
-          lang,
-          'Five minutes is perfect. Small steps count!',
-          '៥ នាទីល្អណាស់។ ជំហានតូចៗក៏សំខាន់ដែរ!',
-        ),
-        OnboardingPace.regular => _t(
-          lang,
-          'Ten minutes a day. That\'s the sweet spot!',
-          '១០ នាទីក្នុងមួយថ្ងៃ។ ល្អបំផុតហ្មង!',
-        ),
-        OnboardingPace.serious => _t(
-          lang,
-          'Fifteen minutes? You mean it. I like it!',
-          '១៥ នាទី? អ្នកពិតជាប្តេជ្ញាមែន។ ខ្ញុំចូលចិត្ត!',
-        ),
-      },
-      4 => quizLine(setup.quizAnswer1Index, questions[0], true),
-      5 => quizLine(setup.quizAnswer2Index, questions[1], false),
-      _ => _t(
-        lang,
-        'We did it! Save your streak so we can keep going.',
-        'យើងធ្វើបានហើយ! រក្សាទុក streak ដើម្បីបន្តជាមួយគ្នា។',
-      ),
-    };
+    if (_currentPage == 1) {
+      return setup.provinceId == null
+          ? _t(
+              lang,
+              'Where are you from? Your province is your squad.',
+              'តើអ្នកមកពីខេត្តណា? ខេត្តរបស់អ្នកគឺជាក្រុមរបស់អ្នក។',
+            )
+          : _t(
+              lang,
+              'Welcome to the ${setup.provinceNameLatin} squad!',
+              'សូមស្វាគមន៍មកកាន់ក្រុម${setup.provinceNameKhmer}!',
+            );
+    }
+    return _t(
+      lang,
+      'Your ${setup.subject?.title(lang) ?? 'study'} roadmap is ready.',
+      'ផ្លូវរៀន${setup.subject?.title(lang) ?? 'របស់អ្នក'}រួចរាល់ហើយ។',
+    );
   }
 
   @override
@@ -307,29 +188,19 @@ class _InteractiveOnboardingScreenState
     final canContinue = _isStepComplete(setup);
     final notifier = ref.read(onboardingProvider.notifier);
 
-    final subject = setup.subject ?? OnboardingSubject.math;
-    final questions = OnboardingCuratedQuestions.forSubject(subject);
     final isPayoffScreen = _currentPage == _payoffPage;
-    final label = _buttonLabel(lang);
 
     final step = switch (_currentPage) {
-      0 => _GoalStep(
-        selectedGoal: setup.goal,
-        lang: lang,
-        onSelect: (goal) {
-          notifier.setGoal(goal);
-          _buddy.react(MascotMood.happy);
-        },
-      ),
-      1 => _SubjectStep(
+      0 => _SubjectStep(
         selectedSubject: setup.subject,
         lang: lang,
         onSelect: (subject) {
           notifier.setSubject(subject);
           _buddy.react(MascotMood.happy);
+          unawaited(_next(setup));
         },
       ),
-      2 => _ProvinceStep(
+      1 => _ProvinceStep(
         selectedProvinceId: setup.provinceId,
         selectedProvinceName: lang == 'km'
             ? setup.provinceNameKhmer
@@ -347,49 +218,12 @@ class _InteractiveOnboardingScreenState
           _buddy.react(MascotMood.greeting);
         },
       ),
-      3 => _PaceStep(
-        selectedPace: setup.pace,
-        lang: lang,
-        onSelect: (pace) {
-          notifier.setPace(pace);
-          _buddy.react(switch (pace) {
-            OnboardingPace.casual => MascotMood.love,
-            OnboardingPace.regular => MascotMood.happy,
-            OnboardingPace.serious => MascotMood.celebrate,
-          });
-        },
-      ),
-      4 || 5 => _QuizStep(
-        key: ValueKey('quiz_step_${_currentPage - 3}'),
-        questionNumber: _currentPage - 3,
-        totalQuestions: 2,
-        question: questions[_currentPage - 4],
-        selectedAnswerIndex: _currentPage == 4
-            ? setup.quizAnswer1Index
-            : setup.quizAnswer2Index,
-        lang: lang,
-        species: species,
-        buddyName: name,
-        onSelectAnswer: (idx, isCorrect) {
-          if (_currentPage == 4) {
-            notifier.setQuizAnswer1(idx, isCorrect);
-          } else {
-            notifier.setQuizAnswer2(idx, isCorrect);
-          }
-          _buddy.react(isCorrect ? MascotMood.celebrate : MascotMood.sad);
-        },
-      ),
       _ => _PayoffStep(
         key: const ValueKey('payoff_step'),
         setup: setup,
         lang: lang,
-        species: species,
-        buddyName: name,
         submitting: _submitting,
-        onSaveTelegram: () => _saveAndNavigate('/auth/telegram'),
-        onSaveGoogle: _handleGoogleAuth,
-        onSaveEmail: () => _saveAndNavigate('/auth/register'),
-        onLogin: () => _saveAndNavigate('/auth/login'),
+        onStart: () => _saveAndNavigate(kLandingLocation),
       ),
     };
 
@@ -516,10 +350,14 @@ class _InteractiveOnboardingScreenState
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Text(
-                                                label,
+                                                _t(lang, 'Continue', 'បន្ត'),
                                                 style:
                                                     RiksaTypography.bodyStyleFor(
-                                                      label,
+                                                      _t(
+                                                        lang,
+                                                        'Continue',
+                                                        'បន្ត',
+                                                      ),
                                                       const TextStyle(
                                                         fontSize: 16,
                                                         fontWeight:
@@ -870,6 +708,7 @@ class _ChoiceSurface extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _GoalStep extends StatelessWidget {
   const _GoalStep({
     required this.selectedGoal,
@@ -1104,6 +943,7 @@ class _SubjectStep extends StatelessWidget {
 
 /// The province step, framed as joining a squad: learners from the same
 /// province earn points together on the national leaderboard.
+// ignore: unused_element
 class _ProvinceStep extends StatelessWidget {
   const _ProvinceStep({
     required this.selectedProvinceId,
@@ -1412,6 +1252,7 @@ class _ProvinceChip extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _PaceStep extends StatelessWidget {
   const _PaceStep({
     required this.selectedPace,
@@ -1656,9 +1497,9 @@ class _WeekPreview extends StatelessWidget {
 
 /// A warm-up question. The buddy cheers or consoles from the top; the
 /// explanation lands here, from the buddy's face, under the answers.
+// ignore: unused_element
 class _QuizStep extends StatelessWidget {
   const _QuizStep({
-    super.key,
     required this.questionNumber,
     required this.totalQuestions,
     required this.question,
@@ -2108,78 +1949,51 @@ class _BuddyFeedback extends StatelessWidget {
   }
 }
 
-/// The reward: three prizes popping in one after another (the streak, the
-/// XP, the squad), the plan just made, then one tap to keep it all.
+/// Confirms the selected learning path before opening the curriculum.
 class _PayoffStep extends StatelessWidget {
   const _PayoffStep({
     super.key,
     required this.setup,
     required this.lang,
-    required this.species,
-    required this.buddyName,
     required this.submitting,
-    required this.onSaveTelegram,
-    required this.onSaveGoogle,
-    required this.onSaveEmail,
-    required this.onLogin,
+    required this.onStart,
   });
 
   final OnboardingSetupData setup;
   final String lang;
-  final MascotSpecies species;
-  final String buddyName;
   final bool submitting;
-  final VoidCallback onSaveTelegram;
-  final VoidCallback onSaveGoogle;
-  final VoidCallback onSaveEmail;
-  final VoidCallback onLogin;
+  final VoidCallback onStart;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = context.riksa;
-    final provinceName = lang == 'km'
-        ? (setup.provinceNameKhmer ?? 'កម្ពុជា')
-        : (setup.provinceNameLatin ?? 'Cambodia');
-    final earnedXp = setup.earnedXp > 0 ? setup.earnedXp : 20;
-    final headline = _t(
+    final subject =
+        setup.subject?.title(lang) ??
+        _t(lang, 'your subject', 'មុខវិជ្ជារបស់អ្នក');
+    final title = _t(
       lang,
-      'Day 1 streak started!',
-      'Streak ថ្ងៃទី ១ បានចាប់ផ្តើម!',
+      'Your $subject roadmap is ready',
+      'ផ្លូវរៀន$subject របស់អ្នករួចរាល់ហើយ',
     );
     final body = _t(
       lang,
-      'You finished your first challenge, and $provinceName just got stronger.',
-      'អ្នកបានបញ្ចប់ការសាកល្បងដំបូង ហើយក្រុម$provinceNameកាន់តែខ្លាំង។',
+      'Choose a lesson and start learning at your own pace.',
+      'ជ្រើសរើសមេរៀនមួយ ហើយចាប់ផ្តើមរៀនតាមល្បឿនរបស់អ្នក។',
     );
-    final saveTitle = _t(
-      lang,
-      'Save your streak & progress',
-      'រក្សាទុកពិន្ទុ និងបន្ត Streak របស់អ្នក',
-    );
-    final saveBody = _t(
-      lang,
-      'Make an account so $buddyName remembers you tomorrow.',
-      'បង្កើតគណនី ដើម្បីឱ្យ $buddyName ចាំអ្នកនៅថ្ងៃស្អែក។',
-    );
-    final haveAccount = _t(lang, 'Already have an account?', 'មានគណនីរួចហើយ?');
-    final logIn = _t(lang, 'Log In', 'ចូលគណនី');
-    final plan = [
-      if (setup.subject case final subject?) subject.title(lang),
-      _t(
-        lang,
-        '${setup.pace?.minutes ?? 10} min / day',
-        '${setup.pace?.minutes ?? 10} នាទី / ថ្ងៃ',
-      ),
-    ].join('  ·  ');
+    final startLabel = _t(lang, 'Start learning', 'ចាប់ផ្តើមរៀន');
 
     return ListView(
+      key: const ValueKey('onboarding-roadmap-ready'),
       children: [
+        const SizedBox(height: 16),
+        Icon(Icons.route_rounded, size: 56, color: palette.brand),
+        const SizedBox(height: 16),
         Text(
-          headline,
+          title,
           textAlign: TextAlign.center,
           style: RiksaTypography.titleStyleFor(
-            headline,
+            title,
             theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w800,
               color: palette.ink,
@@ -2187,7 +2001,7 @@ class _PayoffStep extends StatelessWidget {
             khmerHeight: 1.4,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Text(
           body,
           textAlign: TextAlign.center,
@@ -2195,375 +2009,31 @@ class _PayoffStep extends StatelessWidget {
             body,
             theme.textTheme.bodyMedium?.copyWith(
               color: palette.inkMuted,
-              height: 1.4,
+              height: 1.45,
             ),
           ),
         ),
-        const SizedBox(height: 14),
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: _RewardTile(
-                  order: 0,
-                  icon: ExcludeSemantics(
-                    child: Image.asset(
-                      'assets/images/rewards/streak.png',
-                      width: 48,
-                      height: 48,
-                    ),
-                  ),
-                  value: '1',
-                  label: _t(lang, 'day streak', 'ថ្ងៃ streak'),
-                  color: const Color(0xFFFF6B2C),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _RewardTile(
-                  order: 1,
-                  icon: ExcludeSemantics(
-                    child: Image.asset(
-                      'assets/images/rewards/xp.png',
-                      width: 48,
-                      height: 48,
-                    ),
-                  ),
-                  value: '+$earnedXp',
-                  countTo: earnedXp,
-                  label: _t(lang, 'XP earned', 'XP ទទួលបាន'),
-                  color: palette.brand,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _RewardTile(
-                  order: 2,
-                  icon: ExcludeSemantics(
-                    child: Image.asset(
-                      'assets/images/rewards/squad.png',
-                      width: 48,
-                      height: 48,
-                    ),
-                  ),
-                  value: provinceName,
-                  label: _t(lang, 'your squad', 'ក្រុមរបស់អ្នក'),
-                  color: palette.ink,
-                ),
-              ),
-            ],
+        const SizedBox(height: 24),
+        FilledButton(
+          key: const ValueKey('onboarding_start_learning'),
+          onPressed: submitting ? null : onStart,
+          style: FilledButton.styleFrom(
+            backgroundColor: palette.brandStrong,
+            foregroundColor: palette.onBrand,
+            minimumSize: const Size.fromHeight(52),
+            shape: const StadiumBorder(),
           ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.route_rounded, size: 16, color: palette.inkMuted),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                plan,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: RiksaTypography.bodyStyleFor(
-                  plan,
-                  theme.textTheme.labelMedium?.copyWith(
-                    color: palette.inkMuted,
-                    fontWeight: FontWeight.w600,
+          child: submitting
+              ? SizedBox.square(
+                  dimension: 22,
+                  child: CircularProgressIndicator(
+                    color: palette.onBrand,
+                    strokeWidth: 2,
                   ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Container(
-          padding: const EdgeInsets.fromLTRB(14, 14, 14, 4),
-          decoration: BoxDecoration(
-            color: palette.surface,
-            borderRadius: AppRadii.extraLargeBorder,
-            border: Border.all(color: palette.outline),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: palette.brandSoft,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.cloud_done_rounded,
-                      color: palette.brand,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          saveTitle,
-                          style: RiksaTypography.titleStyleFor(
-                            saveTitle,
-                            theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: palette.ink,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          saveBody,
-                          style: RiksaTypography.bodyStyleFor(
-                            saveBody,
-                            theme.textTheme.bodySmall?.copyWith(
-                              color: palette.inkMuted,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _SaveButton(
-                key: const Key('onboarding_save_telegram'),
-                onPressed: submitting ? null : onSaveTelegram,
-                background: const Color(0xFF2AABEE),
-                foreground: Colors.white,
-                leading: const TelegramLogo(size: 22),
-                label: _t(lang, 'Save with Telegram', 'រក្សាទុកតាម Telegram'),
-                busy: submitting,
-              ),
-              const SizedBox(height: 10),
-              _SaveButton(
-                key: const Key('onboarding_save_google'),
-                onPressed: submitting ? null : onSaveGoogle,
-                background: palette.canvas,
-                foreground: palette.ink,
-                border: palette.outline,
-                leading: const GoogleLogo(size: 20),
-                label: _t(lang, 'Continue with Google', 'បន្តជាមួយ Google'),
-              ),
-              const SizedBox(height: 4),
-              _SaveButton(
-                key: const Key('onboarding_save_email'),
-                onPressed: submitting ? null : onSaveEmail,
-                background: Colors.transparent,
-                foreground: palette.inkMuted,
-                leading: Icon(
-                  Icons.mail_outline_rounded,
-                  size: 18,
-                  color: palette.inkMuted,
-                ),
-                label: _t(lang, 'Sign up with Email', 'ចុះឈ្មោះតាមអ៊ីមែល'),
-                compact: true,
-              ),
-            ],
-          ),
-        ),
-        Wrap(
-          alignment: WrapAlignment.center,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text(
-              haveAccount,
-              style: RiksaTypography.bodyStyleFor(
-                haveAccount,
-                theme.textTheme.bodySmall?.copyWith(color: palette.inkMuted),
-              ),
-            ),
-            TextButton(
-              key: const Key('onboarding_login_link'),
-              onPressed: submitting ? null : onLogin,
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: palette.brand,
-                shadowColor: Colors.transparent,
-                elevation: 0,
-                side: BorderSide.none,
-                minimumSize: const Size(48, 44),
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-              ),
-              child: Text(
-                logIn,
-                style: RiksaTypography.bodyStyleFor(
-                  logIn,
-                  const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                ),
-              ),
-            ),
-          ],
+                )
+              : Text(startLabel),
         ),
       ],
-    );
-  }
-}
-
-/// One prize, popping in after the ones before it, its number counting up.
-class _RewardTile extends StatelessWidget {
-  const _RewardTile({
-    required this.order,
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.color,
-    this.countTo,
-  });
-
-  final int order;
-  final Widget icon;
-  final String value;
-  final String label;
-  final Color color;
-
-  /// When set, [value] counts up to this number as `+n`.
-  final int? countTo;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final palette = context.riksa;
-    final reduce = MediaQuery.disableAnimationsOf(context);
-    final start = order * .18;
-    final valueStyle = RiksaTypography.titleStyleFor(
-      value,
-      theme.textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.w800,
-        color: color,
-        height: 1.2,
-      ),
-    );
-    final count = countTo;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: reduce ? 1 : 0, end: 1),
-      duration: const Duration(milliseconds: 1100),
-      builder: (context, t, child) {
-        final pop = Curves.easeOutBack.transform(
-          ((t - start) / (1 - start)).clamp(0.0, 1.0),
-        );
-        return Opacity(
-          opacity: pop.clamp(0.0, 1.0),
-          child: Transform.scale(scale: .6 + .4 * pop, child: child),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
-        decoration: BoxDecoration(
-          color: palette.surface,
-          borderRadius: AppRadii.largeBorder,
-          border: Border.all(color: palette.outline),
-        ),
-        child: Column(
-          children: [
-            icon,
-            const SizedBox(height: 8),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: count == null
-                  ? Text(value, maxLines: 1, style: valueStyle)
-                  : TweenAnimationBuilder<int>(
-                      tween: IntTween(begin: reduce ? count : 0, end: count),
-                      duration: const Duration(milliseconds: 1200),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, n, _) =>
-                          Text('+$n', maxLines: 1, style: valueStyle),
-                    ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              style: RiksaTypography.bodyStyleFor(
-                label,
-                theme.textTheme.labelSmall?.copyWith(color: palette.inkMuted),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// A full-width sign-up pill, styled directly so the theme's glass buttons
-/// do not leak in.
-class _SaveButton extends StatelessWidget {
-  const _SaveButton({
-    super.key,
-    required this.onPressed,
-    required this.background,
-    required this.foreground,
-    required this.leading,
-    required this.label,
-    this.border,
-    this.busy = false,
-    this.compact = false,
-  });
-
-  final VoidCallback? onPressed;
-  final Color background;
-  final Color foreground;
-  final Color? border;
-  final Widget leading;
-  final String label;
-  final bool busy;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    final side = border;
-    return FilledButton(
-      onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: background,
-        foregroundColor: foreground,
-        disabledBackgroundColor: background,
-        disabledForegroundColor: foreground.withValues(alpha: .6),
-        shadowColor: Colors.transparent,
-        elevation: 0,
-        side: side == null ? BorderSide.none : BorderSide(color: side),
-        shape: const StadiumBorder(),
-        minimumSize: Size.fromHeight(compact ? 44 : 52),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-      ),
-      child: busy
-          ? SizedBox.square(
-              dimension: 20,
-              child: CircularProgressIndicator(
-                color: foreground,
-                strokeWidth: 2,
-              ),
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                leading,
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    label,
-                    overflow: TextOverflow.ellipsis,
-                    style: RiksaTypography.bodyStyleFor(
-                      label,
-                      TextStyle(
-                        fontSize: compact ? 14 : 15,
-                        fontWeight: compact ? FontWeight.w600 : FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
     );
   }
 }

@@ -6,7 +6,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../mascot/domain/buddy_behavior.dart';
+import '../../mascot/domain/mascot.dart';
 import '../../mascot/presentation/widgets/buddy_companion.dart';
+import '../../mascot/providers/buddy_care_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_roadmap_provider.dart';
 import 'widgets/learning_atoms.dart';
@@ -38,6 +40,7 @@ class LessonCompletionScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final palette = context.riksa;
     final theme = Theme.of(context);
+    final buddyCare = ref.watch(buddyCareProvider);
     final roadmap = roadmapCategoryId == null
         ? null
         : ref.watch(learningRoadmapProvider(roadmapCategoryId!)).asData?.value;
@@ -85,6 +88,9 @@ class LessonCompletionScreen extends ConsumerWidget {
                             ),
                             speech: l10n.buddyLessonCompleted,
                             size: 124,
+                            moodOverride: buddyCare.care.bondLevel >= 2
+                                ? MascotMood.treat
+                                : null,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -106,6 +112,14 @@ class LessonCompletionScreen extends ConsumerWidget {
                         Text(
                           l10n.lessonCompletedBody,
                           style: theme.textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.buddyLessonEnergyLine(buddyCare.name),
+                          key: const ValueKey('lesson-buddy-energy-reward'),
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: palette.inkMuted,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         RiksaCountUp(
@@ -215,4 +229,3 @@ class LessonCompletionScreen extends ConsumerWidget {
     );
   }
 }
-

@@ -4,10 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/features/auth/data/auth_models.dart';
+import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/learning/data/learning_api.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_experience_screen.dart';
 import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.dart';
+import 'package:riksa_app/features/learning/presentation/widgets/learning_atoms.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -84,10 +87,30 @@ class JourneyApi implements LearningApi {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _AuthenticatedNotifier extends AuthNotifier {
+  @override
+  AuthState build() => const Authenticated(
+    AuthUser(
+      id: 'learner-1',
+      username: 'learner',
+      displayName: 'Learner',
+      emailVerified: true,
+      phoneVerified: false,
+      role: 'USER',
+    ),
+  );
+}
+
+class _GuestNotifier extends AuthNotifier {
+  @override
+  AuthState build() => const Unauthenticated();
+}
+
 Widget journeyApp(
   JourneyApi api, {
   Locale locale = const Locale('en'),
   TextScaler scaler = TextScaler.noScaling,
+  bool authenticated = true,
 }) {
   final router = GoRouter(
     initialLocation: '/learn/force',
@@ -102,10 +125,19 @@ Widget journeyApp(
           body: Text('Saved: ${(state.extra as Map)['reflection']}'),
         ),
       ),
+      GoRoute(
+        path: '/auth/login',
+        builder: (_, _) => const Scaffold(body: Text('Sign in required')),
+      ),
     ],
   );
   return ProviderScope(
-    overrides: [learningApiProvider.overrideWithValue(api)],
+    overrides: [
+      learningApiProvider.overrideWithValue(api),
+      authProvider.overrideWith(
+        authenticated ? _AuthenticatedNotifier.new : _GuestNotifier.new,
+      ),
+    ],
     child: MaterialApp.router(
       routerConfig: router,
       theme: AppTheme.light,
@@ -118,7 +150,9 @@ Widget journeyApp(
       ],
       supportedLocales: const [Locale('en'), Locale('km')],
       builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(textScaler: scaler),
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: scaler, disableAnimations: true),
         child: child!,
       ),
     ),
@@ -154,13 +188,17 @@ void main() {
       expect(find.textContaining('Keep units consistent.'), findsWidgets);
       await tapKey(tester, 'start-section-1');
       expect(find.byKey(const ValueKey('lesson-option-0')), findsNothing);
-      await tapKey(tester, 'compare-answers');
-      expect(find.byKey(const ValueKey('lesson-option-0')), findsNothing);
+      await tapKey(tester, 'lesson-add-working-force-1');
+      expect(
+        find.byKey(const ValueKey('lesson-working-force-1')),
+        findsOneWidget,
+      );
       await tester.enterText(
         find.byKey(const ValueKey('lesson-working-force-1')),
         '2 × 3 = 6 N',
       );
       await tapKey(tester, 'compare-answers');
+      expect(find.byKey(const ValueKey('lesson-option-0')), findsOneWidget);
       await tapKey(tester, 'lesson-option-0');
       await tapKey(tester, 'check-answer');
       expect(find.text('Try again.'), findsOneWidget);
@@ -204,41 +242,80 @@ void main() {
     },
   );
 
+  testWidgets('guest answer asks for sign in without submitting to the API', (
+    tester,
+  ) async {
+    final api = JourneyApi();
+    await tester.pumpWidget(journeyApp(api, authenticated: false));
+    await tester.pumpAndSettle();
+
+    await tapKey(tester, 'start-section-1');
+    await tapKey(tester, 'lesson-worked-on-paper-force-1');
+    await tapKey(tester, 'lesson-option-0');
+    await tapKey(tester, 'check-answer');
+
+    expect(find.text('Sign in required'), findsOneWidget);
+    expect(api.submitted, isEmpty);
+  });
+
   testWidgets(
-    'Khmer reading and written response fit 360dp at 200 percent text',
+    'a confidence tap completes the lesson with an empty reflection',
     (tester) async {
-      tester.view.physicalSize = const Size(360, 800);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(
-        journeyApp(
-          JourneyApi(),
-          locale: const Locale('km'),
-          scaler: TextScaler.linear(2),
-        ),
-      );
+      final api = JourneyApi();
+      await tester.pumpWidget(journeyApp(api));
       await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
+
       await tapKey(tester, 'start-section-1');
-      expect(tester.takeException(), isNull);
-      await tester.enterText(
-        find.byKey(const ValueKey('lesson-working-force-1')),
-        '2 × 3 = 6 N',
-      );
-      await tapKey(tester, 'compare-answers');
-      expect(tester.takeException(), isNull);
+      await tapKey(tester, 'lesson-worked-on-paper-force-1');
       await tapKey(tester, 'lesson-option-1');
       await tapKey(tester, 'check-answer');
       await tapKey(tester, 'continue-after-answer');
-      await tester.enterText(
-        find.byKey(const ValueKey('lesson-reflection')),
-        'កម្លាំងអាស្រ័យលើម៉ាស និងសំទុះ។',
+
+      expect(find.byKey(const ValueKey('lesson-reflection')), findsOneWidget);
+      final save = tester.widget<LearningPrimaryButton>(
+        find.byKey(const ValueKey('complete-lesson')),
       );
-      FocusManager.instance.primaryFocus?.unfocus();
-      await tester.pumpAndSettle();
-      await tapKey(tester, 'lesson-reflection-review');
+      expect(save.onPressed, isNull);
+
+      await tapKey(tester, 'lesson-reflection-confident');
+      final enabledSave = tester.widget<LearningPrimaryButton>(
+        find.byKey(const ValueKey('complete-lesson')),
+      );
+      expect(enabledSave.onPressed, isNotNull);
+      await tapKey(tester, 'complete-lesson');
+
+      expect(api.reflections, hasLength(1));
+      expect(api.reflections.single, contains('[I can explain it]'));
+      expect(find.text('Saved: '), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('Khmer reading and reflection fit 360dp at 200 percent text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      journeyApp(
+        JourneyApi(),
+        locale: const Locale('km'),
+        scaler: TextScaler.linear(2),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tapKey(tester, 'start-section-1');
+    expect(tester.takeException(), isNull);
+    await tapKey(tester, 'lesson-worked-on-paper-force-1');
+    expect(tester.takeException(), isNull);
+    await tapKey(tester, 'lesson-option-1');
+    await tapKey(tester, 'check-answer');
+    await tapKey(tester, 'continue-after-answer');
+    expect(find.byKey(const ValueKey('lesson-reflection')), findsOneWidget);
+    await tapKey(tester, 'lesson-reflection-review');
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -55,7 +55,7 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
     if (router.canPop()) {
       router.pop();
     } else {
-      router.go('/onboarding/setup');
+      router.go('/mascot-select');
     }
   }
 

@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../auth/providers/auth_provider.dart';
+import '../data/buddy_api.dart';
 import '../domain/mascot.dart';
 
 /// The learner's own buddy: which species, and what they called it.
@@ -80,6 +82,35 @@ class MascotNotifier extends Notifier<MascotState> {
     final preferences = await SharedPreferences.getInstance();
     await Future.wait([
       preferences.setString(_speciesKey, species.name),
+      preferences.setString(_nameKey, profile.name),
+    ]);
+    if (ref.read(authProvider) is Authenticated) {
+      try {
+        final remote = await ref
+            .read(buddyApiProvider)
+            .updateMe(species: species, name: profile.name);
+        await acceptRemoteChoice(remote.species, remote.name);
+      } catch (_) {
+        // Keep the choice locally available while offline. The next buddy
+        // sync will reconcile it with the server profile.
+      }
+    }
+  }
+
+  /// Applies the server's canonical species and name without sending another
+  /// write back to the same endpoint.
+  Future<void> acceptRemoteChoice(MascotSpecies species, String name) async {
+    _changedInSession = true;
+    final profile = MascotProfile(
+      species: species,
+      name: name.trim().isEmpty
+          ? MascotProfile.defaultName(species)
+          : name.trim().characters.take(MascotProfile.maxNameLength).toString(),
+    );
+    state = MascotState(isReady: true, profile: profile);
+    final preferences = await SharedPreferences.getInstance();
+    await Future.wait([
+      preferences.setString(_speciesKey, profile.species.name),
       preferences.setString(_nameKey, profile.name),
     ]);
   }

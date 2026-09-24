@@ -10,6 +10,10 @@ import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_experience_screen.dart';
 import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.dart';
 import 'package:riksa_app/features/learning/providers/saved_lessons_provider.dart';
+import 'package:riksa_app/features/mascot/domain/mascot.dart';
+import 'package:riksa_app/features/mascot/presentation/widgets/mascot_view.dart';
+import 'package:riksa_app/features/auth/data/auth_models.dart';
+import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -39,6 +43,20 @@ const _detail = LessonDetail(
   reflectionPrompt: '',
   exercises: [],
 );
+
+class _AuthenticatedNotifier extends AuthNotifier {
+  @override
+  AuthState build() => const Authenticated(
+    AuthUser(
+      id: 'student-1',
+      username: 'student',
+      displayName: 'Student',
+      emailVerified: false,
+      phoneVerified: false,
+      role: 'USER',
+    ),
+  );
+}
 
 class _FakeLearningApi implements LearningApi {
   @override
@@ -117,6 +135,13 @@ Iterable<TextSpan> _textSpans(InlineSpan span) sync* {
 bool _hasKhmer(String? text) =>
     text != null && RegExp(r'[\u1780-\u17FF\u19E0-\u19FF]').hasMatch(text);
 
+/// The buddy in the lesson scene animates for as long as it is on screen, so
+/// pumpAndSettle would never settle. Reduced motion holds it on one frame.
+Widget _stillBuddy(BuildContext context, Widget? child) => MediaQuery(
+  data: MediaQuery.of(context).copyWith(disableAnimations: true),
+  child: child!,
+);
+
 Widget _lessonApp({TextScaler textScaler = TextScaler.noScaling}) =>
     ProviderScope(
       overrides: [learningApiProvider.overrideWithValue(_FakeLearningApi())],
@@ -130,7 +155,9 @@ Widget _lessonApp({TextScaler textScaler = TextScaler.noScaling}) =>
         ],
         supportedLocales: const [Locale('en'), Locale('km')],
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: textScaler, disableAnimations: true),
           child: child!,
         ),
         home: const LessonExperienceScreen(lessonId: 'biology-1'),
@@ -159,6 +186,7 @@ void main() {
       ProviderScope(
         overrides: [learningApiProvider.overrideWithValue(_FakeLearningApi())],
         child: MaterialApp(
+          builder: _stillBuddy,
           theme: AppTheme.light,
           localizationsDelegates: const [
             AppLocalizations.delegate,
@@ -259,6 +287,27 @@ void main() {
     expect(title, findsNothing);
   });
 
+  testWidgets('the buddy stands in its scene at the head of the lesson', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(_lessonApp());
+    await tester.pumpAndSettle();
+
+    final scene = find.byKey(const ValueKey('lesson-buddy-scene'));
+    expect(scene, findsOneWidget);
+    final buddy = tester.widget<MascotView>(
+      find.descendant(of: scene, matching: find.byType(MascotView)),
+    );
+    // Calm while reading: no fidgeting or dozing off beside the text.
+    expect(buddy.mood, MascotMood.idle);
+    expect(buddy.alive, isFalse);
+  });
+
   testWidgets('the header holds at 200% text scale', (tester) async {
     // The narrowest supported width at the largest supported type: the case
     // where a header that guessed its own extent overflows.
@@ -287,6 +336,7 @@ void main() {
         ProviderScope(
           overrides: [learningApiProvider.overrideWithValue(fakeApi)],
           child: MaterialApp(
+            builder: _stillBuddy,
             theme: AppTheme.light,
             localizationsDelegates: const [
               AppLocalizations.delegate,
@@ -357,6 +407,7 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
+          builder: _stillBuddy,
           theme: AppTheme.light,
           localizationsDelegates: const [
             AppLocalizations.delegate,
@@ -404,7 +455,10 @@ void main() {
     (tester) async {
       SharedPreferences.setMockInitialValues({});
       final container = ProviderContainer(
-        overrides: [learningApiProvider.overrideWithValue(_FakeLearningApi())],
+        overrides: [
+          learningApiProvider.overrideWithValue(_FakeLearningApi()),
+          authProvider.overrideWith(_AuthenticatedNotifier.new),
+        ],
       );
       addTearDown(container.dispose);
 
@@ -412,6 +466,7 @@ void main() {
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
+            builder: _stillBuddy,
             theme: AppTheme.light,
             localizationsDelegates: const [
               AppLocalizations.delegate,

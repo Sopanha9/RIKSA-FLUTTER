@@ -10,9 +10,18 @@ import 'package:go_router/go_router.dart';
 import '../../../core/sound/learning_sound.dart';
 import '../../../core/sound/sound_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/riksa_brand.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../auth/presentation/require_account.dart';
+import '../../mascot/domain/buddy_behavior.dart';
+import '../../mascot/domain/buddy_care.dart';
+import '../../mascot/domain/mascot.dart';
+import '../../mascot/presentation/widgets/buddy_companion.dart';
+import '../../mascot/presentation/widgets/mascot_scene.dart';
+import '../../mascot/presentation/widgets/mascot_view.dart';
+import '../../mascot/providers/buddy_preferences_provider.dart';
+import '../../mascot/providers/buddy_care_provider.dart';
+import '../../mascot/providers/mascot_provider.dart';
 import '../../userProfile/providers/profile_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
@@ -90,6 +99,7 @@ class _LessonExperienceScreenState
   bool _completing = false;
   final _working = <String, TextEditingController>{};
   final _comparedAnswers = <String>{};
+  final _expandedWorking = <String>{};
   final _scroll = ScrollController();
   final _feedbackAnchor = GlobalKey();
   String? _feedbackExerciseId;
@@ -282,10 +292,8 @@ class _LessonExperienceScreenState
             children: [
               _JourneyStages(phase: flow.phase),
               const SizedBox(height: RiksaSpacing.lg),
-              if (flow.phase == _LessonPhase.reading) ...[
-                _LessonArtCard(subject: subject),
-                const SizedBox(height: RiksaSpacing.lg),
-              ],
+              _LessonBuddyScene(subject: subject, phase: flow.phase),
+              const SizedBox(height: RiksaSpacing.lg),
               RiksaContentReveal(
                 identity: (
                   flow.section.index,
@@ -421,6 +429,10 @@ class _LessonExperienceScreenState
           ),
           working: _working.putIfAbsent(exercise.id, TextEditingController.new),
           showChoices: _comparedAnswers.contains(exercise.id),
+          workingExpanded: _expandedWorking.contains(exercise.id),
+          onExpandWorking: () =>
+              setState(() => _expandedWorking.add(exercise.id)),
+          onCompare: () => _changeStep(() => _comparedAnswers.add(exercise.id)),
           onEditWorking: () =>
               _changeStep(() => _comparedAnswers.remove(exercise.id)),
           feedbackKey: _feedbackAnchor,
@@ -486,33 +498,6 @@ class _LessonExperienceScreenState
           style: theme.textTheme.bodyLarge?.copyWith(color: palette.inkMuted),
         ),
         const SizedBox(height: RiksaSpacing.lg),
-        TextField(
-          key: const ValueKey('lesson-reflection'),
-          controller: _reflection,
-          style: RiksaTypography.bodyStyleFor(
-            l10n.lessonReflectionHint,
-            theme.textTheme.bodyLarge,
-          ),
-          minLines: 4,
-          maxLines: 8,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            hintText: l10n.lessonReflectionHint,
-            hintStyle: TextStyle(color: palette.inkMuted, fontSize: 13),
-            alignLabelWithHint: true,
-            filled: true,
-            fillColor: palette.surfaceRaised,
-            border: OutlineInputBorder(
-              borderRadius: AppRadii.largeBorder,
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: AppRadii.largeBorder,
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-        const SizedBox(height: RiksaSpacing.lg),
         Text(l10n.lessonConfidencePrompt, style: theme.textTheme.titleMedium),
         const SizedBox(height: RiksaSpacing.sm),
         Wrap(
@@ -533,13 +518,40 @@ class _LessonExperienceScreenState
             ),
           ],
         ),
-        if (_reflection.text.trim().isEmpty) ...[
-          const SizedBox(height: 16),
+        if (_needsReview == null) ...[
+          const SizedBox(height: 10),
           Text(
-            l10n.lessonReflectionRequired,
+            l10n.lessonConfidenceRequired,
             style: theme.textTheme.bodySmall?.copyWith(color: palette.inkMuted),
           ),
         ],
+        const SizedBox(height: RiksaSpacing.lg),
+        TextField(
+          key: const ValueKey('lesson-reflection'),
+          controller: _reflection,
+          style: RiksaTypography.bodyStyleFor(
+            l10n.lessonReflectionHint,
+            theme.textTheme.bodyLarge,
+          ),
+          minLines: 4,
+          maxLines: 8,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            hintText: l10n.lessonReflectionOptionalHint,
+            hintStyle: TextStyle(color: palette.inkMuted, fontSize: 13),
+            alignLabelWithHint: true,
+            filled: true,
+            fillColor: palette.surfaceRaised,
+            border: OutlineInputBorder(
+              borderRadius: AppRadii.largeBorder,
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: AppRadii.largeBorder,
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -586,15 +598,19 @@ class _LessonExperienceScreenState
         );
       }(),
       _LessonPhase.practising => LearningActionBar(
-        primaryKey: ValueKey(comparing ? 'compare-answers' : 'check-answer'),
+        primaryKey: ValueKey(
+          comparing
+              ? (working.isEmpty ? 'show-choices' : 'compare-answers')
+              : 'check-answer',
+        ),
         primaryLabel: comparing
-            ? l10n.lessonCompareAnswers
+            ? (working.isEmpty
+                  ? l10n.lessonShowChoices
+                  : l10n.lessonCompareAnswers)
             : l10n.lessonCheckAnswer,
         busy: _submitting.contains(exercise!.id),
         onPrimary: comparing
-            ? working.isEmpty
-                  ? null
-                  : () => _changeStep(() => _comparedAnswers.add(exercise.id))
+            ? () => _changeStep(() => _comparedAnswers.add(exercise.id))
             : answer.isEmpty
             ? null
             : () => _submitAnswer(exercise, flow.section),
@@ -627,7 +643,7 @@ class _LessonExperienceScreenState
                     ? '/learn'
                     : '/learn/roadmap/${Uri.encodeComponent(detail.categoryId!)}',
               )
-            : _reflection.text.trim().isEmpty
+            : _needsReview == null
             ? null
             : () => _complete(detail),
       ),
@@ -696,7 +712,7 @@ class _LessonExperienceScreenState
             const SizedBox(width: RiksaSpacing.sm),
             Expanded(
               child: Text(
-                  l10n.lessonExitTitle,
+                l10n.lessonExitTitle,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -743,6 +759,7 @@ class _LessonExperienceScreenState
     LessonExercise exercise,
     _LessonSection section,
   ) async {
+    if (!requireAccount(context, ref, reason: 'save_progress')) return;
     final answer = _answers[exercise.id]?.text.trim() ?? '';
     if (answer.isEmpty) return;
     setState(() => _submitting.add(exercise.id));
@@ -780,7 +797,8 @@ class _LessonExperienceScreenState
   }
 
   Future<void> _complete(LessonDetail detail) async {
-    if (_completing || _reflection.text.trim().isEmpty) return;
+    if (!requireAccount(context, ref, reason: 'save_progress')) return;
+    if (_completing || _needsReview == null) return;
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() => _completing = true);
     try {
@@ -792,7 +810,7 @@ class _LessonExperienceScreenState
           : l10n.lessonConfident;
       final reflectionPayload = [
         if (confidence != null) '[$confidence]',
-        userNotes,
+        if (userNotes.isNotEmpty) userNotes,
         for (final exercise in detail.exercises)
           if (_working[exercise.id]?.text.trim().isNotEmpty == true)
             '${exercise.question}\n${_working[exercise.id]!.text.trim()}',
@@ -803,6 +821,9 @@ class _LessonExperienceScreenState
             lessonId: widget.lessonId,
             reflectionText: reflectionPayload,
           );
+      await ref
+          .read(buddyCareProvider.notifier)
+          .recordLocalGain(BuddyCareSource.lesson, sourceId: detail.id);
       // Sounded before the awaits below: the fanfare should land with the tap,
       // not after the catalog and roadmaps have finished refetching.
       HapticFeedback.mediumImpact();
@@ -1087,6 +1108,13 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
                         icon: const Icon(Icons.more_horiz_rounded),
                         onSelected: (value) {
                           if (value == 'save') {
+                            if (!requireAccount(
+                              context,
+                              ref,
+                              reason: 'save_lesson',
+                            )) {
+                              return;
+                            }
                             ref
                                 .read(savedLessonsProvider.notifier)
                                 .toggle(lessonId);
@@ -1188,60 +1216,71 @@ class _LessonIdentity extends StatelessWidget {
   );
 }
 
-/// Quiet subject artwork at the head of a reading step. The learner's buddy
-/// stays out of reading so the content remains the only focus.
-class _LessonArtCard extends StatelessWidget {
-  const _LessonArtCard({required this.subject});
+/// The learner's buddy standing in its own scene at the head of every step,
+/// its mood following where they are in the lesson.
+///
+/// The scene is a band above the content, never behind it: the lesson text
+/// stays on the plain canvas so it reads at 9pm on a cheap phone. The buddy
+/// does not fidget or doze here ([MascotView.alive] is off), so it keeps the
+/// learner company without pulling their eye off the work.
+class _LessonBuddyScene extends ConsumerWidget {
+  const _LessonBuddyScene({required this.subject, required this.phase});
   final String subject;
+  final _LessonPhase phase;
+
+  /// While answering, the scene shrinks to a strip so the exercise and its
+  /// feedback stay above the fold on a 360dp phone.
+  bool get _compact =>
+      phase == _LessonPhase.practising || phase == _LessonPhase.answerChecked;
+
+  MascotMood get _mood => switch (phase) {
+    _LessonPhase.reading => MascotMood.idle,
+    _LessonPhase.practising => MascotMood.thinking,
+    _LessonPhase.answerChecked => MascotMood.happy,
+    _LessonPhase.sectionPassed => MascotMood.celebrate,
+    _LessonPhase.reflecting => MascotMood.happy,
+  };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final species =
+        ref.watch(mascotProvider).profile?.species ?? MascotSpecies.crocodile;
+    final reactions = ref.watch(buddyReactionsEnabledProvider);
     final stem = stemSubjectFor(subject);
-    final tone = subjectTone(context, stem);
     return ExcludeSemantics(
       child: Container(
-        key: const ValueKey('lesson-art-card'),
-        height: 164,
-        decoration: BoxDecoration(
-          color: tone.surface,
+        key: const ValueKey('lesson-buddy-scene'),
+        height: _compact ? 92 : 168,
+        decoration: const BoxDecoration(
           borderRadius: AppRadii.extraLargeBorder,
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            Positioned(
-              left: -30,
-              bottom: -40,
-              child: Container(
-                width: 170,
-                height: 170,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: tone.accent.withValues(alpha: .1),
-                ),
+            // The art directly rather than MascotSceneBackdrop: that one also
+            // sets the status bar style, which would flip as this band scrolls
+            // under the pinned header.
+            Positioned.fill(
+              child: Image.asset(
+                MascotScenes.asset(species, Theme.of(context).brightness),
+                fit: BoxFit.cover,
+                alignment: Alignment.bottomCenter,
+                gaplessPlayback: true,
+                filterQuality: FilterQuality.medium,
               ),
             ),
             Positioned(
-              left: 36,
-              top: 26,
-              child: StemSubjectTile(subject: stem, size: 108),
+              left: RiksaSpacing.md,
+              top: RiksaSpacing.md,
+              child: StemSubjectTile(subject: stem, size: _compact ? 40 : 52),
             ),
-            Positioned(
-              right: 28,
-              top: 18,
-              child: RiksaDoodle(
-                RiksaDoodleKind.sparkle,
-                size: 20,
-                color: tone.accent,
-              ),
-            ),
-            Positioned(
-              left: 150,
-              top: 22,
-              child: RiksaDoodle(
-                RiksaDoodleKind.squiggle,
-                size: 26,
-                color: context.riksa.reward,
+            Align(
+              alignment: const Alignment(0, 1.08),
+              child: MascotView(
+                species: species,
+                mood: reactions ? _mood : MascotMood.idle,
+                size: _compact ? 76 : 128,
+                alive: false,
               ),
             ),
           ],
@@ -1371,6 +1410,9 @@ class _ExerciseCard extends StatelessWidget {
     required this.onAnswerChanged,
     required this.working,
     required this.showChoices,
+    required this.workingExpanded,
+    required this.onExpandWorking,
+    required this.onCompare,
     required this.onEditWorking,
     required this.feedbackKey,
   });
@@ -1383,6 +1425,9 @@ class _ExerciseCard extends StatelessWidget {
   final VoidCallback onAnswerChanged;
   final TextEditingController working;
   final bool showChoices;
+  final bool workingExpanded;
+  final VoidCallback onExpandWorking;
+  final VoidCallback onCompare;
   final VoidCallback onEditWorking;
   final Key feedbackKey;
 
@@ -1460,20 +1505,53 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
-            TextField(
-              key: ValueKey('lesson-working-${exercise.id}'),
-              controller: working,
-              style: RiksaTypography.bodyStyleFor(
-                l10n.lessonWorkHint,
-                Theme.of(context).textTheme.bodyLarge,
+            if (workingExpanded)
+              TextField(
+                key: ValueKey('lesson-working-${exercise.id}'),
+                controller: working,
+                style: RiksaTypography.bodyStyleFor(
+                  l10n.lessonWorkHint,
+                  Theme.of(context).textTheme.bodyLarge,
+                ),
+                minLines: 3,
+                maxLines: 6,
+                onChanged: (_) => onAnswerChanged(),
+                decoration: InputDecoration(
+                  hintText: l10n.lessonWorkHint,
+                  filled: true,
+                  fillColor: palette.surfaceRaised,
+                ),
+              )
+            else
+              InkWell(
+                key: ValueKey('lesson-add-working-${exercise.id}'),
+                onTap: onExpandWorking,
+                borderRadius: AppRadii.mediumBorder,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: palette.surfaceRaised,
+                    borderRadius: AppRadii.mediumBorder,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(l10n.lessonAddWorkingOptional)),
+                      Icon(Icons.edit_outlined, color: palette.inkMuted),
+                    ],
+                  ),
+                ),
               ),
-              minLines: 3,
-              maxLines: 6,
-              onChanged: (_) => onAnswerChanged(),
-              decoration: InputDecoration(
-                hintText: l10n.lessonWorkHint,
-                filled: true,
-                fillColor: palette.surfaceRaised,
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: OutlinedButton(
+                key: ValueKey('lesson-worked-on-paper-${exercise.id}'),
+                onPressed: onCompare,
+                child: Text(l10n.lessonWorkedOnPaper),
               ),
             ),
           ] else if (exercise.type == LessonExerciseType.text)
@@ -1566,12 +1644,16 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      correct
-                          ? Icons.check_circle_rounded
-                          : Icons.lightbulb_outline_rounded,
-                      color: correct ? palette.jade : palette.saffron,
-                      size: 22,
+                    BuddyFaceReaction(
+                      key: ValueKey(
+                        correct ? 'lesson-buddy-correct' : 'lesson-buddy-retry',
+                      ),
+                      face: BuddyBehavior.resolve(
+                        correct
+                            ? BuddyEvent.answerCorrect
+                            : BuddyEvent.answerIncorrect,
+                      ).face,
+                      size: 36,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -1861,9 +1943,6 @@ String _friendlyLessonError(Object error) {
   }
   if (text.contains('already completed')) {
     return 'This lesson is already complete.';
-  }
-  if (text.contains('too short')) {
-    return 'Write at least 10 words in your reflection.';
   }
   if (text.contains('Cannot complete lesson')) {
     return 'Answer every exercise correctly before completing the lesson.';

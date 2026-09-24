@@ -18,6 +18,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginSubtitle => 'Sign in to continue your learning journey.';
 
   @override
+  String get authReasonSaveProgress =>
+      'Sign in to save your lesson progress and streak.';
+
+  @override
+  String get authReasonSaveLesson =>
+      'Sign in to save this lesson to your library.';
+
+  @override
+  String get authReasonPost => 'Sign in to share a post with your community.';
+
+  @override
   String get loginEyebrow => 'Your learning space';
 
   @override
@@ -1463,6 +1474,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonCompareAnswers => 'Compare answers';
 
   @override
+  String get lessonShowChoices => 'Show choices';
+
+  @override
+  String get lessonWorkedOnPaper => 'I worked it on paper';
+
+  @override
+  String get lessonAddWorkingOptional => 'Add your working (optional)';
+
+  @override
   String get lessonWorkFirst => 'Work it out first';
 
   @override
@@ -1505,6 +1525,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonReflectionHint => 'I understood… I still want to work on…';
 
   @override
+  String get lessonReflectionOptionalHint => 'Optional: add a note for later';
+
+  @override
   String get lessonConfidencePrompt => 'How do you feel about this lesson?';
 
   @override
@@ -1517,8 +1540,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonSaveReflection => 'Save and finish';
 
   @override
-  String get lessonReflectionRequired =>
-      'Write a short reflection to finish this lesson.';
+  String get lessonConfidenceRequired => 'Tap how it went to finish';
 
   @override
   String get lessonSavedReflection => 'Your reflection';
@@ -1548,6 +1570,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lessonStartAction => 'Start lesson';
+
+  @override
+  String get startHere => 'Start here';
 
   @override
   String get lessonOptions => 'Lesson options';
@@ -2560,6 +2585,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get buddyLessonCompleted => 'You earned this!';
+
+  @override
+  String buddyCareTitle(String name) {
+    return 'Today with $name';
+  }
+
+  @override
+  String get buddyCareLesson => 'Finish a lesson';
+
+  @override
+  String get buddyCareRead => 'Read a story';
+
+  @override
+  String get buddyCareShare => 'Share with the community';
+
+  @override
+  String get buddyChooseAction => 'Choose a buddy';
+
+  @override
+  String buddyCareProgress(int count) {
+    return '$count of 1 complete';
+  }
+
+  @override
+  String buddyEnergyLively(String name) {
+    return '$name is full of energy.';
+  }
+
+  @override
+  String buddyEnergySteady(String name) {
+    return 'One lesson keeps $name going.';
+  }
+
+  @override
+  String buddyEnergySleepy(String name) {
+    return '$name is getting sleepy.';
+  }
+
+  @override
+  String buddyEnergyNapping(String name) {
+    return '$name is napping. A lesson wakes them up.';
+  }
+
+  @override
+  String buddyLessonEnergyLine(String name) {
+    return '+35 energy · $name is full of energy';
+  }
+
+  @override
+  String buddyReadEnjoyed(String name) {
+    return '$name enjoyed that story';
+  }
 
   @override
   String get buddyRankImproved => 'Your progress moved you up.';

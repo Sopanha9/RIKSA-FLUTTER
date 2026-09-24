@@ -265,9 +265,16 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                               titleWeight: FontWeight.w800,
                               subtitle: _t(
                                 lang,
-                                'Your study buddy',
-                                'មិត្តរៀនរបស់អ្នក',
+                                'Your study buddy · Tap to change',
+                                'មិត្តរៀនរបស់អ្នក · ចុចដើម្បីប្ដូរ',
                               ),
+                              // First run no longer passes the picker, so
+                              // this is where a buddy is chosen or changed.
+                              trailing: Icon(
+                                Icons.chevron_right_rounded,
+                                color: palette.inkMuted,
+                              ),
+                              onTap: () => context.push('/mascot-select'),
                             ),
                             const _Divider(),
                             _SwitchRow(

@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/unsaved_changes_guard.dart';
+import '../../auth/presentation/require_account.dart';
+import '../../mascot/providers/buddy_care_provider.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../data/social_api.dart';
 import '../data/social_models.dart';
@@ -101,6 +103,7 @@ class _ComposeCommunityPostScreenState
   /// Picks an image and uploads it straight away, so a failure surfaces while
   /// the author is still writing rather than when they hit publish.
   Future<void> _pickImage() async {
+    if (!requireAccount(context, ref, reason: 'post')) return;
     final l10n = AppLocalizations.of(context)!;
     final source = await _askImageSource();
     if (source == null || !mounted) return;
@@ -175,6 +178,7 @@ class _ComposeCommunityPostScreenState
   }
 
   Future<void> _submit() async {
+    if (!requireAccount(context, ref, reason: 'post')) return;
     if (!_formKey.currentState!.validate() || _categoryId == null) return;
     setState(() => _submitting = true);
     final notifier = ref.read(socialFeedProvider.notifier);
@@ -203,6 +207,9 @@ class _ComposeCommunityPostScreenState
     if (!mounted) return;
     setState(() => _submitting = false);
     if (failure == null) {
+      if (editing == null) {
+        unawaited(ref.read(buddyCareProvider.notifier).refresh());
+      }
       Navigator.of(context).pop(true);
       return;
     }

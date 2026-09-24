@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_router.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_brand.dart';
@@ -12,8 +13,7 @@ import '../providers/auth_provider.dart';
 ///
 /// A returning learner sees the wordmark while the session restores and is
 /// sent on automatically. On first run the screen becomes the welcome, and
-/// Get Started leads to the mascot picker, then language selection, which
-/// then starts the introduction.
+/// Get Started leads to language selection, then the buddy picker, then setup.
 class SplashAnimationScreen extends ConsumerStatefulWidget {
   const SplashAnimationScreen({super.key});
 
@@ -39,7 +39,7 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
       duration: const Duration(milliseconds: 1100),
       vsync: this,
     )..forward();
-    Future<void>.delayed(const Duration(milliseconds: 1500), () {
+    Future<void>.delayed(const Duration(milliseconds: 600), () {
       if (!mounted) return;
       setState(() => _minimumTimeElapsed = true);
       _scheduleDestination();
@@ -66,24 +66,14 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
       if (!mounted) return;
       if (!locale.hasViewedOnboarding) {
         context.go('/onboarding');
-      } else if (!locale.hasCompletedOnboarding &&
-          locale.pendingProvinceId == null) {
-        context.go('/province-select');
-      } else if (auth is Authenticated) {
-        context.go('/home');
       } else {
-        context.go('/auth/login');
+        context.go(kLandingLocation);
       }
     });
   }
 
-  /// New learners hear the intro first; anyone who already saw it goes
-  /// straight on to picking a buddy.
-  void _getStarted() => context.go(
-    ref.read(localeProvider).hasViewedOnboarding
-        ? '/mascot-select'
-        : '/onboarding',
-  );
+  /// Language comes first so the buddy picker already speaks it.
+  void _getStarted() => context.go('/language-select');
 
   @override
   void dispose() {

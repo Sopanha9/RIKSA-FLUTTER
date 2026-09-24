@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/telegram_logo.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -413,7 +414,9 @@ class _TelegramAuthScreenState extends ConsumerState<TelegramAuthScreen>
     final bot = _botInfo?.handle ?? strings.telegramTheBot;
 
     ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next is Authenticated) context.go('/home');
+      if (next is Authenticated) {
+        context.go(authenticatedLandingFor(GoRouter.of(context).state.uri));
+      }
     });
 
     final (eyebrow, title, subtitle) = switch (_phase) {

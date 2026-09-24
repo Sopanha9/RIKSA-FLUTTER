@@ -37,7 +37,10 @@ void main() {
     test('never assigns punitive expressions to study events', () {
       for (final event in BuddyEvent.values) {
         final face = BuddyBehavior.resolve(event).face;
-        expect(face, isNot(anyOf(MascotFace.sad, MascotFace.crying, MascotFace.annoyed)));
+        expect(
+          face,
+          isNot(anyOf(MascotFace.sad, MascotFace.crying, MascotFace.annoyed)),
+        );
       }
     });
   });

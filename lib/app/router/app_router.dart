@@ -41,6 +41,30 @@ import '../../features/userProfile/presentation/user_profile_screen.dart';
 import '../../features/userProfile/presentation/progress_history_screen.dart';
 import 'app_shell.dart';
 
+/// Where a learner lands after first run or sign-in. The study loop is the
+/// product; the community is one tab away.
+const kLandingLocation = '/learn';
+
+bool _guestCanView(String location) =>
+    location == '/learn' ||
+    location.startsWith('/learn/roadmap/') ||
+    (location.startsWith('/learn/') &&
+        location != '/learn/saved' &&
+        !location.startsWith('/learn/saved/') &&
+        location != '/learn/completion' &&
+        !location.startsWith('/learn/completion/'));
+
+String? _safeReturnLocation(String? from) {
+  if (from == null || !from.startsWith('/') || from.startsWith('//')) {
+    return null;
+  }
+  return from;
+}
+
+/// Returns a validated in-app destination after authentication.
+String authenticatedLandingFor(Uri uri) =>
+    _safeReturnLocation(uri.queryParameters['from']) ?? kLandingLocation;
+
 final _authRouterRefreshProvider = Provider<ValueNotifier<AuthState>>((ref) {
   final refresh = ValueNotifier<AuthState>(ref.read(authProvider));
   ref.listen<AuthState>(authProvider, (previous, next) {
@@ -78,12 +102,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return '/splash';
       }
 
-      if (!isLoggedIn && !isAuthRoute && !isPublicRoute) return '/auth/login';
-      if (isLoggedIn && (isAuthRoute || isLanguage)) return '/home';
+      if (!isLoggedIn &&
+          !isPublicRoute &&
+          !_guestCanView(state.matchedLocation)) {
+        return '/auth/login?from=${Uri.encodeComponent(state.uri.toString())}';
+      }
+      if (isLoggedIn && (isAuthRoute || isLanguage)) {
+        return authenticatedLandingFor(state.uri);
+      }
       return null;
     },
     routes: [
-      GoRoute(path: '/', redirect: (context, state) => '/home'),
+      GoRoute(path: '/', redirect: (context, state) => kLandingLocation),
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashAnimationScreen(),
@@ -145,7 +175,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: '/dashboard',
-                redirect: (context, state) => '/home',
+                redirect: (context, state) => kLandingLocation,
               ),
               GoRoute(
                 path: '/community',

@@ -12,7 +12,12 @@ import 'package:riksa_app/features/learning/data/learning_api.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_experience_screen.dart';
 import 'package:riksa_app/features/learning/presentation/learning_result_screens.dart';
+import 'package:riksa_app/features/auth/data/auth_models.dart';
+import 'package:riksa_app/features/auth/providers/auth_provider.dart';
+import 'package:riksa_app/features/mascot/domain/buddy_care.dart';
+import 'package:riksa_app/features/mascot/domain/mascot.dart';
 import 'package:riksa_app/features/mascot/presentation/widgets/mascot_view.dart';
+import 'package:riksa_app/features/mascot/providers/buddy_care_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
@@ -125,6 +130,34 @@ class _PreviewLearningApi implements LearningApi {
   );
 }
 
+class _PreviewAuthNotifier extends AuthNotifier {
+  @override
+  AuthState build() => const Authenticated(
+    AuthUser(
+      id: 'preview-learner',
+      username: 'preview',
+      displayName: 'Preview',
+      emailVerified: true,
+      phoneVerified: false,
+      role: 'USER',
+    ),
+  );
+}
+
+class _PreviewBuddyCareNotifier extends BuddyCareNotifier {
+  @override
+  BuddyCareState build() => BuddyCareState(
+    care: BuddyCare(
+      energy: 60,
+      bond: 15,
+      updatedAt: DateTime.now(),
+      careDay: phnomPenhCareDay(DateTime.now()),
+    ),
+    species: MascotSpecies.crocodile,
+    name: 'Croco',
+  );
+}
+
 Future<void> _loadFonts() async {
   final redditSans = FontLoader(RiksaTypography.latinFamily)
     ..addFont(rootBundle.load('assets/fonts/Poppins-Regular.ttf'));
@@ -160,7 +193,11 @@ Widget _previewApp({
   Locale locale = const Locale('en'),
   TextScaler scaler = TextScaler.noScaling,
 }) => ProviderScope(
-  overrides: [learningApiProvider.overrideWithValue(_PreviewLearningApi())],
+  overrides: [
+    learningApiProvider.overrideWithValue(_PreviewLearningApi()),
+    authProvider.overrideWith(_PreviewAuthNotifier.new),
+    buddyCareProvider.overrideWith(_PreviewBuddyCareNotifier.new),
+  ],
   child: MaterialApp(
     debugShowCheckedModeBanner: false,
     theme: theme ?? AppTheme.light,
@@ -182,6 +219,22 @@ Widget _previewApp({
   ),
 );
 
+/// The buddy scene and sprites are asset images that decode off the test
+/// clock; without this a golden catches the scene before it has painted.
+Future<void> _precacheImages(WidgetTester tester) async {
+  final images = find.descendant(
+    of: find.byType(LessonExperienceScreen),
+    matching: find.byType(Image, skipOffstage: false),
+  );
+  await tester.runAsync(
+    () => Future.wait([
+      for (final element in images.evaluate())
+        precacheImage((element.widget as Image).image, element),
+    ]),
+  );
+  await tester.pump();
+}
+
 void main() {
   setUpAll(_loadFonts);
   setUp(
@@ -200,6 +253,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
+    await _precacheImages(tester);
     await expectLater(
       find.byType(LessonExperienceScreen),
       matchesGoldenFile('goldens/lesson_reading_en_light.png'),
@@ -207,21 +261,18 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('start-section-1')));
     await tester.pumpAndSettle();
+    await _precacheImages(tester);
     await expectLater(
       find.byType(LessonExperienceScreen),
       matchesGoldenFile('goldens/lesson_working_en_light.png'),
     );
-    await tester.enterText(
-      find.byKey(const ValueKey('lesson-working-ex-1')),
-      'F = m × a = 2 × 3 = 6 N',
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('compare-answers')));
+    await tester.tap(find.byKey(const ValueKey('show-choices')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const ValueKey('lesson-option-2')));
     await tester.tap(find.byKey(const ValueKey('lesson-option-2')));
     await tester.pumpAndSettle();
 
+    await _precacheImages(tester);
     await expectLater(
       find.byType(LessonExperienceScreen),
       matchesGoldenFile('goldens/lesson_practice_en_light.png'),
@@ -229,6 +280,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('check-answer')));
     await tester.pumpAndSettle();
     expect(find.text('Correct.').hitTestable(), findsOneWidget);
+    await _precacheImages(tester);
     await expectLater(
       find.byType(LessonExperienceScreen),
       matchesGoldenFile('goldens/lesson_feedback_en_light.png'),
@@ -239,12 +291,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('start-section-2')));
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const ValueKey('lesson-working-ex-2')),
-      'a = F / m, so twice the mass gives half the acceleration.',
+    final paperButton = find.byKey(
+      const ValueKey('lesson-worked-on-paper-ex-2'),
     );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('compare-answers')));
+    await tester.ensureVisible(paperButton);
+    await tester.tap(paperButton);
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const ValueKey('lesson-option-0')));
     await tester.tap(find.byKey(const ValueKey('lesson-option-0')));
@@ -260,6 +311,7 @@ void main() {
     );
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
+    await _precacheImages(tester);
     await expectLater(
       find.byType(LessonExperienceScreen),
       matchesGoldenFile('goldens/lesson_reflection_en_light.png'),
@@ -276,6 +328,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
+    await _precacheImages(tester);
     await expectLater(
       find.byType(LessonExperienceScreen),
       matchesGoldenFile('goldens/lesson_reading_en_dark.png'),

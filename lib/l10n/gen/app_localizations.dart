@@ -116,6 +116,24 @@ abstract class AppLocalizations {
   /// **'Sign in to continue your learning journey.'**
   String get loginSubtitle;
 
+  /// No description provided for @authReasonSaveProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to save your lesson progress and streak.'**
+  String get authReasonSaveProgress;
+
+  /// No description provided for @authReasonSaveLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to save this lesson to your library.'**
+  String get authReasonSaveLesson;
+
+  /// No description provided for @authReasonPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to share a post with your community.'**
+  String get authReasonPost;
+
   /// No description provided for @loginEyebrow.
   ///
   /// In en, this message translates to:
@@ -2612,6 +2630,24 @@ abstract class AppLocalizations {
   /// **'Compare answers'**
   String get lessonCompareAnswers;
 
+  /// No description provided for @lessonShowChoices.
+  ///
+  /// In en, this message translates to:
+  /// **'Show choices'**
+  String get lessonShowChoices;
+
+  /// No description provided for @lessonWorkedOnPaper.
+  ///
+  /// In en, this message translates to:
+  /// **'I worked it on paper'**
+  String get lessonWorkedOnPaper;
+
+  /// No description provided for @lessonAddWorkingOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your working (optional)'**
+  String get lessonAddWorkingOptional;
+
   /// No description provided for @lessonWorkFirst.
   ///
   /// In en, this message translates to:
@@ -2684,6 +2720,12 @@ abstract class AppLocalizations {
   /// **'I understood… I still want to work on…'**
   String get lessonReflectionHint;
 
+  /// No description provided for @lessonReflectionOptionalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional: add a note for later'**
+  String get lessonReflectionOptionalHint;
+
   /// No description provided for @lessonConfidencePrompt.
   ///
   /// In en, this message translates to:
@@ -2708,11 +2750,11 @@ abstract class AppLocalizations {
   /// **'Save and finish'**
   String get lessonSaveReflection;
 
-  /// No description provided for @lessonReflectionRequired.
+  /// No description provided for @lessonConfidenceRequired.
   ///
   /// In en, this message translates to:
-  /// **'Write a short reflection to finish this lesson.'**
-  String get lessonReflectionRequired;
+  /// **'Tap how it went to finish'**
+  String get lessonConfidenceRequired;
 
   /// No description provided for @lessonSavedReflection.
   ///
@@ -2767,6 +2809,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start lesson'**
   String get lessonStartAction;
+
+  /// No description provided for @startHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Start here'**
+  String get startHere;
 
   /// No description provided for @lessonOptions.
   ///
@@ -4531,6 +4579,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You earned this!'**
   String get buddyLessonCompleted;
+
+  /// No description provided for @buddyCareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today with {name}'**
+  String buddyCareTitle(String name);
+
+  /// No description provided for @buddyCareLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish a lesson'**
+  String get buddyCareLesson;
+
+  /// No description provided for @buddyCareRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read a story'**
+  String get buddyCareRead;
+
+  /// No description provided for @buddyCareShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with the community'**
+  String get buddyCareShare;
+
+  /// No description provided for @buddyChooseAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a buddy'**
+  String get buddyChooseAction;
+
+  /// No description provided for @buddyCareProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of 1 complete'**
+  String buddyCareProgress(int count);
+
+  /// No description provided for @buddyEnergyLively.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is full of energy.'**
+  String buddyEnergyLively(String name);
+
+  /// No description provided for @buddyEnergySteady.
+  ///
+  /// In en, this message translates to:
+  /// **'One lesson keeps {name} going.'**
+  String buddyEnergySteady(String name);
+
+  /// No description provided for @buddyEnergySleepy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is getting sleepy.'**
+  String buddyEnergySleepy(String name);
+
+  /// No description provided for @buddyEnergyNapping.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is napping. A lesson wakes them up.'**
+  String buddyEnergyNapping(String name);
+
+  /// No description provided for @buddyLessonEnergyLine.
+  ///
+  /// In en, this message translates to:
+  /// **'+35 energy · {name} is full of energy'**
+  String buddyLessonEnergyLine(String name);
+
+  /// No description provided for @buddyReadEnjoyed.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} enjoyed that story'**
+  String buddyReadEnjoyed(String name);
 
   /// No description provided for @buddyRankImproved.
   ///

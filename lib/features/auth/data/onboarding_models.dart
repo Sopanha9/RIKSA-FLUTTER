@@ -207,7 +207,8 @@ class OnboardingQuizQuestion {
 
   String question(String lang) => lang == 'km' ? questionKm : questionEn;
   List<String> options(String lang) => lang == 'km' ? optionsKm : optionsEn;
-  String kruAiSuccess(String lang) => lang == 'km' ? kruAiSuccessKm : kruAiSuccessEn;
+  String kruAiSuccess(String lang) =>
+      lang == 'km' ? kruAiSuccessKm : kruAiSuccessEn;
   String kruAiHint(String lang) => lang == 'km' ? kruAiHintKm : kruAiHintEn;
 }
 
@@ -215,7 +216,8 @@ class OnboardingQuizQuestion {
 class OnboardingCuratedQuestions {
   OnboardingCuratedQuestions._();
 
-  static const Map<OnboardingSubject, List<OnboardingQuizQuestion>> questions = {
+  static const Map<OnboardingSubject, List<OnboardingQuizQuestion>>
+  questions = {
     OnboardingSubject.math: [
       OnboardingQuizQuestion(
         id: 'math_q1',
@@ -225,10 +227,14 @@ class OnboardingCuratedQuestions {
         optionsEn: ['3', '5', '3/5', '-3'],
         optionsKm: ['3', '5', '3/5', '-3'],
         correctIndex: 0,
-        kruAiSuccessEn: 'Spot on! In y = mx + b, "m" is always the slope. You spotted that in seconds! 🚀',
-        kruAiSuccessKm: 'ពូកែណាស់! ក្នុងសមីការ y = mx + b តម្លៃ "m" គឺជាមេគុណប្រាប់ទិស។ ចាប់ចំណុចបានលឿនមែន! 🚀',
-        kruAiHintEn: 'Remember the linear equation form: y = mx + b, where m is the slope.',
-        kruAiHintKm: 'ចងចាំទម្រង់សមីការបន្ទាត់ y = mx + b ដែល m គឺជាមេគុណប្រាប់ទិស។',
+        kruAiSuccessEn:
+            'Spot on! In y = mx + b, "m" is always the slope. You spotted that in seconds! 🚀',
+        kruAiSuccessKm:
+            'ពូកែណាស់! ក្នុងសមីការ y = mx + b តម្លៃ "m" គឺជាមេគុណប្រាប់ទិស។ ចាប់ចំណុចបានលឿនមែន! 🚀',
+        kruAiHintEn:
+            'Remember the linear equation form: y = mx + b, where m is the slope.',
+        kruAiHintKm:
+            'ចងចាំទម្រង់សមីការបន្ទាត់ y = mx + b ដែល m គឺជាមេគុណប្រាប់ទិស។',
       ),
       OnboardingQuizQuestion(
         id: 'math_q2',
@@ -238,9 +244,12 @@ class OnboardingCuratedQuestions {
         optionsEn: ['7', '3', '5', '14'],
         optionsKm: ['7', '3', '5', '14'],
         correctIndex: 0,
-        kruAiSuccessEn: 'Brilliant algebra! Add 4 to get 14, then divide by 2 to get 7. Grade A mastery! 🔥',
-        kruAiSuccessKm: 'គណនាលឿនណាស់! បូក 4 ស្មើ 14 រួចចែកនឹង 2 ឃើញ 7។ កម្រិតនិទ្ទេស A ហ្មង! 🔥',
-        kruAiHintEn: 'First add 4 to both sides (2x = 14), then divide both sides by 2.',
+        kruAiSuccessEn:
+            'Brilliant algebra! Add 4 to get 14, then divide by 2 to get 7. Grade A mastery! 🔥',
+        kruAiSuccessKm:
+            'គណនាលឿនណាស់! បូក 4 ស្មើ 14 រួចចែកនឹង 2 ឃើញ 7។ កម្រិតនិទ្ទេស A ហ្មង! 🔥',
+        kruAiHintEn:
+            'First add 4 to both sides (2x = 14), then divide both sides by 2.',
         kruAiHintKm: 'ដំបូងបូក 4 ទៅទាំងសងខាង (2x = 14) រួចចែកនឹង 2។',
       ),
     ],
@@ -248,14 +257,18 @@ class OnboardingCuratedQuestions {
       OnboardingQuizQuestion(
         id: 'physics_q1',
         subject: OnboardingSubject.physics,
-        questionEn: 'According to Newton\'s Second Law, what is the formula for Force (F)?',
+        questionEn:
+            'According to Newton\'s Second Law, what is the formula for Force (F)?',
         questionKm: 'យោងតាមច្បាប់ទី២ញូតុន តើកម្លាំង (F) ស្មើនឹងរូបមន្តណា?',
         optionsEn: ['F = m × a', 'F = m / a', 'F = v × t', 'F = m × g × h'],
         optionsKm: ['F = m × a', 'F = m / a', 'F = v × t', 'F = m × g × h'],
         correctIndex: 0,
-        kruAiSuccessEn: 'Spot on! Force equals mass times acceleration (F = ma). A core BacII physics formula!',
-        kruAiSuccessKm: 'ត្រឹមត្រូវ ១០០%! កម្លាំង = ម៉ាស × សំទុះ (F = ma)។ រូបមន្តស្នូលនៃការប្រឡងបាក់ឌុប!',
-        kruAiHintEn: 'Force depends on both mass (m) and acceleration (a) multiplied together.',
+        kruAiSuccessEn:
+            'Spot on! Force equals mass times acceleration (F = ma). A core BacII physics formula!',
+        kruAiSuccessKm:
+            'ត្រឹមត្រូវ ១០០%! កម្លាំង = ម៉ាស × សំទុះ (F = ma)។ រូបមន្តស្នូលនៃការប្រឡងបាក់ឌុប!',
+        kruAiHintEn:
+            'Force depends on both mass (m) and acceleration (a) multiplied together.',
         kruAiHintKm: 'កម្លាំងអាស្រ័យលើផលគុណរវាងម៉ាស (m) និងសំទុះ (a)។',
       ),
       OnboardingQuizQuestion(
@@ -266,10 +279,14 @@ class OnboardingCuratedQuestions {
         optionsEn: ['Joule (J)', 'Newton (N)', 'Watt (W)', 'Pascal (Pa)'],
         optionsKm: ['ស៊ូល (J)', 'ញូតុន (N)', 'វ៉ាត់ (W)', 'ប៉ាស្កាល់ (Pa)'],
         correctIndex: 0,
-        kruAiSuccessEn: 'Excellent! Joules (J) measure both energy and work done in physical systems.',
-        kruAiSuccessKm: 'ពិតជាត្រឹមត្រូវ! ស៊ូល (J) គឺជាខ្នាតអន្តរជាតិនៃថាមពល និងកម្មន្ត។',
-        kruAiHintEn: 'Newton is for force, Watt is for power. Energy uses Joules.',
-        kruAiHintKm: 'ញូតុនជាខ្នាតកម្លាំង វ៉ាត់ជាខ្នាតអានុភាព រីឯថាមពលប្រើស៊ូល។',
+        kruAiSuccessEn:
+            'Excellent! Joules (J) measure both energy and work done in physical systems.',
+        kruAiSuccessKm:
+            'ពិតជាត្រឹមត្រូវ! ស៊ូល (J) គឺជាខ្នាតអន្តរជាតិនៃថាមពល និងកម្មន្ត។',
+        kruAiHintEn:
+            'Newton is for force, Watt is for power. Energy uses Joules.',
+        kruAiHintKm:
+            'ញូតុនជាខ្នាតកម្លាំង វ៉ាត់ជាខ្នាតអានុភាព រីឯថាមពលប្រើស៊ូល។',
       ),
     ],
     OnboardingSubject.chemistry: [
@@ -281,8 +298,10 @@ class OnboardingCuratedQuestions {
         optionsEn: ['H₂O', 'CO₂', 'NaCl', 'H₂SO₄'],
         optionsKm: ['H₂O', 'CO₂', 'NaCl', 'H₂SO₄'],
         correctIndex: 0,
-        kruAiSuccessEn: 'Classic! Two hydrogen atoms bonded covalently with one oxygen atom.',
-        kruAiSuccessKm: 'ពិតជាត្រឹមត្រូវ! អាតូមអ៊ីដ្រូសែន ២ ភ្ជាប់ជាមួយអាតូមអុកស៊ីសែន ១។',
+        kruAiSuccessEn:
+            'Classic! Two hydrogen atoms bonded covalently with one oxygen atom.',
+        kruAiSuccessKm:
+            'ពិតជាត្រឹមត្រូវ! អាតូមអ៊ីដ្រូសែន ២ ភ្ជាប់ជាមួយអាតូមអុកស៊ីសែន ១។',
         kruAiHintEn: 'Water consists of Hydrogen (H) and Oxygen (O).',
         kruAiHintKm: 'ទឹកផ្សំឡើងពីអ៊ីដ្រូសែន (H) និងអុកស៊ីសែន (O)។',
       ),
@@ -294,9 +313,12 @@ class OnboardingCuratedQuestions {
         optionsEn: ['7', '0', '14', '1'],
         optionsKm: ['7', '0', '14', '1'],
         correctIndex: 0,
-        kruAiSuccessEn: 'Spot on! pH 7 is neutral; below 7 is acidic and above 7 is basic.',
-        kruAiSuccessKm: 'ពូកែមែន! pH 7 ជាសូលុយស្យុងណឺត ក្រោម 7 ជាអាស៊ីត ហើយលើស 7 ជាបាស។',
-        kruAiHintEn: 'On a pH scale of 0 to 14, neutral sits right in the middle.',
+        kruAiSuccessEn:
+            'Spot on! pH 7 is neutral; below 7 is acidic and above 7 is basic.',
+        kruAiSuccessKm:
+            'ពូកែមែន! pH 7 ជាសូលុយស្យុងណឺត ក្រោម 7 ជាអាស៊ីត ហើយលើស 7 ជាបាស។',
+        kruAiHintEn:
+            'On a pH scale of 0 to 14, neutral sits right in the middle.',
         kruAiHintKm: 'នៅលើមាត្រដ្ឋាន pH ពី 0 ដល់ 14 តម្លៃកណ្តាលគឺជាណឺត។',
       ),
     ],
@@ -309,21 +331,28 @@ class OnboardingCuratedQuestions {
         optionsEn: ['Mitochondria', 'Nucleus', 'Ribosome', 'Vacuole'],
         optionsKm: ['មីតូកុងឌ្រី', 'ណ្វៃយ៉ូ', 'រីបូសូម', 'វ៉ាគុយអូល'],
         correctIndex: 0,
-        kruAiSuccessEn: 'Yes! Mitochondria generate cellular ATP energy to fuel biological processes! 🧬',
-        kruAiSuccessKm: 'ពិតជាពូកែ! មីតូកុងឌ្រីជាអ្នកផលិតថាមពល ATP សម្រាប់ដំណើរការកោសិកា! 🧬',
-        kruAiHintEn: 'Think of the organelle responsible for cellular respiration and ATP synthesis.',
+        kruAiSuccessEn:
+            'Yes! Mitochondria generate cellular ATP energy to fuel biological processes! 🧬',
+        kruAiSuccessKm:
+            'ពិតជាពូកែ! មីតូកុងឌ្រីជាអ្នកផលិតថាមពល ATP សម្រាប់ដំណើរការកោសិកា! 🧬',
+        kruAiHintEn:
+            'Think of the organelle responsible for cellular respiration and ATP synthesis.',
         kruAiHintKm: 'គិតដល់អង្គប្រាណដែលទទួលបន្ទុកដង្ហើមកោសិកា និងផលិត ATP។',
       ),
       OnboardingQuizQuestion(
         id: 'bio_q2',
         subject: OnboardingSubject.biology,
-        questionEn: 'What green pigment in plant chloroplasts absorbs light for photosynthesis?',
-        questionKm: 'តើសារធាតុពណ៌បៃតងក្នុងក្លរ៉ូប្លាសដែលស្រូបពន្លឺសម្រាប់រស្មីសំយោគគឺជាអ្វី?',
+        questionEn:
+            'What green pigment in plant chloroplasts absorbs light for photosynthesis?',
+        questionKm:
+            'តើសារធាតុពណ៌បៃតងក្នុងក្លរ៉ូប្លាសដែលស្រូបពន្លឺសម្រាប់រស្មីសំយោគគឺជាអ្វី?',
         optionsEn: ['Chlorophyll', 'Hemoglobin', 'Melanin', 'Carotene'],
         optionsKm: ['ក្លរ៉ូភីល', 'អេម៉ូក្លូប៊ីន', 'មេឡានីន', 'ការ៉ូតែន'],
         correctIndex: 0,
-        kruAiSuccessEn: 'Awesome! Chlorophyll captures sunlight to convert water and CO₂ into glucose.',
-        kruAiSuccessKm: 'ត្រឹមត្រូវណាស់! ក្លរ៉ូភីលស្រូបពន្លឺព្រះអាទិត្យសម្រាប់ដំណើរការរស្មីសំយោគ។',
+        kruAiSuccessEn:
+            'Awesome! Chlorophyll captures sunlight to convert water and CO₂ into glucose.',
+        kruAiSuccessKm:
+            'ត្រឹមត្រូវណាស់! ក្លរ៉ូភីលស្រូបពន្លឺព្រះអាទិត្យសម្រាប់ដំណើរការរស្មីសំយោគ។',
         kruAiHintEn: 'It gives leaves their vibrant green color.',
         kruAiHintKm: 'ជាសារធាតុដែលធ្វើឱ្យស្លឹកឈើមានពណ៌បៃតងស្រស់។',
       ),

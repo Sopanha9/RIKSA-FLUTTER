@@ -30,10 +30,7 @@ class BuddyCompanionInline extends ConsumerWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        BuddyFaceReaction(
-          face: effective.face,
-          size: size,
-        ),
+        BuddyFaceReaction(face: effective.face, size: size),
         if (line != null && line.isNotEmpty) ...[
           const SizedBox(width: RiksaSpacing.sm),
           Expanded(
@@ -87,18 +84,22 @@ class BuddyEarnedMoment extends ConsumerWidget {
     required this.reaction,
     this.speech,
     this.size = 180,
+    this.moodOverride,
   });
 
   final BuddyReaction reaction;
   final String? speech;
   final double size;
+  final MascotMood? moodOverride;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final enabled = ref.watch(buddyReactionsEnabledProvider);
     final profile = ref.watch(mascotProvider).profile;
     final species = profile?.species ?? MascotSpecies.crocodile;
-    final mood = enabled ? reaction.mood ?? MascotMood.trophy : MascotMood.idle;
+    final mood = enabled
+        ? moodOverride ?? reaction.mood ?? MascotMood.trophy
+        : MascotMood.idle;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -107,11 +108,11 @@ class BuddyEarnedMoment extends ConsumerWidget {
         _StaticWhenDisabled(
           disabled: !enabled,
           child: MascotView(
-          species: species,
-          mood: mood,
-          size: size,
-          alive: enabled,
-          interactive: false,
+            species: species,
+            mood: mood,
+            size: size,
+            alive: enabled,
+            interactive: false,
           ),
         ),
       ],

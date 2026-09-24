@@ -14,6 +14,7 @@ import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_catalog_screen.dart';
 import 'package:riksa_app/features/learning/providers/learning_home_provider.dart';
+import 'package:riksa_app/features/mascot/providers/buddy_care_provider.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 import 'package:riksa_app/features/social/providers/social_feed_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
@@ -112,10 +113,15 @@ void main() {
             communityStreakProvider.overrideWith(
               (ref) async => const CommunityStreak(current: 7, highest: 12),
             ),
+            buddyCareProvider.overrideWith(_FixedBuddyCareNotifier.new),
           ],
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
             theme: dark ? AppTheme.dark : AppTheme.light,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: true),
+              child: child!,
+            ),
             localizationsDelegates: const [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
@@ -182,14 +188,16 @@ void main() {
           communityStreakProvider.overrideWith(
             (ref) async => const CommunityStreak(current: 7, highest: 12),
           ),
+          buddyCareProvider.overrideWith(_FixedBuddyCareNotifier.new),
         ],
         child: MaterialApp(
           theme: AppTheme.light,
           locale: const Locale('km'),
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: const TextScaler.linear(2)),
+            data: MediaQuery.of(context).copyWith(
+              textScaler: const TextScaler.linear(2),
+              disableAnimations: true,
+            ),
             child: child!,
           ),
           localizationsDelegates: const [
@@ -208,4 +216,9 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byType(LessonCatalogScreen), findsOneWidget);
   });
+}
+
+class _FixedBuddyCareNotifier extends BuddyCareNotifier {
+  @override
+  BuddyCareState build() => BuddyCareState.initial(DateTime.now());
 }

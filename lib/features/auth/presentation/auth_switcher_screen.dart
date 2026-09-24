@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../app/router/app_router.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -113,6 +115,7 @@ class _AuthSwitcherScreenState extends ConsumerState<AuthSwitcherScreen> {
   String? _buddyError;
   int _failureCount = 0;
   int _passwordShake = 0;
+  String _authenticatedLocation = kLandingLocation;
 
   @override
   void initState() {
@@ -373,12 +376,28 @@ class _AuthSwitcherScreenState extends ConsumerState<AuthSwitcherScreen> {
         : const Duration(milliseconds: 900);
     if (delay != Duration.zero) await Future<void>.delayed(delay);
     if (mounted && ref.read(authProvider) is Authenticated) {
-      context.go('/home');
+      context.go(_authenticatedLocation);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    String? reasonCopy;
+    try {
+      final route = GoRouterState.of(context);
+      if (route.matchedLocation.startsWith('/auth')) {
+        _authenticatedLocation = authenticatedLandingFor(route.uri);
+        final strings = AppLocalizations.of(context)!;
+        reasonCopy = switch (route.uri.queryParameters['reason']) {
+          'save_progress' => strings.authReasonSaveProgress,
+          'save_lesson' => strings.authReasonSaveLesson,
+          'post' => strings.authReasonPost,
+          _ => null,
+        };
+      }
+    } on GoError {
+      // AuthSwitcherScreen is also used outside a router in widget previews.
+    }
     final strings = AppLocalizations.of(context)!;
     final auth = ref.watch(authProvider);
     final loading = auth is AuthLoading;
@@ -412,6 +431,7 @@ class _AuthSwitcherScreenState extends ConsumerState<AuthSwitcherScreen> {
               passwordShake: _passwordShake,
               loading: loading,
               error: error,
+              reasonCopy: reasonCopy,
               onTogglePassword: () => _togglePassword(
                 () => _obscureLoginPassword = !_obscureLoginPassword,
               ),
@@ -752,6 +772,7 @@ class _LoginForm extends StatelessWidget {
     required this.passwordShake,
     required this.loading,
     required this.error,
+    required this.reasonCopy,
     required this.onTogglePassword,
     required this.onForgotPassword,
     required this.onSubmit,
@@ -766,6 +787,7 @@ class _LoginForm extends StatelessWidget {
   final int passwordShake;
   final bool loading;
   final String? error;
+  final String? reasonCopy;
   final VoidCallback onTogglePassword;
   final VoidCallback onForgotPassword;
   final VoidCallback onSubmit;
@@ -781,7 +803,7 @@ class _LoginForm extends StatelessWidget {
         children: [
           AuthHeader(
             title: strings.welcomeBack,
-            subtitle: strings.loginSubtitle,
+            subtitle: reasonCopy ?? strings.loginSubtitle,
           ),
           const SizedBox(height: 22),
           if (error != null) ...[

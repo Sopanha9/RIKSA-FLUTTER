@@ -17,10 +17,7 @@ void main() {
 
     expect(container.read(buddyReactionsEnabledProvider), isTrue);
     final preferences = await SharedPreferences.getInstance();
-    expect(
-      preferences.getBool(BuddyPreferencesNotifier.storageKey),
-      isTrue,
-    );
+    expect(preferences.getBool(BuddyPreferencesNotifier.storageKey), isTrue);
   });
 
   test('an in-session choice wins over a late restore', () async {

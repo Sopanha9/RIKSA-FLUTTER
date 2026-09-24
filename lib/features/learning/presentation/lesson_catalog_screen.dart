@@ -11,8 +11,11 @@ import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../auth/data/onboarding_models.dart';
+import '../../auth/providers/onboarding_provider.dart';
 import '../../social/providers/social_feed_provider.dart';
 import '../../mascot/domain/mascot.dart';
+import '../../mascot/presentation/widgets/buddy_care_card.dart';
 import '../../mascot/presentation/widgets/buddy_companion.dart';
 import '../../userProfile/providers/profile_provider.dart';
 import '../data/learning_models.dart';
@@ -67,6 +70,9 @@ class _HomeBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final selectedSubject = ref.watch(
+      onboardingProvider.select((setup) => setup.subject),
+    );
 
     if (data.subjects.isEmpty) {
       return _HomeMessage(
@@ -77,6 +83,23 @@ class _HomeBody extends ConsumerWidget {
       );
     }
 
+    final preferred = selectedSubject == null
+        ? null
+        : data.subjects
+              .where(
+                (subject) =>
+                    _matchesOnboardingSubject(subject, selectedSubject),
+              )
+              .firstOrNull;
+    final subjects = preferred == null
+        ? data.subjects
+        : [
+            preferred,
+            ...data.subjects.where(
+              (subject) => subject.category.id != preferred.category.id,
+            ),
+          ];
+
     final bottomNavClearance = MediaQuery.paddingOf(context).bottom + 24;
 
     return ListView(
@@ -85,6 +108,8 @@ class _HomeBody extends ConsumerWidget {
       padding: EdgeInsets.fromLTRB(16, 4, 16, bottomNavClearance),
       children: [
         const _GreetingRow(),
+        const SizedBox(height: RiksaSpacing.md),
+        const BuddyCareCard(),
         const SizedBox(height: RiksaSpacing.lg),
         if (data.resumeLesson case final lesson?)
           _ContinueCard(
@@ -103,7 +128,10 @@ class _HomeBody extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: RiksaSpacing.sm),
-        _SubjectGrid(subjects: data.subjects),
+        _SubjectGrid(
+          subjects: subjects,
+          preferredCategoryId: preferred?.category.id,
+        ),
         if (data.hasCounts) ...[
           const SizedBox(height: 24),
           _DestinationBar(data: data),
@@ -134,56 +162,54 @@ class _GreetingRow extends ConsumerWidget {
         : user?.username ?? '';
     final tone = subjectTone(context, StemSubject.mathematics);
     final openDrawer = AppShellScope.maybeOf(context)?.openDrawer;
-    final frameTier = ref
-        .watch(profileDashboardProvider)
-        .value
-        ?.gamification
-        .currentTier;
+    final frameTier = auth is Authenticated
+        ? ref.watch(profileDashboardProvider).value?.gamification.currentTier
+        : null;
 
     final avatar = Semantics(
-          button: true,
-          label: l10n.openProfileMenu,
-          child: Tooltip(
-            message: l10n.openProfileMenu,
-            child: InkWell(
-              key: const ValueKey('home-avatar-button'),
-              onTap: openDrawer,
-              customBorder: const CircleBorder(),
-              child: RiksaAvatarImage(
-                value: user?.avatarUrl,
-                label: name.isEmpty ? '?' : name,
-                size: 44,
-                backgroundColor: tone.surface,
-                foregroundColor: tone.accent,
-                frameTier: frameTier,
-              ),
+      button: true,
+      label: l10n.openProfileMenu,
+      child: Tooltip(
+        message: l10n.openProfileMenu,
+        child: InkWell(
+          key: const ValueKey('home-avatar-button'),
+          onTap: openDrawer,
+          customBorder: const CircleBorder(),
+          child: RiksaAvatarImage(
+            value: user?.avatarUrl,
+            label: name.isEmpty ? '?' : name,
+            size: 44,
+            backgroundColor: tone.surface,
+            foregroundColor: tone.accent,
+            frameTier: frameTier,
+          ),
+        ),
+      ),
+    );
+    final identity = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          name.isEmpty ? l10n.learningTitle : l10n.greetingNamed(name),
+          maxLines: 2,
+          style: RiksaTypography.titleStyleFor(
+            name,
+            Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
             ),
           ),
-        );
-    final identity = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                name.isEmpty ? l10n.learningTitle : l10n.greetingNamed(name),
-                maxLines: 2,
-                style: RiksaTypography.titleStyleFor(
-                  name,
-                  Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0,
-                  ),
-                ),
-              ),
-              Text(
-                l10n.gradeStemLabel,
-                maxLines: 2,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall?.copyWith(color: palette.inkMuted),
-              ),
-            ],
-          );
+        ),
+        Text(
+          l10n.gradeStemLabel,
+          maxLines: 2,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: palette.inkMuted),
+        ),
+      ],
+    );
     const actions = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -232,6 +258,9 @@ class _StreakChip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    if (ref.watch(authProvider) is! Authenticated) {
+      return const SizedBox.shrink();
+    }
     final streak = ref.watch(communityStreakProvider);
     final days = streak.asData?.value.current ?? 0;
     if (days <= 0) return const SizedBox.shrink();
@@ -649,9 +678,10 @@ class _AllDoneCard extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _SubjectGrid extends StatelessWidget {
-  const _SubjectGrid({required this.subjects});
+  const _SubjectGrid({required this.subjects, this.preferredCategoryId});
 
   final List<SubjectProgress> subjects;
+  final String? preferredCategoryId;
 
   @override
   Widget build(BuildContext context) {
@@ -661,7 +691,10 @@ class _SubjectGrid extends StatelessWidget {
     return Column(
       children: [
         for (var index = 0; index < subjects.length; index++) ...[
-          _SubjectTile(subject: subjects[index]),
+          _SubjectTile(
+            subject: subjects[index],
+            isPreferred: subjects[index].category.id == preferredCategoryId,
+          ),
           if (index != subjects.length - 1)
             const SizedBox(height: RiksaSpacing.sm + 2),
         ],
@@ -671,8 +704,9 @@ class _SubjectGrid extends StatelessWidget {
 }
 
 class _SubjectTile extends StatelessWidget {
-  const _SubjectTile({required this.subject});
+  const _SubjectTile({required this.subject, this.isPreferred = false});
   final SubjectProgress subject;
+  final bool isPreferred;
 
   @override
   Widget build(BuildContext context) {
@@ -683,7 +717,10 @@ class _SubjectTile extends StatelessWidget {
       color: palette.surface,
       shape: RoundedRectangleBorder(
         borderRadius: AppRadii.mediumBorder,
-        side: BorderSide(color: palette.outline),
+        side: BorderSide(
+          color: isPreferred ? palette.brand : palette.outline,
+          width: isPreferred ? 1.5 : 1,
+        ),
       ),
       child: InkWell(
         key: ValueKey('subject-tile-${subject.category.id}'),
@@ -743,11 +780,30 @@ class _SubjectTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: palette.inkMuted,
-                size: 18,
-              ),
+              if (isPreferred)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.startHere,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: palette.brandStrong,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      color: palette.brandStrong,
+                      size: 18,
+                    ),
+                  ],
+                )
+              else
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: palette.inkMuted,
+                  size: 18,
+                ),
             ],
           ),
         ),
@@ -904,6 +960,20 @@ class _HomeSkeleton extends StatelessWidget {
       ),
     ],
   );
+}
+
+bool _matchesOnboardingSubject(
+  SubjectProgress progress,
+  OnboardingSubject selected,
+) {
+  final expected = switch (selected.id.toLowerCase()) {
+    'mathematics' || 'math' => StemSubject.mathematics,
+    'physics' => StemSubject.physics,
+    'chemistry' => StemSubject.chemistry,
+    'biology' => StemSubject.biology,
+    _ => StemSubject.other,
+  };
+  return progress.subject == expected;
 }
 
 class _HomeMessage extends StatelessWidget {

@@ -36,8 +36,7 @@ class MascotSpeechBubble extends StatelessWidget {
     final length = line.characters.length;
     final textStyle = RiksaTypography.bodyStyleFor(
       line,
-      style ??
-          theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+      style ?? theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
     );
     return Semantics(
       liveRegion: true,
