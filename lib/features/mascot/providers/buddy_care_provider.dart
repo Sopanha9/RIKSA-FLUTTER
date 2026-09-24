@@ -117,23 +117,28 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
   }
 
   Future<void> _restoreGuest() async {
-    final prefs = await SharedPreferences.getInstance();
-    final json = prefs.getString(_guestKey);
-    final care = json == null
-        ? BuddyCare.initial(DateTime.now())
-        : BuddyCare.fromJson(
-            Map<String, dynamic>.from(jsonDecode(json) as Map),
-          );
-    final profile =
-        ref.read(mascotProvider).profile ??
-        await _profileFromPreferences(prefs);
-    if (_syncingUserId != null || _activeUserId != null) return;
-    state = BuddyCareState(
-      care: care,
-      species: profile.species,
-      name: profile.name,
-      today: _todayFromCare(care),
-    );
+    final prefs = await _loadPreferences();
+    if (prefs == null) return;
+    try {
+      final json = prefs.getString(_guestKey);
+      final care = json == null
+          ? BuddyCare.initial(DateTime.now())
+          : BuddyCare.fromJson(
+              Map<String, dynamic>.from(jsonDecode(json) as Map),
+            );
+      final profile =
+          ref.read(mascotProvider).profile ??
+          await _profileFromPreferences(prefs);
+      if (_syncingUserId != null || _activeUserId != null) return;
+      state = BuddyCareState(
+        care: care,
+        species: profile.species,
+        name: profile.name,
+        today: _todayFromCare(care),
+      );
+    } catch (_) {
+      // Keep the initial buddy state if its local cache cannot be restored.
+    }
   }
 
   Future<void> _syncSignedIn(String userId) {
@@ -153,20 +158,32 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
   }
 
   Future<void> _performSignedInSync(String userId) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _loadPreferences();
     final cacheKey = '$_signedInKeyPrefix$userId';
-    final cachedJson = prefs.getString(cacheKey);
-    if (cachedJson != null) {
-      final cached = BuddyMe.fromJson(
-        Map<String, dynamic>.from(jsonDecode(cachedJson) as Map),
-      );
-      _applyServerState(cached, userId);
+    String? cachedJson;
+    if (prefs != null) {
+      try {
+        cachedJson = prefs.getString(cacheKey);
+        if (cachedJson != null) {
+          final cached = BuddyMe.fromJson(
+            Map<String, dynamic>.from(jsonDecode(cachedJson) as Map),
+          );
+          _applyServerState(cached, userId);
+        }
+      } catch (_) {
+        cachedJson = null;
+      }
     }
 
     try {
-      final guestJson = prefs.getString(_guestKey);
+      String? guestJson;
+      try {
+        guestJson = prefs?.getString(_guestKey);
+      } catch (_) {
+        // If the local guest cache is unavailable, still load the server buddy.
+      }
       final BuddyMe remote;
-      if (guestJson != null) {
+      if (guestJson != null && prefs != null) {
         final guestCare = BuddyCare.fromJson(
           Map<String, dynamic>.from(jsonDecode(guestJson) as Map),
         );
@@ -179,13 +196,21 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
               guestEnergy: guestCare.energy,
               guestBond: guestCare.bond,
             );
-        await prefs.remove(_guestKey);
+        try {
+          await prefs.remove(_guestKey);
+        } catch (_) {
+          // Removing a stale local copy is best-effort after a successful sync.
+        }
       } else {
         remote = await ref.read(buddyApiProvider).getMe();
       }
       if (!ref.mounted || _syncingUserId != userId) return;
       _activeUserId = userId;
-      await prefs.setString(cacheKey, jsonEncode(remote.toJson()));
+      try {
+        await prefs?.setString(cacheKey, jsonEncode(remote.toJson()));
+      } catch (_) {
+        // The server response remains usable when its local cache cannot save.
+      }
       _applyServerState(remote, userId);
     } catch (_) {
       if (cachedJson == null && ref.mounted) {
@@ -268,17 +293,30 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
   }
 
   Future<void> _saveCurrentState() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (_activeUserId case final userId?) {
-      final json = BuddyMe(
-        care: state.care,
-        species: state.species,
-        name: state.name,
-        today: state.today,
-      ).toJson();
-      await prefs.setString('$_signedInKeyPrefix$userId', jsonEncode(json));
-    } else {
-      await prefs.setString(_guestKey, jsonEncode(state.care.toJson()));
+    final prefs = await _loadPreferences();
+    if (prefs == null) return;
+    try {
+      if (_activeUserId case final userId?) {
+        final json = BuddyMe(
+          care: state.care,
+          species: state.species,
+          name: state.name,
+          today: state.today,
+        ).toJson();
+        await prefs.setString('$_signedInKeyPrefix$userId', jsonEncode(json));
+      } else {
+        await prefs.setString(_guestKey, jsonEncode(state.care.toJson()));
+      }
+    } catch (_) {
+      // Buddy care stays usable when its optional local cache is unavailable.
+    }
+  }
+
+  Future<SharedPreferences?> _loadPreferences() async {
+    try {
+      return await SharedPreferences.getInstance();
+    } catch (_) {
+      return null;
     }
   }
 

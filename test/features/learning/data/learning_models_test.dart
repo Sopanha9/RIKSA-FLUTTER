@@ -2,6 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 
 void main() {
+  test('recognises Computer Skills in English and Khmer category names', () {
+    expect(isLearningCategory('Computer Skills / ជំនាញកុំព្យូទ័រ'), isTrue);
+    expect(isLearningCategory('ជំនាញកុំព្យូទ័រ'), isTrue);
+  });
+
   test('LessonPage parses the current Spring page response', () {
     final page = LessonPage.fromJson({
       'content': [
