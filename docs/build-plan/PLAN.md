@@ -120,8 +120,8 @@ Wave 4 checkpoints (2026-09-24): API `faf526c` and Flutter `8925ee4`. The API
 seeds the bilingual Computer Skills category, Digital basics unit, five lessons,
 and fifteen multiple-choice exercises. The app includes that category in the
 learning catalog, and buddy care remains usable when local preference storage
-fails. Flutter analysis is clean and all 492 tests pass. The full API suite
-passes all 417 tests with 5 Docker-dependent skips.
+fails. Flutter analysis is clean and all 492 tests pass. The full API suite ran
+417 tests with 0 failures, 0 errors, and 5 Docker-dependent skips.
 
 The migration's documented smoke check is to request
 `GET /api/v1/lessons/roadmap?categoryId=c3800000-0000-0000-0000-000000000001`,
