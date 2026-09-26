@@ -60,3 +60,9 @@ app.*.map.json
 screenshots_redesign_reference
 UI_HANDOFF.md
 ui_map.json
+
+# Android signing keys, never commit
+*.jks
+*.keystore
+*.b64
+key.properties
