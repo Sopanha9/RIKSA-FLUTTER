@@ -81,7 +81,18 @@ class AuthUnavailable extends AuthState {
   final String message;
 }
 
+/// Id of the signed-in user, or null when no session is ready.
+///
+/// Ownership checks read this: feeds carry only an author id, so edit and
+/// delete affordances compare against it (the server stays the authority).
+final currentUserIdProvider = Provider<String?>((ref) {
+  final auth = ref.watch(authProvider);
+  return auth is Authenticated ? auth.user.id : null;
+});
+
 class AuthNotifier extends Notifier<AuthState> {
+  static const _minimumAuthenticationLoading = Duration(milliseconds: 500);
+
   StreamSubscription<void>? _sessionExpiredSubscription;
   StreamSubscription<GoogleAuthEvent>? _googleAuthSubscription;
   Future<void>? _bootstrapOperation;
@@ -123,14 +134,13 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> _performBootstrap() async {
     state = const AuthInitial();
     final client = ref.read(dioClientProvider);
-    if (!await client.hasSession()) {
-      // Remove a half-written session if only one token survived.
-      await client.clearSession();
-      state = const Unauthenticated();
-      return;
-    }
-
     try {
+      if (!await client.hasSession()) {
+        // Remove a half-written session if only one token survived.
+        await client.clearSession();
+        state = const Unauthenticated();
+        return;
+      }
       final user = await _hydrateProfile();
       _requireProfile(user);
       state = Authenticated(user);
@@ -159,11 +169,12 @@ class AuthNotifier extends Notifier<AuthState> {
     required String password,
   }) async {
     state = const AuthLoading();
+    final minimumLoading = Future<void>.delayed(_minimumAuthenticationLoading);
     try {
       final response = await ref
           .read(authApiProvider)
           .login(LoginRequest(username: username, password: password));
-      await _completeAuthentication(response);
+      await _completeAuthentication(response, minimumLoading: minimumLoading);
     } catch (error) {
       await _handleAuthenticationFailure(error);
     }
@@ -171,9 +182,10 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> register(RegisterRequest request) async {
     state = const AuthLoading();
+    final minimumLoading = Future<void>.delayed(_minimumAuthenticationLoading);
     try {
       final response = await ref.read(authApiProvider).register(request);
-      await _completeAuthentication(response);
+      await _completeAuthentication(response, minimumLoading: minimumLoading);
     } catch (error) {
       await _handleAuthenticationFailure(error);
     }
@@ -191,22 +203,50 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> telegramSignIn(TelegramAuthRequest request) async {
+  /// Signs in with the token pair returned once an existing Telegram account
+  /// confirms in the bot.
+  Future<void> acceptTelegramSession(AuthResponse response) async {
     state = const AuthLoading();
     try {
-      final response = await ref.read(authApiProvider).telegramAuth(request);
       await _completeAuthentication(response);
     } catch (error) {
       await _handleAuthenticationFailure(error);
     }
   }
 
-  Future<void> _completeAuthentication(AuthResponse response) async {
+  /// Creates the account for a newly confirmed Telegram user.
+  ///
+  /// Returns the failure instead of only moving to [AuthError] so the profile
+  /// form can tell a taken username apart from an expired signup token.
+  Future<AuthFailure?> completeTelegramSignup(
+    TelegramCompleteRequest request,
+  ) async {
+    state = const AuthLoading();
+    try {
+      final response = await ref
+          .read(authApiProvider)
+          .completeTelegramAuth(request);
+      await _completeAuthentication(response);
+      return null;
+    } on AuthFailure catch (failure) {
+      state = const Unauthenticated();
+      return failure;
+    } catch (error) {
+      await _handleAuthenticationFailure(error);
+      return null;
+    }
+  }
+
+  Future<void> _completeAuthentication(
+    AuthResponse response, {
+    Future<void>? minimumLoading,
+  }) async {
     final client = ref.read(dioClientProvider);
     try {
       await client.persistSession(response.toJson());
       final user = await _hydrateProfile();
       _requireProfile(user);
+      await minimumLoading;
       state = Authenticated(user);
     } on AuthFailure catch (failure) {
       if (failure.kind == AuthFailureKind.network ||
@@ -250,16 +290,18 @@ class AuthNotifier extends Notifier<AuthState> {
     if (current is! Authenticated) return true;
 
     state = const AuthLoading();
+    late final AuthUser user;
     try {
-      final user = await ref.read(authApiProvider).updateProvince(provinceId);
+      user = await ref.read(authApiProvider).updateProvince(provinceId);
       _requireProfile(user);
-      await ref.read(localeProvider.notifier).completeOnboarding();
-      state = Authenticated(user);
-      return true;
     } catch (error) {
+      if (kDebugMode) debugPrint('Profile province update failed: $error');
       state = current;
       return false;
     }
+    await ref.read(localeProvider.notifier).completeOnboarding();
+    state = Authenticated(user);
+    return true;
   }
 
   Future<bool> updateProfile(UpdateProfileRequest request) async {

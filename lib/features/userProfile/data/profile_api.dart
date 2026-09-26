@@ -35,6 +35,20 @@ class ProfileApi {
     );
   }
 
+  Future<List<RankHistoryEntry>> rankHistory({int limit = 50}) async {
+    final response = await _client.dio.get(
+      '/gamification/rank-history',
+      queryParameters: {'limit': limit},
+    );
+    final data = (response.data as Map).cast<String, dynamic>();
+    return ((data['edges'] as List?) ?? const [])
+        .map(
+          (item) =>
+              RankHistoryEntry.fromJson((item as Map).cast<String, dynamic>()),
+        )
+        .toList();
+  }
+
   Future<LeaderboardRank> leaderboardRank({String? provinceId}) async {
     final queryParameters = <String, dynamic>{};
     if (provinceId != null) queryParameters['scopeId'] = provinceId;
@@ -45,5 +59,26 @@ class ProfileApi {
     return LeaderboardRank.fromJson(
       (response.data as Map).cast<String, dynamic>(),
     );
+  }
+
+  /// Fetches the full ranked board for a scope.
+  ///
+  /// Mirrors `GET /leaderboard?scope=&scopeId=&date=`. Rows arrive ordered by
+  /// rank and carry `displayName`/`avatarUrl` for direct rendering.
+  Future<List<LeaderboardRow>> leaderboard({
+    required LeaderboardScope scope,
+    required String scopeId,
+  }) async {
+    final response = await _client.dio.get(
+      '/leaderboard',
+      queryParameters: {'scope': scope.apiName, 'scopeId': scopeId},
+    );
+    final values = response.data as List? ?? const [];
+    return values
+        .map(
+          (item) =>
+              LeaderboardRow.fromJson((item as Map).cast<String, dynamic>()),
+        )
+        .toList();
   }
 }

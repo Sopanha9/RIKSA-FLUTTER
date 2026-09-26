@@ -30,27 +30,53 @@ class AuthApi {
     });
   }
 
-  Future<AuthResponse> telegramAuth(TelegramAuthRequest req) async {
+  /// Bot handle and links for the "Log in with code" option. See
+  /// `docs/TELEGRAM_AUTH_FLOW.md` for the server contract.
+  Future<TelegramBotInfo> telegramBotInfo() async {
     return _guard(() async {
-      final res = await _client.dio.post('/auth/telegram', data: req.toJson());
-      return AuthResponse.fromJson(_json(res.data));
+      final res = await _client.dio.get('/auth/telegram/bot');
+      return TelegramBotInfo.fromJson(_json(res.data));
     });
   }
 
-  Future<OtpResult> sendOtp(OtpSendRequest req) async {
+  /// Starts a one-tap "Open Telegram" authorization.
+  Future<TelegramAuthChallenge> startTelegramAuth() async {
     return _guard(() async {
-      final res = await _client.dio.post('/auth/otp/send', data: req.toJson());
-      return OtpResult.fromJson(_json(res.data), successOverride: true);
+      final res = await _client.dio.post('/auth/telegram/start');
+      return TelegramAuthChallenge.fromJson(_json(res.data));
     });
   }
 
-  Future<OtpResult> verifyOtp(OtpVerifyRequest req) async {
+  Future<TelegramAuthPoll> pollTelegramAuth(
+    TelegramAuthChallenge challenge,
+  ) async {
     return _guard(() async {
       final res = await _client.dio.post(
-        '/auth/otp/verify',
+        '/auth/telegram/status',
+        data: {'requestToken': challenge.requestToken},
+      );
+      return TelegramAuthPoll.fromJson(_json(res.data));
+    });
+  }
+
+  /// Exchanges the code the bot sent after /start or /code.
+  Future<TelegramAuthPoll> redeemTelegramCode(String code) async {
+    return _guard(() async {
+      final res = await _client.dio.post(
+        '/auth/telegram/code',
+        data: {'code': code},
+      );
+      return TelegramAuthPoll.fromJson(_json(res.data));
+    });
+  }
+
+  Future<AuthResponse> completeTelegramAuth(TelegramCompleteRequest req) async {
+    return _guard(() async {
+      final res = await _client.dio.post(
+        '/auth/telegram/complete',
         data: req.toJson(),
       );
-      return OtpResult.fromJson(_json(res.data));
+      return AuthResponse.fromJson(_json(res.data));
     });
   }
 
@@ -73,19 +99,26 @@ class AuthApi {
 
   /// Public province catalog used before authentication during first run.
   Future<List<ProvinceOption>> listProvinces() async {
-    return _guard(() async {
-      final res = await _client.dio.get('/auth/provinces');
-      final values = res.data;
-      if (values is! List) {
-        throw const FormatException('Expected a province list');
-      }
-      return values
-          .map(
-            (value) =>
-                ProvinceOption.fromJson((value as Map).cast<String, dynamic>()),
-          )
-          .toList();
-    });
+    try {
+      return await _guard(() async {
+        final res = await _client.dio.get('/auth/provinces');
+        final values = res.data;
+        if (values is! List) {
+          throw const FormatException('Expected a province list');
+        }
+        final list = values
+            .map(
+              (value) => ProvinceOption.fromJson(
+                (value as Map).cast<String, dynamic>(),
+              ),
+            )
+            .toList();
+        if (list.isEmpty) return defaultProvinces;
+        return list;
+      });
+    } catch (_) {
+      return defaultProvinces;
+    }
   }
 
   /// Saves a province on the authenticated user profile.
@@ -105,6 +138,40 @@ class AuthApi {
       return AuthUser.fromJson(_json(res.data));
     });
   }
+
+  Future<String> forgotPassword(String identifier) async => _guard(() async {
+    final res = await _client.dio.post(
+      '/auth/forgot-password',
+      data: {'identifier': identifier},
+    );
+    return _json(res.data)['message'] as String? ??
+        'A verification code has been sent.';
+  });
+
+  Future<String> resetPassword({
+    required String identifier,
+    required String code,
+    required String newPassword,
+  }) async => _guard(() async {
+    final res = await _client.dio.post(
+      '/auth/reset-password',
+      data: {
+        'identifier': identifier,
+        'code': code,
+        'newPassword': newPassword,
+      },
+    );
+    return _json(res.data)['message'] as String? ??
+        'Password reset successfully.';
+  });
+
+  Future<bool> verifyEmail(String token) async => _guard(() async {
+    final res = await _client.dio.post(
+      '/auth/verify-email',
+      data: {'token': token},
+    );
+    return _json(res.data)['verified'] as bool? ?? false;
+  });
 
   Future<T> _guard<T>(Future<T> Function() request) async {
     try {

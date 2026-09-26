@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riksa_app/core/providers/locale_provider.dart';
 import 'package:riksa_app/core/providers/theme_mode_provider.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
@@ -9,6 +10,8 @@ import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/userProfile/presentation/edit_profile_screen.dart';
 import 'package:riksa_app/features/userProfile/presentation/profile_settings_screen.dart';
+import 'package:riksa_app/features/userProfile/presentation/widgets/profile_cover.dart';
+import 'package:riksa_app/features/userProfile/presentation/widgets/profile_ui.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 class _AuthNotifier extends AuthNotifier {
@@ -52,6 +55,12 @@ Widget _app(Widget home, {ThemeMode themeMode = ThemeMode.dark}) =>
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: themeMode,
+        // The settings buddy animates for as long as it is on screen; with
+        // motion off it holds a still frame, so pumpAndSettle can settle.
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        ),
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -64,6 +73,8 @@ Widget _app(Widget home, {ThemeMode themeMode = ThemeMode.dark}) =>
     );
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('profile settings follows the application light and dark mode', (
     tester,
   ) async {
@@ -73,7 +84,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
-      AppColors.lightCanvas,
+      AppColors.editorialNeutralCanvas,
     );
 
     await tester.pumpWidget(
@@ -94,6 +105,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Sok Sophea'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('settings-edit-profile')),
+        findsOneWidget,
+      );
       expect(find.text('Notification preferences'), findsOneWidget);
       expect(find.text('Dark mode'), findsOneWidget);
       expect(find.text('Language'), findsOneWidget);
@@ -124,16 +139,44 @@ void main() {
     expect(find.text('sophea@example.com'), findsOneWidget);
     expect(find.text('012345678'), findsOneWidget);
 
+    await tester.tap(find.byKey(const ValueKey('edit-cover')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('profile-cover-grid')), findsOneWidget);
+    expect(find.byKey(const ValueKey('choose-custom-cover')), findsOneWidget);
+    await tester.tap(
+      find.byKey(const ValueKey('profile-cover-option-sunrise')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<ProfileCover>(
+            find.byKey(const ValueKey('edit-profile-cover')),
+          )
+          .coverId,
+      'sunrise',
+    );
+
     await tester.tap(find.byKey(const ValueKey('edit-avatar')));
     await tester.pumpAndSettle();
     expect(find.text('Humation'), findsOneWidget);
+    expect(find.byKey(const ValueKey('choose-custom-avatar')), findsOneWidget);
     expect(find.byKey(const ValueKey('humation-avatar-grid')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('humation-avatar-option-0')),
       findsOneWidget,
     );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('humation-avatar-option-0')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('humation-avatar-option-0')));
     await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<RiksaProfileAvatar>(find.byType(RiksaProfileAvatar))
+          .avatarPath,
+      '/avatars/avatar-1.png',
+    );
     expect(
       find.byKey(const ValueKey('humation-avatar-avatar-01.svg')),
       findsOneWidget,

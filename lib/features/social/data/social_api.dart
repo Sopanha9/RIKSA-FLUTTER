@@ -1,5 +1,8 @@
+import 'package:dio/dio.dart';
+
 import '../../../core/network/api_config.dart';
 import '../../../core/network/dio_client.dart';
+import '../../auth/data/auth_api.dart';
 import 'social_models.dart';
 
 class SocialApiException implements Exception {
@@ -19,6 +22,7 @@ class SocialApi {
 
   static const _postFields = r'''
     id title content mediaUrl reactionCount commentCount shareCount myReaction
+    kind milestone { type title titleKm value }
     createdAt updatedAt
     author { id username displayName avatarUrl }
     category { id name slug description iconUrl memberCount joined }
@@ -153,6 +157,7 @@ class SocialApi {
     required String title,
     required String content,
     required String categoryId,
+    String? mediaUrl,
   }) async {
     final data = await _query(
       '''
@@ -161,12 +166,100 @@ class SocialApi {
       }
       ''',
       variables: {
-        'input': {'title': title, 'content': content, 'categoryId': categoryId},
+        'input': {
+          'title': title,
+          'content': content,
+          'categoryId': categoryId,
+          'mediaUrl': ?mediaUrl,
+        },
       },
     );
     return SocialPost.fromJson(
       (data['createPost'] as Map).cast<String, dynamic>(),
     );
+  }
+
+  /// Rewrites a post the signed-in user owns (`updatePost`, owner only).
+  ///
+  /// `UpdatePostInput` is assumed to mirror `CreatePostInput` plus the post
+  /// id; the category stays put because moving a post would also have to
+  /// satisfy the join-before-posting rule.
+  Future<SocialPost> updatePost({
+    required String id,
+    required String title,
+    required String content,
+    String? mediaUrl,
+  }) async {
+    final data = await _query(
+      '''
+      mutation UpdatePost(\$input: UpdatePostInput!) {
+        updatePost(input: \$input) { $_postFields }
+      }
+      ''',
+      variables: {
+        'input': {
+          'id': id,
+          'title': title,
+          'content': content,
+          // Omitted leaves the image alone; an empty string clears it.
+          'mediaUrl': ?mediaUrl,
+        },
+      },
+    );
+    return SocialPost.fromJson(
+      (data['updatePost'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// Uploads an image and returns the URL to store on a post.
+  ///
+  /// The API keeps the bytes and hands back a link; nothing else in the app
+  /// needs to know where they live. Throws [SocialApiException] with the
+  /// server's reason when the file is rejected.
+  Future<String> uploadMedia(String filePath, {String? filename}) async {
+    try {
+      final form = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath, filename: filename),
+      });
+      final response = await _client.dio.post(
+        '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/media',
+        data: form,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+      final url = (response.data as Map)['url'];
+      if (url is! String || url.isEmpty) {
+        throw const SocialApiException('The image upload returned no link.');
+      }
+      return url;
+    } on DioException catch (error) {
+      throw SocialApiException(dioErrorMessage(error));
+    }
+  }
+
+  /// Removes a post the signed-in user owns (`deletePost`, owner only).
+  Future<void> deletePost(String id) async {
+    final data = await _query(
+      r'''
+      mutation DeletePost($id: UUID!) { deletePost(id: $id) }
+      ''',
+      variables: {'id': id},
+    );
+    if (data['deletePost'] == false) {
+      throw const SocialApiException('This post could not be deleted.');
+    }
+  }
+
+  /// Removes a comment the signed-in user owns (`deleteComment`, owner only).
+  Future<void> deleteComment(String id) async {
+    final data = await _query(
+      r'''
+      mutation DeleteComment($id: UUID!) { deleteComment(id: $id) }
+      ''',
+      variables: {'id': id},
+    );
+    if (data['deleteComment'] == false) {
+      throw const SocialApiException('This comment could not be deleted.');
+    }
   }
 
   Future<SocialPost> share(String postId) async {
@@ -202,6 +295,36 @@ class SocialApi {
     );
     return SocialCategory.fromJson(
       (data[field] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// Founds a community owned by the signed-in member, who joins it at once.
+  ///
+  /// The server cleans every field, generates the slug, and enforces who may
+  /// create and how often; its refusal comes back as a [SocialApiException].
+  Future<SocialCategory> createCommunity({
+    required String name,
+    String? description,
+    String? iconUrl,
+  }) async {
+    final data = await _query(
+      r'''
+      mutation CreateCommunity($input: CreateCommunityInput!) {
+        createCommunity(input: $input) {
+          id name slug description iconUrl memberCount joined
+        }
+      }
+      ''',
+      variables: {
+        'input': {
+          'name': name,
+          'description': ?description,
+          'iconUrl': ?iconUrl,
+        },
+      },
+    );
+    return SocialCategory.fromJson(
+      (data['createCommunity'] as Map).cast<String, dynamic>(),
     );
   }
 

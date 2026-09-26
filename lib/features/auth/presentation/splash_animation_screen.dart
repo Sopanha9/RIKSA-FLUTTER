@@ -1,17 +1,19 @@
-import 'dart:async';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_router.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/riksa_logo.dart';
+import '../../../core/widgets/riksa_brand.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../providers/auth_provider.dart';
 
-/// Animated launch screen and deterministic app bootstrap gate.
+/// Launch screen and deterministic app bootstrap gate.
+///
+/// A returning learner sees the wordmark while the session restores and is
+/// sent on automatically. On first run the screen becomes the welcome, and
+/// Get Started leads to the buddy picker, then language selection, then setup.
 class SplashAnimationScreen extends ConsumerStatefulWidget {
   const SplashAnimationScreen({super.key});
 
@@ -23,28 +25,21 @@ class SplashAnimationScreen extends ConsumerStatefulWidget {
 class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final Animation<double> _fadeAnimation;
-  late final Animation<double> _scaleAnimation;
   bool _minimumTimeElapsed = false;
   bool _navigationScheduled = false;
+
+  /// Set once bootstrap finds no saved language: the learner is new, and the
+  /// screen waits for Get Started instead of moving on by itself.
+  bool _welcoming = false;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1050),
+      duration: const Duration(milliseconds: 1100),
       vsync: this,
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0, 0.7, curve: Curves.easeOut),
-    );
-    _scaleAnimation = Tween<double>(
-      begin: .82,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
-    _controller.forward();
-    Future<void>.delayed(const Duration(milliseconds: 1500), () {
+    )..forward();
+    Future<void>.delayed(const Duration(milliseconds: 600), () {
       if (!mounted) return;
       setState(() => _minimumTimeElapsed = true);
       _scheduleDestination();
@@ -52,30 +47,34 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
   }
 
   void _scheduleDestination() {
-    if (!_minimumTimeElapsed || _navigationScheduled || !mounted) return;
+    if (!_minimumTimeElapsed || _navigationScheduled || _welcoming) return;
+    if (!mounted) return;
     final locale = ref.read(localeProvider);
     final auth = ref.read(authProvider);
     if (!locale.isReady || auth is AuthInitial || auth is AuthUnavailable) {
+      return;
+    }
+    if (!locale.hasSelection) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _welcoming = true);
+      });
       return;
     }
 
     _navigationScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (!locale.hasSelection) {
-        context.go('/language-select');
-      } else if (!locale.hasViewedOnboarding) {
+      if (!locale.hasViewedOnboarding) {
         context.go('/onboarding');
-      } else if (!locale.hasCompletedOnboarding &&
-          locale.pendingProvinceId == null) {
-        context.go('/province-select');
-      } else if (auth is Authenticated) {
-        context.go('/home');
       } else {
-        context.go('/auth/login');
+        context.go(kLandingLocation);
       }
     });
   }
+
+  /// The buddy comes first, so the language page is already the learner's
+  /// own buddy asking which language to speak, never a placeholder one.
+  void _getStarted() => context.go('/mascot-select');
 
   @override
   void dispose() {
@@ -88,59 +87,108 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
     final locale = ref.watch(localeProvider);
     final auth = ref.watch(authProvider);
     final strings = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final palette = context.riksa;
     _scheduleDestination();
     final unavailable = auth is AuthUnavailable ? auth : null;
 
+    final entrance = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
+    final fade = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0, .6, curve: Curves.easeOut),
+    );
+
     return Scaffold(
-      backgroundColor: AppColors.lightCanvas,
+      backgroundColor: palette.canvas,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const _SplashAtmosphere(),
+          const _SplashBackdrop(),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
               child: Column(
                 children: [
-                  const Align(
-                    alignment: Alignment.topLeft,
-                    child: _EditionBadge(),
-                  ),
                   Expanded(
                     child: Center(
-                      child: AnimatedBuilder(
-                        animation: _controller,
-                        builder: (context, child) => Transform.scale(
-                          scale: _scaleAnimation.value,
-                          child: Opacity(
-                            opacity: _fadeAnimation.value,
-                            child: child,
+                      child: FadeTransition(
+                        opacity: fade,
+                        child: ScaleTransition(
+                          scale: Tween<double>(
+                            begin: .86,
+                            end: 1,
+                          ).animate(entrance),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const RiksaWordmark(fontSize: 76),
+                              const SizedBox(height: 22),
+                              Text(
+                                strings.splashTagline,
+                                key: const Key('splash_tagline'),
+                                textAlign: TextAlign.center,
+                                style: RiksaTypography.titleStyleFor(
+                                  strings.splashTagline,
+                                  theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 260,
+                                ),
+                                child: Text(
+                                  strings.splashDescription,
+                                  textAlign: TextAlign.center,
+                                  style: RiksaTypography.bodyStyleFor(
+                                    strings.splashDescription,
+                                    theme.textTheme.bodySmall?.copyWith(
+                                      color: palette.inkMuted,
+                                      height: 1.6,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: const _SplashMark(),
                       ),
                     ),
                   ),
                   AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 240),
-                    child: unavailable == null
-                        ? _BootstrapIndicator(
-                            key: const ValueKey('loading'),
-                            ready: locale.isReady && auth is! AuthInitial,
-                            readyLabel: strings.readyToLearn,
-                            loadingLabel: strings.preparingYourSpace,
-                          )
-                        : _OfflineActions(
-                            key: const ValueKey('offline'),
-                            message: unavailable.message,
-                            onRetry: () => ref
-                                .read(authProvider.notifier)
-                                .bootstrap(force: true),
-                            onUseAnotherAccount: () =>
-                                ref.read(authProvider.notifier).logout(),
-                            retryLabel: strings.tryAgain,
-                            anotherAccountLabel: strings.useAnotherAccount,
-                          ),
+                    duration: RiksaMotion.resolve(
+                      context,
+                      RiksaMotion.standard,
+                    ),
+                    child: switch ((unavailable, _welcoming)) {
+                      (final AuthUnavailable offline, _) => _OfflineActions(
+                        key: const ValueKey('offline'),
+                        message: offline.message,
+                        onRetry: () => ref
+                            .read(authProvider.notifier)
+                            .bootstrap(force: true),
+                        onUseAnotherAccount: () =>
+                            ref.read(authProvider.notifier).logout(),
+                        retryLabel: strings.tryAgain,
+                        anotherAccountLabel: strings.useAnotherAccount,
+                      ),
+                      (_, true) => _WelcomeActions(
+                        key: const ValueKey('welcome'),
+                        label: strings.onboardingGetStarted,
+                        onStart: _getStarted,
+                      ),
+                      _ => _BootstrapIndicator(
+                        key: const ValueKey('loading'),
+                        ready: locale.isReady && auth is! AuthInitial,
+                        readyLabel: strings.readyToLearn,
+                        loadingLabel: strings.preparingYourSpace,
+                      ),
+                    },
                   ),
                 ],
               ),
@@ -152,124 +200,132 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
   }
 }
 
-class _SplashAtmosphere extends StatelessWidget {
-  const _SplashAtmosphere();
+/// Hand-drawn marks scattered around the wordmark, as on the welcome board.
+class _SplashBackdrop extends StatelessWidget {
+  const _SplashBackdrop();
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned(
-          top: -120,
-          right: -90,
-          child: _BlurOrb(color: AppTheme.secondary.withValues(alpha: .2)),
-        ),
-        Positioned(
-          bottom: -150,
-          left: -110,
-          child: _BlurOrb(
-            color: AppTheme.primary.withValues(alpha: .13),
-            size: 330,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _BlurOrb extends StatelessWidget {
-  const _BlurOrb({required this.color, this.size = 280});
-
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return ImageFiltered(
-      imageFilter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      ),
-    );
-  }
-}
-
-class _EditionBadge extends StatelessWidget {
-  const _EditionBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: AppRadii.fullBorder,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: .72),
-            borderRadius: AppRadii.fullBorder,
-            border: Border.all(color: Colors.white.withValues(alpha: .9)),
-          ),
-          child: const Text(
-            'MADE FOR CAMBODIA  •  2026',
-            style: TextStyle(
-              color: AppTheme.primary,
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.1,
+    final palette = context.riksa;
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [palette.surface, palette.canvas, palette.brandSoft],
+                  stops: const [0, .55, 1],
+                ),
+              ),
             ),
           ),
-        ),
+          Positioned(
+            top: 70,
+            left: 26,
+            child: Transform.rotate(
+              angle: 2.4,
+              child: RiksaDoodle(
+                RiksaDoodleKind.arrow,
+                size: 46,
+                color: palette.ink,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 76,
+            right: 30,
+            child: RiksaDoodle(
+              RiksaDoodleKind.star,
+              size: 40,
+              color: palette.ink,
+            ),
+          ),
+          Positioned(
+            left: -26,
+            bottom: 250,
+            child: RiksaDoodle(
+              RiksaDoodleKind.globe,
+              size: 96,
+              color: palette.brand.withValues(alpha: .35),
+            ),
+          ),
+          Positioned(
+            right: 38,
+            bottom: 290,
+            child: RiksaDoodle(
+              RiksaDoodleKind.sparkle,
+              size: 30,
+              color: palette.ink,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _SplashMark extends StatelessWidget {
-  const _SplashMark();
+class _WelcomeActions extends StatelessWidget {
+  const _WelcomeActions({
+    super.key,
+    required this.label,
+    required this.onStart,
+  });
+
+  final String label;
+  final VoidCallback onStart;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 104,
-          height: 104,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: .9),
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.primary.withValues(alpha: .12),
-                blurRadius: 40,
-                offset: const Offset(0, 16),
-              ),
-            ],
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 440),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // A solid Material 3 filled pill rather than the theme's glass
+          // one: the deep violet is the primary tone the reference uses for
+          // its main call to action.
+          FilledButton(
+            key: const Key('splash_get_started'),
+            onPressed: onStart,
+            style: FilledButton.styleFrom(
+              backgroundColor: isDark ? palette.brand : palette.brandStrong,
+              foregroundColor: palette.onBrand,
+              shadowColor: Colors.transparent,
+              elevation: 0,
+              side: BorderSide.none,
+              shape: const StadiumBorder(),
+              minimumSize: const Size.fromHeight(52),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: RiksaTypography.bodyStyleFor(
+                      label,
+                      const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(Icons.arrow_forward_rounded, size: 20),
+              ],
+            ),
           ),
-          child: const Icon(
-            Icons.auto_stories_rounded,
-            color: AppTheme.primary,
-            size: 42,
-          ),
-        ),
-        const SizedBox(height: 28),
-        const RiksaLogo(fontSize: 64),
-        const SizedBox(height: 12),
-        const Text(
-          'រៀន. គិត. អភិវឌ្ឍន៍.',
-          style: TextStyle(
-            fontSize: 16,
-            color: AppTheme.muted,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 1.1,
-          ),
-        ),
-      ],
+          const SizedBox(height: 8),
+        ],
+      ),
     );
   }
 }
@@ -288,27 +344,29 @@ class _BootstrapIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.riksa;
+    final label = ready ? readyLabel : loadingLabel;
     return SizedBox(
-      height: 54,
+      height: 64,
       child: Column(
         children: [
           SizedBox(
-            width: 92,
+            width: 96,
             child: LinearProgressIndicator(
-              minHeight: 3,
+              minHeight: 4,
               borderRadius: AppRadii.fullBorder,
-              backgroundColor: AppTheme.primary.withValues(alpha: .08),
-              color: ready ? AppTheme.secondary : AppTheme.primary,
+              backgroundColor: palette.outline,
+              color: palette.jade,
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            (ready ? readyLabel : loadingLabel).toUpperCase(),
-            style: const TextStyle(
-              color: AppTheme.muted,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.2,
+            label,
+            style: RiksaTypography.bodyStyleFor(
+              label,
+              Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(color: palette.inkMuted),
             ),
           ),
         ],
@@ -335,18 +393,19 @@ class _OfflineActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.riksa;
     return Container(
       constraints: const BoxConstraints(maxWidth: 440),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .9),
-        borderRadius: AppRadii.mediumBorder,
-        border: Border.all(color: AppTheme.outline),
+        color: palette.surface,
+        borderRadius: AppRadii.largeBorder,
+        border: Border.all(color: palette.outline),
       ),
       child: Column(
         children: [
           Text(message, textAlign: TextAlign.center),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(

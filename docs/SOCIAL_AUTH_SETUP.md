@@ -67,17 +67,16 @@ returns the Riksa token pair that the app stores in secure storage.
 TELEGRAM_ENABLED=true
 TELEGRAM_BOT_TOKEN=YOUR_BOT_TOKEN
 TELEGRAM_BOT_USERNAME=YOUR_BOT_USERNAME
+# Local development (no public HTTPS needed):
+TELEGRAM_POLLING_ENABLED=true
 ```
 
 3. Restart the API after changing `.env`.
-4. Each tester must start the bot before requesting a code, then enter their
-   numeric Telegram chat ID in Riksa. Telegram will reject bot messages until
-   that user has opened the bot.
 
-The app requests a code from `POST /api/v1/auth/otp/send`, then exchanges the
-chat ID and code at `POST /api/v1/auth/telegram`. Existing Telegram accounts
-are logged in; the registration route creates a passwordless Riksa account and
-returns the same token pair used by all other login methods.
+Users never enter a Telegram ID. They choose **Open Telegram** (confirm in the
+bot) or **Log in with code** (paste the code the bot sends after Start). New
+Telegram users then pick a username and display name. See
+[`TELEGRAM_AUTH_FLOW.md`](TELEGRAM_AUTH_FLOW.md).
 
 ## 3. Start and verify locally
 
@@ -90,6 +89,6 @@ Verify all four paths:
 
 - existing user: Continue with Google;
 - new user: Continue with Google (automatic registration);
-- existing user: Continue with Telegram and enter the OTP;
-- new user: open registration, Continue with Telegram, choose a username and
-  display name, and enter the OTP.
+- Telegram, existing user: Open Telegram → Confirm in bot → Home, and
+  Log in with code → paste code → Home;
+- Telegram, new user: either option → choose a username and display name → Home.

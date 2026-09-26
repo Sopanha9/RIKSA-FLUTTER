@@ -57,8 +57,8 @@ already attaches it and handles refresh.
 | Operation | Args | Returns | Behavior |
 |---|---|---|---|
 | `createPost` | `input: CreatePostInput!` | `Post!` | **Fails unless the user joined the category first.** STEM keyword filter on title+content. |
-| `updatePost` | `input: UpdatePostInput!` | `Post!` | Owner only. |
-| `deletePost` | `id: UUID!` | `Boolean!` | Owner only. |
+| `updatePost` | `input: UpdatePostInput!` | `Post!` | Owner only. The app sends `{ id, title, content }` — see the note below. |
+| `deletePost` | `id: UUID!` | `Boolean!` | Owner only. A `false` result is surfaced to the author as a failure. |
 | `createComment` | `input: CreateCommentInput!` | `Comment!` | STEM filter; replies via `parentId`; increments `commentCount`. |
 | `updateComment` / `deleteComment` | — | `Comment!` / `Boolean!` | Owner only. |
 | `react` | `input: ReactInput!` | `Post!` | **Toggle semantics:** same type again → removes; different type → swaps; new → adds. Always build optimistic UI from the returned full `Post` (counts + `myReaction`). |
@@ -92,10 +92,19 @@ enum ReactionType  { UPVOTE DOWNVOTE HAHA LOVE }
 enum SharePlatform { TELEGRAM FACEBOOK COPY_LINK }
 
 input CreatePostInput    { title: String!  content: String!  mediaUrl: String  categoryId: UUID! }
+# UpdatePostInput is not published in the doc set. The client assumes it
+# mirrors CreatePostInput plus the post id, and sends only the fields the
+# composer edits:
+input UpdatePostInput    { id: UUID!  title: String  content: String }
 input CreateCommentInput { postId: UUID!  content: String!  parentId: UUID }
 input ReactInput         { postId: UUID  commentId: UUID  type: ReactionType! }
 input SharePostInput     { postId: UUID!  platform: SharePlatform }
 ```
+
+An edited post keeps its community: moving it would also have to satisfy the
+join-before-posting rule `createPost` enforces, so the composer locks the
+category dropdown in edit mode. If the server does accept `categoryId` on
+`UpdatePostInput`, unlocking it is a one-line change in the composer.
 
 Pagination: `endCursor` is the **last item's UUID** (opaque to the client —
 never parse it). Feed fetches `limit+1` rows server-side to compute

@@ -20,34 +20,104 @@ void main() {
       expect(json, isNot(contains('provinceId')));
     });
 
-    test('OTP payload matches backend and contains no channel field', () {
-      expect(OtpSendRequest(identifier: '1081239995').toJson(), {
-        'identifier': '1081239995',
-      });
+    test('Telegram signup completion payload', () {
       expect(
-        OtpVerifyRequest(identifier: '1081239995', code: '931293').toJson(),
-        {'identifier': '1081239995', 'code': '931293'},
-      );
-    });
-
-    test('Telegram login and registration payloads match backend', () {
-      expect(
-        TelegramAuthRequest(identifier: '1081239995', code: '931293').toJson(),
-        {'identifier': '1081239995', 'code': '931293'},
-      );
-      expect(
-        TelegramAuthRequest(
-          identifier: '1081239995',
-          code: '931293',
+        const TelegramCompleteRequest(
+          signupToken: 'signup-1',
           username: 'sophea',
           displayName: 'Sok Sophea',
         ).toJson(),
         {
-          'identifier': '1081239995',
-          'code': '931293',
+          'signupToken': 'signup-1',
           'username': 'sophea',
           'displayName': 'Sok Sophea',
         },
+      );
+    });
+  });
+
+  group('Telegram authorization responses', () {
+    test('challenge parses and clamps server timings', () {
+      final challenge = TelegramAuthChallenge.fromJson({
+        'requestToken': 'secret-token',
+        'botUrl':
+            'https://t.me/riksa_bot?start=login_841f6cb4701d56f61cd1b2fea1f133f8',
+        'botAppUrl':
+            'tg://resolve?domain=riksa_bot&start=login_841f6cb4701d56f61cd1b2fea1f133f8',
+        'expiresInSeconds': 5,
+        'pollIntervalSeconds': 60,
+      });
+      expect(
+        challenge.botUrl.queryParameters['start'],
+        'login_841f6cb4701d56f61cd1b2fea1f133f8',
+      );
+      expect(challenge.botAppUrl!.scheme, 'tg');
+      expect(challenge.expiresIn, const Duration(seconds: 30));
+      expect(challenge.pollInterval, const Duration(seconds: 10));
+    });
+
+    test('challenge without a usable link is rejected', () {
+      expect(
+        () => TelegramAuthChallenge.fromJson({
+          'requestToken': 'secret-token',
+          'botUrl': '',
+        }),
+        throwsFormatException,
+      );
+    });
+
+    test('bot info exposes the handle for the code screen', () {
+      final info = TelegramBotInfo.fromJson({
+        'available': true,
+        'botUsername': 'riksa_bot',
+        'botUrl': 'https://t.me/riksa_bot?start=code',
+        'codeLength': 8,
+      });
+      expect(info.handle, '@riksa_bot');
+      expect(info.botAppUrl, isNull);
+      expect(TelegramBotInfo.fromJson({'available': false}).handle, isNull);
+    });
+
+    test('poll result parses each status', () {
+      expect(
+        TelegramAuthPoll.fromJson({'status': 'PENDING'}).status,
+        TelegramAuthStatus.pending,
+      );
+      final signedIn = TelegramAuthPoll.fromJson({
+        'status': 'AUTHENTICATED',
+        'auth': {
+          'userId': 'user-1',
+          'accessToken': 'a',
+          'refreshToken': 'r',
+          'username': 'sophea',
+          'role': 'USER',
+        },
+      });
+      expect(signedIn.auth!.accessToken, 'a');
+      final newUser = TelegramAuthPoll.fromJson({
+        'status': 'PROFILE_REQUIRED',
+        'signupToken': 'signup-1',
+        'telegram': {'displayName': ' Sok Sophea ', 'username': 'sophea'},
+      });
+      expect(newUser.profile!.displayName, 'Sok Sophea');
+      expect(
+        TelegramAuthPoll.fromJson({'status': 'DENIED'}).status,
+        TelegramAuthStatus.denied,
+      );
+    });
+
+    test('incomplete or unknown poll results are rejected', () {
+      expect(
+        () => TelegramAuthPoll.fromJson({'status': 'AUTHENTICATED'}),
+        throwsFormatException,
+      );
+      expect(
+        () => TelegramAuthPoll.fromJson({'status': 'PROFILE_REQUIRED'}),
+        throwsFormatException,
+      );
+      expect(
+        () => TelegramAuthPoll.fromJson({'status': 'SOMETHING'}),
+        throwsFormatException,
       );
     });
   });

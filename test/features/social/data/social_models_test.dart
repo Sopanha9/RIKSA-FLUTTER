@@ -2,6 +2,35 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 
 void main() {
+  test(
+    'old posts default to USER while milestone data parses when present',
+    () {
+      final legacy = SocialPost.fromJson({
+        'id': 'legacy',
+        'author': {'id': 'u1', 'displayName': 'Dara'},
+        'category': {'id': 'c1', 'name': 'Wins', 'slug': 'wins'},
+      });
+      final milestone = SocialPost.fromJson({
+        'id': 'win',
+        'kind': 'MILESTONE',
+        'milestone': {
+          'type': 'STREAK',
+          'title': '7-day streak',
+          'titleKm': '៧ ថ្ងៃជាប់គ្នា',
+          'value': 7,
+        },
+        'author': {'id': 'u1', 'displayName': 'Dara'},
+        'category': {'id': 'c1', 'name': 'Wins', 'slug': 'wins'},
+      });
+
+      expect(legacy.kind, SocialPostKind.user);
+      expect(legacy.milestone, isNull);
+      expect(milestone.kind, SocialPostKind.milestone);
+      expect(milestone.milestone?.type, SocialMilestoneType.streak);
+      expect(milestone.milestone?.value, 7);
+    },
+  );
+
   test('SocialFeedPage parses GraphQL feed and reaction state', () {
     final page = SocialFeedPage.fromJson({
       'edges': [

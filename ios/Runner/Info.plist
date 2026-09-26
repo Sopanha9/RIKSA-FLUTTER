@@ -9,6 +9,8 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose a profile photo or cover image for your RIKSA profile.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleURLTypes</key>
@@ -23,7 +25,7 @@
 		</dict>
 	</array>
 	<key>CFBundleDisplayName</key>
-	<string>Riksa App</string>
+	<string>Riksa</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -31,7 +33,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>riksa_app</string>
+	<string>Riksa</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

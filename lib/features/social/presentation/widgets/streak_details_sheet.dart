@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/pixel_fire_icon.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../data/social_models.dart';
 
@@ -10,11 +11,21 @@ Future<void> showStreakDetailsSheet(
 ) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
-  useSafeArea: true,
+  useSafeArea: false,
   showDragHandle: true,
-  backgroundColor: Theme.of(context).colorScheme.surface,
+  backgroundColor: Colors.transparent,
   constraints: const BoxConstraints(maxWidth: 640),
-  builder: (context) => StreakDetailsSheet(streak: streak),
+  builder: (context) => SizedBox(
+    width: double.infinity,
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.riksa.surface.withValues(alpha: .94),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border.all(color: Colors.white.withValues(alpha: .42)),
+      ),
+      child: StreakDetailsSheet(streak: streak),
+    ),
+  ),
 );
 
 class StreakDetailsSheet extends StatelessWidget {
@@ -36,14 +47,19 @@ class StreakDetailsSheet extends StatelessWidget {
         maxHeight: MediaQuery.sizeOf(context).height * .86,
       ),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          4,
+          20,
+          28 + MediaQuery.paddingOf(context).bottom,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               l10n.streakTitle,
               style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 4),
@@ -60,9 +76,7 @@ class StreakDetailsSheet extends StatelessWidget {
               children: [
                 Expanded(
                   child: _StreakMetric(
-                    icon: Icons.local_fire_department_rounded,
-                    iconColor: AppColors.gamificationOrange,
-                    background: AppColors.gamificationOrangeSoft,
+                    kind: _StreakMetricKind.current,
                     value: streak.current,
                     label: l10n.currentStreak,
                   ),
@@ -70,9 +84,7 @@ class StreakDetailsSheet extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _StreakMetric(
-                    icon: Icons.star_rounded,
-                    iconColor: AppColors.gamificationGold,
-                    background: AppColors.gamificationGoldSoft,
+                    kind: _StreakMetricKind.best,
                     value: streak.highest,
                     label: l10n.bestStreak,
                   ),
@@ -89,7 +101,7 @@ class StreakDetailsSheet extends StatelessWidget {
             Text(
               l10n.activityCalendar,
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 10),
@@ -155,13 +167,14 @@ class _DayStatus extends StatelessWidget {
     final future = date.isAfter(today);
     final missedToday = date == today && !active;
     final colors = Theme.of(context).colorScheme;
+    final palette = context.riksa;
     final background = active
-        ? AppColors.success
+        ? palette.brand
         : missedToday
         ? AppColors.gamificationOrange
         : future
-        ? Colors.transparent
-        : colors.surfaceContainerHighest;
+        ? Colors.white.withValues(alpha: .42)
+        : palette.surfaceRaised;
     final foreground = active || missedToday
         ? Colors.white
         : colors.onSurfaceVariant;
@@ -182,7 +195,11 @@ class _DayStatus extends StatelessWidget {
           decoration: BoxDecoration(
             color: background,
             shape: BoxShape.circle,
-            border: future ? Border.all(color: colors.outlineVariant) : null,
+            border: Border.all(
+              color: active || missedToday
+                  ? Colors.white.withValues(alpha: .36)
+                  : colors.outlineVariant,
+            ),
           ),
           alignment: Alignment.center,
           child: active
@@ -203,46 +220,46 @@ class _DayStatus extends StatelessWidget {
   }
 }
 
+enum _StreakMetricKind { current, best }
+
 class _StreakMetric extends StatelessWidget {
   const _StreakMetric({
-    required this.icon,
-    required this.iconColor,
-    required this.background,
+    required this.kind,
     required this.value,
     required this.label,
   });
 
-  final IconData icon;
-  final Color iconColor;
-  final Color background;
+  final _StreakMetricKind kind;
   final int value;
   final String label;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: background,
-      borderRadius: AppRadii.mediumBorder,
-    ),
+  Widget build(BuildContext context) => _GlassStreakCard(
+    padding: const EdgeInsets.all(15),
     child: Column(
       children: [
-        Icon(icon, size: 40, color: iconColor),
-        const SizedBox(height: 2),
+        kind == _StreakMetricKind.current
+            ? const PixelFireIcon(size: 34)
+            : const Icon(
+                Icons.star_rounded,
+                size: 35,
+                color: AppColors.gamificationGold,
+              ),
+        const SizedBox(height: 4),
         Text(
           '$value',
-          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-            color: AppColors.neutralInk,
-            fontWeight: FontWeight.w900,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            color: context.riksa.ink,
+            fontWeight: FontWeight.w800,
           ),
         ),
+        const SizedBox(height: 1),
         Text(
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: AppColors.neutralInk,
-            fontSize: 12,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: context.riksa.inkMuted,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -260,14 +277,9 @@ class _LastTrackedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    return Container(
+    return _GlassStreakCard(
       key: const ValueKey('streak-last-tracked'),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer,
-        borderRadius: AppRadii.mediumBorder,
-        border: Border.all(color: theme.colorScheme.outline),
-      ),
       child: Row(
         children: [
           Container(
@@ -302,7 +314,7 @@ class _LastTrackedCard extends StatelessWidget {
                           context,
                         ).formatShortDate(lastTrackedDate!),
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -321,12 +333,8 @@ class _MilestoneCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return _GlassStreakCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-      decoration: BoxDecoration(
-        color: AppColors.gamificationOrangeSoft,
-        borderRadius: AppRadii.mediumBorder,
-      ),
       child: Row(
         children: [
           const Icon(Icons.flag_rounded, color: AppColors.gamificationOrange),
@@ -334,9 +342,9 @@ class _MilestoneCard extends StatelessWidget {
           Expanded(
             child: Text(
               '${streak.daysToNext} • ${streak.nextMilestoneName}',
-              style: const TextStyle(
-                color: AppColors.neutralInk,
-                fontWeight: FontWeight.w800,
+              style: TextStyle(
+                color: context.riksa.ink,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -363,69 +371,158 @@ class _ActivityCalendar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final material = MaterialLocalizations.of(context);
-    final first = DateTime(month.year, month.month);
-    final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
-    final offset = first.weekday - 1;
-    final cells = ((offset + daysInMonth + 6) ~/ 7) * 7;
+    final lastDayOfMonth = DateTime(month.year, month.month + 1, 0);
+    final gridEnd = lastDayOfMonth.add(
+      Duration(days: DateTime.daysPerWeek - lastDayOfMonth.weekday),
+    );
+    final gridStart = gridEnd.subtract(
+      const Duration(days: DateTime.daysPerWeek * 11 + 6),
+    );
+    final weekCount = gridEnd.difference(gridStart).inDays ~/ 7 + 1;
     final weekdays = [
       ...material.narrowWeekdays.skip(1),
       material.narrowWeekdays.first,
     ];
+    final firstVisibleMonth = DateTime(gridStart.year, gridStart.month);
+    final visibleMonths = [
+      for (var index = 0; index < 4; index++)
+        DateTime(firstVisibleMonth.year, firstVisibleMonth.month + index),
+    ].where((date) => !date.isAfter(gridEnd)).toList();
+    final activeInRange = activeDates
+        .where((date) => !date.isBefore(gridStart) && !date.isAfter(gridEnd))
+        .length;
 
-    return Container(
+    return _GlassStreakCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer,
-        borderRadius: AppRadii.mediumBorder,
-        border: Border.all(color: theme.colorScheme.outline),
-      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            material.formatMonthYear(month),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 14),
           Row(
             children: [
-              for (final weekday in weekdays)
-                Expanded(
-                  child: Text(
-                    weekday,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w800,
-                    ),
+              Expanded(
+                child: Text(
+                  'Activity history',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
+              ),
+              Text(
+                '$activeInRange active',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: context.riksa.inkMuted,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 6),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7,
-              mainAxisExtent: 44,
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 26),
+            child: Row(
+              children: [
+                for (final visibleMonth in visibleMonths)
+                  Expanded(
+                    child: Text(
+                      material.formatMonthYear(visibleMonth).split(' ').first,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: context.riksa.inkMuted,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            itemCount: cells,
-            itemBuilder: (context, index) {
-              final dayNumber = index - offset + 1;
-              if (dayNumber < 1 || dayNumber > daysInMonth) {
-                return const SizedBox.shrink();
-              }
-              final date = DateTime(month.year, month.month, dayNumber);
-              return _CalendarDay(
-                date: date,
-                isToday: date == today,
-                isActive: activeDates.contains(date),
-                isLastTracked:
-                    lastTrackedDate != null && date == _day(lastTrackedDate!),
+          ),
+          const SizedBox(height: 5),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const labelWidth = 18.0;
+              const labelGap = 8.0;
+              final gridWidth = constraints.maxWidth - labelWidth - labelGap;
+              final gap = weekCount > 10 ? 3.0 : 5.0;
+              final cellSize = ((gridWidth - (weekCount - 1) * gap) / weekCount)
+                  .clamp(10.0, 16.0);
+              const bottomGap = 3.0;
+              final rowHeight = cellSize + bottomGap;
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: labelWidth,
+                    child: Column(
+                      children: [
+                        for (var row = 0; row < DateTime.daysPerWeek; row++)
+                          SizedBox(
+                            height: rowHeight,
+                            child: row.isEven
+                                ? Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      weekdays[row],
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: labelGap),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (var week = 0; week < weekCount; week++)
+                          Column(
+                            children: [
+                              for (
+                                var day = 0;
+                                day < DateTime.daysPerWeek;
+                                day++
+                              )
+                                Builder(
+                                  builder: (context) {
+                                    final date = gridStart.add(
+                                      Duration(days: week * 7 + day),
+                                    );
+                                    return _ContributionCell(
+                                      date: date,
+                                      size: cellSize,
+                                      bottomGap: bottomGap,
+                                      isToday: date == today,
+                                      isActive: activeDates.contains(date),
+                                      isLastTracked:
+                                          lastTrackedDate != null &&
+                                          date == _day(lastTrackedDate!),
+                                    );
+                                  },
+                                ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
               );
             },
+          ),
+          const SizedBox(height: 14),
+          _ContributionLegend(
+            activeColor: AppColors.success,
+            quietColor: Theme.of(context).colorScheme.surfaceContainerHighest,
           ),
         ],
       ),
@@ -433,15 +530,19 @@ class _ActivityCalendar extends StatelessWidget {
   }
 }
 
-class _CalendarDay extends StatelessWidget {
-  const _CalendarDay({
+class _ContributionCell extends StatelessWidget {
+  const _ContributionCell({
     required this.date,
+    required this.size,
+    required this.bottomGap,
     required this.isToday,
     required this.isActive,
     required this.isLastTracked,
   });
 
   final DateTime date;
+  final double size;
+  final double bottomGap;
   final bool isToday;
   final bool isActive;
   final bool isLastTracked;
@@ -449,40 +550,121 @@ class _CalendarDay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
-      decoration: BoxDecoration(
-        color: isToday ? AppColors.neutralInk : Colors.transparent,
-        borderRadius: AppRadii.smallBorder,
-        border: isLastTracked && !isToday
-            ? Border.all(color: AppColors.gamificationOrange, width: 1.5)
-            : null,
+    final palette = context.riksa;
+    final color = isActive
+        ? AppColors.success
+        : isToday
+        ? palette.brand.withValues(alpha: .55)
+        : colors.surfaceContainerHighest.withValues(alpha: .72);
+
+    return Tooltip(
+      message:
+          '${MaterialLocalizations.of(context).formatShortDate(date)}'
+          '${isActive ? ' • active' : ''}',
+      child: Container(
+        width: size,
+        height: size,
+        margin: EdgeInsets.only(bottom: bottomGap),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: isLastTracked
+                ? AppColors.gamificationOrange
+                : isToday
+                ? palette.brand
+                : Colors.white.withValues(alpha: .42),
+            width: isLastTracked || isToday ? 1.4 : .7,
+          ),
+        ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            '${date.day}',
-            style: TextStyle(
-              color: isToday ? Colors.white : colors.onSurface,
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
+    );
+  }
+}
+
+class _ContributionLegend extends StatelessWidget {
+  const _ContributionLegend({
+    required this.activeColor,
+    required this.quietColor,
+  });
+
+  final Color activeColor;
+  final Color quietColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
+      color: context.riksa.inkMuted,
+      fontWeight: FontWeight.w700,
+    );
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Text('Less', style: style),
+        const SizedBox(width: 6),
+        for (final color in [
+          quietColor.withValues(alpha: .72),
+          Color.lerp(quietColor, activeColor, .32)!,
+          Color.lerp(quietColor, activeColor, .62)!,
+          activeColor,
+        ])
+          Container(
+            width: 11,
+            height: 11,
+            margin: const EdgeInsetsDirectional.only(end: 4),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(3),
+              border: Border.all(color: Colors.white.withValues(alpha: .38)),
             ),
           ),
-          const SizedBox(height: 2),
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: isActive
-                  ? AppColors.success
-                  : isToday
-                  ? Colors.white24
-                  : Colors.transparent,
-              shape: BoxShape.circle,
-            ),
+        const SizedBox(width: 2),
+        Text('More', style: style),
+      ],
+    );
+  }
+}
+
+class _GlassStreakCard extends StatelessWidget {
+  const _GlassStreakCard({
+    super.key,
+    required this.child,
+    this.padding = EdgeInsets.zero,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.riksa;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fill = isDark
+        ? palette.surface.withValues(alpha: .46)
+        : Colors.white.withValues(alpha: .58);
+    final border = isDark
+        ? Colors.white.withValues(alpha: .12)
+        : Colors.white.withValues(alpha: .72);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: AppRadii.mediumBorder,
+        boxShadow: [
+          BoxShadow(
+            color: palette.ink.withValues(alpha: isDark ? .16 : .06),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
         ],
+      ),
+      child: Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: AppRadii.mediumBorder,
+          border: Border.all(color: border),
+        ),
+        child: child,
       ),
     );
   }

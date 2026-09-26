@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
+import '../../../core/widgets/unsaved_changes_guard.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_models.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../data/profile_media_storage.dart';
+import '../providers/profile_cover_provider.dart';
 import '../providers/profile_provider.dart';
+import 'widgets/profile_cover.dart';
 import 'widgets/profile_ui.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -17,6 +22,8 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
+  static const _customImageChoice = '__custom_image__';
+
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _bioController;
@@ -37,6 +44,24 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _bioController = TextEditingController(text: user?.bio);
     _gender = user?.gender;
     _avatarPath = user?.avatarUrl;
+    _nameController.addListener(_syncDirty);
+    _bioController.addListener(_syncDirty);
+  }
+
+  /// Whether the form differs from the profile the server last returned.
+  bool _isDirty(AuthUser? user) {
+    if (user == null) return false;
+    return _nameController.text.trim() != (user.displayName).trim() ||
+        _bioController.text.trim() != (user.bio ?? '').trim() ||
+        _gender != user.gender ||
+        _avatarPath != user.avatarUrl;
+  }
+
+  bool _wasDirty = false;
+
+  void _syncDirty() {
+    final dirty = _isDirty(_user);
+    if (dirty != _wasDirty) setState(() => _wasDirty = dirty);
   }
 
   @override
@@ -51,194 +76,236 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final l10n = AppLocalizations.of(context)!;
     final auth = ref.watch(authProvider);
     final user = auth is Authenticated ? auth.user : null;
+    final coverId = ref.watch(profileCoverProvider);
+    final localAvatar = ref.watch(profileAvatarProvider);
 
-    return Scaffold(
-      backgroundColor: ProfilePalette.canvas(context),
-      appBar: AppBar(
-        backgroundColor: ProfilePalette.canvas(context),
-        centerTitle: true,
-        title: Text(
-          l10n.editProfile,
-          style: const TextStyle(fontWeight: FontWeight.w900),
+    return UnsavedChangesGuard(
+      dirty: _isDirty(user),
+      busy: _saving,
+      child: Scaffold(
+        backgroundColor: context.riksa.canvas,
+        appBar: AppBar(
+          backgroundColor: context.riksa.canvas,
+          centerTitle: true,
+          title: Text(
+            l10n.editProfile,
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
         ),
-      ),
-      body: user == null
-          ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              top: false,
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 680),
-                  child: Form(
-                    key: _formKey,
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
-                      children: [
-                        Center(
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              RiksaProfileAvatar(
-                                user: user,
-                                radius: 52,
-                                avatarPath: _avatarPath,
-                              ),
-                              PositionedDirectional(
-                                end: -2,
-                                bottom: 1,
-                                child: IconButton.filled(
-                                  key: const ValueKey('edit-avatar'),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: ProfilePalette.green,
-                                    foregroundColor: Colors.black,
-                                  ),
-                                  onPressed: () => _chooseAvatar(context),
-                                  icon: const Icon(
-                                    Icons.camera_alt_rounded,
-                                    size: 19,
+        body: user == null
+            ? const Center(child: CircularProgressIndicator())
+            : SafeArea(
+                top: false,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 680),
+                    child: Form(
+                      key: _formKey,
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
+                        children: [
+                          SizedBox(
+                            height: 205,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                ProfileCover(
+                                  key: const ValueKey('edit-profile-cover'),
+                                  coverId: coverId,
+                                  height: 150,
+                                ),
+                                PositionedDirectional(
+                                  top: 10,
+                                  end: 10,
+                                  child: FilledButton.tonalIcon(
+                                    key: const ValueKey('edit-cover'),
+                                    onPressed: () => _chooseCover(context),
+                                    icon: const Icon(Icons.palette_outlined),
+                                    label: Text(l10n.editCover),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        ProfilePanel(
-                          child: Column(
-                            children: [
-                              TextFormField(
-                                key: const ValueKey('edit-display-name'),
-                                controller: _nameController,
-                                maxLength: 100,
-                                decoration: InputDecoration(
-                                  labelText: l10n.fullName,
-                                  prefixIcon: const Icon(Icons.badge_outlined),
+                                PositionedDirectional(
+                                  start: 0,
+                                  end: 0,
+                                  bottom: 0,
+                                  child: Center(
+                                    child: Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        RiksaProfileAvatar(
+                                          user: user,
+                                          radius: 52,
+                                          avatarPath:
+                                              localAvatar ?? _avatarPath,
+                                        ),
+                                        PositionedDirectional(
+                                          end: -2,
+                                          bottom: 1,
+                                          child: IconButton.filled(
+                                            key: const ValueKey('edit-avatar'),
+                                            style: IconButton.styleFrom(
+                                              backgroundColor:
+                                                  ProfilePalette.green(context),
+                                              foregroundColor:
+                                                  context.riksa.onBrand,
+                                            ),
+                                            onPressed: () =>
+                                                _chooseAvatar(context),
+                                            icon: const Icon(
+                                              Icons.camera_alt_rounded,
+                                              size: 19,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return l10n.requiredField;
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _bioController,
-                                maxLength: 160,
-                                minLines: 2,
-                                maxLines: 4,
-                                decoration: InputDecoration(
-                                  labelText: l10n.bio,
-                                  prefixIcon: const Icon(Icons.notes_rounded),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          ProfilePanel(
+                            child: Column(
+                              children: [
+                                TextFormField(
+                                  key: const ValueKey('edit-display-name'),
+                                  controller: _nameController,
+                                  maxLength: 100,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.fullName,
+                                    prefixIcon: const Icon(
+                                      Icons.badge_outlined,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return l10n.requiredField;
+                                    }
+                                    return null;
+                                  },
                                 ),
-                              ),
-                              const SizedBox(height: 12),
-                              DropdownButtonFormField<String?>(
-                                initialValue: _gender,
-                                isExpanded: true,
-                                decoration: InputDecoration(
-                                  labelText: l10n.gender,
-                                  prefixIcon: const Icon(Icons.person_outline),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: _bioController,
+                                  maxLength: 160,
+                                  minLines: 2,
+                                  maxLines: 4,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.bio,
+                                    prefixIcon: const Icon(Icons.notes_rounded),
+                                  ),
                                 ),
-                                items: [
-                                  DropdownMenuItem<String?>(
-                                    value: null,
-                                    child: Text(l10n.genderUnspecified),
+                                const SizedBox(height: 12),
+                                DropdownButtonFormField<String?>(
+                                  initialValue: _gender,
+                                  isExpanded: true,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.gender,
+                                    prefixIcon: const Icon(
+                                      Icons.person_outline,
+                                    ),
                                   ),
-                                  const DropdownMenuItem(
-                                    value: 'FEMALE',
-                                    child: Text('Female'),
-                                  ),
-                                  const DropdownMenuItem(
-                                    value: 'MALE',
-                                    child: Text('Male'),
-                                  ),
-                                  const DropdownMenuItem(
-                                    value: 'OTHER',
-                                    child: Text('Other'),
-                                  ),
-                                ],
-                                onChanged: (value) => _gender = value,
-                              ),
-                            ],
+                                  items: [
+                                    DropdownMenuItem<String?>(
+                                      value: null,
+                                      child: Text(l10n.genderUnspecified),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'FEMALE',
+                                      child: Text(l10n.genderFemale),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'MALE',
+                                      child: Text(l10n.genderMale),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'OTHER',
+                                      child: Text(l10n.genderOther),
+                                    ),
+                                  ],
+                                  onChanged: (value) => _gender = value,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        ProfilePanel(
-                          padding: EdgeInsets.zero,
-                          child: Column(
-                            children: [
-                              _ReadOnlyAccountRow(
-                                icon: Icons.alternate_email_rounded,
-                                label: l10n.username,
-                                value: '@${user.username}',
-                              ),
-                              Divider(
-                                height: 1,
-                                indent: 58,
-                                color: ProfilePalette.border(context),
-                              ),
-                              _ReadOnlyAccountRow(
-                                icon: Icons.email_outlined,
-                                label: l10n.email,
-                                value: user.email ?? l10n.notProvided,
-                              ),
-                              Divider(
-                                height: 1,
-                                indent: 58,
-                                color: ProfilePalette.border(context),
-                              ),
-                              _ReadOnlyAccountRow(
-                                icon: Icons.phone_outlined,
-                                label: l10n.phoneNumber,
-                                value: user.phoneNumber ?? l10n.notProvided,
-                              ),
-                            ],
+                          const SizedBox(height: 16),
+                          ProfilePanel(
+                            padding: EdgeInsets.zero,
+                            child: Column(
+                              children: [
+                                _ReadOnlyAccountRow(
+                                  icon: Icons.alternate_email_rounded,
+                                  label: l10n.username,
+                                  value: '@${user.username}',
+                                ),
+                                Divider(
+                                  height: 1,
+                                  indent: 58,
+                                  color: context.riksa.outline,
+                                ),
+                                _ReadOnlyAccountRow(
+                                  icon: Icons.email_outlined,
+                                  label: l10n.email,
+                                  value: user.email ?? l10n.notProvided,
+                                ),
+                                Divider(
+                                  height: 1,
+                                  indent: 58,
+                                  color: context.riksa.outline,
+                                ),
+                                _ReadOnlyAccountRow(
+                                  icon: Icons.phone_outlined,
+                                  label: l10n.phoneNumber,
+                                  value: user.phoneNumber ?? l10n.notProvided,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          l10n.accountIdentifiersReadOnly,
-                          style: TextStyle(
-                            color: ProfilePalette.muted(context),
-                            fontSize: 12,
-                            height: 1.4,
+                          const SizedBox(height: 10),
+                          Text(
+                            l10n.accountIdentifiersReadOnly,
+                            style: TextStyle(
+                              color: context.riksa.inkMuted,
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        FilledButton(
-                          key: const ValueKey('save-profile'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: ProfilePalette.green,
-                            foregroundColor: Colors.black,
+                          const SizedBox(height: 24),
+                          FilledButton(
+                            key: const ValueKey('save-profile'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: ProfilePalette.green(context),
+                              foregroundColor: Colors.black,
+                            ),
+                            onPressed: _saving ? null : _save,
+                            child: _saving
+                                ? const SizedBox.square(
+                                    dimension: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(l10n.saveChanges),
                           ),
-                          onPressed: _saving ? null : _save,
-                          child: _saving
-                              ? const SizedBox.square(
-                                  dimension: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(l10n.saveChanges),
-                        ),
-                        const SizedBox(height: 34),
-                        TextButton(
-                          key: const ValueKey('delete-account'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: ProfilePalette.muted(context),
-                            backgroundColor: ProfilePalette.panel(context),
-                            minimumSize: const Size.fromHeight(50),
+                          const SizedBox(height: 34),
+                          TextButton(
+                            key: const ValueKey('delete-account'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: context.riksa.inkMuted,
+                              backgroundColor: context.riksa.surface,
+                              minimumSize: const Size.fromHeight(50),
+                            ),
+                            onPressed: () => _confirmDelete(context),
+                            child: Text(l10n.deleteAccount),
                           ),
-                          onPressed: () => _confirmDelete(context),
-                          child: Text(l10n.deleteAccount),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
@@ -272,7 +339,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (user == null) return;
     final selected = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: ProfilePalette.panel(context),
+      backgroundColor: context.riksa.surface,
       showDragHandle: true,
       isScrollControlled: true,
       builder: (sheetContext) => FractionallySizedBox(
@@ -301,13 +368,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: ProfilePalette.greenSoft(context),
+                        color: context.riksa.brandSoft,
                         borderRadius: AppRadii.smallBorder,
                       ),
-                      child: const Text(
+                      child: Text(
                         'Humation',
                         style: TextStyle(
-                          color: ProfilePalette.green,
+                          color: ProfilePalette.green(context),
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
                         ),
@@ -319,11 +386,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 Text(
                   l10n.humationAvatarSubtitle,
                   style: TextStyle(
-                    color: ProfilePalette.muted(context),
+                    color: context.riksa.inkMuted,
                     fontSize: 13,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('choose-custom-avatar'),
+                    onPressed: () =>
+                        Navigator.of(sheetContext).pop(_customImageChoice),
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: Text(l10n.chooseFromPhotos),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Expanded(
                   child: GridView.builder(
                     key: const ValueKey('humation-avatar-grid'),
@@ -343,15 +421,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         label: '${l10n.chooseAvatar} ${index + 1}',
                         child: Material(
                           color: selected
-                              ? ProfilePalette.greenSoft(context)
-                              : ProfilePalette.panelSoft(context),
+                              ? context.riksa.brandSoft
+                              : context.riksa.surfaceRaised,
                           clipBehavior: Clip.antiAlias,
                           shape: RoundedRectangleBorder(
                             borderRadius: AppRadii.mediumBorder,
                             side: BorderSide(
                               color: selected
-                                  ? ProfilePalette.green
-                                  : ProfilePalette.border(context),
+                                  ? ProfilePalette.green(context)
+                                  : context.riksa.outline,
                               width: selected ? 2 : 1,
                             ),
                           ),
@@ -368,23 +446,23 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       label: user.displayName,
                                       size: 66,
                                       backgroundColor: Colors.transparent,
-                                      foregroundColor: ProfilePalette.text(
-                                        context,
-                                      ),
+                                      foregroundColor: context.riksa.ink,
                                     ),
                                   ),
                                 ),
                                 if (selected)
-                                  const PositionedDirectional(
+                                  PositionedDirectional(
                                     top: 5,
                                     end: 5,
                                     child: CircleAvatar(
                                       radius: 9,
-                                      backgroundColor: ProfilePalette.green,
+                                      backgroundColor: ProfilePalette.green(
+                                        context,
+                                      ),
                                       child: Icon(
                                         Icons.check_rounded,
                                         size: 13,
-                                        color: Colors.white,
+                                        color: context.riksa.onBrand,
                                       ),
                                     ),
                                   ),
@@ -402,7 +480,171 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         ),
       ),
     );
-    if (selected != null && mounted) setState(() => _avatarPath = selected);
+    if (selected == _customImageChoice) {
+      await _pickCustomAvatar();
+    } else if (selected != null && mounted) {
+      setState(() => _avatarPath = selected);
+      await ref.read(profileAvatarProvider.notifier).clear();
+    }
+  }
+
+  Future<void> _chooseCover(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final current = ref.read(profileCoverProvider);
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: context.riksa.surface,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => FractionallySizedBox(
+        heightFactor: .72,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 4, 18, 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.chooseProfileCover,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  l10n.profileCoverSubtitle,
+                  style: TextStyle(
+                    color: context.riksa.inkMuted,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('choose-custom-cover'),
+                    onPressed: () =>
+                        Navigator.of(sheetContext).pop(_customImageChoice),
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: Text(l10n.chooseFromPhotos),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: GridView.builder(
+                    key: const ValueKey('profile-cover-grid'),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 2.1,
+                          mainAxisSpacing: 11,
+                          crossAxisSpacing: 11,
+                        ),
+                    itemCount: profileCoverStyles.length,
+                    itemBuilder: (context, index) {
+                      final cover = profileCoverStyles[index];
+                      final isSelected = cover.id == current;
+                      return Semantics(
+                        button: true,
+                        selected: isSelected,
+                        label: '${l10n.chooseProfileCover} ${index + 1}',
+                        child: InkWell(
+                          key: ValueKey('profile-cover-option-${cover.id}'),
+                          borderRadius: AppRadii.mediumBorder,
+                          onTap: () => Navigator.of(sheetContext).pop(cover.id),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ProfileCover(coverId: cover.id, height: 100),
+                              if (isSelected)
+                                Align(
+                                  alignment: AlignmentDirectional.topEnd,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(7),
+                                    child: CircleAvatar(
+                                      radius: 10,
+                                      backgroundColor: context.riksa.onBrand,
+                                      child: Icon(
+                                        Icons.check_rounded,
+                                        size: 15,
+                                        color: ProfilePalette.green(context),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    if (selected == _customImageChoice) {
+      await _pickCustomCover();
+    } else if (selected != null) {
+      await ref.read(profileCoverProvider.notifier).select(selected);
+    }
+  }
+
+  Future<void> _pickCustomAvatar() async {
+    final user = _user;
+    if (user == null) return;
+    try {
+      final image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 900,
+        maxHeight: 900,
+        imageQuality: 88,
+        requestFullMetadata: false,
+      );
+      if (image == null) return;
+      final value = await persistProfileImage(
+        source: image,
+        userId: user.id,
+        kind: 'avatar',
+      );
+      await ref.read(profileAvatarProvider.notifier).selectLocalImage(value);
+    } catch (_) {
+      _showImageSelectionError();
+    }
+  }
+
+  Future<void> _pickCustomCover() async {
+    final user = _user;
+    if (user == null) return;
+    try {
+      final image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1800,
+        imageQuality: 88,
+        requestFullMetadata: false,
+      );
+      if (image == null) return;
+      final value = await persistProfileImage(
+        source: image,
+        userId: user.id,
+        kind: 'cover',
+      );
+      await ref.read(profileCoverProvider.notifier).select(value);
+    } catch (_) {
+      _showImageSelectionError();
+    }
+  }
+
+  void _showImageSelectionError() {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.imageSelectionFailed)));
   }
 
   Future<void> _confirmDelete(BuildContext context) async {
@@ -445,15 +687,15 @@ class _ReadOnlyAccountRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-    leading: Icon(icon, color: ProfilePalette.muted(context)),
+    leading: Icon(icon, color: context.riksa.inkMuted),
     title: Text(
       label,
-      style: TextStyle(color: ProfilePalette.muted(context), fontSize: 12),
+      style: TextStyle(color: context.riksa.inkMuted, fontSize: 12),
     ),
     subtitle: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis),
     trailing: Icon(
       Icons.lock_outline_rounded,
-      color: ProfilePalette.muted(context),
+      color: context.riksa.inkMuted,
       size: 17,
     ),
   );
