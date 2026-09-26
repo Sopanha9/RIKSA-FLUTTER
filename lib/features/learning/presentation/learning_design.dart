@@ -21,6 +21,15 @@ import '../../../core/theme/app_theme.dart';
 
 enum StemSubject { mathematics, physics, chemistry, biology, technology, other }
 
+/// Classifies an onboarding subject id, such as `MATHEMATICS`.
+StemSubject stemSubjectForId(String id) => switch (id.toLowerCase()) {
+  'mathematics' || 'math' => StemSubject.mathematics,
+  'physics' => StemSubject.physics,
+  'chemistry' => StemSubject.chemistry,
+  'biology' => StemSubject.biology,
+  _ => StemSubject.other,
+};
+
 /// Classifies a category name coming from the learning API.
 ///
 /// Matches Khmer as well as English because category names are authored in

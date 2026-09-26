@@ -22,6 +22,7 @@ import '../../features/blog/presentation/my_posts_screen.dart';
 import '../../features/learning/presentation/lesson_catalog_screen.dart';
 import '../../features/learning/presentation/lesson_experience_screen.dart';
 import '../../features/learning/presentation/subject_roadmap_screen.dart';
+import '../../features/learning/presentation/subject_start_screen.dart';
 import '../../features/learning/presentation/learning_result_screens.dart';
 import '../../features/learning/presentation/saved_lessons_screen.dart';
 import '../../features/learning/data/learning_models.dart';
@@ -303,6 +304,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                             : null,
                       );
                     },
+                  ),
+                  GoRoute(
+                    path: 'subject/:subjectId',
+                    builder: (context, state) => SubjectStartScreen(
+                      subjectId: state.pathParameters['subjectId']!,
+                    ),
                   ),
                   GoRoute(
                     path: 'roadmap/:categoryId',

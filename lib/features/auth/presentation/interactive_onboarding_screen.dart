@@ -100,7 +100,7 @@ class _InteractiveOnboardingScreenState
       _goTo(_currentPage + 1);
       return;
     }
-    await _saveAndNavigate(kLandingLocation);
+    await _saveAndNavigate(_startLocation(data));
   }
 
   Future<void> _back() async {
@@ -112,6 +112,13 @@ class _InteractiveOnboardingScreenState
     final router = GoRouter.maybeOf(context);
     if (router != null && router.canPop()) router.pop();
   }
+
+  /// Setup ends on the chosen subject's path, so the learner is not asked to
+  /// pick a subject again on the learning home.
+  String _startLocation(OnboardingSetupData data) => switch (data.subject) {
+    final subject? => '/learn/subject/${subject.id}',
+    null => kLandingLocation,
+  };
 
   Future<void> _saveAndNavigate(String route) async {
     if (_submitting) return;
@@ -223,7 +230,7 @@ class _InteractiveOnboardingScreenState
         setup: setup,
         lang: lang,
         submitting: _submitting,
-        onStart: () => _saveAndNavigate(kLandingLocation),
+        onStart: () => _saveAndNavigate(_startLocation(setup)),
       ),
     };
 

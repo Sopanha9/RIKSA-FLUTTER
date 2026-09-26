@@ -64,12 +64,12 @@ class _MascotSelectScreenState extends ConsumerState<MascotSelectScreen> {
     if (!mounted) return;
     _stage.react(MascotMood.celebrate);
     // Opened from settings it returns there; on first run, which replaces the
-    // stack, it carries on to setup.
+    // stack, it carries on to language.
     final router = GoRouter.of(context);
     if (router.canPop()) {
       router.pop();
     } else {
-      router.go('/onboarding/setup');
+      router.go('/language-select');
     }
   }
 

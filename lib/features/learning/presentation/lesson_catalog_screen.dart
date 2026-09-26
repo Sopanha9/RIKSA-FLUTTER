@@ -966,14 +966,7 @@ bool _matchesOnboardingSubject(
   SubjectProgress progress,
   OnboardingSubject selected,
 ) {
-  final expected = switch (selected.id.toLowerCase()) {
-    'mathematics' || 'math' => StemSubject.mathematics,
-    'physics' => StemSubject.physics,
-    'chemistry' => StemSubject.chemistry,
-    'biology' => StemSubject.biology,
-    _ => StemSubject.other,
-  };
-  return progress.subject == expected;
+  return progress.subject == stemSubjectForId(selected.id);
 }
 
 class _HomeMessage extends StatelessWidget {

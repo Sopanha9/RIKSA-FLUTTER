@@ -39,8 +39,8 @@ Widget _app({bool reduceMotion = false, bool fromSettings = false}) {
         builder: (context, state) => const MascotSelectScreen(),
       ),
       GoRoute(
-        path: '/onboarding/setup',
-        builder: (context, state) => const Text('setup page'),
+        path: '/language-select',
+        builder: (context, state) => const Text('language page'),
       ),
     ],
   );
@@ -106,7 +106,9 @@ void main() {
     expect(_stageName(tester), 'Mochi');
   });
 
-  testWidgets('continue saves the buddy and moves on to setup', (tester) async {
+  testWidgets('continue saves the buddy and moves on to language', (
+    tester,
+  ) async {
     await phone(tester);
     await tester.pumpWidget(_app());
     await tester.pump(const Duration(milliseconds: 100));
@@ -117,7 +119,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 16));
 
-    expect(find.text('setup page'), findsOneWidget);
+    expect(find.text('language page'), findsOneWidget);
     final preferences = await SharedPreferences.getInstance();
     expect(preferences.getString('riksa_mascot_species'), 'capybara');
     expect(preferences.getString('riksa_mascot_name'), 'Mochi');
@@ -139,7 +141,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('settings page'), findsOneWidget);
-    expect(find.text('setup page'), findsNothing);
+    expect(find.text('language page'), findsNothing);
     final preferences = await SharedPreferences.getInstance();
     expect(preferences.getString('riksa_mascot_species'), 'capybara');
   });

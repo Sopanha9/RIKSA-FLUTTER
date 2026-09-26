@@ -81,6 +81,14 @@ GoRouter _onboardingRouter() => GoRouter(
     GoRoute(
       path: '/learn',
       builder: (_, _) => const Scaffold(body: Text('Learn destination')),
+      routes: [
+        GoRoute(
+          path: 'subject/:subjectId',
+          builder: (_, state) => Scaffold(
+            body: Text('Subject ${state.pathParameters['subjectId']}'),
+          ),
+        ),
+      ],
     ),
   ],
 );
@@ -88,54 +96,61 @@ GoRouter _onboardingRouter() => GoRouter(
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('subject, then province, then Start learning opens Learn', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(393, 852);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets(
+    'subject, then province, then Start learning opens that subject',
+    (tester) async {
+      tester.view.physicalSize = const Size(393, 852);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    final router = _onboardingRouter();
-    addTearDown(router.dispose);
-    await tester.pumpWidget(_buildApp(router: router));
-    await tester.pumpAndSettle();
+      final router = _onboardingRouter();
+      addTearDown(router.dispose);
+      await tester.pumpWidget(_buildApp(router: router));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Pick your starting subject'), findsOneWidget);
-    expect(find.text('1/3'), findsOneWidget);
-    expect(find.text('Physics'), findsOneWidget);
+      expect(find.text('Pick your starting subject'), findsOneWidget);
+      expect(find.text('1/3'), findsOneWidget);
+      expect(find.text('Physics'), findsOneWidget);
 
-    await tester.tap(find.text('Physics'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Physics'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Which province are you representing?'), findsOneWidget);
-    expect(find.text('2/3'), findsOneWidget);
-    final continueButton = find.byKey(const Key('onboarding_continue_btn'));
-    expect(tester.widget<FilledButton>(continueButton).onPressed, isNull);
+      expect(find.text('Which province are you representing?'), findsOneWidget);
+      expect(find.text('2/3'), findsOneWidget);
+      final continueButton = find.byKey(const Key('onboarding_continue_btn'));
+      expect(tester.widget<FilledButton>(continueButton).onPressed, isNull);
 
-    await tester.tap(find.text('Phnom Penh'));
-    await tester.pumpAndSettle();
-    expect(find.text('Representing Phnom Penh!'), findsOneWidget);
+      await tester.tap(find.text('Phnom Penh'));
+      await tester.pumpAndSettle();
+      expect(find.text('Representing Phnom Penh!'), findsOneWidget);
 
-    await tester.tap(continueButton);
-    await tester.pumpAndSettle();
+      await tester.tap(continueButton);
+      await tester.pumpAndSettle();
 
-    expect(find.text('Your Physics roadmap is ready'), findsOneWidget);
-    expect(find.text('3/3'), findsOneWidget);
-    expect(find.text('Start learning'), findsOneWidget);
+      expect(find.text('Your Physics roadmap is ready'), findsOneWidget);
+      expect(find.text('3/3'), findsOneWidget);
+      expect(find.text('Start learning'), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('onboarding_start_learning')));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('onboarding_start_learning')));
+      await tester.pumpAndSettle();
 
-    expect(router.routeInformationProvider.value.uri.path, '/learn');
-    expect(find.text('Learn destination'), findsOneWidget);
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString('riksa_onboarding_subject'), 'PHYSICS');
-    expect(prefs.getBool('riksa_onboarding_viewed'), isTrue);
-    // A guest's squad waits for sign-in to reach their profile.
-    expect(prefs.getString('riksa_pending_province_id'), 'province-phnom-penh');
-    expect(prefs.getInt('riksa_onboarding_earned_xp'), isNull);
-  });
+      expect(
+        router.routeInformationProvider.value.uri.path,
+        '/learn/subject/PHYSICS',
+      );
+      expect(find.text('Subject PHYSICS'), findsOneWidget);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('riksa_onboarding_subject'), 'PHYSICS');
+      expect(prefs.getBool('riksa_onboarding_viewed'), isTrue);
+      // A guest's squad waits for sign-in to reach their profile.
+      expect(
+        prefs.getString('riksa_pending_province_id'),
+        'province-phnom-penh',
+      );
+      expect(prefs.getInt('riksa_onboarding_earned_xp'), isNull);
+    },
+  );
 
   testWidgets('subject and province fit Khmer at 200% text scale', (
     tester,

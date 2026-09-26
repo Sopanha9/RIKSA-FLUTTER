@@ -10,6 +10,7 @@ import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/providers/learning_home_provider.dart';
+import 'package:riksa_app/features/learning/providers/learning_roadmap_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -93,6 +94,18 @@ void main() {
             authProvider.overrideWith(_GuestNotifier.new),
             localeProvider.overrideWith(_FreshLocaleNotifier.new),
             learningHomeProvider.overrideWith((ref) async => _home),
+            learningRoadmapProvider('physics-id').overrideWith(
+              (ref) async => const LearningRoadmap(
+                categoryId: 'physics-id',
+                categoryName: 'Physics',
+                completedLessons: 0,
+                totalLessons: 0,
+                progress: 0,
+                currentLessonId: null,
+                activeDates: [],
+                units: [],
+              ),
+            ),
             provinceOptionsProvider.overrideWith((ref) async => _provinces),
           ],
           child: Consumer(
@@ -136,17 +149,21 @@ void main() {
       await tap(const ValueKey('splash_get_started'));
       expect(
         router.routerDelegate.currentConfiguration.uri.path,
-        '/language-select',
-      );
-
-      // Khmer is the first-run default; confirming it is the language decision.
-      await tap(const ValueKey('language_continue'));
-      expect(
-        router.routerDelegate.currentConfiguration.uri.path,
         '/mascot-select',
       );
 
+      // Picking a buddy first means the language page is that buddy talking.
+      await tap(const Key('mascot_capybara'));
       await tap(const Key('mascot_continue'));
+      expect(
+        router.routerDelegate.currentConfiguration.uri.path,
+        '/language-select',
+      );
+      expect(find.textContaining('Capy'), findsWidgets);
+      expect(find.textContaining('Croco'), findsNothing);
+
+      // Khmer is the first-run default; confirming it is the language decision.
+      await tap(const ValueKey('language_continue'));
       expect(
         router.routerDelegate.currentConfiguration.uri.path,
         '/onboarding/setup',
@@ -163,25 +180,15 @@ void main() {
       expect(find.text('ផ្លូវរៀនរូបវិទ្យា របស់អ្នករួចរាល់ហើយ'), findsOneWidget);
 
       await tap(const ValueKey('onboarding_start_learning'));
-      expect(router.routerDelegate.currentConfiguration.uri.path, '/learn');
-      // Language, buddy, subject and squad are the only decisions.
-      expect(taps, lessThanOrEqualTo(7));
-      expect(find.text('Physics First Lesson'), findsOneWidget);
+      // Setup ends on the chosen subject's path, not the subject picker.
       expect(
-        find.byKey(const ValueKey('resume-lesson-physics-first')),
-        findsOneWidget,
+        router.routerDelegate.currentConfiguration.uri.path,
+        '/learn/subject/PHYSICS',
       );
-      expect(find.text('ចាប់ផ្តើមទីនេះ'), findsOneWidget);
-      expect(
-        tester
-            .getTopLeft(find.byKey(const ValueKey('subject-tile-physics-id')))
-            .dy,
-        lessThan(
-          tester
-              .getTopLeft(find.byKey(const ValueKey('subject-tile-math-id')))
-              .dy,
-        ),
-      );
+      // Buddy, language, subject and squad are the only decisions.
+      expect(taps, lessThanOrEqualTo(8));
+      expect(find.text('Physics'), findsWidgets);
+      expect(find.byKey(const ValueKey('subject-tile-math-id')), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
