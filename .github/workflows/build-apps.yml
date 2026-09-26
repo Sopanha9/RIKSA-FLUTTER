@@ -86,6 +86,14 @@ jobs:
 
       - run: flutter pub get
 
+      # Info.plist needs the reversed iOS client ID as a URL scheme so Google
+      # sign-in can return to the app. Locally this file is gitignored.
+      - name: Write GoogleAuth.xcconfig
+        if: vars.GOOGLE_IOS_CLIENT_ID != ''
+        run: |
+          id="${{ vars.GOOGLE_IOS_CLIENT_ID }}"
+          echo "GOOGLE_REVERSED_CLIENT_ID=com.googleusercontent.apps.${id%.apps.googleusercontent.com}" > ios/Flutter/GoogleAuth.xcconfig
+
       - name: Build iOS app (no codesign)
         run: flutter build ios --release --no-codesign --build-number=${{ github.run_number }} $DART_DEFINES
 
