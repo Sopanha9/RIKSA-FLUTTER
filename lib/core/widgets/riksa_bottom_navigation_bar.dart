@@ -18,11 +18,14 @@ class RiksaBottomNavigationBar extends StatelessWidget {
     required this.currentIndex,
     required this.onSelected,
     this.isExpanded = true,
-  }) : assert(currentIndex >= 0 && currentIndex < 5);
+    this.onExpand,
+  }) : assert(currentIndex >= 0 && currentIndex < 5),
+       assert(isExpanded || onExpand != null);
 
   final int currentIndex;
   final ValueChanged<int> onSelected;
   final bool isExpanded;
+  final VoidCallback? onExpand;
 
   static const int aiTutorIndex = 2;
   static const double _height = 60;
@@ -48,7 +51,14 @@ class RiksaBottomNavigationBar extends StatelessWidget {
           activeIcon: Icons.auto_stories_rounded,
         ),
       ),
-
+      (
+        3,
+        _RiksaNavigationItem(
+          label: l10n.leaderboard,
+          icon: Icons.leaderboard_outlined,
+          activeIcon: Icons.leaderboard_rounded,
+        ),
+      ),
       (
         4,
         _RiksaNavigationItem(
@@ -129,44 +139,44 @@ class RiksaBottomNavigationBar extends StatelessWidget {
       top: false,
       minimum: const EdgeInsets.fromLTRB(16, 6, 16, 12),
       child: Semantics(
-        label: 'Current Tab',
+        label: MaterialLocalizations.of(context).showMenuTooltip,
         button: true,
+        onTap: onExpand,
+        excludeSemantics: true,
         child: Container(
-              width: RiksaBottomNavigationBar._height,
-              height: RiksaBottomNavigationBar._height,
-              decoration: ShapeDecoration(
-                shape: CircleBorder(side: BorderSide(color: glassBorder)),
-                shadows: [shadow],
-                color: glassFill,
-              ),
-              child: ClipOval(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : Colors.white.withValues(alpha: 0.54),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.36),
-                        ),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        shape: const CircleBorder(),
-                        clipBehavior: Clip.antiAlias,
-                        child: InkWell(
-                          onTap: () {},
-                          child: Center(
-                            child: Icon(
-                              activeTabIcon,
-                              color: palette.brand,
-                              size: 24,
-                            ),
-                          ),
+          width: RiksaBottomNavigationBar._height,
+          height: RiksaBottomNavigationBar._height,
+          decoration: ShapeDecoration(
+            shape: CircleBorder(side: BorderSide(color: glassBorder)),
+            shadows: [shadow],
+            color: glassFill,
+          ),
+          child: ClipOval(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.white.withValues(alpha: 0.54),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.36),
+                    ),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    shape: const CircleBorder(),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: onExpand,
+                      child: Center(
+                        child: Icon(
+                          activeTabIcon,
+                          color: palette.brand,
+                          size: 24,
                         ),
                       ),
                     ),
@@ -175,6 +185,8 @@ class RiksaBottomNavigationBar extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
     );
 
     return AnimatedSwitcher(
@@ -184,10 +196,7 @@ class RiksaBottomNavigationBar extends StatelessWidget {
       layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
         return Stack(
           alignment: Alignment.bottomLeft,
-          children: <Widget>[
-            ...previousChildren,
-            if (currentChild != null) currentChild,
-          ],
+          children: <Widget>[...previousChildren, ?currentChild],
         );
       },
       transitionBuilder: (child, animation) {

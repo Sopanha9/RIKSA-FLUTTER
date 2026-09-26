@@ -92,6 +92,7 @@ class SocialFeedFailure extends SocialFeedState {
 
 class SocialFeedNotifier extends Notifier<SocialFeedState> {
   static const _pageSize = 20;
+  int _requestVersion = 0;
 
   @override
   SocialFeedState build() {
@@ -100,6 +101,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
   }
 
   Future<void> load({String? categoryId}) async {
+    final requestVersion = ++_requestVersion;
     state = const SocialFeedLoading();
     try {
       final api = ref.read(socialApiProvider);
@@ -109,6 +111,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
       ]);
       final categories = results[0] as List<SocialCategory>;
       final page = results[1] as SocialFeedPage;
+      if (requestVersion != _requestVersion) return;
       state = SocialFeedLoaded(
         categories: categories,
         posts: page.posts,
@@ -117,6 +120,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
         selectedCategoryId: categoryId,
       );
     } catch (error) {
+      if (requestVersion != _requestVersion) return;
       state = SocialFeedFailure(_message(error));
     }
   }
@@ -126,6 +130,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
 
   Future<void> loadMore() async {
     final current = state;
+    final requestVersion = _requestVersion;
     if (current is! SocialFeedLoaded ||
         current.isLoadingMore ||
         !current.hasNextPage) {
@@ -140,14 +145,23 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
             cursor: current.endCursor,
             limit: _pageSize,
           );
-      state = current.copyWith(
-        posts: [...current.posts, ...page.posts],
+      final latest = state;
+      if (requestVersion != _requestVersion ||
+          latest is! SocialFeedLoaded ||
+          latest.selectedCategoryId != current.selectedCategoryId ||
+          latest.endCursor != current.endCursor) {
+        return;
+      }
+      state = latest.copyWith(
+        posts: [...latest.posts, ...page.posts],
         hasNextPage: page.hasNextPage,
         endCursor: page.endCursor,
         isLoadingMore: false,
       );
     } catch (_) {
-      state = current.copyWith(isLoadingMore: false);
+      if (requestVersion == _requestVersion && state is SocialFeedLoaded) {
+        state = (state as SocialFeedLoaded).copyWith(isLoadingMore: false);
+      }
     }
   }
 

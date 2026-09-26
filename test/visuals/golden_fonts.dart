@@ -17,6 +17,9 @@ Future<void> loadRiksaGoldenFonts() async {
   final redditSans = FontLoader('Reddit Sans')
     ..addFont(rootBundle.load('assets/fonts/RedditSans-Variable.ttf'));
   await redditSans.load();
+  await (FontLoader(
+    'Poppins',
+  )..addFont(rootBundle.load('assets/fonts/Poppins-Regular.ttf'))).load();
   for (final entry in {
     'Kantumruy Pro': 'assets/fonts/KantumruyPro-Variable.ttf',
     'Khmer OS Siemreap': 'assets/fonts/KhmerOS_siemreap.ttf',

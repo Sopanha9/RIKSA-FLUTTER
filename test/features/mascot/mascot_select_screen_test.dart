@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/mascot/domain/mascot.dart';
 import 'package:riksa_app/features/mascot/presentation/mascot_select_screen.dart';
 import 'package:riksa_app/features/mascot/presentation/widgets/mascot_face.dart';
@@ -15,10 +16,24 @@ import 'package:riksa_app/features/mascot/providers/mascot_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Widget _app({bool reduceMotion = false}) {
+class _GuestAuthNotifier extends AuthNotifier {
+  @override
+  AuthState build() => const Unauthenticated();
+}
+
+Widget _app({bool reduceMotion = false, bool fromSettings = false}) {
   final router = GoRouter(
-    initialLocation: '/mascot-select',
+    initialLocation: fromSettings ? '/settings' : '/mascot-select',
     routes: [
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => Scaffold(
+          body: TextButton(
+            onPressed: () => context.push('/mascot-select'),
+            child: const Text('settings page'),
+          ),
+        ),
+      ),
       GoRoute(
         path: '/mascot-select',
         builder: (context, state) => const MascotSelectScreen(),
@@ -30,6 +45,7 @@ Widget _app({bool reduceMotion = false}) {
     ],
   );
   return ProviderScope(
+    overrides: [authProvider.overrideWith(_GuestAuthNotifier.new)],
     child: MaterialApp.router(
       theme: AppTheme.light,
       routerConfig: router,
@@ -100,14 +116,34 @@ void main() {
     await tester.tap(find.byKey(const Key('mascot_capybara')));
     await tester.enterText(find.byKey(const Key('mascot_name')), '  Mochi ');
     await tester.tap(find.byKey(const Key('mascot_continue')));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 16));
 
     expect(find.text('language page'), findsOneWidget);
     final preferences = await SharedPreferences.getInstance();
     expect(preferences.getString('riksa_mascot_species'), 'capybara');
     expect(preferences.getString('riksa_mascot_name'), 'Mochi');
+  });
+
+  testWidgets('opened from settings, continue saves and returns there', (
+    tester,
+  ) async {
+    await phone(tester);
+    await tester.pumpWidget(_app(fromSettings: true));
+    await tester.pump();
+    await tester.tap(find.text('settings page'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    await tester.tap(find.byKey(const Key('mascot_capybara')));
+    await tester.tap(find.byKey(const Key('mascot_continue')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('settings page'), findsOneWidget);
+    expect(find.text('language page'), findsNothing);
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getString('riksa_mascot_species'), 'capybara');
   });
 
   testWidgets('reduced motion shows still frames and settles', (tester) async {
@@ -135,8 +171,26 @@ void main() {
     expect(profile.name, 'Mochi');
   });
 
+  testWidgets('picker uses a saved buddy after asynchronous restoration', (
+    tester,
+  ) async {
+    await phone(tester);
+    SharedPreferences.setMockInitialValues({
+      'riksa_mascot_species': 'capybara',
+      'riksa_mascot_name': 'Mochi',
+    });
+    await tester.pumpWidget(_app());
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(_stageName(tester), 'Mochi');
+    final name = tester.widget<TextField>(find.byKey(const Key('mascot_name')));
+    expect(name.controller!.text, 'Mochi');
+  });
+
   test('a blank name falls back to the species default', () async {
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: [authProvider.overrideWith(_GuestAuthNotifier.new)],
+    );
     addTearDown(container.dispose);
     await container
         .read(mascotProvider.notifier)

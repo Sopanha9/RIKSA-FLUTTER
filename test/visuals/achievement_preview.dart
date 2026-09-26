@@ -29,6 +29,7 @@ Future<void> loadAchievementPreviewFonts() async {
       File(Platform.resolvedExecutable).parent.parent.parent.parent.parent.path;
   for (final entry in {
     'Reddit Sans': 'assets/fonts/RedditSans-Variable.ttf',
+    'Poppins': 'assets/fonts/Poppins-Regular.ttf',
     'Kantumruy Pro': 'assets/fonts/KantumruyPro-Variable.ttf',
     'MaterialIcons':
         '$flutterRoot/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_shell.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -56,6 +57,7 @@ class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final openDrawer = AppShellScope.maybeOf(context)?.openDrawer;
     final feedState = ref.watch(blogFeedProvider);
     final selectedCategoryId = feedState is BlogFeedLoaded
         ? feedState.categoryId
@@ -73,14 +75,26 @@ class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
           BlogTopBar(
             title: l10n.blogTitle,
             onBack: () => context.pop(),
-            trailing: IconButton(
-              onPressed: () => context.push('/blog/my-posts'),
-              tooltip: l10n.blogYourPosts,
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: context.riksa.ink,
-              ),
-              icon: const Icon(Icons.article_outlined, size: 22),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (openDrawer != null)
+                  IconButton(
+                    key: const ValueKey('blog-sidebar-menu-button'),
+                    onPressed: openDrawer,
+                    tooltip: l10n.openProfileMenu,
+                    icon: const Icon(Icons.menu_rounded, size: 22),
+                  ),
+                IconButton(
+                  onPressed: () => context.push('/blog/my-posts'),
+                  tooltip: l10n.blogYourPosts,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: context.riksa.ink,
+                  ),
+                  icon: const Icon(Icons.article_outlined, size: 22),
+                ),
+              ],
             ),
           ),
           _CategoryTabs(selectedCategoryId: selectedCategoryId),

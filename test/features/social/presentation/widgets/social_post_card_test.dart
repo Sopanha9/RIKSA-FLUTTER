@@ -90,13 +90,12 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('comment-post-1')));
     expect(opened, isTrue);
 
-    final outerCard = tester.widget<Material>(
+    // A timeline row, not a boxed card: no shape, no fill of its own.
+    final row = tester.widget<Material>(
       find.byKey(const ValueKey('post-post-1')),
     );
-    expect(
-      (outerCard.shape! as RoundedRectangleBorder).borderRadius,
-      AppRadii.largeBorder,
-    );
+    expect(row.shape, isNull);
+    expect(row.color, Colors.transparent);
   });
 
   testWidgets('shows the owner menu only when the reader owns the post', (
@@ -151,78 +150,45 @@ void main() {
     expect(deletes, 1);
   });
 
-  testWidgets('an official post drops its tint when the highlight is off', (
-    tester,
-  ) async {
-    await initializeDateFormatting('en');
+  testWidgets(
+    'an official post shows its verified mark only when highlighted',
+    (tester) async {
+      await initializeDateFormatting('en');
 
-    Future<void> pump({required bool highlight}) => tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [Locale('en'), Locale('km')],
-        home: Scaffold(
-          body: SingleChildScrollView(
-            child: SocialPostCard(
-              post: _officialPost,
-              onTap: () {},
-              onReact: () {},
-              onShare: () {},
-              highlightOfficial: highlight,
+      Future<void> pump({required bool highlight}) => tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: SocialPostCard(
+                post: _officialPost,
+                onTap: () {},
+                onReact: () {},
+                onShare: () {},
+                highlightOfficial: highlight,
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
-    Color surfaceOf(WidgetTester tester) => tester
-        .widget<Material>(find.byKey(const ValueKey('post-post-10')))
-        .color!;
+      final badge = find.byKey(const ValueKey('official-account-badge'));
 
-    await pump(highlight: true);
-    final tinted = surfaceOf(tester);
+      await pump(highlight: true);
+      expect(badge, findsOneWidget);
 
-    await pump(highlight: false);
-    final plain = surfaceOf(tester);
-
-    // The author's own list must look like the cards readers see elsewhere.
-    expect(plain, isNot(tinted));
-
-    // A non-official post is already plain, so turning the flag off is a no-op.
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [Locale('en'), Locale('km')],
-        home: Scaffold(
-          body: SingleChildScrollView(
-            child: SocialPostCard(
-              post: _ownedPost,
-              onTap: () {},
-              onReact: () {},
-              onShare: () {},
-            ),
-          ),
-        ),
-      ),
-    );
-    expect(
-      tester
-          .widget<Material>(find.byKey(const ValueKey('post-post-9')))
-          .color,
-      plain,
-    );
-  });
+      // The author's own list must look like the rows readers see elsewhere.
+      await pump(highlight: false);
+      expect(badge, findsNothing);
+    },
+  );
 }
 
 final _ownedPost = SocialPost(

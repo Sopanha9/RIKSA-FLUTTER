@@ -32,6 +32,7 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+**/failures/
 /ios/Flutter/GoogleAuth.xcconfig
 
 # Symbolication related
@@ -53,9 +54,15 @@ app.*.map.json
 *.g.dart
 *.freezed.dart
 
-
+.env
 # In app ScreenShot
 /screenshots/
 screenshots_redesign_reference
 UI_HANDOFF.md
 ui_map.json
+
+# Android signing keys, never commit
+*.jks
+*.keystore
+*.b64
+key.properties

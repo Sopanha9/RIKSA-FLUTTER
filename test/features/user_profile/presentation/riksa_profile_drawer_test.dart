@@ -140,8 +140,8 @@ void main() {
           ),
         ),
         GoRoute(
-          path: '/leaderboard',
-          builder: (_, _) => const Scaffold(body: Text('leaderboard screen')),
+          path: '/progress',
+          builder: (_, _) => const Scaffold(body: Text('progress screen')),
         ),
       ],
     );
@@ -151,10 +151,10 @@ void main() {
     await tester.pumpAndSettle();
     await _openDrawer(tester);
 
-    await tester.tap(find.byKey(const ValueKey('drawer-leaderboard')));
+    await tester.tap(find.byKey(const ValueKey('drawer-progress')));
     await tester.pumpAndSettle();
 
-    expect(find.text('leaderboard screen'), findsOneWidget);
+    expect(find.text('progress screen'), findsOneWidget);
     // Popping the drawer before pushing is what stops the learner returning
     // home onto an open menu.
     expect(find.byType(RiksaProfileDrawer), findsNothing);
@@ -194,6 +194,46 @@ void main() {
     expect(find.byType(RiksaProfileDrawer), findsNothing);
   });
 
+  testWidgets('keeps community posts and blog articles separate', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: [
+        GoRoute(
+          path: '/home',
+          builder: (_, _) => const Scaffold(
+            drawer: RiksaProfileDrawer(),
+            body: SizedBox.shrink(),
+          ),
+        ),
+        GoRoute(
+          path: '/profile',
+          builder: (_, _) => const Scaffold(body: Text('community posts')),
+        ),
+        GoRoute(
+          path: '/blog/my-posts',
+          builder: (_, _) => const Scaffold(body: Text('blog articles')),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(_app(signedIn: true, router: router));
+    await tester.pumpAndSettle();
+    await _openDrawer(tester);
+    await tester.tap(find.byKey(const ValueKey('drawer-my-posts')));
+    await tester.pumpAndSettle();
+    expect(find.text('community posts'), findsOneWidget);
+
+    router.go('/home');
+    await tester.pumpAndSettle();
+    await _openDrawer(tester);
+    await tester.tap(find.byKey(const ValueKey('drawer-my-articles')));
+    await tester.pumpAndSettle();
+    expect(find.text('blog articles'), findsOneWidget);
+  });
+
   testWidgets('offers no account actions when signed out', (tester) async {
     await tester.pumpWidget(_app(signedIn: false));
     await tester.pumpAndSettle();
@@ -203,15 +243,7 @@ void main() {
     expect(find.byKey(const ValueKey('drawer-logout')), findsNothing);
     expect(find.byKey(const ValueKey('drawer-counts')), findsNothing);
     // Navigation is still offered: signing in is reachable from those screens.
-    expect(find.byKey(const ValueKey('drawer-profile')), findsOneWidget);
-  });
-
-  testWidgets('renders academic grade STEM label in identity', (tester) async {
-    await tester.pumpWidget(_app(signedIn: true));
-    await tester.pumpAndSettle();
-    await _openDrawer(tester);
-
-    expect(find.text('Grade 12 · STEM'), findsOneWidget);
+    expect(find.byKey(const ValueKey('drawer-progress')), findsOneWidget);
   });
 
   testWidgets('provides quick theme and language controls in drawer footer', (

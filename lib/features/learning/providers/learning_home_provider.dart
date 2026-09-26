@@ -5,7 +5,7 @@ import '../presentation/learning_design.dart';
 import 'learning_roadmap_provider.dart';
 import 'lesson_catalog_provider.dart';
 
-/// One STEM subject and the learner's position inside it.
+/// One learning subject and the learner's position inside it.
 ///
 /// Built from `/lessons/roadmap`, which returns the subject's lessons already
 /// ordered and carrying per-lesson state. That is the only endpoint today that
@@ -87,9 +87,7 @@ class SubjectProgress {
         )
         .toList(growable: false);
     if (open.isEmpty) return null;
-    return open
-            .where((lesson) => lesson.id == currentLessonId)
-            .firstOrNull ??
+    return open.where((lesson) => lesson.id == currentLessonId).firstOrNull ??
         open.first;
   }
 }
@@ -126,7 +124,7 @@ class LearningHomeData {
   bool get hasCounts => totalLessons > 0;
 }
 
-/// Loads every STEM subject and its roadmap in parallel.
+/// Loads every supported subject and its roadmap in parallel.
 ///
 /// A single subject failing does not fail the screen: that subject is kept as
 /// [SubjectProgress.unavailable] so the learner can still open and retry it.
@@ -137,7 +135,7 @@ final learningHomeProvider = FutureProvider.autoDispose<LearningHomeData>((
 ) async {
   final api = ref.watch(learningApiProvider);
   final categories = (await api.categories())
-      .where((category) => isStemLearningCategory(category.name))
+      .where((category) => isLearningCategory(category.name))
       .toList(growable: false);
 
   if (categories.isEmpty) {
@@ -196,4 +194,3 @@ SubjectProgress? _pickResumeSubject(List<SubjectProgress> subjects) {
     return a.fraction >= b.fraction ? a : b;
   });
 }
-

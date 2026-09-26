@@ -27,6 +27,10 @@ class PublicProfileScreen extends ConsumerStatefulWidget {
       _PublicProfileScreenState();
 }
 
+// Public profiles intentionally omit buddy identity. Add it only when the
+// backend PublicProfile contract exposes mascotSpecies and mascotName; using
+// mascotProvider here would incorrectly show the signed-in learner's buddy.
+
 class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   ProfileTab _tab = ProfileTab.posts;
 
@@ -223,6 +227,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                         onEditPost: (post) => _editPost(post, controller),
                         onDeletePost: (post) => _deletePost(post, controller),
                       ),
+                      ProfileTab.articles => const SizedBox.shrink(),
                       ProfileTab.achievements => _PublicAchievements(
                         achievements: profile.achievements,
                       ),
@@ -362,10 +367,7 @@ class _PublicAvatar extends StatelessWidget {
           : BoxDecoration(
               shape: BoxShape.circle,
               color: context.riksa.canvas,
-              border: Border.all(
-                color: context.riksa.canvas,
-                width: 2,
-              ),
+              border: Border.all(color: context.riksa.canvas, width: 2),
             ),
       child: avatar,
     );

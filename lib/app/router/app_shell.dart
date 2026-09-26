@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/riksa_bottom_navigation_bar.dart';
+import '../../features/mascot/presentation/widgets/floating_buddy.dart';
 import '../../features/userProfile/presentation/widgets/riksa_profile_drawer.dart';
 
 /// How many screens the tab the learner is standing in has stacked up.
@@ -81,6 +83,16 @@ class AppShellScope extends InheritedWidget {
 class _AppShellState extends State<AppShell> {
   bool _showNavBar = true;
 
+  Widget _floatingBuddyOverlay() {
+    try {
+      ProviderScope.containerOf(context, listen: false);
+      return const FloatingBuddy();
+    } on StateError {
+      // AppShell is also used alone in router tests, outside the app's scope.
+      return const SizedBox.shrink();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final router = GoRouter.of(context);
@@ -102,7 +114,10 @@ class _AppShellState extends State<AppShell> {
         child: Builder(
           builder: (context) => AppShellScope(
             openDrawer: Scaffold.of(context).openDrawer,
-            child: widget.navigationShell,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [widget.navigationShell, _floatingBuddyOverlay()],
+            ),
           ),
         ),
       ),
@@ -120,6 +135,7 @@ class _AppShellState extends State<AppShell> {
             key: const ValueKey('persistent-bottom-navigation'),
             currentIndex: widget.navigationShell.currentIndex,
             isExpanded: _showNavBar,
+            onExpand: () => setState(() => _showNavBar = true),
             onSelected: (index) {
               widget.navigationShell.goBranch(
                 index,

@@ -23,13 +23,18 @@ class LeaderboardScreen extends ConsumerStatefulWidget {
 }
 
 class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
-  LeaderboardScope _scope = LeaderboardScope.country;
+  late LeaderboardScope _scope;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
+    final auth = ref.read(authProvider);
+    final user = auth is Authenticated ? auth.user : null;
+    _scope = user?.provinceId?.isNotEmpty == true
+        ? LeaderboardScope.province
+        : LeaderboardScope.country;
     _searchController.addListener(() {
       final query = _searchController.text.trim().toLowerCase();
       if (query != _searchQuery) {
@@ -61,17 +66,13 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         ? (userRankData?.provinceScore ?? 0)
         : (userRankData?.countryScore ?? 0);
     final userTierName = _scope == LeaderboardScope.province
-        ? (userRankData?.provinceTier ?? 'Scholar')
-        : (userRankData?.countryTier ?? 'Scholar');
+        ? (userRankData?.provinceTier ?? l10n.startingTier)
+        : (userRankData?.countryTier ?? l10n.startingTier);
     final showCurrentUserRank = currentUser != null && userRankNumber > 0;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
-      backgroundColor: isDark
-          ? context.riksa.canvas
-          : AppColors.editorialNeutralCanvas,
+      backgroundColor: context.riksa.canvas,
       body: RefreshIndicator(
-        color: AppColors.editorialPink,
+        color: context.riksa.brand,
         onRefresh: () async {
           ref.invalidate(profileRankProvider);
           ref.invalidate(leaderboardProvider(_scope));
@@ -174,6 +175,33 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                       : currentUser.username,
                                   onTap: () => context.push('/profile'),
                                 ),
+                              if (showCurrentUserRank &&
+                                  _searchQuery.isEmpty) ...[
+                                const SizedBox(height: RiksaSpacing.md),
+                                Text(
+                                  l10n.leaderboardNearbyLearners,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: RiksaSpacing.xs),
+                                for (final row in _nearbyRows(
+                                  rows,
+                                  userRankNumber,
+                                ))
+                                  ListTile(
+                                    dense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                    leading: Text('#${row.rank}'),
+                                    title: Text(
+                                      row.userId == currentUser.id
+                                          ? l10n.homeYou
+                                          : row.fallbackName,
+                                    ),
+                                    trailing: Text(l10n.xpAmount(row.score)),
+                                  ),
+                              ],
                               const SizedBox(height: RiksaSpacing.md),
                               _LeaderboardSearchField(
                                 controller: _searchController,
@@ -212,6 +240,14 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       return name.contains(query) || tier.contains(query);
     }).toList();
   }
+
+  List<LeaderboardRow> _nearbyRows(List<LeaderboardRow> rows, int rank) {
+    final sorted = [...rows]
+      ..sort((a, b) =>
+          (a.rank - rank).abs().compareTo((b.rank - rank).abs()));
+    return sorted.take(3).toList(growable: false)
+      ..sort((a, b) => a.rank.compareTo(b.rank));
+  }
 }
 
 class _LeaderboardSearchField extends StatelessWidget {
@@ -221,21 +257,15 @@ class _LeaderboardSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return TextField(
       controller: controller,
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: 'Search learners',
-        hintStyle: TextStyle(
-          color: isDark ? context.riksa.inkMuted : AppColors.editorialMuted,
-        ),
+        hintText: AppLocalizations.of(context)!.leaderboardSearchLearners,
+        hintStyle: TextStyle(color: context.riksa.inkMuted),
         prefixIcon: const Icon(Icons.search_rounded),
         filled: true,
-        fillColor: isDark
-            ? context.riksa.surfaceRaised
-            : AppColors.editorialNeutralSurface,
+        fillColor: context.riksa.surfaceRaised,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: RiksaSpacing.md,
           vertical: 10,
@@ -248,9 +278,9 @@ class _LeaderboardSearchField extends StatelessWidget {
           borderRadius: AppRadii.fullBorder,
           borderSide: BorderSide(color: context.riksa.outline),
         ),
-        focusedBorder: const OutlineInputBorder(
+        focusedBorder: OutlineInputBorder(
           borderRadius: AppRadii.fullBorder,
-          borderSide: BorderSide(color: AppColors.editorialPink, width: 1.5),
+          borderSide: BorderSide(color: context.riksa.brand, width: 1.5),
         ),
       ),
     );

@@ -134,14 +134,13 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> _performBootstrap() async {
     state = const AuthInitial();
     final client = ref.read(dioClientProvider);
-    if (!await client.hasSession()) {
-      // Remove a half-written session if only one token survived.
-      await client.clearSession();
-      state = const Unauthenticated();
-      return;
-    }
-
     try {
+      if (!await client.hasSession()) {
+        // Remove a half-written session if only one token survived.
+        await client.clearSession();
+        state = const Unauthenticated();
+        return;
+      }
       final user = await _hydrateProfile();
       _requireProfile(user);
       state = Authenticated(user);
@@ -291,18 +290,18 @@ class AuthNotifier extends Notifier<AuthState> {
     if (current is! Authenticated) return true;
 
     state = const AuthLoading();
+    late final AuthUser user;
     try {
-      final user = await ref.read(authApiProvider).updateProvince(provinceId);
+      user = await ref.read(authApiProvider).updateProvince(provinceId);
       _requireProfile(user);
-      await ref.read(localeProvider.notifier).completeOnboarding();
-      state = Authenticated(user);
-      return true;
     } catch (error) {
-      if (kDebugMode) debugPrint('Profile province update deferred: $error');
-      await ref.read(localeProvider.notifier).completeOnboarding();
+      if (kDebugMode) debugPrint('Profile province update failed: $error');
       state = current;
-      return true;
+      return false;
     }
+    await ref.read(localeProvider.notifier).completeOnboarding();
+    state = Authenticated(user);
+    return true;
   }
 
   Future<bool> updateProfile(UpdateProfileRequest request) async {

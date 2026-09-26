@@ -11,6 +11,8 @@ import 'package:riksa_app/features/social/data/social_api.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 import 'package:riksa_app/features/social/presentation/compose_community_post_screen.dart';
 import 'package:riksa_app/features/social/providers/social_feed_provider.dart';
+import 'package:riksa_app/features/auth/data/auth_models.dart';
+import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 import 'golden_fonts.dart';
@@ -47,6 +49,20 @@ class _Feed extends SocialFeedNotifier {
     categories: categories,
     posts: const [],
     hasNextPage: false,
+  );
+}
+
+class _AuthenticatedNotifier extends AuthNotifier {
+  @override
+  AuthState build() => const Authenticated(
+    AuthUser(
+      id: 'student-1',
+      username: 'student',
+      displayName: 'Student',
+      emailVerified: false,
+      phoneVerified: false,
+      role: 'USER',
+    ),
   );
 }
 
@@ -122,6 +138,7 @@ Future<_FakeSocialApi> _pump(
       overrides: [
         socialApiProvider.overrideWithValue(api),
         socialFeedProvider.overrideWith(() => _Feed(categories)),
+        authProvider.overrideWith(_AuthenticatedNotifier.new),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
@@ -165,9 +182,7 @@ void main() {
     });
   }
 
-  testWidgets('composer keeps a phone-width column on desktop', (
-    tester,
-  ) async {
+  testWidgets('composer keeps a phone-width column on desktop', (tester) async {
     await _pump(tester, size: const Size(1280, 800), dark: true);
     final column = tester.getSize(find.byType(Form));
     expect(column.width, lessThanOrEqualTo(640));
@@ -186,7 +201,10 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('compose-community')));
     await tester.pumpAndSettle();
     // Communities the reader has not joined are not offered.
-    expect(find.byKey(const ValueKey('compose-community-history')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('compose-community-history')),
+      findsNothing,
+    );
     await tester.tap(find.byKey(const ValueKey('compose-community-general')));
     await tester.pumpAndSettle();
     expect(find.text('General Discussion'), findsOneWidget);

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -6,9 +5,12 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../data/social_models.dart';
+import 'milestone_post_card.dart';
 import 'social_owner_menu.dart';
-import 'social_palette.dart';
 
+/// One post as a timeline row, on the X layout: the avatar owns a left column,
+/// everything else hangs off it, and rows are separated by a hairline rather
+/// than boxed into cards.
 class SocialPostCard extends StatelessWidget {
   const SocialPostCard({
     super.key,
@@ -32,139 +34,193 @@ class SocialPostCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
-  /// Whether an official Riksa post gets its tinted surface.
+  /// Whether an official Riksa post shows its verified mark.
   ///
-  /// The tint exists to pick official posts out of a mixed feed. On a profile
-  /// whose owner is already named in the header it says nothing, so the author's
-  /// own list renders every card the same way readers see everyone else's.
+  /// The mark exists to pick official posts out of a mixed feed. On a profile
+  /// whose owner is already named in the header it says nothing.
   final bool highlightOfficial;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final colors = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
+    final palette = context.riksa;
     final isReacted = post.myReaction != null;
-    final isOfficial = isOfficialRiksaAuthor(post.author);
-    final tinted = isOfficial && highlightOfficial;
+    final preview = post.plainTextPreview;
+    final authorName = post.author.displayName.trim().isEmpty
+        ? post.author.username
+        : post.author.displayName;
 
     return Semantics(
       container: true,
       label: '${post.author.displayName}: ${post.title}',
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-        child: Material(
-          key: ValueKey('post-${post.id}'),
-          color: tinted
-              ? (isDark
-                    ? context.riksa.surface
-                    : Color.lerp(
-                        context.riksa.surface,
-                        context.riksa.brandSoft,
-                        .18,
-                      ))
-              : context.riksa.surface,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadii.largeBorder,
-            side: BorderSide(color: context.riksa.outline),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
+      child: Material(
+        key: ValueKey('post-${post.id}'),
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: palette.outline)),
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
+              padding: const EdgeInsets.fromLTRB(16, 12, 12, 0),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _PostMetadata(
-                    post: post,
-                    onAuthorTap: onAuthorTap,
-                    onEdit: onEdit,
-                    onDelete: onDelete,
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    post.title,
-                    style: RiksaTypography.bodyStyleFor(
-                      post.title,
-                      theme.textTheme.titleLarge?.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        height: 1.35,
-                        letterSpacing: 0,
-                        color: context.riksa.ink,
+                  Semantics(
+                    button: true,
+                    enabled: onAuthorTap != null,
+                    label: l10n.socialOpenProfile(authorName),
+                    excludeSemantics: true,
+                    child: GestureDetector(
+                      key: ValueKey('author-avatar-${post.author.id}'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: onAuthorTap,
+                      child: SocialAuthorAvatar(
+                        imageUrl: post.author.avatarUrl,
+                        label: authorName,
+                        seed: post.author.username.isEmpty
+                            ? post.author.id
+                            : post.author.username,
+                        size: 42,
                       ),
                     ),
                   ),
-                  if (post.content.trim().isNotEmpty) ...[
-                    const SizedBox(height: 9),
-                    Text(
-                      post.plainTextPreview,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: RiksaTypography.bodyStyleFor(
-                        post.plainTextPreview,
-                        theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 15,
-                          color: context.riksa.inkMuted,
-                          height: 1.42,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _PostMetadata(
+                          post: post,
+                          showOfficial: highlightOfficial,
+                          onAuthorTap: onAuthorTap,
+                          onEdit: post.kind == SocialPostKind.user
+                              ? onEdit
+                              : null,
+                          onDelete: post.kind == SocialPostKind.user
+                              ? onDelete
+                              : null,
                         ),
-                      ),
-                    ),
-                  ],
-                  if (post.hasMedia) ...[
-                    const SizedBox(height: 16),
-                    ClipRRect(
-                      borderRadius: AppRadii.mediumBorder,
-                      child: AspectRatio(
-                        aspectRatio: 16 / 9,
-                        child: Image.network(
-                          post.mediaUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              ColoredBox(
-                                color: colors.surfaceContainer,
-                                child: Icon(
-                                  Icons.image_not_supported_outlined,
-                                  color: context.riksa.inkMuted,
-                                  size: 32,
+                        _CommunityLine(category: post.category),
+                        const SizedBox(height: 6),
+                        if (post.kind == SocialPostKind.milestone &&
+                            post.milestone != null)
+                          MilestonePostCard(post: post)
+                        else ...[
+                          Text(
+                            post.title,
+                            style: RiksaTypography.bodyStyleFor(
+                              post.title,
+                              theme.textTheme.bodyLarge?.copyWith(
+                                fontSize: 15.5,
+                                fontWeight: FontWeight.w700,
+                                height: 1.35,
+                                letterSpacing: 0,
+                                color: palette.ink,
+                              ),
+                            ),
+                          ),
+                          if (post.content.trim().isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              preview,
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
+                              style: RiksaTypography.bodyStyleFor(
+                                preview,
+                                theme.textTheme.bodyLarge?.copyWith(
+                                  fontSize: 15,
+                                  height: 1.42,
+                                  color: palette.ink,
                                 ),
                               ),
+                            ),
+                          ],
+                        ],
+                        if (post.hasMedia) ...[
+                          const SizedBox(height: 10),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: DecoratedBox(
+                              position: DecorationPosition.foreground,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: palette.outline),
+                              ),
+                              child: AspectRatio(
+                                aspectRatio: 16 / 9,
+                                child: Image.network(
+                                  post.mediaUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      ColoredBox(
+                                        color: palette.surfaceRaised,
+                                        child: Icon(
+                                          Icons.image_not_supported_outlined,
+                                          color: palette.inkMuted,
+                                          size: 32,
+                                        ),
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                        // The first icon lines up under the text above, as on
+                        // X: pull the row left by the button's inner padding.
+                        Transform.translate(
+                          offset: const Offset(-10, 0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Align(
+                                  alignment: AlignmentDirectional.centerStart,
+                                  child: _LightAction(
+                                    key: ValueKey('comment-${post.id}'),
+                                    icon: Icons.chat_bubble_outline_rounded,
+                                    count: post.commentCount,
+                                    semanticLabel: l10n.socialCommentLabel(
+                                      post.commentCount,
+                                    ),
+                                    onPressed: onTap,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Align(
+                                  alignment: AlignmentDirectional.centerStart,
+                                  child: _PrimaryReactionButton(
+                                    key: ValueKey('react-${post.id}'),
+                                    count: post.reactionCount,
+                                    selected: isReacted,
+                                    semanticLabel: l10n.socialLikeLabel(
+                                      post.reactionCount,
+                                    ),
+                                    onPressed: onReact,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Align(
+                                  alignment: AlignmentDirectional.centerStart,
+                                  child: _LightAction(
+                                    key: ValueKey('share-${post.id}'),
+                                    icon: Icons.ios_share_rounded,
+                                    count: post.shareCount,
+                                    semanticLabel: l10n.socialShareLabel(
+                                      post.shareCount,
+                                    ),
+                                    onPressed: onShare,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                  const SizedBox(height: 15),
-                  Row(
-                    children: [
-                      _PrimaryReactionButton(
-                        key: ValueKey('react-${post.id}'),
-                        count: post.reactionCount,
-                        selected: isReacted,
-                        semanticLabel: l10n.socialLikeLabel(post.reactionCount),
-                        onPressed: onReact,
-                      ),
-                      const SizedBox(width: 10),
-                      _LightAction(
-                        key: ValueKey('comment-${post.id}'),
-                        icon: CupertinoIcons.chat_bubble,
-                        count: post.commentCount,
-                        semanticLabel: l10n.socialCommentLabel(
-                          post.commentCount,
-                        ),
-                        onPressed: onTap,
-                      ),
-                      const Spacer(),
-                      _LightAction(
-                        key: ValueKey('share-${post.id}'),
-                        icon: Icons.share_rounded,
-                        count: post.shareCount,
-                        semanticLabel: l10n.socialShareLabel(post.shareCount),
-                        onPressed: onShare,
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -176,15 +232,32 @@ class SocialPostCard extends StatelessWidget {
   }
 }
 
+/// "5m", "3h", "2d", then a date: how old a post is, the way a timeline says
+/// it.
+String socialRelativeTime(BuildContext context, DateTime createdAt) {
+  final language = Localizations.localeOf(context).languageCode;
+  final km = language == 'km';
+  final age = DateTime.now().difference(createdAt.toLocal());
+  if (age.inMinutes < 1) return km ? 'ឥឡូវ' : 'now';
+  if (age.inMinutes < 60) {
+    return km ? '${age.inMinutes} នាទី' : '${age.inMinutes}m';
+  }
+  if (age.inHours < 24) return km ? '${age.inHours} ម៉ោង' : '${age.inHours}h';
+  if (age.inDays < 7) return km ? '${age.inDays} ថ្ងៃ' : '${age.inDays}d';
+  return DateFormat.MMMd(language).format(createdAt.toLocal());
+}
+
 class _PostMetadata extends StatelessWidget {
   const _PostMetadata({
     required this.post,
+    required this.showOfficial,
     this.onAuthorTap,
     this.onEdit,
     this.onDelete,
   });
 
   final SocialPost post;
+  final bool showOfficial;
   final VoidCallback? onAuthorTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -192,99 +265,65 @@ class _PostMetadata extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final date = DateFormat.MMMd(
-      Localizations.localeOf(context).languageCode,
-    ).format(post.createdAt.toLocal());
+    final palette = context.riksa;
     final authorName = post.author.displayName.trim().isEmpty
         ? post.author.username
         : post.author.displayName;
-    final isOfficial = isOfficialRiksaAuthor(post.author);
+    final handle = post.author.username.isEmpty
+        ? ''
+        : '@${post.author.username} · ';
+    final isOfficial = showOfficial && isOfficialRiksaAuthor(post.author);
 
+    // The name, badge and handle share one inner row so the menu is pushed to
+    // the far edge, where X keeps it; as siblings of the menu, a short name
+    // left its unused share of the width sitting between them.
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Semantics(
-          button: true,
-          enabled: onAuthorTap != null,
-          label: AppLocalizations.of(context)!.socialOpenProfile(authorName),
-          excludeSemantics: true,
-          child: GestureDetector(
-            key: ValueKey('author-avatar-${post.author.id}'),
-            behavior: HitTestBehavior.opaque,
-            onTap: onAuthorTap,
-            child: SocialAuthorAvatar(
-              imageUrl: post.author.avatarUrl,
-              label: authorName,
-              seed: post.author.username.isEmpty
-                  ? post.author.id
-                  : post.author.username,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Flexible(
-                    child: Semantics(
-                      button: true,
-                      enabled: onAuthorTap != null,
-                      label: AppLocalizations.of(
-                        context,
-                      )!.socialOpenProfile(authorName),
-                      excludeSemantics: true,
-                      child: GestureDetector(
-                        key: ValueKey('author-name-${post.author.id}'),
-                        behavior: HitTestBehavior.opaque,
-                        onTap: onAuthorTap,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Text(
-                            authorName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color: context.riksa.ink,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+              Flexible(
+                child: Semantics(
+                  button: true,
+                  enabled: onAuthorTap != null,
+                  label: AppLocalizations.of(
+                    context,
+                  )!.socialOpenProfile(authorName),
+                  excludeSemantics: true,
+                  child: GestureDetector(
+                    key: ValueKey('author-name-${post.author.id}'),
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onAuthorTap,
+                    child: Text(
+                      authorName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: RiksaTypography.bodyStyleFor(
+                        authorName,
+                        theme.textTheme.bodyLarge?.copyWith(
+                          fontSize: 15,
+                          color: palette.ink,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
                   ),
-                  if (isOfficial) ...[
-                    const SizedBox(width: 7),
-                    const _OfficialBadge(),
-                  ],
-                ],
-              ),
-              const SizedBox(height: 3),
-              Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: categoryPrefix(post.category),
-                      style: TextStyle(
-                        color: context.riksa.ink,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0,
-                      ),
-                    ),
-                    TextSpan(
-                      text: ' ${post.category.name} · $date',
-                      style: TextStyle(
-                        color: context.riksa.inkMuted,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(height: 1.2),
+              ),
+              if (isOfficial) ...[
+                const SizedBox(width: 3),
+                const _OfficialBadge(),
+              ],
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  '$handle${socialRelativeTime(context, post.createdAt)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: palette.inkMuted,
+                  ),
+                ),
               ),
             ],
           ),
@@ -300,44 +339,69 @@ class _PostMetadata extends StatelessWidget {
   }
 }
 
-class _OfficialBadge extends StatelessWidget {
-  const _OfficialBadge();
+/// Which community a post lives in, under the author line.
+class _CommunityLine extends StatelessWidget {
+  const _CommunityLine({required this.category});
+  final SocialCategory category;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      key: const ValueKey('official-account-badge'),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: context.riksa.brandSoft,
-        borderRadius: AppRadii.fullBorder,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.verified_rounded,
-            size: 12,
-            color: SocialPalette.pink(context),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            AppLocalizations.of(context)!.official,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: context.riksa.brand,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              height: 1,
+    final palette = context.riksa;
+    final style = Theme.of(context).textTheme.labelMedium;
+    return Padding(
+      padding: const EdgeInsets.only(top: 1),
+      child: Text.rich(
+        TextSpan(
+          children: [
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(end: 4),
+                child: Icon(
+                  Icons.groups_2_outlined,
+                  size: 14,
+                  color: palette.inkMuted,
+                ),
+              ),
             ),
-          ),
-        ],
+            TextSpan(
+              text: categoryPrefix(category),
+              style: TextStyle(
+                color: palette.brandStrong,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            TextSpan(
+              text: ' ${category.name}',
+              style: TextStyle(color: palette.inkMuted),
+            ),
+          ],
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: RiksaTypography.bodyStyleFor(category.name, style),
       ),
     );
   }
 }
 
-/// Compact community label used in the dense post metadata line.
+class _OfficialBadge extends StatelessWidget {
+  const _OfficialBadge();
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: AppLocalizations.of(context)!.official,
+    child: Icon(
+      Icons.verified_rounded,
+      key: const ValueKey('official-account-badge'),
+      size: 17,
+      color: context.riksa.brand,
+      semanticLabel: AppLocalizations.of(context)!.official,
+    ),
+  );
+}
+
+// Compact community label used in the dense post metadata line.
 String categoryPrefix(SocialCategory category) {
   final normalizedName = _normalizeCategory(category.name);
   final normalizedSlug = _normalizeCategory(category.slug);

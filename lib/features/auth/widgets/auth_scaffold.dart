@@ -88,9 +88,7 @@ class _AuthTopBar extends StatelessWidget {
         if (onBack != null)
           IconButton(
             onPressed: onBack,
-            style: IconButton.styleFrom(
-              backgroundColor: context.riksa.surface,
-            ),
+            style: IconButton.styleFrom(backgroundColor: context.riksa.surface),
             icon: const Icon(Icons.arrow_back_rounded),
             tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           ),

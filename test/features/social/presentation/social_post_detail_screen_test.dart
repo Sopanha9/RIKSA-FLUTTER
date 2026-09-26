@@ -110,14 +110,10 @@ void main() {
       AppColors.editorialNeutralCanvas,
     );
     expect(
-      (tester
-                  .widget<Container>(
-                    find.byKey(const ValueKey('post-detail-body')),
-                  )
-                  .decoration
-              as BoxDecoration)
-          .color,
-      AppColors.editorialNeutralSurface,
+      tester
+          .widget<Padding>(find.byKey(const ValueKey('post-detail-body')))
+          .padding,
+      const EdgeInsets.only(top: 8, bottom: 8),
     );
     expect(
       (tester
@@ -127,14 +123,17 @@ void main() {
                   .decoration
               as BoxDecoration)
           .color,
-      AppColors.editorialNeutralSurface,
+      tester
+          .element(find.byKey(const ValueKey('comment-card-comment-1')))
+          .riksa
+          .surface,
     );
     expect(
       tester
           .widget<TextField>(find.byKey(const ValueKey('comment-composer')))
           .decoration
           ?.fillColor,
-      AppColors.editorialField,
+      Colors.white.withValues(alpha: .16),
     );
     expect(
       tester.widget<Text>(find.text(_post.title)).style?.fontFamily,
@@ -236,10 +235,7 @@ void main() {
       find.byKey(const ValueKey('comment-card-comment-2')),
       findsOneWidget,
     );
-    expect(
-      find.text('Happy to help with math questions!'),
-      findsOneWidget,
-    );
+    expect(find.text('Happy to help with math questions!'), findsOneWidget);
   });
 
   testWidgets(
@@ -271,7 +267,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final commentButton = find.byKey(const ValueKey('post-detail-comment-button'));
+      final commentButton = find.byKey(
+        const ValueKey('post-detail-comment-button'),
+      );
       expect(commentButton, findsOneWidget);
 
       await tester.tap(commentButton);
@@ -393,4 +391,3 @@ class _FakeSocialApi extends SocialApi {
     lastDeletedCommentId = id;
   }
 }
-

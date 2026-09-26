@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_router.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
@@ -57,7 +58,7 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
       }
 
       final authenticated = ref.read(authProvider) is Authenticated;
-      context.go(authenticated ? '/home' : '/auth/login');
+      context.go(authenticated ? kLandingLocation : '/auth/login');
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -77,7 +78,7 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
     await ref.read(localeProvider.notifier).completeOnboarding();
     if (!mounted) return;
     final authenticated = ref.read(authProvider) is Authenticated;
-    context.go(authenticated ? '/home' : '/auth/login');
+    context.go(authenticated ? kLandingLocation : '/auth/login');
   }
 
   @override

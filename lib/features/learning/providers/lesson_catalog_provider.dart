@@ -75,6 +75,7 @@ class LessonCatalogState {
 
 class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
   static const _pageSize = 20;
+  int _requestVersion = 0;
 
   @override
   LessonCatalogState build() {
@@ -85,7 +86,12 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
   }
 
   Future<void> load() async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    final requestVersion = ++_requestVersion;
+    state = state.copyWith(
+      isLoading: true,
+      isLoadingMore: false,
+      clearError: true,
+    );
     try {
       final api = ref.read(learningApiProvider);
       final results = await Future.wait<Object>([
@@ -101,15 +107,16 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
           Future<List<LearningCategory>>.value(state.categories),
       ]);
       final page = results[0] as LessonPage;
-      final stemLessons = page.content
-          .where((lesson) => isStemLearningCategory(lesson.categoryName))
+      final learningLessons = page.content
+          .where((lesson) => isLearningCategory(lesson.categoryName))
           .toList(growable: false);
-      final stemCategories = (results[1] as List<LearningCategory>)
-          .where((category) => isStemLearningCategory(category.name))
+      final learningCategories = (results[1] as List<LearningCategory>)
+          .where((category) => isLearningCategory(category.name))
           .toList(growable: false);
+      if (requestVersion != _requestVersion) return;
       state = state.copyWith(
-        lessons: stemLessons,
-        categories: stemCategories,
+        lessons: learningLessons,
+        categories: learningCategories,
         page: page.page,
         totalPages: page.totalPages,
         isLoading: false,
@@ -117,6 +124,7 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
         clearError: true,
       );
     } catch (error) {
+      if (requestVersion != _requestVersion) return;
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,
@@ -164,8 +172,9 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
   }
 
   Future<void> loadMore() async {
-    if (state.isLoadingMore || !state.hasMore) return;
+    if (state.isLoading || state.isLoadingMore || !state.hasMore) return;
     final snapshot = state;
+    final requestVersion = _requestVersion;
     state = state.copyWith(isLoadingMore: true);
     try {
       final page = await ref
@@ -177,11 +186,12 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
             page: snapshot.page + 1,
             size: _pageSize,
           );
+      if (requestVersion != _requestVersion) return;
       state = state.copyWith(
         lessons: [
-          ...snapshot.lessons,
+          ...state.lessons,
           ...page.content.where(
-            (lesson) => isStemLearningCategory(lesson.categoryName),
+            (lesson) => isLearningCategory(lesson.categoryName),
           ),
         ],
         page: page.page,
@@ -189,7 +199,9 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
         isLoadingMore: false,
       );
     } catch (_) {
-      state = state.copyWith(isLoadingMore: false);
+      if (requestVersion == _requestVersion) {
+        state = state.copyWith(isLoadingMore: false);
+      }
     }
   }
 

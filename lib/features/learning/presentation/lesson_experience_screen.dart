@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
@@ -9,10 +10,25 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/sound/learning_sound.dart';
 import '../../../core/sound/sound_provider.dart';
+import '../../../core/notifications/streak_reminder_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/riksa_brand.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../auth/presentation/require_account.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../mascot/domain/buddy_behavior.dart';
+import '../../mascot/domain/buddy_care.dart';
+import '../../mascot/domain/mascot.dart';
+import '../../mascot/presentation/widgets/buddy_companion.dart';
+import '../../mascot/presentation/widgets/mascot_scene.dart';
+import '../../mascot/presentation/widgets/mascot_face.dart';
+import '../../mascot/presentation/widgets/mascot_view.dart';
+import '../../mascot/providers/buddy_preferences_provider.dart';
+import '../../mascot/providers/buddy_care_provider.dart';
+import '../../mascot/providers/mascot_provider.dart';
+import '../../resources/presentation/lesson_resources_sheet.dart';
+import '../../resources/providers/lesson_resources_provider.dart';
+import '../data/guest_answer_check_counter.dart';
 import '../../userProfile/providers/profile_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
@@ -83,13 +99,18 @@ class _LessonExperienceScreenState
     extends ConsumerState<LessonExperienceScreen> {
   final _answers = <String, TextEditingController>{};
   final _results = <String, LessonAnswerResult>{};
+  final _guestCorrectAnswers = <String, String>{};
+  final _syncedGuestAnswers = <String>{};
   final _submitting = <String>{};
   final _reflection = TextEditingController();
   int? _activeSectionIndex;
   bool _showPractice = false;
   bool _completing = false;
+  bool _showReflectionInput = false;
+  Future<void>? _guestAnswerSync;
   final _working = <String, TextEditingController>{};
   final _comparedAnswers = <String>{};
+  final _expandedWorking = <String>{};
   final _scroll = ScrollController();
   final _feedbackAnchor = GlobalKey();
   String? _feedbackExerciseId;
@@ -118,6 +139,17 @@ class _LessonExperienceScreenState
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (previous is! Authenticated &&
+          next is Authenticated &&
+          _guestCorrectAnswers.isNotEmpty) {
+        unawaited(
+          _syncGuestCorrectAnswers().catchError((Object error) {
+            if (mounted) _showError(error);
+          }),
+        );
+      }
+    });
     final detail = ref.watch(lessonDetailProvider(widget.lessonId));
     final data = detail.value;
     final flow = data == null ? null : _flowFor(data);
@@ -271,6 +303,11 @@ class _LessonExperienceScreenState
             onBack: () => _handleExit(flow),
             onAskAi: onAskAi,
             onSections: () => _showSections(flow),
+            onResources: () => showLessonResourcesSheet(
+              context,
+              lessonId: detail.id,
+              lessonTitle: detail.title,
+            ),
           ),
         ),
         SliverToBoxAdapter(
@@ -282,10 +319,8 @@ class _LessonExperienceScreenState
             children: [
               _JourneyStages(phase: flow.phase),
               const SizedBox(height: RiksaSpacing.lg),
-              if (flow.phase == _LessonPhase.reading) ...[
-                _LessonArtCard(subject: subject),
-                const SizedBox(height: RiksaSpacing.lg),
-              ],
+              _LessonBuddyScene(subject: subject, phase: flow.phase),
+              const SizedBox(height: RiksaSpacing.lg),
               RiksaContentReveal(
                 identity: (
                   flow.section.index,
@@ -308,6 +343,18 @@ class _LessonExperienceScreenState
                 _AskTutorButton(
                   lessonTitle: detail.title,
                   learningContext: '$subject - ${flow.section.title}',
+                ),
+              ],
+              if (flow.phase == _LessonPhase.reflecting) ...[
+                const SizedBox(height: RiksaSpacing.lg),
+                _LessonResourcesCallout(
+                  lessonId: detail.id,
+                  lessonTitle: detail.title,
+                  onOpen: () => showLessonResourcesSheet(
+                    context,
+                    lessonId: detail.id,
+                    lessonTitle: detail.title,
+                  ),
                 ),
               ],
             ],
@@ -421,6 +468,10 @@ class _LessonExperienceScreenState
           ),
           working: _working.putIfAbsent(exercise.id, TextEditingController.new),
           showChoices: _comparedAnswers.contains(exercise.id),
+          workingExpanded: _expandedWorking.contains(exercise.id),
+          onExpandWorking: () =>
+              setState(() => _expandedWorking.add(exercise.id)),
+          onCompare: () => _changeStep(() => _comparedAnswers.add(exercise.id)),
           onEditWorking: () =>
               _changeStep(() => _comparedAnswers.remove(exercise.id)),
           feedbackKey: _feedbackAnchor,
@@ -486,33 +537,6 @@ class _LessonExperienceScreenState
           style: theme.textTheme.bodyLarge?.copyWith(color: palette.inkMuted),
         ),
         const SizedBox(height: RiksaSpacing.lg),
-        TextField(
-          key: const ValueKey('lesson-reflection'),
-          controller: _reflection,
-          style: RiksaTypography.bodyStyleFor(
-            l10n.lessonReflectionHint,
-            theme.textTheme.bodyLarge,
-          ),
-          minLines: 4,
-          maxLines: 8,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            hintText: l10n.lessonReflectionHint,
-            hintStyle: TextStyle(color: palette.inkMuted, fontSize: 13),
-            alignLabelWithHint: true,
-            filled: true,
-            fillColor: palette.surfaceRaised,
-            border: OutlineInputBorder(
-              borderRadius: AppRadii.largeBorder,
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: AppRadii.largeBorder,
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-        const SizedBox(height: RiksaSpacing.lg),
         Text(l10n.lessonConfidencePrompt, style: theme.textTheme.titleMedium),
         const SizedBox(height: RiksaSpacing.sm),
         Wrap(
@@ -533,13 +557,44 @@ class _LessonExperienceScreenState
             ),
           ],
         ),
-        if (_reflection.text.trim().isEmpty) ...[
-          const SizedBox(height: 16),
-          Text(
-            l10n.lessonReflectionRequired,
-            style: theme.textTheme.bodySmall?.copyWith(color: palette.inkMuted),
-          ),
-        ],
+        const SizedBox(height: RiksaSpacing.md),
+        ExpansionTile(
+          key: const ValueKey('lesson-reflection-toggle'),
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: EdgeInsets.zero,
+          title: Text(l10n.lessonReflectionAddOptional),
+          initiallyExpanded: _showReflectionInput,
+          onExpansionChanged: (expanded) =>
+              setState(() => _showReflectionInput = expanded),
+          children: [
+            TextField(
+              key: const ValueKey('lesson-reflection'),
+              controller: _reflection,
+              style: RiksaTypography.bodyStyleFor(
+                l10n.lessonReflectionHint,
+                theme.textTheme.bodyLarge,
+              ),
+              minLines: 3,
+              maxLines: 6,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                hintText: l10n.lessonReflectionOptionalHint,
+                hintStyle: TextStyle(color: palette.inkMuted, fontSize: 13),
+                alignLabelWithHint: true,
+                filled: true,
+                fillColor: palette.surfaceRaised,
+                border: OutlineInputBorder(
+                  borderRadius: AppRadii.largeBorder,
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: AppRadii.largeBorder,
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -586,15 +641,19 @@ class _LessonExperienceScreenState
         );
       }(),
       _LessonPhase.practising => LearningActionBar(
-        primaryKey: ValueKey(comparing ? 'compare-answers' : 'check-answer'),
+        primaryKey: ValueKey(
+          comparing
+              ? (working.isEmpty ? 'show-choices' : 'compare-answers')
+              : 'check-answer',
+        ),
         primaryLabel: comparing
-            ? l10n.lessonCompareAnswers
+            ? (working.isEmpty
+                  ? l10n.lessonShowChoices
+                  : l10n.lessonCompareAnswers)
             : l10n.lessonCheckAnswer,
         busy: _submitting.contains(exercise!.id),
         onPrimary: comparing
-            ? working.isEmpty
-                  ? null
-                  : () => _changeStep(() => _comparedAnswers.add(exercise.id))
+            ? () => _changeStep(() => _comparedAnswers.add(exercise.id))
             : answer.isEmpty
             ? null
             : () => _submitAnswer(exercise, flow.section),
@@ -618,7 +677,7 @@ class _LessonExperienceScreenState
         primaryKey: const ValueKey('complete-lesson'),
         primaryLabel: isCompleted
             ? l10n.lessonRoadmapAction
-            : l10n.lessonSaveReflection,
+            : l10n.lessonFinishAction,
         primaryIcon: isCompleted ? null : Icons.check_rounded,
         busy: _completing,
         onPrimary: isCompleted
@@ -627,8 +686,6 @@ class _LessonExperienceScreenState
                     ? '/learn'
                     : '/learn/roadmap/${Uri.encodeComponent(detail.categoryId!)}',
               )
-            : _reflection.text.trim().isEmpty
-            ? null
             : () => _complete(detail),
       ),
     };
@@ -667,7 +724,6 @@ class _LessonExperienceScreenState
   }
 
   Future<bool> _showExitConfirmationDialog() async {
-    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
     final palette = context.riksa;
     final theme = Theme.of(context);
 
@@ -697,7 +753,7 @@ class _LessonExperienceScreenState
             const SizedBox(width: RiksaSpacing.sm),
             Expanded(
               child: Text(
-                isKhmer ? 'ចាកចេញពីមេរៀន?' : 'Leave this lesson?',
+                l10n.lessonExitTitle,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -715,7 +771,7 @@ class _LessonExperienceScreenState
             key: const ValueKey('leave-lesson-cancel-button'),
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(
-              isKhmer ? 'បន្តរៀន' : 'Keep Learning',
+              l10n.lessonKeepLearning,
               style: TextStyle(color: palette.ink, fontWeight: FontWeight.w600),
             ),
           ),
@@ -727,7 +783,7 @@ class _LessonExperienceScreenState
               shape: const StadiumBorder(),
             ),
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(isKhmer ? 'ចាកចេញ' : 'Leave Lesson'),
+            child: Text(l10n.lessonLeaveAction),
           ),
         ],
       ),
@@ -746,15 +802,32 @@ class _LessonExperienceScreenState
   ) async {
     final answer = _answers[exercise.id]?.text.trim() ?? '';
     if (answer.isEmpty) return;
+    final authenticated = ref.read(authProvider) is Authenticated;
     setState(() => _submitting.add(exercise.id));
     try {
-      final result = await ref
-          .read(learningApiProvider)
-          .submitAnswer(
-            lessonId: widget.lessonId,
-            exerciseId: exercise.id,
-            answer: answer,
-          );
+      if (!authenticated &&
+          await ref.read(guestAnswerCheckCounterProvider).count() >= 3) {
+        await _showSaveProgressPrompt();
+        return;
+      }
+      final api = ref.read(learningApiProvider);
+      final result = authenticated
+          ? await api.submitAnswer(
+              lessonId: widget.lessonId,
+              exerciseId: exercise.id,
+              answer: answer,
+            )
+          : await api.checkAnswer(
+              lessonId: widget.lessonId,
+              exerciseId: exercise.id,
+              answer: answer,
+            );
+      final guestCheckCount = authenticated
+          ? null
+          : await ref.read(guestAnswerCheckCounterProvider).recordCheck();
+      if (!authenticated && result.correct) {
+        _guestCorrectAnswers[exercise.id] = answer;
+      }
       if (mounted) {
         setState(() {
           _activeSectionIndex = section.index;
@@ -773,6 +846,9 @@ class _LessonExperienceScreenState
           );
         });
       }
+      if (!authenticated && result.correct && guestCheckCount! >= 3) {
+        await _showSaveProgressPrompt();
+      }
     } catch (error) {
       if (mounted) _showError(error);
     } finally {
@@ -781,10 +857,16 @@ class _LessonExperienceScreenState
   }
 
   Future<void> _complete(LessonDetail detail) async {
-    if (_completing || _reflection.text.trim().isEmpty) return;
+    if (_completing) return;
+    if (ref.read(authProvider) is! Authenticated) {
+      await _showSaveProgressPrompt();
+      return;
+    }
+    final reminderNavigator = Navigator.of(context, rootNavigator: true);
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() => _completing = true);
     try {
+      await _syncGuestCorrectAnswers();
       final userNotes = _reflection.text.trim();
       final confidence = _needsReview == null
           ? null
@@ -793,10 +875,7 @@ class _LessonExperienceScreenState
           : l10n.lessonConfident;
       final reflectionPayload = [
         if (confidence != null) '[$confidence]',
-        userNotes,
-        for (final exercise in detail.exercises)
-          if (_working[exercise.id]?.text.trim().isNotEmpty == true)
-            '${exercise.question}\n${_working[exercise.id]!.text.trim()}',
+        if (userNotes.isNotEmpty) userNotes,
       ].join('\n\n');
       final result = await ref
           .read(learningApiProvider)
@@ -804,6 +883,31 @@ class _LessonExperienceScreenState
             lessonId: widget.lessonId,
             reflectionText: reflectionPayload,
           );
+      await ref
+          .read(buddyCareProvider.notifier)
+          .recordLocalGain(BuddyCareSource.lesson, sourceId: detail.id);
+      final buddyName =
+          ref.read(mascotProvider).profile?.name ??
+          MascotProfile.defaultName(MascotSpecies.crocodile);
+      final streak =
+          ref
+              .read(profileDashboardProvider)
+              .value
+              ?.gamification
+              .currentStreak ??
+          0;
+      final reminderTitle = streak > 0
+          ? l10n.reminderNotificationTitle(buddyName, streak)
+          : l10n.reminderNotificationTitleNoStreak(buddyName);
+      final reminderBody = l10n.reminderNotificationBody;
+      final reminderService = ref.read(streakReminderServiceProvider);
+      unawaited(
+        reminderService
+            .recordLessonCompleted(title: reminderTitle, body: reminderBody)
+            .catchError((Object error) {
+              debugPrint('Streak reminder update failed: $error');
+            }),
+      );
       // Sounded before the awaits below: the fanfare should land with the tap,
       // not after the catalog and roadmaps have finished refetching.
       HapticFeedback.mediumImpact();
@@ -836,11 +940,185 @@ class _LessonExperienceScreenState
             'lessonId': detail.id,
           },
         );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!reminderNavigator.mounted) return;
+          unawaited(
+            _maybeOfferReminderPermission(
+              navigator: reminderNavigator,
+              strings: l10n,
+              buddyName: buddyName,
+              title: reminderTitle,
+              body: reminderBody,
+            ).catchError((Object error) {
+              debugPrint('Streak reminder permission prompt failed: $error');
+            }),
+          );
+        });
       }
     } catch (error) {
       if (mounted) _showError(error);
     } finally {
       if (mounted) setState(() => _completing = false);
+    }
+  }
+
+  Future<void> _syncGuestCorrectAnswers() {
+    final active = _guestAnswerSync;
+    if (active != null) return active;
+    final syncing = _performGuestAnswerSync();
+    _guestAnswerSync = syncing;
+    return syncing.whenComplete(() {
+      if (identical(_guestAnswerSync, syncing)) _guestAnswerSync = null;
+    });
+  }
+
+  Future<void> _performGuestAnswerSync() async {
+    final api = ref.read(learningApiProvider);
+    for (final entry in _guestCorrectAnswers.entries) {
+      if (_syncedGuestAnswers.contains(entry.key)) continue;
+      final result = await api.submitAnswer(
+        lessonId: widget.lessonId,
+        exerciseId: entry.key,
+        answer: entry.value,
+      );
+      if (!result.correct) {
+        throw StateError('A guest answer could not be saved to this account.');
+      }
+      _syncedGuestAnswers.add(entry.key);
+      _results[entry.key] = result;
+    }
+  }
+
+  Future<void> _showSaveProgressPrompt() async {
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * .82,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const MascotFaceAvatar(
+                  face: MascotFace.happy,
+                  size: 68,
+                  loops: 1,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.guestSaveProgressBuddyLine,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(sheetContext).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.guestSaveProgressTitle,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(sheetContext).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.guestSaveProgressBody,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(sheetContext).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    key: const ValueKey('guest-save-progress-sign-in'),
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          requireAccount(context, ref, reason: 'save_progress');
+                        }
+                      });
+                    },
+                    icon: const Icon(Icons.login_rounded),
+                    label: Text(l10n.guestSaveProgressSignIn),
+                  ),
+                ),
+                TextButton(
+                  key: const ValueKey('guest-save-progress-later'),
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                  child: Text(l10n.guestSaveProgressLater),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _maybeOfferReminderPermission({
+    required NavigatorState navigator,
+    required AppLocalizations strings,
+    required String buddyName,
+    required String title,
+    required String body,
+  }) async {
+    final service = ref.read(streakReminderServiceProvider);
+    final enabled = await service.isEnabled();
+    final canRequest = await service.canRequestPermission();
+    final hasPermission = await service.hasNotificationPermission();
+    final canPrompt = await service.shouldShowPermissionPromptAfterLesson();
+    if (!enabled ||
+        !canRequest ||
+        hasPermission ||
+        !canPrompt ||
+        !navigator.mounted) {
+      return;
+    }
+    await service.markPermissionPromptShown();
+    if (!navigator.mounted) return;
+    final wantsReminder = await showModalBottomSheet<bool>(
+      context: navigator.context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                strings.reminderPermissionTitle,
+                style: Theme.of(sheetContext).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 10),
+              Text(strings.reminderPermissionBody(buddyName)),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(sheetContext).pop(true),
+                  child: Text(strings.reminderPermissionAllow),
+                ),
+              ),
+              TextButton(
+                key: const ValueKey('reminder-permission-cancel'),
+                onPressed: () => Navigator.of(sheetContext).pop(false),
+                child: Text(strings.cancel),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (wantsReminder != true || !navigator.mounted) return;
+    if (await service.requestPermission()) {
+      await service.rescheduleIfEnabled(title: title, body: body);
     }
   }
 
@@ -1009,6 +1287,40 @@ class _LessonSection {
   final List<LessonExercise> exercises;
 }
 
+class _LessonResourcesCallout extends ConsumerWidget {
+  const _LessonResourcesCallout({
+    required this.lessonId,
+    required this.lessonTitle,
+    required this.onOpen,
+  });
+
+  final String lessonId;
+  final String lessonTitle;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final count =
+        ref.watch(lessonResourcesProvider(lessonId)).value?.resources.length ??
+        0;
+    return Card(
+      child: ListTile(
+        key: const ValueKey('lesson-resources-end-entry'),
+        leading: const Icon(Icons.library_books_outlined),
+        title: Text(l10n.resourceEntryCount(count)),
+        subtitle: Text(
+          lessonTitle,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: onOpen,
+      ),
+    );
+  }
+}
+
 class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
   const _LessonBarDelegate({
     required this.lessonId,
@@ -1021,12 +1333,13 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
     required this.onBack,
     required this.onAskAi,
     required this.onSections,
+    required this.onResources,
   });
   final String lessonId, backTooltip, askAiTooltip;
   final _LessonFlow flow;
   final double topInset, controlsHeight;
   final RiksaPalette palette;
-  final VoidCallback onBack, onAskAi, onSections;
+  final VoidCallback onBack, onAskAi, onSections, onResources;
 
   double get _rowHeight => math.max(48, controlsHeight + 16);
   @override
@@ -1082,12 +1395,26 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
                           .watch(savedLessonsProvider)
                           .contains(lessonId);
                       final sound = ref.watch(soundEnabledProvider);
+                      final resourceCount =
+                          ref
+                              .watch(lessonResourcesProvider(lessonId))
+                              .value
+                              ?.resources
+                              .length ??
+                          0;
                       return PopupMenuButton<String>(
                         key: const ValueKey('lesson-options'),
                         tooltip: l10n.lessonOptions,
                         icon: const Icon(Icons.more_horiz_rounded),
                         onSelected: (value) {
                           if (value == 'save') {
+                            if (!requireAccount(
+                              context,
+                              ref,
+                              reason: 'save_lesson',
+                            )) {
+                              return;
+                            }
                             ref
                                 .read(savedLessonsProvider.notifier)
                                 .toggle(lessonId);
@@ -1095,8 +1422,20 @@ class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
                           if (value == 'sound') {
                             ref.read(soundEnabledProvider.notifier).toggle();
                           }
+                          if (value == 'resources') onResources();
                         },
                         itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'resources',
+                            key: const ValueKey('lesson-resources-open'),
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: const Icon(Icons.library_books_outlined),
+                              title: Text(
+                                l10n.resourceEntryCount(resourceCount),
+                              ),
+                            ),
+                          ),
                           PopupMenuItem(
                             value: 'save',
                             key: const ValueKey('lesson-bookmark-toggle'),
@@ -1189,65 +1528,71 @@ class _LessonIdentity extends StatelessWidget {
   );
 }
 
-/// The picture at the head of a reading step: the subject's pastel, its
-/// icon drawn large, and the mascot taking notes.
-class _LessonArtCard extends StatelessWidget {
-  const _LessonArtCard({required this.subject});
+/// The learner's buddy standing in its own scene at the head of every step,
+/// its mood following where they are in the lesson.
+///
+/// The scene is a band above the content, never behind it: the lesson text
+/// stays on the plain canvas so it reads at 9pm on a cheap phone. The buddy
+/// does not fidget or doze here ([MascotView.alive] is off), so it keeps the
+/// learner company without pulling their eye off the work.
+class _LessonBuddyScene extends ConsumerWidget {
+  const _LessonBuddyScene({required this.subject, required this.phase});
   final String subject;
+  final _LessonPhase phase;
+
+  /// While answering, the scene shrinks to a strip so the exercise and its
+  /// feedback stay above the fold on a 360dp phone.
+  bool get _compact =>
+      phase == _LessonPhase.practising || phase == _LessonPhase.answerChecked;
+
+  MascotMood get _mood => switch (phase) {
+    _LessonPhase.reading => MascotMood.idle,
+    _LessonPhase.practising => MascotMood.thinking,
+    _LessonPhase.answerChecked => MascotMood.happy,
+    _LessonPhase.sectionPassed => MascotMood.celebrate,
+    _LessonPhase.reflecting => MascotMood.happy,
+  };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final species =
+        ref.watch(mascotProvider).profile?.species ?? MascotSpecies.crocodile;
+    final reactions = ref.watch(buddyReactionsEnabledProvider);
     final stem = stemSubjectFor(subject);
-    final tone = subjectTone(context, stem);
     return ExcludeSemantics(
       child: Container(
-        key: const ValueKey('lesson-art-card'),
-        height: 164,
-        decoration: BoxDecoration(
-          color: tone.surface,
+        key: const ValueKey('lesson-buddy-scene'),
+        height: _compact ? 92 : 168,
+        decoration: const BoxDecoration(
           borderRadius: AppRadii.extraLargeBorder,
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            Positioned(
-              left: -30,
-              bottom: -40,
-              child: Container(
-                width: 170,
-                height: 170,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: tone.accent.withValues(alpha: .1),
-                ),
+            // The art directly rather than MascotSceneBackdrop: that one also
+            // sets the status bar style, which would flip as this band scrolls
+            // under the pinned header.
+            Positioned.fill(
+              child: Image.asset(
+                MascotScenes.asset(species, Theme.of(context).brightness),
+                fit: BoxFit.cover,
+                alignment: Alignment.bottomCenter,
+                gaplessPlayback: true,
+                filterQuality: FilterQuality.medium,
               ),
             ),
             Positioned(
-              left: 36,
-              top: 26,
-              child: StemSubjectTile(subject: stem, size: 108),
+              left: RiksaSpacing.md,
+              top: RiksaSpacing.md,
+              child: StemSubjectTile(subject: stem, size: _compact ? 40 : 52),
             ),
-            const Positioned(
-              right: 22,
-              bottom: 12,
-              child: RiksaMascot(size: 112, pose: RiksaMascotPose.pencil),
-            ),
-            Positioned(
-              right: 28,
-              top: 18,
-              child: RiksaDoodle(
-                RiksaDoodleKind.sparkle,
-                size: 20,
-                color: tone.accent,
-              ),
-            ),
-            Positioned(
-              left: 150,
-              top: 22,
-              child: RiksaDoodle(
-                RiksaDoodleKind.squiggle,
-                size: 26,
-                color: context.riksa.reward,
+            Align(
+              alignment: const Alignment(0, 1.08),
+              child: MascotView(
+                species: species,
+                mood: reactions ? _mood : MascotMood.idle,
+                size: _compact ? 76 : 128,
+                alive: false,
               ),
             ),
           ],
@@ -1377,6 +1722,9 @@ class _ExerciseCard extends StatelessWidget {
     required this.onAnswerChanged,
     required this.working,
     required this.showChoices,
+    required this.workingExpanded,
+    required this.onExpandWorking,
+    required this.onCompare,
     required this.onEditWorking,
     required this.feedbackKey,
   });
@@ -1389,6 +1737,9 @@ class _ExerciseCard extends StatelessWidget {
   final VoidCallback onAnswerChanged;
   final TextEditingController working;
   final bool showChoices;
+  final bool workingExpanded;
+  final VoidCallback onExpandWorking;
+  final VoidCallback onCompare;
   final VoidCallback onEditWorking;
   final Key feedbackKey;
 
@@ -1429,6 +1780,7 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
     final l10n = AppLocalizations.of(context)!;
     final correct = result?.correct == true;
     final incorrect = result != null && !correct;
+    final explanation = result?.explanation ?? exercise.explanation;
     return Container(
       key: ValueKey('lesson-exercise-${exercise.id}'),
       padding: const EdgeInsets.all(RiksaSpacing.md + 2),
@@ -1465,20 +1817,53 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
-            TextField(
-              key: ValueKey('lesson-working-${exercise.id}'),
-              controller: working,
-              style: RiksaTypography.bodyStyleFor(
-                l10n.lessonWorkHint,
-                Theme.of(context).textTheme.bodyLarge,
+            if (workingExpanded)
+              TextField(
+                key: ValueKey('lesson-working-${exercise.id}'),
+                controller: working,
+                style: RiksaTypography.bodyStyleFor(
+                  l10n.lessonWorkHint,
+                  Theme.of(context).textTheme.bodyLarge,
+                ),
+                minLines: 3,
+                maxLines: 6,
+                onChanged: (_) => onAnswerChanged(),
+                decoration: InputDecoration(
+                  hintText: l10n.lessonWorkHint,
+                  filled: true,
+                  fillColor: palette.surfaceRaised,
+                ),
+              )
+            else
+              InkWell(
+                key: ValueKey('lesson-add-working-${exercise.id}'),
+                onTap: onExpandWorking,
+                borderRadius: AppRadii.mediumBorder,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: palette.surfaceRaised,
+                    borderRadius: AppRadii.mediumBorder,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(l10n.lessonAddWorkingOptional)),
+                      Icon(Icons.edit_outlined, color: palette.inkMuted),
+                    ],
+                  ),
+                ),
               ),
-              minLines: 3,
-              maxLines: 6,
-              onChanged: (_) => onAnswerChanged(),
-              decoration: InputDecoration(
-                hintText: l10n.lessonWorkHint,
-                filled: true,
-                fillColor: palette.surfaceRaised,
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: OutlinedButton(
+                key: ValueKey('lesson-worked-on-paper-${exercise.id}'),
+                onPressed: onCompare,
+                child: Text(l10n.lessonWorkedOnPaper),
               ),
             ),
           ] else if (exercise.type == LessonExerciseType.text)
@@ -1571,35 +1956,62 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      correct
-                          ? Icons.check_circle_rounded
-                          : Icons.lightbulb_outline_rounded,
-                      color: correct ? palette.jade : palette.saffron,
-                      size: 22,
+                    BuddyFaceReaction(
+                      key: ValueKey(
+                        correct ? 'lesson-buddy-correct' : 'lesson-buddy-retry',
+                      ),
+                      face: BuddyBehavior.resolve(
+                        correct
+                            ? BuddyEvent.answerCorrect
+                            : BuddyEvent.answerIncorrect,
+                      ).face,
+                      size: 36,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        correct
-                            ? l10n.lessonAnswerSuccess
-                            : l10n.lessonAnswerRetry,
-                        style: RiksaTypography.bodyStyleFor(
-                          correct
-                              ? l10n.lessonAnswerSuccess
-                              : l10n.lessonAnswerRetry,
-                          Theme.of(context).textTheme.titleSmall,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            correct
+                                ? l10n.lessonAnswerSuccess
+                                : l10n.lessonAnswerRetry,
+                            style: RiksaTypography.bodyStyleFor(
+                              correct
+                                  ? l10n.lessonAnswerSuccess
+                                  : l10n.lessonAnswerRetry,
+                              Theme.of(context).textTheme.titleSmall,
+                            ),
+                          ),
+                          if (result!.message.trim().isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              result!.message,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                          if (explanation?.trim().isNotEmpty == true) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              l10n.lessonWhy,
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              explanation!,
+                              style: RiksaTypography.bodyStyleFor(
+                                explanation,
+                                Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            if (result!.message.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(result!.message, style: TextStyle(color: palette.inkMuted)),
-            ],
             if (incorrect) ...[
               const SizedBox(height: RiksaSpacing.xs),
               Align(
@@ -1617,15 +2029,6 @@ Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAn
               _Feedback(
                 label: l10n.lessonHint,
                 text: result!.hint ?? exercise.hint!,
-              ),
-            if ((incorrect || correct) &&
-                (result!.explanation ?? exercise.explanation)
-                        ?.trim()
-                        .isNotEmpty ==
-                    true)
-              _Feedback(
-                label: l10n.lessonWhy,
-                text: result!.explanation ?? exercise.explanation!,
               ),
           ],
         ],
@@ -1852,9 +2255,6 @@ String _friendlyLessonError(Object error) {
   }
   if (text.contains('already completed')) {
     return 'This lesson is already complete.';
-  }
-  if (text.contains('too short')) {
-    return 'Write at least 10 words in your reflection.';
   }
   if (text.contains('Cannot complete lesson')) {
     return 'Answer every exercise correctly before completing the lesson.';

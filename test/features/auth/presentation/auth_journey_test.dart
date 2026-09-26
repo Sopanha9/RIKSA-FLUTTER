@@ -200,6 +200,7 @@ Future<ProviderContainer> mountAuth(
   AuthServer server, {
   LinkRecorder? links,
   bool startAtLogin = false,
+  String? loginReason,
   Locale locale = const Locale('en'),
   double textScale = 1,
 }) async {
@@ -219,7 +220,14 @@ Future<ProviderContainer> mountAuth(
   );
   container.read(authProvider);
   final router = GoRouter(
-    initialLocation: startAtLogin ? '/auth/login' : '/auth/telegram',
+    initialLocation: startAtLogin
+        ? Uri(
+            path: '/auth/login',
+            queryParameters: loginReason == null
+                ? null
+                : {'reason': loginReason},
+          ).toString()
+        : '/auth/telegram',
     routes: [
       GoRoute(
         path: '/auth/login',
@@ -230,7 +238,7 @@ Future<ProviderContainer> mountAuth(
         builder: (_, _) => const TelegramAuthScreen(),
       ),
       GoRoute(
-        path: '/home',
+        path: '/learn',
         builder: (_, _) => const Scaffold(body: Text('Signed in destination')),
       ),
     ],
@@ -302,6 +310,21 @@ Future<void> openCodeStep(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('login explains the action that needs an account', (
+    tester,
+  ) async {
+    await mountAuth(
+      tester,
+      AuthServer(),
+      startAtLogin: true,
+      loginReason: 'save_lesson',
+    );
+    expect(
+      find.text('Sign in to save this lesson to your library.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('offers Open Telegram and Log in with code, asking for no ID', (
     tester,
   ) async {

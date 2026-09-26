@@ -14,6 +14,7 @@ void main() {
   setUpAll(() async {
     for (final entry in {
       'Reddit Sans': 'assets/fonts/RedditSans-Variable.ttf',
+      'Poppins': 'assets/fonts/Poppins-Regular.ttf',
       'Kantumruy Pro': 'assets/fonts/KantumruyPro-Variable.ttf',
     }.entries) {
       await (FontLoader(entry.key)..addFont(
@@ -26,7 +27,7 @@ void main() {
   testWidgets('collection at 32 and 48 on light and dark surfaces', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1080, 1136);
+    tester.view.physicalSize = const Size(1080, 1250);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -78,7 +79,7 @@ void main() {
                         for (final icon in icons)
                           SizedBox(
                             width: 200,
-                            height: 136,
+                            height: 150,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [

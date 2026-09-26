@@ -10,6 +10,7 @@ import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_catalog_screen.dart';
 import 'package:riksa_app/features/learning/providers/learning_home_provider.dart';
+import 'package:riksa_app/features/mascot/providers/buddy_care_provider.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 import 'package:riksa_app/features/social/providers/social_feed_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
@@ -28,6 +29,11 @@ class _SignedInNotifier extends AuthNotifier {
       createdAt: DateTime.utc(2026),
     ),
   );
+}
+
+class _FixedBuddyCareNotifier extends BuddyCareNotifier {
+  @override
+  BuddyCareState build() => BuddyCareState.initial(DateTime.now());
 }
 
 LessonSummary _lesson({
@@ -107,6 +113,7 @@ Widget _app({
 }) => ProviderScope(
   overrides: [
     authProvider.overrideWith(_SignedInNotifier.new),
+    buddyCareProvider.overrideWith(_FixedBuddyCareNotifier.new),
     communityStreakProvider.overrideWith(
       (ref) async => const CommunityStreak(current: 12, highest: 21),
     ),
@@ -115,6 +122,10 @@ Widget _app({
   child: MaterialApp.router(
     theme: AppTheme.light,
     routerConfig: router,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(disableAnimations: true),
+      child: child!,
+    ),
     localizationsDelegates: const [
       AppLocalizations.delegate,
       GlobalMaterialLocalizations.delegate,
@@ -181,7 +192,10 @@ void main() {
       lessThanOrEqualTo(120),
     );
     expect(
-      find.byKey(const ValueKey('subject-artwork-mathematics')),
+      find.descendant(
+        of: find.byKey(const ValueKey('subject-tile-math')),
+        matching: find.byKey(const ValueKey('subject-artwork-mathematics')),
+      ),
       findsOneWidget,
     );
     expect(
@@ -364,9 +378,14 @@ void main() {
           communityStreakProvider.overrideWith(
             (ref) async => const CommunityStreak(current: 3, highest: 9),
           ),
+          buddyCareProvider.overrideWith(_FixedBuddyCareNotifier.new),
         ],
         child: MaterialApp(
           theme: AppTheme.light,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -404,9 +423,14 @@ void main() {
           communityStreakProvider.overrideWith(
             (ref) async => const CommunityStreak(current: 3, highest: 9),
           ),
+          buddyCareProvider.overrideWith(_FixedBuddyCareNotifier.new),
         ],
         child: MaterialApp(
           theme: AppTheme.light,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -440,9 +464,14 @@ void main() {
           communityStreakProvider.overrideWith(
             (ref) async => const CommunityStreak(current: 3, highest: 9),
           ),
+          buddyCareProvider.overrideWith(_FixedBuddyCareNotifier.new),
         ],
         child: MaterialApp(
           theme: AppTheme.light,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,

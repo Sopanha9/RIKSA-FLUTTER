@@ -21,6 +21,8 @@ class OnboardingNotifier extends Notifier<OnboardingSetupData> {
     final goalId = prefs.getString(_goalKey);
     final subjectId = prefs.getString(_subjectKey);
     final paceMins = prefs.getInt(_paceKey);
+    // Read the legacy value for one release so existing installs can restore
+    // cleanly; the new onboarding no longer awards or writes setup XP.
     final earnedXp = prefs.getInt(_xpKey) ?? 0;
 
     OnboardingGoal? restoredGoal;
@@ -56,8 +58,7 @@ class OnboardingNotifier extends Notifier<OnboardingSetupData> {
     state = state.copyWith(goal: goal);
   }
 
-  /// The warm-up questions come from the subject, so switching subject
-  /// clears any answers (and the XP they earned) given to the old ones.
+  /// Switching the starting subject clears any legacy warm-up answers.
   void setSubject(OnboardingSubject subject) {
     if (subject == state.subject) return;
     final answered =
@@ -92,16 +93,6 @@ class OnboardingNotifier extends Notifier<OnboardingSetupData> {
     state = state.copyWith(pace: pace);
   }
 
-  void setQuizAnswer1(int index, bool isCorrect) {
-    final newXp = (state.earnedXp) + (isCorrect ? 10 : 5);
-    state = state.copyWith(quizAnswer1Index: index, earnedXp: newXp);
-  }
-
-  void setQuizAnswer2(int index, bool isCorrect) {
-    final newXp = (state.earnedXp) + (isCorrect ? 10 : 5);
-    state = state.copyWith(quizAnswer2Index: index, earnedXp: newXp);
-  }
-
   /// Commits choices to SharedPreferences and updates the locale provider
   /// with the pending province.
   Future<void> commitSetup() async {
@@ -117,8 +108,6 @@ class OnboardingNotifier extends Notifier<OnboardingSetupData> {
     if (state.pace != null) {
       futures.add(prefs.setInt(_paceKey, state.pace!.minutes));
     }
-    futures.add(prefs.setInt(_xpKey, state.earnedXp));
-
     final provinceId = state.provinceId;
     if (provinceId != null) {
       futures.add(

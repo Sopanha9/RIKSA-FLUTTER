@@ -69,31 +69,33 @@ void main() {
     });
   });
 
-  test('createPost omits mediaUrl entirely when no image is attached', () async {
-    final adapter = _GraphqlAdapter({'createPost': _postJson(title: 'Plain')});
+  test(
+    'createPost omits mediaUrl entirely when no image is attached',
+    () async {
+      final adapter = _GraphqlAdapter({
+        'createPost': _postJson(title: 'Plain'),
+      });
 
-    await apiWith(adapter).createPost(
-      title: 'Plain',
-      content: 'No picture on this one',
-      categoryId: 'category-1',
-    );
+      await apiWith(adapter).createPost(
+        title: 'Plain',
+        content: 'No picture on this one',
+        categoryId: 'category-1',
+      );
 
-    // Sending an explicit null would read as "clear it" on the server.
-    expect(
-      (adapter.variables?['input'] as Map).containsKey('mediaUrl'),
-      isFalse,
-    );
-  });
+      // Sending an explicit null would read as "clear it" on the server.
+      expect(
+        (adapter.variables?['input'] as Map).containsKey('mediaUrl'),
+        isFalse,
+      );
+    },
+  );
 
   test('updatePost clears the image with a blank mediaUrl', () async {
     final adapter = _GraphqlAdapter({'updatePost': _postJson(title: 'Edited')});
 
-    await apiWith(adapter).updatePost(
-      id: 'post-1',
-      title: 'Edited',
-      content: 'Body',
-      mediaUrl: '',
-    );
+    await apiWith(
+      adapter,
+    ).updatePost(id: 'post-1', title: 'Edited', content: 'Body', mediaUrl: '');
 
     expect((adapter.variables?['input'] as Map)['mediaUrl'], '');
   });

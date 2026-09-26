@@ -12,29 +12,39 @@ Widget _testApp({
   Locale locale = const Locale('en'),
   bool dark = false,
   double textScale = 1,
-}) => MaterialApp(
-  theme: dark ? AppTheme.dark : AppTheme.light,
-  locale: locale,
-  builder: (context, child) => MediaQuery(
-    data: MediaQuery.of(
-      context,
-    ).copyWith(textScaler: TextScaler.linear(textScale)),
-    child: child!,
-  ),
-  localizationsDelegates: const [
-    AppLocalizations.delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-  ],
-  supportedLocales: const [Locale('en'), Locale('km')],
-  home: Scaffold(
-    bottomNavigationBar: RiksaBottomNavigationBar(
-      currentIndex: currentIndex,
-      onSelected: onSelected ?? (_) {},
+  bool isExpanded = true,
+}) {
+  var expanded = isExpanded;
+  return MaterialApp(
+    theme: dark ? AppTheme.dark : AppTheme.light,
+    locale: locale,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(textScale)),
+      child: child!,
     ),
-  ),
-);
+    localizationsDelegates: const [
+      AppLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: const [Locale('en'), Locale('km')],
+    home: StatefulBuilder(
+      builder: (context, setState) {
+        return Scaffold(
+          bottomNavigationBar: RiksaBottomNavigationBar(
+            currentIndex: currentIndex,
+            onSelected: onSelected ?? (_) {},
+            isExpanded: expanded,
+            onExpand: () => setState(() => expanded = true),
+          ),
+        );
+      },
+    ),
+  );
+}
 
 void main() {
   testWidgets('floating pill labels every tab and keeps all tabs accessible', (
@@ -46,11 +56,13 @@ void main() {
     final surface = find.byKey(const ValueKey('bottom-nav-surface'));
     // A translucent glass pill floats off the screen edges, with the round AI
     // Tutor button beside it.
-    final surfaceColor = tester.widget<Material>(surface).color!;
+    final surfaceColor =
+        (tester.widget<Container>(surface).decoration! as ShapeDecoration)
+            .color!;
     expect(surfaceColor.a, lessThan(1));
-    expect(surfaceColor.r, AppColors.editorialNeutralSurface.r);
-    expect(surfaceColor.g, AppColors.editorialNeutralSurface.g);
-    expect(surfaceColor.b, AppColors.editorialNeutralSurface.b);
+    expect(surfaceColor.r, Colors.white.r);
+    expect(surfaceColor.g, Colors.white.g);
+    expect(surfaceColor.b, Colors.white.b);
     expect(tester.getRect(surface).left, greaterThanOrEqualTo(16));
     expect(
       tester.getRect(find.byKey(const ValueKey('bottom-nav-item-2'))).left,
@@ -82,6 +94,16 @@ void main() {
       await tester.tap(find.byKey(ValueKey('bottom-nav-item-$index')));
       expect(selected, index);
     }
+  });
+
+  testWidgets('collapsed navigation opens the full destination bar', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_testApp(isExpanded: false));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('collapsed-bottom-nav-fab')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('full-bottom-nav-bar')), findsOneWidget);
   });
 
   testWidgets('selection pill slides between non-AI destinations', (

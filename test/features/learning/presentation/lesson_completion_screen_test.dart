@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/core/widgets/riksa_components.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/learning_result_screens.dart';
 import 'package:riksa_app/features/learning/providers/learning_roadmap_provider.dart';
@@ -89,6 +90,14 @@ Widget completionApp({
 }
 
 void main() {
+  testWidgets('XP text uses readable dark ink on the reward card', (
+    tester,
+  ) async {
+    await tester.pumpWidget(completionApp());
+    final xp = tester.widget<RiksaCountUp>(find.byType(RiksaCountUp));
+    expect(xp.style?.color, AppColors.ink);
+  });
+
   testWidgets(
     'shows the saved reflection and opens the server recommended lesson',
     (tester) async {

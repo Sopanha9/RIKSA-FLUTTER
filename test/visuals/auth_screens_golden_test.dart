@@ -11,12 +11,13 @@ import 'package:riksa_app/features/auth/presentation/account_recovery_screen.dar
 import 'package:riksa_app/features/auth/presentation/onboarding_splash_screen.dart';
 import 'package:riksa_app/features/auth/presentation/auth_switcher_screen.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
+import 'package:riksa_app/features/mascot/presentation/widgets/mascot_view.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> _loadFonts() async {
   final redditSans = FontLoader(RiksaTypography.latinFamily)
-    ..addFont(rootBundle.load('assets/fonts/RedditSans-Variable.ttf'));
+    ..addFont(rootBundle.load('assets/fonts/Poppins-Regular.ttf'));
   final khmer = FontLoader(RiksaTypography.khmerFamily)
     ..addFont(rootBundle.load('assets/fonts/NotoSansKhmer-Variable.ttf'));
   final configuredRoot = Platform.environment['FLUTTER_ROOT'];
@@ -66,6 +67,10 @@ Widget _previewApp(
     debugShowCheckedModeBanner: false,
     theme: theme ?? AppTheme.light,
     locale: locale,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(disableAnimations: true),
+      child: child!,
+    ),
     localizationsDelegates: const [
       AppLocalizations.delegate,
       GlobalMaterialLocalizations.delegate,
@@ -76,6 +81,20 @@ Widget _previewApp(
     home: home,
   ),
 );
+
+Future<void> _waitForMascotImages(WidgetTester tester) async {
+  final images = find.descendant(
+    of: find.byType(MascotView, skipOffstage: false),
+    matching: find.byType(Image, skipOffstage: false),
+  );
+  await tester.runAsync(
+    () => Future.wait([
+      for (final element in images.evaluate())
+        precacheImage((element.widget as Image).image, element),
+    ]),
+  );
+  await tester.pump();
+}
 
 void main() {
   setUpAll(_loadFonts);
@@ -89,7 +108,8 @@ void main() {
 
     await tester.pumpWidget(_previewApp(const AuthSwitcherScreen()));
     await tester.pump(const Duration(milliseconds: 500));
-    await tester.pumpAndSettle(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 300));
+    await _waitForMascotImages(tester);
 
     expect(find.byKey(const Key('auth_supporting_panel')), findsNothing);
     await expectLater(
@@ -108,7 +128,8 @@ void main() {
       _previewApp(const AuthSwitcherScreen(initialPage: PageState.register)),
     );
     await tester.pump(const Duration(milliseconds: 500));
-    await tester.pumpAndSettle(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 300));
+    await _waitForMascotImages(tester);
 
     expect(find.byKey(const Key('auth_supporting_panel')), findsNothing);
     await expectLater(
@@ -131,7 +152,8 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 500));
-    await tester.pumpAndSettle(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 300));
+    await _waitForMascotImages(tester);
 
     expect(tester.takeException(), isNull);
     await expectLater(
@@ -227,6 +249,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await _waitForMascotImages(tester);
 
     expect(tester.takeException(), isNull);
     await expectLater(
@@ -239,6 +262,7 @@ void main() {
       const Offset(-360, 0),
     );
     await tester.pumpAndSettle();
+    await _waitForMascotImages(tester);
     await expectLater(
       find.byType(OnboardingSplashScreen),
       matchesGoldenFile('goldens/onboarding_learning_en_light.png'),
@@ -249,6 +273,7 @@ void main() {
       const Offset(-360, 0),
     );
     await tester.pumpAndSettle();
+    await _waitForMascotImages(tester);
     await expectLater(
       find.byType(OnboardingSplashScreen),
       matchesGoldenFile('goldens/onboarding_achievement_en_light.png'),

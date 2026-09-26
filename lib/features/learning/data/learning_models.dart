@@ -1,12 +1,13 @@
 library;
 
-/// Learning currently focuses on the five STEM subject families.
-/// Keep this classification at the catalog boundary because the category API
-/// is also shared by community and blog features.
-bool isStemLearningCategory(String name) {
+/// Return whether a category belongs in the learning catalog. This whitelist
+/// keeps learning separate from the API's shared community and blog categories.
+bool isLearningCategory(String name) {
   final normalized = name.trim().toLowerCase();
   return normalized.contains('math') ||
       normalized.contains('computer science') ||
+      normalized.contains('computer skills') ||
+      normalized.contains('ជំនាញកុំព្យូទ័រ') ||
       normalized.contains('technology') ||
       normalized.contains('engineering') ||
       normalized.contains('physics') ||
@@ -285,10 +286,7 @@ class LearningRoadmap {
 
 /// Server-backed recommendation returned by `GET /learning/me/continue`.
 class ContinueLearningResponse {
-  const ContinueLearningResponse({
-    required this.allCompleted,
-    this.lesson,
-  });
+  const ContinueLearningResponse({required this.allCompleted, this.lesson});
 
   final bool allCompleted;
   final LessonProgress? lesson;
@@ -354,10 +352,8 @@ class LessonProgress {
     totalExerciseCount: (json['totalExerciseCount'] as num?)?.toInt() ?? 0,
     attemptedExerciseCount:
         (json['attemptedExerciseCount'] as num?)?.toInt() ?? 0,
-    correctExerciseCount:
-        (json['correctExerciseCount'] as num?)?.toInt() ?? 0,
-    progressPercentage:
-        (json['progressPercentage'] as num?)?.toDouble() ?? 0,
+    correctExerciseCount: (json['correctExerciseCount'] as num?)?.toInt() ?? 0,
+    progressPercentage: (json['progressPercentage'] as num?)?.toDouble() ?? 0,
     currentSectionIndex: (json['currentSectionIndex'] as num?)?.toInt() ?? 1,
     lastActivityAt: DateTime.tryParse(json['lastActivityAt']?.toString() ?? ''),
     completed: json['completed'] as bool? ?? false,
@@ -384,10 +380,14 @@ class LessonRoadmap {
   factory LessonRoadmap.fromJson(Map<String, dynamic> json) => LessonRoadmap(
     categoryId: json['categoryId']?.toString() ?? '',
     categoryName: json['categoryName'] as String? ?? '',
-    lessons: ((json['lessons'] as List?) ?? const [])
-        .map((item) => LessonSummary.fromJson((item as Map).cast<String, dynamic>()))
-        .toList()
-      ..sort((a, b) => a.position.compareTo(b.position)),
+    lessons:
+        ((json['lessons'] as List?) ?? const [])
+            .map(
+              (item) =>
+                  LessonSummary.fromJson((item as Map).cast<String, dynamic>()),
+            )
+            .toList()
+          ..sort((a, b) => a.position.compareTo(b.position)),
   );
 }
 

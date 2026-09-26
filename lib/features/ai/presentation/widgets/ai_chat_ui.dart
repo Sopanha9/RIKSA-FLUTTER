@@ -6,9 +6,8 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_components.dart';
+import '../../../../core/widgets/riksa_brand.dart';
 import '../../../../l10n/gen/app_localizations.dart';
-import '../../../mascot/domain/mascot.dart';
-import '../../../mascot/presentation/widgets/mascot_face.dart';
 
 const _userRadius = BorderRadius.only(
   topLeft: Radius.circular(AppRadii.panel),
@@ -166,12 +165,10 @@ class AiTutorBubble extends StatelessWidget {
                         alignment: Alignment.centerRight,
                         child: Builder(
                           builder: (context) {
-                            final isKhmer =
-                                Localizations.localeOf(context).languageCode ==
-                                'km';
+                            final l10n = AppLocalizations.of(context)!;
                             return Semantics(
                               button: true,
-                              label: isKhmer ? 'ចម្លងចម្លើយ' : 'Copy answer',
+                              label: l10n.aiCopyAnswer,
                               child: InkWell(
                                 key: const ValueKey('copy-ai-response'),
                                 borderRadius: AppRadii.fullBorder,
@@ -185,9 +182,7 @@ class AiTutorBubble extends StatelessWidget {
                                     ..showSnackBar(
                                       SnackBar(
                                         content: Text(
-                                          isKhmer
-                                              ? 'បានចម្លងទៅក្តារតម្កល់'
-                                              : 'Copied to clipboard',
+                                          l10n.aiCopiedClipboard,
                                         ),
                                         duration: const Duration(seconds: 2),
                                       ),
@@ -208,7 +203,7 @@ class AiTutorBubble extends StatelessWidget {
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        isKhmer ? 'ចម្លង' : 'Copy',
+                                        l10n.aiCopy,
                                         style: Theme.of(context)
                                             .textTheme
                                             .labelSmall
@@ -238,26 +233,32 @@ class AiTutorBubble extends StatelessWidget {
   }
 }
 
-/// The coach's face beside each of its answers: the learner's own study
-/// buddy, showing [face].
-///
-/// Beside an answer the face plays [loops] times and then rests, so a long
-/// conversation is not a wall of moving heads.
+/// Kru AI's own violet mark. This intentionally does not use mascotProvider:
+/// the learner's chosen buddy and the tutor are different product roles.
 class AiCoachAvatar extends StatelessWidget {
   const AiCoachAvatar({
     super.key,
     this.size = 34,
-    this.face = MascotFace.happy,
-    this.loops = 1,
+    this.thinking = false,
   });
 
   final double size;
-  final MascotFace face;
-  final int? loops;
+  final bool thinking;
 
   @override
-  Widget build(BuildContext context) =>
-      MascotFaceAvatar(face: face, size: size, loops: loops);
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: context.riksa.learningSoft,
+      shape: BoxShape.circle,
+    ),
+    child: RiksaMascot(
+      size: size,
+      pose: thinking ? RiksaMascotPose.pencil : RiksaMascotPose.happy,
+      showSparkles: false,
+    ),
+  );
 }
 
 /// Waiting state in the tutor's own position, so the answer does not arrive
@@ -278,7 +279,7 @@ class AiThinkingBubble extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const AiCoachAvatar(face: MascotFace.thinking, loops: null),
+            const AiCoachAvatar(thinking: true),
             const SizedBox(width: RiksaSpacing.xs),
             DecoratedBox(
               decoration: BoxDecoration(

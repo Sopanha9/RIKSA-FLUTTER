@@ -100,6 +100,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.tap(find.byKey(const ValueKey('leaderboard-national-tab')));
+    await tester.pumpAndSettle();
+
     final card = find.byKey(const ValueKey('current-user-rank-card'));
     final rankings = find.byKey(const ValueKey('leaderboard-rankings-section'));
     expect(card, findsOneWidget);

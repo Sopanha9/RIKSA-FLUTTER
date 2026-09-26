@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../mascot/providers/buddy_care_provider.dart';
 import '../../userProfile/data/public_profile.dart';
 import '../../userProfile/presentation/public_profile_navigation.dart';
 import '../data/blog_api.dart';
@@ -30,10 +33,12 @@ class BlogDetailScreen extends ConsumerStatefulWidget {
   ConsumerState<BlogDetailScreen> createState() => _BlogDetailScreenState();
 }
 
-class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
+class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen>
+    with WidgetsBindingObserver {
   static const double _coverHeight = 268;
 
   final _scrollController = ScrollController();
+  final _readingTime = Stopwatch();
   BlogPost? _post;
   bool _loading = true;
   bool _liking = false;
@@ -41,16 +46,38 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
   double _readingProgress = 0.0;
   double _textScale = 1.0;
   String? _error;
+  Timer? _readCompleteTimer;
+  bool _readCompleteSent = false;
+
+  static const _minimumReadTime = Duration(seconds: 40);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _readingTime.start();
     _scrollController.addListener(_onScroll);
     _load();
   }
 
   @override
+  void didUpdateWidget(covariant BlogDetailScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.id != widget.id) {
+      _readCompleteTimer?.cancel();
+      _readCompleteSent = false;
+      _readingTime
+        ..reset()
+        ..start();
+      _load();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _readCompleteTimer?.cancel();
+    _readingTime.stop();
     _scrollController.dispose();
     super.dispose();
   }
@@ -71,6 +98,70 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
       if ((progress - _readingProgress).abs() > 0.005) {
         setState(() => _readingProgress = progress);
       }
+    }
+    _maybeCompleteRead();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _readingTime.start();
+      _maybeCompleteRead();
+    } else {
+      _readingTime.stop();
+      _readCompleteTimer?.cancel();
+      _readCompleteTimer = null;
+    }
+  }
+
+  void _maybeCompleteRead() {
+    if (_readCompleteSent ||
+        _post == null ||
+        ref.read(authProvider) is! Authenticated ||
+        !_scrollController.hasClients) {
+      return;
+    }
+    final position = _scrollController.position;
+    final reachedEnd =
+        position.maxScrollExtent <= 0 ||
+        position.pixels >= position.maxScrollExtent - 24;
+    if (!reachedEnd) {
+      _readCompleteTimer?.cancel();
+      _readCompleteTimer = null;
+      return;
+    }
+    final remaining = _minimumReadTime - _readingTime.elapsed;
+    if (remaining <= Duration.zero) {
+      _readCompleteSent = true;
+      _readCompleteTimer?.cancel();
+      _readCompleteTimer = null;
+      unawaited(_sendReadComplete());
+    } else {
+      _readCompleteTimer ??= Timer(remaining, () {
+        _readCompleteTimer = null;
+        _maybeCompleteRead();
+      });
+    }
+  }
+
+  Future<void> _sendReadComplete() async {
+    final care = ref.read(buddyCareProvider);
+    try {
+      await ref.read(buddyCareProvider.notifier).readComplete(widget.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.buddyReadEnjoyed(care.name),
+            ),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+    } catch (_) {
+      // Read-complete is a quiet reward and never interrupts reading.
     }
   }
 
@@ -113,6 +204,9 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen> {
       setState(() {
         _post = post;
         _loading = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _maybeCompleteRead();
       });
     } catch (_) {
       if (!mounted) return;

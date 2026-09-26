@@ -22,6 +22,7 @@ class SocialApi {
 
   static const _postFields = r'''
     id title content mediaUrl reactionCount commentCount shareCount myReaction
+    kind milestone { type title titleKm value }
     createdAt updatedAt
     author { id username displayName avatarUrl }
     category { id name slug description iconUrl memberCount joined }

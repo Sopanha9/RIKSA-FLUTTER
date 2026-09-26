@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riksa_app/core/network/dio_client.dart';
 import 'package:riksa_app/core/storage/session_store.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
@@ -19,11 +20,13 @@ import 'package:riksa_app/features/social/providers/social_feed_provider.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/providers/learning_home_provider.dart';
+import 'package:riksa_app/features/userProfile/data/profile_models.dart';
+import 'package:riksa_app/features/userProfile/providers/profile_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 Future<void> _loadFonts() async {
   final redditSans = FontLoader(RiksaTypography.latinFamily)
-    ..addFont(rootBundle.load('assets/fonts/RedditSans-Variable.ttf'));
+    ..addFont(rootBundle.load('assets/fonts/Poppins-Regular.ttf'));
 
   final configuredRoot = Platform.environment['FLUTTER_ROOT'];
   final flutterRoot =
@@ -180,6 +183,8 @@ final _biology = SubjectProgress(
 
 void main() {
   setUpAll(_loadFonts);
+  // The timeline's study banner reads the learner's buddy from local storage.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
 
   for (final dark in [false, true]) {
     testWidgets('social feed editorial palette ${dark ? 'dark' : 'light'}', (
@@ -206,6 +211,20 @@ void main() {
             socialFeedProvider.overrideWith(_PreviewFeedNotifier.new),
             communityStreakProvider.overrideWith(
               (ref) async => const CommunityStreak(current: 20, highest: 24),
+            ),
+            // The header avatar wears the learner's rank frame.
+            profileDashboardProvider.overrideWith(
+              (ref) async => ProfileDashboardData(
+                gamification: const GamificationProfile(
+                  totalXp: 1240,
+                  currentStreak: 20,
+                  highestStreak: 24,
+                  xpToNext: 260,
+                  currentTier: 'GOLD',
+                ),
+                achievements: const [],
+                activities: const [],
+              ),
             ),
           ],
           child: MaterialApp(

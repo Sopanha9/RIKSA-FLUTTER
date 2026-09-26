@@ -18,6 +18,15 @@ class AppLocalizationsKm extends AppLocalizations {
   String get loginSubtitle => 'ចូលប្រើប្រាស់ដើម្បីបន្តការសិក្សារបស់អ្នក';
 
   @override
+  String get authReasonSaveProgress => 'ចូលគណនី ដើម្បីរក្សាទុកវឌ្ឍនភាពមេរៀន និងការរៀនជាប់គ្នា។';
+
+  @override
+  String get authReasonSaveLesson => 'ចូលគណនី ដើម្បីរក្សាទុកមេរៀននេះក្នុងបណ្ណាល័យរបស់អ្នក។';
+
+  @override
+  String get authReasonPost => 'ចូលគណនី ដើម្បីចែករំលែកប្រកាសជាមួយសហគមន៍របស់អ្នក។';
+
+  @override
   String get loginEyebrow => 'កន្លែងសិក្សារបស់អ្នក';
 
   @override
@@ -155,22 +164,19 @@ class AppLocalizationsKm extends AppLocalizations {
   String get forgotPassword => 'ភ្លេច​ពាក្យ​សម្ងាត់?';
 
   @override
-  String get passwordRecoveryUnavailable =>
-      'មុខងារសង្គ្រោះពាក្យសម្ងាត់មិនទាន់មាននៅឡើយទេ។';
+  String get passwordRecoveryUnavailable => 'មុខងារសង្គ្រោះពាក្យសម្ងាត់មិនទាន់មាននៅឡើយទេ។';
 
   @override
   String get requiredField => 'ចន្លោះ​នេះ​ត្រូវ​ការ';
 
   @override
-  String get invalidUsername =>
-      'ឈ្មោះ​អ្នក​ប្រើ​ត្រូវ​មាន​យ៉ាង​ហោច​ណាស់ ៣ តួ​អក្សរ';
+  String get invalidUsername => 'ឈ្មោះ​អ្នក​ប្រើ​ត្រូវ​មាន​យ៉ាង​ហោច​ណាស់ ៣ តួ​អក្សរ';
 
   @override
   String get invalidEmail => 'បញ្ចូល​អ៊ីមែល​ត្រឹម​ត្រូវ';
 
   @override
-  String get weakPassword =>
-      'ពាក្យ​សម្ងាត់​ត្រូវ​មាន ៨ តួ​អក្សរ​ឡើង​ទៅ​មាន​អក្សរ​ធំ អក្សរ​តូច និង​លេខ';
+  String get weakPassword => 'ពាក្យ​សម្ងាត់​ត្រូវ​មាន ៨ តួ​អក្សរ​ឡើង​ទៅ​មាន​អក្សរ​ធំ អក្សរ​តូច និង​លេខ';
 
   @override
   String get passwordsDoNotMatch => 'ពាក្យសម្ងាត់មិនត្រូវគ្នា';
@@ -182,12 +188,10 @@ class AppLocalizationsKm extends AppLocalizations {
   String get usernameTooLong => 'ឈ្មោះអ្នកប្រើត្រូវមានពី ៣ ដល់ ៥០ តួអក្សរ';
 
   @override
-  String get signInSecureNote =>
-      'សម័យចូលប្រើរបស់អ្នកត្រូវបានការពារ និងបន្តដោយស្វ័យប្រវត្តិ។';
+  String get signInSecureNote => 'សម័យចូលប្រើរបស់អ្នកត្រូវបានការពារ និងបន្តដោយស្វ័យប្រវត្តិ។';
 
   @override
-  String get registerEmailNote =>
-      'អ្នកអាចផ្ទៀងផ្ទាត់អ៊ីមែលពេលក្រោយក្នុងប្រវត្តិរូប។';
+  String get registerEmailNote => 'អ្នកអាចផ្ទៀងផ្ទាត់អ៊ីមែលពេលក្រោយក្នុងប្រវត្តិរូប។';
 
   @override
   String get loginFailed => 'ការ​ចូល​បរាជ័យ។ ពិនិត្យ​ព័ត៌មាន​របស់​អ្នក។';
@@ -199,12 +203,10 @@ class AppLocalizationsKm extends AppLocalizations {
   String get googleFailed => 'ការ​ចូល​តាម Google បរាជ័យ';
 
   @override
-  String get googleNotConfigured =>
-      'ការ​ចូល​តាម Google មិន​ទាន់​បាន​កំណត់​សម្រាប់​កំណែ​នេះ​ទេ។';
+  String get googleNotConfigured => 'ការ​ចូល​តាម Google មិន​ទាន់​បាន​កំណត់​សម្រាប់​កំណែ​នេះ​ទេ។';
 
   @override
-  String get googleUnsupported =>
-      'ប្រើ​ប៊ូតុង Google ដែល​កម្មវិធី​រុករក​ផ្តល់​ឱ្យ​ដើម្បី​បន្ត។';
+  String get googleUnsupported => 'ប្រើ​ប៊ូតុង Google ដែល​កម្មវិធី​រុករក​ផ្តល់​ឱ្យ​ដើម្បី​បន្ត។';
 
   @override
   String get telegramEyebrow => 'មិនត្រូវការពាក្យសម្ងាត់';
@@ -213,22 +215,19 @@ class AppLocalizationsKm extends AppLocalizations {
   String get telegramAuthTitle => 'បន្ត​ជាមួយ Telegram';
 
   @override
-  String get telegramAuthSubtitle =>
-      'មិនចាំបាច់ចាំលេខសម្គាល់ Telegram ទេ។ ជ្រើសរើសវិធីចូល។ ថ្មីនៅ Riksa? ជម្រើសទាំងពីរនឹងបង្កើតគណនីឱ្យអ្នក។';
+  String get telegramAuthSubtitle => 'មិនចាំបាច់ចាំលេខសម្គាល់ Telegram ទេ។ ជ្រើសរើសវិធីចូល។ ថ្មីនៅ Riksa? ជម្រើសទាំងពីរនឹងបង្កើតគណនីឱ្យអ្នក។';
 
   @override
   String get telegramAuthorize => 'បើក Telegram';
 
   @override
-  String get telegramAuthorizeHint =>
-      'លឿនបំផុត៖ ចុច Confirm នៅក្នុងបូត Riksa ហើយត្រឡប់មកវិញភ្លាម។';
+  String get telegramAuthorizeHint => 'លឿនបំផុត៖ ចុច Confirm នៅក្នុងបូត Riksa ហើយត្រឡប់មកវិញភ្លាម។';
 
   @override
   String get telegramUseCode => 'ចូលដោយប្រើកូដ';
 
   @override
-  String get telegramUseCodeHint =>
-      'Telegram នៅលើឧបករណ៍ផ្សេង? យកកូដពីបូត ហើយបិទភ្ជាប់នៅទីនេះ។';
+  String get telegramUseCodeHint => 'Telegram នៅលើឧបករណ៍ផ្សេង? យកកូដពីបូត ហើយបិទភ្ជាប់នៅទីនេះ។';
 
   @override
   String get telegramTheBot => 'បូត Riksa';
@@ -270,12 +269,10 @@ class AppLocalizationsKm extends AppLocalizations {
   String get telegramCodeInvalidFormat => 'បញ្ចូលកូដ ៨ តួអក្សរពីបូត';
 
   @override
-  String get telegramCodeRejected =>
-      'កូដនេះមិនត្រឹមត្រូវ ឬផុតកំណត់។ ផ្ញើ /code ទៅបូតដើម្បីទទួលកូដថ្មី។';
+  String get telegramCodeRejected => 'កូដនេះមិនត្រឹមត្រូវ ឬផុតកំណត់។ ផ្ញើ /code ទៅបូតដើម្បីទទួលកូដថ្មី។';
 
   @override
-  String get telegramNoCodeInClipboard =>
-      'រកមិនឃើញកូដចូលក្នុងក្ដារតម្បៀតខ្ទាស់ទេ។';
+  String get telegramNoCodeInClipboard => 'រកមិនឃើញកូដចូលក្នុងក្ដារតម្បៀតខ្ទាស់ទេ។';
 
   @override
   String get telegramSignIn => 'ចូល';
@@ -287,15 +284,13 @@ class AppLocalizationsKm extends AppLocalizations {
   String get telegramSwitchToCode => 'មានបញ្ហា? ចូលដោយប្រើកូដ';
 
   @override
-  String get telegramPrivacyNote =>
-      'Riksa ទទួលបានតែឈ្មោះ និងឈ្មោះអ្នកប្រើសាធារណៈ Telegram របស់អ្នកប៉ុណ្ណោះ។ មិនដែលទទួលលេខទូរស័ព្ទ ឬការជជែករបស់អ្នកទេ។';
+  String get telegramPrivacyNote => 'Riksa ទទួលបានតែឈ្មោះ និងឈ្មោះអ្នកប្រើសាធារណៈ Telegram របស់អ្នកប៉ុណ្ណោះ។ មិនដែលទទួលលេខទូរស័ព្ទ ឬការជជែករបស់អ្នកទេ។';
 
   @override
   String get telegramWaitingTitle => 'កំពុងរង់ចាំ Telegram';
 
   @override
-  String get telegramWaitingSubtitle =>
-      'បញ្ជាក់សំណើនៅក្នុងបូត Riksa រួចត្រឡប់មកអេក្រង់នេះវិញ។';
+  String get telegramWaitingSubtitle => 'បញ្ជាក់សំណើនៅក្នុងបូត Riksa រួចត្រឡប់មកអេក្រង់នេះវិញ។';
 
   @override
   String telegramExpiresIn(String time) {
@@ -309,27 +304,22 @@ class AppLocalizationsKm extends AppLocalizations {
   String get telegramCopyLink => 'ចម្លងតំណ';
 
   @override
-  String get telegramLinkCopied =>
-      'បានចម្លងតំណ។ បើកវានៅលើឧបករណ៍ណាដែលមាន Telegram។';
+  String get telegramLinkCopied => 'បានចម្លងតំណ។ បើកវានៅលើឧបករណ៍ណាដែលមាន Telegram។';
 
   @override
-  String get telegramOpenFailed =>
-      'មិនអាចបើក Telegram បានទេ។ សូមដំឡើង Telegram ឬចម្លងតំណហើយបើកនៅលើឧបករណ៍ផ្សេង។';
+  String get telegramOpenFailed => 'មិនអាចបើក Telegram បានទេ។ សូមដំឡើង Telegram ឬចម្លងតំណហើយបើកនៅលើឧបករណ៍ផ្សេង។';
 
   @override
-  String get telegramStartFailed =>
-      'មិនអាចចាប់ផ្ដើមការអនុញ្ញាតតាម Telegram បានទេ។ សូមព្យាយាមម្ដងទៀត។';
+  String get telegramStartFailed => 'មិនអាចចាប់ផ្ដើមការអនុញ្ញាតតាម Telegram បានទេ។ សូមព្យាយាមម្ដងទៀត។';
 
   @override
-  String get telegramExpired =>
-      'សំណើនេះបានផុតកំណត់។ សូមចាប់ផ្ដើមម្ដងទៀតដើម្បីទទួលតំណថ្មី។';
+  String get telegramExpired => 'សំណើនេះបានផុតកំណត់។ សូមចាប់ផ្ដើមម្ដងទៀតដើម្បីទទួលតំណថ្មី។';
 
   @override
   String get telegramDenied => 'សំណើត្រូវបានបដិសេធនៅក្នុង Telegram។';
 
   @override
-  String get telegramSignupExpired =>
-      'ការអនុញ្ញាតតាម Telegram បានផុតកំណត់មុនពេលបង្កើតគណនី។ សូមអនុញ្ញាតម្ដងទៀត។';
+  String get telegramSignupExpired => 'ការអនុញ្ញាតតាម Telegram បានផុតកំណត់មុនពេលបង្កើតគណនី។ សូមអនុញ្ញាតម្ដងទៀត។';
 
   @override
   String get telegramProfileEyebrow => 'បានភ្ជាប់ Telegram';
@@ -338,8 +328,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get telegramProfileTitle => 'រៀបចំប្រវត្តិរូប Riksa របស់អ្នក';
 
   @override
-  String get telegramProfileSubtitle =>
-      'ជ្រើសរើសរបៀបដែលអ្នករៀនផ្សេងទៀតឃើញអ្នក។ អ្នកអាចប្ដូរឈ្មោះបង្ហាញពេលក្រោយបាន។';
+  String get telegramProfileSubtitle => 'ជ្រើសរើសរបៀបដែលអ្នករៀនផ្សេងទៀតឃើញអ្នក។ អ្នកអាចប្ដូរឈ្មោះបង្ហាញពេលក្រោយបាន។';
 
   @override
   String telegramConnectedAs(String name) {
@@ -373,8 +362,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get streakTitle => 'ការសិក្សាបន្ត';
 
   @override
-  String get streakSubtitle =>
-      'រៀនរាល់ថ្ងៃ ដើម្បីបន្តការសិក្សារបស់អ្នកឱ្យកាន់តែប្រសើរ។';
+  String get streakSubtitle => 'រៀនរាល់ថ្ងៃ ដើម្បីបន្តការសិក្សារបស់អ្នកឱ្យកាន់តែប្រសើរ។';
 
   @override
   String get bestStreak => 'ការសិក្សាបន្តល្អបំផុត';
@@ -413,8 +401,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get writeArticle => 'សរសេរអត្ថបទ';
 
   @override
-  String get writeArticleSubtitle =>
-      'អត្ថបទវែងសម្រាប់ប្លុក ដែលត្រូវពិនិត្យមុនបង្ហាញ។';
+  String get writeArticleSubtitle => 'អត្ថបទវែងសម្រាប់ប្លុក ដែលត្រូវពិនិត្យមុនបង្ហាញ។';
 
   @override
   String get yourArticles => 'អត្ថបទរបស់អ្នក';
@@ -472,8 +459,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get publish => 'បោះពុម្ពផ្សាយ';
 
   @override
-  String get publishFailed =>
-      'យើងមិនអាចបោះពុម្ពផ្សាយបានទេ។ សូមពិនិត្យខ្លឹមសារ ហើយព្យាយាមម្ដងទៀត។';
+  String get publishFailed => 'យើងមិនអាចបោះពុម្ពផ្សាយបានទេ។ សូមពិនិត្យខ្លឹមសារ ហើយព្យាយាមម្ដងទៀត។';
 
   @override
   String get noCommunities => 'មិនទាន់មានសហគមន៍ទេ។';
@@ -485,8 +471,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get communityHeadline => 'រៀនជាមួយគ្នា។ ចែករំលែកអ្វីដែលអ្នកយល់។';
 
   @override
-  String get communitySubtitle =>
-      'សួរសំណួរ ចែករំលែកគំនិតមានប្រយោជន៍ និងអបអរវឌ្ឍនភាពជាមួយអ្នកសិក្សា RIKSA។';
+  String get communitySubtitle => 'សួរសំណួរ ចែករំលែកគំនិតមានប្រយោជន៍ និងអបអរវឌ្ឍនភាពជាមួយអ្នកសិក្សា RIKSA។';
 
   @override
   String get forYou => 'សម្រាប់អ្នក';
@@ -523,8 +508,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get feedEmptyTitle => 'មតិព័ត៌មានសហគមន៍របស់អ្នករួចរាល់';
 
   @override
-  String get feedEmptyMessage =>
-      'ការបង្ហោះពីសហគមន៍នេះនឹងបង្ហាញនៅទីនេះ ពេលអ្នកសិក្សាចាប់ផ្ដើមចែករំលែក។';
+  String get feedEmptyMessage => 'ការបង្ហោះពីសហគមន៍នេះនឹងបង្ហាញនៅទីនេះ ពេលអ្នកសិក្សាចាប់ផ្ដើមចែករំលែក។';
 
   @override
   String get feedErrorTitle => 'យើងមិនអាចផ្ទុកសហគមន៍បានទេ';
@@ -554,8 +538,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get deletePostTitle => 'លុបការបង្ហោះនេះមែនទេ?';
 
   @override
-  String get deletePostMessage =>
-      'ការបង្ហោះ និងមតិយោបល់របស់វា នឹងត្រូវលុបចេញសម្រាប់អ្នកទាំងអស់គ្នា។ សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។';
+  String get deletePostMessage => 'ការបង្ហោះ និងមតិយោបល់របស់វា នឹងត្រូវលុបចេញសម្រាប់អ្នកទាំងអស់គ្នា។ សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។';
 
   @override
   String get keepPost => 'រក្សាទុកការបង្ហោះ';
@@ -570,16 +553,13 @@ class AppLocalizationsKm extends AppLocalizations {
   String get postDeleted => 'បានលុបការបង្ហោះ';
 
   @override
-  String get saveFailed =>
-      'យើងមិនអាចរក្សាទុកការផ្លាស់ប្ដូរបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+  String get saveFailed => 'យើងមិនអាចរក្សាទុកការផ្លាស់ប្ដូរបានទេ។ សូមព្យាយាមម្ដងទៀត។';
 
   @override
-  String get deleteFailed =>
-      'យើងមិនអាចលុបការបង្ហោះនេះបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+  String get deleteFailed => 'យើងមិនអាចលុបការបង្ហោះនេះបានទេ។ សូមព្យាយាមម្ដងទៀត។';
 
   @override
-  String get editPostSubtitle =>
-      'ធ្វើបច្ចុប្បន្នភាពអ្វីដែលអ្នកបានចែករំលែកជាមួយសហគមន៍។';
+  String get editPostSubtitle => 'ធ្វើបច្ចុប្បន្នភាពអ្វីដែលអ្នកបានចែករំលែកជាមួយសហគមន៍។';
 
   @override
   String get discussion => 'ការពិភាក្សា';
@@ -597,8 +577,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get replyingTo => 'កំពុងឆ្លើយតបទៅកាន់';
 
   @override
-  String get commentFailed =>
-      'យើងមិនអាចបន្ថែមមតិយោបល់របស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+  String get commentFailed => 'យើងមិនអាចបន្ថែមមតិយោបល់របស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។';
 
   @override
   String get noComments => 'មិនទាន់មានមតិយោបល់ទេ។ ចាប់ផ្ដើមការសន្ទនា។';
@@ -607,8 +586,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get postUnavailable => 'មិនអាចមើលការបង្ហោះបាន';
 
   @override
-  String get postUnavailableMessage =>
-      'ការបង្ហោះនេះអាចត្រូវបានលុប ឬលែងអាចមើលឃើញ។';
+  String get postUnavailableMessage => 'ការបង្ហោះនេះអាចត្រូវបានលុប ឬលែងអាចមើលឃើញ។';
 
   @override
   String get profile => 'ប្រវត្តិរូប';
@@ -626,16 +604,13 @@ class AppLocalizationsKm extends AppLocalizations {
   String get setUpProfile => 'រៀបចំប្រវត្តិរូប';
 
   @override
-  String get onboardingLearningBody =>
-      'មេរៀន គ្រូបង្វឹក AI និងមិត្តភក្តិដែលពន្យល់តាមរបៀបរបស់គេ។ ការរៀនស្រាលជាងមុន ពេលមានគ្នា។';
+  String get onboardingLearningBody => 'មេរៀន គ្រូបង្វឹក AI និងមិត្តភក្តិដែលពន្យល់តាមរបៀបរបស់គេ។ ការរៀនស្រាលជាងមុន ពេលមានគ្នា។';
 
   @override
-  String get onboardingAchievementBody =>
-      'រក្សាការសិក្សាបន្ត ឡើងតារាងចំណាត់ថ្នាក់ ហើយឱ្យដៃគូរបស់អ្នកអបអរគ្រប់ជោគជ័យ។';
+  String get onboardingAchievementBody => 'រក្សាការសិក្សាបន្ត ឡើងតារាងចំណាត់ថ្នាក់ ហើយឱ្យដៃគូរបស់អ្នកអបអរគ្រប់ជោគជ័យ។';
 
   @override
-  String get onboardingCommunityBody =>
-      'ចូលរួមសហគមន៍ ចែករំលែកអ្វីដែលអ្នកកំពុងធ្វើ និងសួរអ្វីក៏បាន។ តែងតែមានគេនៅក្បែរអ្នក។';
+  String get onboardingCommunityBody => 'ចូលរួមសហគមន៍ ចែករំលែកអ្វីដែលអ្នកកំពុងធ្វើ និងសួរអ្វីក៏បាន។ តែងតែមានគេនៅក្បែរអ្នក។';
 
   @override
   String get onboardingLearningTitle => 'រៀនជាមួយគ្នា មិនមែនម្នាក់ឯង';
@@ -653,8 +628,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get selectProvinceTitle => 'ជ្រើសរើសខេត្តរបស់អ្នក';
 
   @override
-  String get selectProvinceSubtitle =>
-      'ខេត្តរបស់អ្នកជួយកំណត់សហគមន៍ក្នុងតំបន់ និងចំណាត់ថ្នាក់តាមខេត្ត។ ព័ត៌មាននេះនឹងត្រូវរក្សាទុកដោយសុវត្ថិភាពក្នុងប្រវត្តិរូប បន្ទាប់ពីអ្នកចូលគណនី។';
+  String get selectProvinceSubtitle => 'ខេត្តរបស់អ្នកជួយកំណត់សហគមន៍ក្នុងតំបន់ និងចំណាត់ថ្នាក់តាមខេត្ត។ ព័ត៌មាននេះនឹងត្រូវរក្សាទុកដោយសុវត្ថិភាពក្នុងប្រវត្តិរូប បន្ទាប់ពីអ្នកចូលគណនី។';
 
   @override
   String get searchProvince => 'ស្វែងរកខេត្ត';
@@ -675,8 +649,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get provinceLoadFailed => 'យើងមិនអាចផ្ទុកបញ្ជីខេត្តបានទេ។';
 
   @override
-  String get provinceSaveFailed =>
-      'យើងមិនអាចរក្សាទុកខេត្តរបស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+  String get provinceSaveFailed => 'យើងមិនអាចរក្សាទុកខេត្តរបស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។';
 
   @override
   String get home => 'ទំព័រ​ដើម';
@@ -709,8 +682,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get learningHeadline => 'ស្វែងរកមេរៀនបន្ទាប់របស់អ្នក';
 
   @override
-  String get learningSubtitle =>
-      'ជ្រើសរើសថ្នាក់ មុខវិជ្ជា និងកម្រិត ដើម្បីរៀនតាមល្បឿនរបស់អ្នក។';
+  String get learningSubtitle => 'ជ្រើសរើសថ្នាក់ មុខវិជ្ជា និងកម្រិត ដើម្បីរៀនតាមល្បឿនរបស់អ្នក។';
 
   @override
   String get learningHeaderSubtitle => 'រៀនបន្តិចម្តងៗ រាល់ថ្ងៃ';
@@ -719,8 +691,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get dailyMissionEyebrow => 'បេសកកម្មថ្ងៃនេះ';
 
   @override
-  String get dailyMissionBody =>
-      'មេរៀនខ្លីមួយ ដែលបានជ្រើសសម្រាប់ល្បឿនរបស់អ្នក។';
+  String get dailyMissionBody => 'មេរៀនខ្លីមួយ ដែលបានជ្រើសសម្រាប់ល្បឿនរបស់អ្នក។';
 
   @override
   String get startDailyMission => 'ចាប់ផ្តើមមេរៀន';
@@ -785,6 +756,9 @@ class AppLocalizationsKm extends AppLocalizations {
   String get completedLabel => 'បានបញ្ចប់';
 
   @override
+  String get roadmapCompletedEarlier => 'បានបញ្ចប់ពីមុន · ផ្នែកនេះនៅតែបើក';
+
+  @override
   String get generalSubject => 'ទូទៅ';
 
   @override
@@ -830,23 +804,19 @@ class AppLocalizationsKm extends AppLocalizations {
   String get yourSubjects => 'មុខវិជ្ជារបស់អ្នក';
 
   @override
-  String get mathematicsSubjectDescription =>
-      'ពង្រឹងជំនាញលេខ និងការដោះស្រាយបញ្ហា';
+  String get mathematicsSubjectDescription => 'ពង្រឹងជំនាញលេខ និងការដោះស្រាយបញ្ហា';
 
   @override
   String get physicsSubjectDescription => 'ស្វែងយល់ពីចលនា កម្លាំង និងសកលលោក';
 
   @override
-  String get chemistrySubjectDescription =>
-      'ស្វែងយល់ពីសារធាតុ ប្រតិកម្ម និងការប្រែប្រួល';
+  String get chemistrySubjectDescription => 'ស្វែងយល់ពីសារធាតុ ប្រតិកម្ម និងការប្រែប្រួល';
 
   @override
-  String get biologySubjectDescription =>
-      'ស្វែងយល់ពីប្រព័ន្ធរស់ និងវិទ្យាសាស្ត្រជីវិត';
+  String get biologySubjectDescription => 'ស្វែងយល់ពីប្រព័ន្ធរស់ និងវិទ្យាសាស្ត្រជីវិត';
 
   @override
-  String get technologySubjectDescription =>
-      'អនុវត្តកុំព្យូទ័រ និងបច្ចេកវិទ្យាឌីជីថល';
+  String get technologySubjectDescription => 'អនុវត្តកុំព្យូទ័រ និងបច្ចេកវិទ្យាឌីជីថល';
 
   @override
   String get generalSubjectDescription => 'ស្វែងយល់ពីមុខវិជ្ជា និងមេរៀននេះ';
@@ -884,15 +854,13 @@ class AppLocalizationsKm extends AppLocalizations {
   String get noSubjectsYet => 'មិនទាន់មានមុខវិជ្ជា STEM';
 
   @override
-  String get noSubjectsYetBody =>
-      'មុខវិជ្ជាថ្នាក់ទី១២ នឹងបង្ហាញនៅទីនេះ ពេលបានផ្សព្វផ្សាយ។';
+  String get noSubjectsYetBody => 'មុខវិជ្ជាថ្នាក់ទី១២ នឹងបង្ហាញនៅទីនេះ ពេលបានផ្សព្វផ្សាយ។';
 
   @override
   String get everySubjectFinished => 'អ្នកបានបញ្ចប់គ្រប់មុខវិជ្ជា';
 
   @override
-  String get everySubjectFinishedBody =>
-      'អ្នកបានរៀនកម្មវិធីសិក្សា STEM ថ្នាក់ទី១២ ទាំងមូលហើយ។';
+  String get everySubjectFinishedBody => 'អ្នកបានរៀនកម្មវិធីសិក្សា STEM ថ្នាក់ទី១២ ទាំងមូលហើយ។';
 
   @override
   String unitOfTotal(int current, int total) {
@@ -947,22 +915,19 @@ class AppLocalizationsKm extends AppLocalizations {
   String get noLessonsFound => 'រកមិនឃើញមេរៀន';
 
   @override
-  String get noLessonsForFilters =>
-      'សាកល្បងជ្រើសរើសថ្នាក់ មុខវិជ្ជា ឬកម្រិតផ្សេង។';
+  String get noLessonsForFilters => 'សាកល្បងជ្រើសរើសថ្នាក់ មុខវិជ្ជា ឬកម្រិតផ្សេង។';
 
   @override
   String get lessonPreviewHeading => 'ត្រៀមខ្លួនហើយឬនៅ';
 
   @override
-  String get lessonPreviewBody =>
-      'រៀនម្តងមួយជំហាន។ វឌ្ឍនភាពរបស់អ្នកនឹងត្រូវបានរក្សាទុក។';
+  String get lessonPreviewBody => 'រៀនម្តងមួយជំហាន។ វឌ្ឍនភាពរបស់អ្នកនឹងត្រូវបានរក្សាទុក។';
 
   @override
   String get beginLesson => 'ចាប់ផ្តើមរៀន';
 
   @override
-  String get lessonContentUnavailable =>
-      'សកម្មភាពមេរៀននឹងបង្ហាញ នៅពេលសេវាកម្មសិក្សាផ្តល់ព័ត៌មានលម្អិត។';
+  String get lessonContentUnavailable => 'សកម្មភាពមេរៀននឹងបង្ហាញ នៅពេលសេវាកម្មសិក្សាផ្តល់ព័ត៌មានលម្អិត។';
 
   @override
   String get backToLessons => 'ត្រឡប់ទៅមេរៀន';
@@ -1035,8 +1000,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get noAchievements => 'សមិទ្ធផល និងវឌ្ឍនភាពរបស់អ្នកនឹងបង្ហាញនៅទីនេះ។';
 
   @override
-  String get noRecentActivity =>
-      'សកម្មភាព XP របស់អ្នកនឹងបង្ហាញនៅទីនេះពេលអ្នកសិក្សា។';
+  String get noRecentActivity => 'សកម្មភាព XP របស់អ្នកនឹងបង្ហាញនៅទីនេះពេលអ្នកសិក្សា។';
 
   @override
   String get profileLoadFailed => 'យើងមិនអាចផ្ទុកប្រវត្តិសិក្សារបស់អ្នកបានទេ។';
@@ -1061,6 +1025,15 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get myPosts => 'ការបង្ហោះរបស់ខ្ញុំ';
+
+  @override
+  String get profileArticlesTab => 'អត្ថបទ';
+
+  @override
+  String get profileBadgesTab => 'សមិទ្ធផល';
+
+  @override
+  String get profileRankTab => 'ចំណាត់ថ្នាក់';
 
   @override
   String get leaderboardRank => 'ចំណាត់ថ្នាក់តារាងពិន្ទុ';
@@ -1123,8 +1096,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get learningSounds => 'សំឡេងសម្រាប់ការរៀន';
 
   @override
-  String get learningSoundsHint =>
-      'បន្លឺសំឡេងពេលឆ្លើយត្រូវ ខុស និងពេលបញ្ចប់មេរៀន។';
+  String get learningSoundsHint => 'បន្លឺសំឡេងពេលឆ្លើយត្រូវ ខុស និងពេលបញ្ចប់មេរៀន។';
 
   @override
   String get darkMode => 'មុខងារងងឹត';
@@ -1166,8 +1138,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get changesSaved => 'ប្រវត្តិរូបរបស់អ្នកត្រូវបានកែប្រែ។';
 
   @override
-  String get profileSaveFailed =>
-      'យើងមិនអាចរក្សាទុកប្រវត្តិរូបបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+  String get profileSaveFailed => 'យើងមិនអាចរក្សាទុកប្រវត្តិរូបបានទេ។ សូមព្យាយាមម្ដងទៀត។';
 
   @override
   String get deleteAccount => 'លុបគណនី';
@@ -1176,26 +1147,22 @@ class AppLocalizationsKm extends AppLocalizations {
   String get deleteAccountTitle => 'លុបគណនី RIKSA របស់អ្នកមែនទេ?';
 
   @override
-  String get deleteAccountConfirmation =>
-      'វានឹងលុបប្រវត្តិសិក្សា XP សមិទ្ធផល និងការបង្ហោះរបស់អ្នកជាអចិន្ត្រៃយ៍។ បន្តទេ?';
+  String get deleteAccountConfirmation => 'វានឹងលុបប្រវត្តិសិក្សា XP សមិទ្ធផល និងការបង្ហោះរបស់អ្នកជាអចិន្ត្រៃយ៍។ បន្តទេ?';
 
   @override
   String get cancel => 'បោះបង់';
 
   @override
-  String get deleteUnavailable =>
-      'API មិនទាន់គាំទ្រការលុបគណនីទេ។ សូមទាក់ទងក្រុមគាំទ្រ RIKSA។';
+  String get deleteUnavailable => 'API មិនទាន់គាំទ្រការលុបគណនីទេ។ សូមទាក់ទងក្រុមគាំទ្រ RIKSA។';
 
   @override
-  String get accountIdentifiersReadOnly =>
-      'អ៊ីមែល លេខទូរស័ព្ទ និងឈ្មោះអ្នកប្រើ គឺជាព័ត៌មានសុវត្ថិភាពដែលមិនអាចកែប្រែនៅទីនេះបានទេ។';
+  String get accountIdentifiersReadOnly => 'អ៊ីមែល លេខទូរស័ព្ទ និងឈ្មោះអ្នកប្រើ គឺជាព័ត៌មានសុវត្ថិភាពដែលមិនអាចកែប្រែនៅទីនេះបានទេ។';
 
   @override
   String get chooseAvatar => 'ជ្រើសរើសរូបតំណាង';
 
   @override
-  String get humationAvatarSubtitle =>
-      'ជ្រើសរើសតួអង្គគូរដោយដៃសម្រាប់ប្រវត្តិរូប RIKSA របស់អ្នក។';
+  String get humationAvatarSubtitle => 'ជ្រើសរើសតួអង្គគូរដោយដៃសម្រាប់ប្រវត្តិរូប RIKSA របស់អ្នក។';
 
   @override
   String get editCover => 'កែរូបគម្រប';
@@ -1210,15 +1177,13 @@ class AppLocalizationsKm extends AppLocalizations {
   String get chooseFromPhotos => 'ជ្រើសរើសពីរូបថត';
 
   @override
-  String get imageSelectionFailed =>
-      'យើងមិនអាចប្រើរូបភាពនោះបានទេ។ សូមសាកល្បងរូបភាពផ្សេង។';
+  String get imageSelectionFailed => 'យើងមិនអាចប្រើរូបភាពនោះបានទេ។ សូមសាកល្បងរូបភាពផ្សេង។';
 
   @override
   String get notProvided => 'មិនបានផ្តល់';
 
   @override
-  String get supportDocumentUnavailable =>
-      'ឯកសារនេះនឹងមាននៅទីនេះ បន្ទាប់ពីខ្លឹមសារជំនួយ RIKSA ត្រូវបានផ្សព្វផ្សាយ។';
+  String get supportDocumentUnavailable => 'ឯកសារនេះនឹងមាននៅទីនេះ បន្ទាប់ពីខ្លឹមសារជំនួយ RIKSA ត្រូវបានផ្សព្វផ្សាយ។';
 
   @override
   String get aiTutor => 'គ្រូ AI';
@@ -1236,24 +1201,19 @@ class AppLocalizationsKm extends AppLocalizations {
   String get publicProfileUnavailable => 'មិនអាចមើលប្រវត្តិរូបបាន';
 
   @override
-  String get publicProfileUnavailableMessage =>
-      'អ្នកនេះប្រហែលជាបានលុបគណនី ត្រូវបានផ្អាក ឬបានកំណត់ការចូលមើលប្រវត្តិរូប។';
+  String get publicProfileUnavailableMessage => 'អ្នកនេះប្រហែលជាបានលុបគណនី ត្រូវបានផ្អាក ឬបានកំណត់ការចូលមើលប្រវត្តិរូប។';
 
   @override
-  String get publicProfileLoadFailed =>
-      'យើងមិនអាចផ្ទុកប្រវត្តិរូបសាធារណៈនេះបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+  String get publicProfileLoadFailed => 'យើងមិនអាចផ្ទុកប្រវត្តិរូបសាធារណៈនេះបានទេ។ សូមព្យាយាមម្ដងទៀត។';
 
   @override
-  String get publicPostsLoadFailed =>
-      'យើងមិនអាចផ្ទុកការបង្ហោះរបស់អ្នកនេះបានទេ។';
+  String get publicPostsLoadFailed => 'យើងមិនអាចផ្ទុកការបង្ហោះរបស់អ្នកនេះបានទេ។';
 
   @override
-  String get noPublicPosts =>
-      'អ្នកនេះមិនទាន់បានចែករំលែកការបង្ហោះក្នុងសហគមន៍ទេ។';
+  String get noPublicPosts => 'អ្នកនេះមិនទាន់បានចែករំលែកការបង្ហោះក្នុងសហគមន៍ទេ។';
 
   @override
-  String get noPublicAchievements =>
-      'មិនទាន់មានសមិទ្ធផលដែលទទួលបានសម្រាប់បង្ហាញទេ។';
+  String get noPublicAchievements => 'មិនទាន់មានសមិទ្ធផលដែលទទួលបានសម្រាប់បង្ហាញទេ។';
 
   @override
   String get noPublicRank => 'មិនទាន់មានចំណាត់ថ្នាក់សាធារណៈសម្រាប់បង្ហាញទេ។';
@@ -1292,8 +1252,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get aiChatsEmptyTitle => 'សួរអំពីអ្វីដែលអ្នកកំពុងរៀន';
 
   @override
-  String get aiChatsEmptyBody =>
-      'ចាប់ផ្ដើមការសន្ទនាឯកជនជាភាសាខ្មែរ ឬអង់គ្លេស អំពីមេរៀនណាមួយ។';
+  String get aiChatsEmptyBody => 'ចាប់ផ្ដើមការសន្ទនាឯកជនជាភាសាខ្មែរ ឬអង់គ្លេស អំពីមេរៀនណាមួយ។';
 
   @override
   String get aiStartChat => 'ចាប់ផ្ដើមសន្ទនា';
@@ -1302,8 +1261,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get aiTutorUnavailableTitle => 'មិនអាចភ្ជាប់គ្រូ AI បានទេ';
 
   @override
-  String get aiTutorUnavailableBody =>
-      'សូមពិនិត្យការតភ្ជាប់ រួចព្យាយាមម្ដងទៀត។';
+  String get aiTutorUnavailableBody => 'សូមពិនិត្យការតភ្ជាប់ រួចព្យាយាមម្ដងទៀត។';
 
   @override
   String get aiSearchChats => 'ស្វែងរកការសន្ទនា';
@@ -1403,11 +1361,19 @@ class AppLocalizationsKm extends AppLocalizations {
   String get lessonCompareAnswers => 'ប្រៀបធៀបចម្លើយ';
 
   @override
+  String get lessonShowChoices => 'បង្ហាញជម្រើសចម្លើយ';
+
+  @override
+  String get lessonWorkedOnPaper => 'ខ្ញុំបានដោះស្រាយលើក្រដាសរួចហើយ';
+
+  @override
+  String get lessonAddWorkingOptional => 'បន្ថែមវិធីដោះស្រាយ (មិនចាំបាច់)';
+
+  @override
   String get lessonWorkFirst => 'សាកល្បងដោះស្រាយជាមុន';
 
   @override
-  String get lessonWorkHint =>
-      'សរសេរចម្លើយ និងរបៀបដែលអ្នករកបាន។ បន្ទាប់មកប្រៀបធៀបជាមួយជម្រើស។';
+  String get lessonWorkHint => 'សរសេរចម្លើយ និងរបៀបដែលអ្នករកបាន។ បន្ទាប់មកប្រៀបធៀបជាមួយជម្រើស។';
 
   @override
   String get lessonAnswerHint => 'សរសេរចម្លើយរបស់អ្នក';
@@ -1416,8 +1382,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get lessonYourWork => 'វិធីដោះស្រាយរបស់អ្នក';
 
   @override
-  String get lessonChooseAnswer =>
-      'ប្រៀបធៀបវិធីដោះស្រាយរបស់អ្នក ហើយជ្រើសរើសចម្លើយ។';
+  String get lessonChooseAnswer => 'ប្រៀបធៀបវិធីដោះស្រាយរបស់អ្នក ហើយជ្រើសរើសចម្លើយ។';
 
   @override
   String lessonExerciseNumber(int number) {
@@ -1439,12 +1404,13 @@ class AppLocalizationsKm extends AppLocalizations {
   String get lessonReflectionTitle => 'តើអ្នកបានយល់អ្វីខ្លះ?';
 
   @override
-  String get lessonReflectionBody =>
-      'សរសេរគំនិតមួយជាពាក្យរបស់អ្នកផ្ទាល់។ កត់ត្រាចំណុចដែលអ្នកចង់រំលឹកឡើងវិញ។';
+  String get lessonReflectionBody => 'សរសេរគំនិតមួយជាពាក្យរបស់អ្នកផ្ទាល់។ កត់ត្រាចំណុចដែលអ្នកចង់រំលឹកឡើងវិញ។';
 
   @override
-  String get lessonReflectionHint =>
-      'ខ្ញុំបានយល់ថា… ខ្ញុំនៅចង់សិក្សាបន្ថែមអំពី…';
+  String get lessonReflectionHint => 'ខ្ញុំបានយល់ថា… ខ្ញុំនៅចង់សិក្សាបន្ថែមអំពី…';
+
+  @override
+  String get lessonReflectionOptionalHint => 'មិនចាំបាច់៖ សរសេរកំណត់ចំណាំសម្រាប់ពេលក្រោយ';
 
   @override
   String get lessonConfidencePrompt => 'តើអ្នកយល់មេរៀននេះកម្រិតណា?';
@@ -1456,25 +1422,37 @@ class AppLocalizationsKm extends AppLocalizations {
   String get lessonNeedsReview => 'ខ្ញុំចង់រំលឹកឡើងវិញ';
 
   @override
-  String get lessonSaveReflection => 'រក្សាទុក និងបញ្ចប់';
+  String get lessonFinishAction => 'បញ្ចប់មេរៀន';
 
   @override
-  String get lessonReflectionRequired =>
-      'សរសេរការយល់ដឹងខ្លីមួយ ដើម្បីបញ្ចប់មេរៀននេះ។';
+  String get lessonReflectionAddOptional => 'បន្ថែមកំណត់ចំណាំ (មិនចាំបាច់)';
+
+  @override
+  String get guestSaveProgressTitle => 'រក្សាទុកវឌ្ឍនភាពរបស់អ្នក';
+
+  @override
+  String get guestSaveProgressBody => 'ចូលគណនីដើម្បីរក្សាចម្លើយ និងបញ្ចប់មេរៀននេះ។';
+
+  @override
+  String get guestSaveProgressBuddyLine => 'មិត្តតូចរបស់អ្នកកំពុងលើកទឹកចិត្ត។ ចូលគណនីដើម្បីរក្សាវឌ្ឍនភាពសិក្សារបស់អ្នក។';
+
+  @override
+  String get guestSaveProgressSignIn => 'ចូលគណនី';
+
+  @override
+  String get guestSaveProgressLater => 'បន្តរៀនក្នុងនាមជាភ្ញៀវ';
 
   @override
   String get lessonSavedReflection => 'ការយល់ដឹងរបស់អ្នក';
 
   @override
-  String get lessonCompletedBody =>
-      'អ្នកបានបោះជំហានមួយទៀតក្នុងកម្មវិធីសិក្សា។ សម្រាក ឬបន្តពេលអ្នករួចរាល់។';
+  String get lessonCompletedBody => 'អ្នកបានបោះជំហានមួយទៀតក្នុងកម្មវិធីសិក្សា។ សម្រាក ឬបន្តពេលអ្នករួចរាល់។';
 
   @override
   String get lessonRevisitTitle => 'ចំណុចដែលត្រូវរំលឹកឡើងវិញ';
 
   @override
-  String get lessonRevisitBody =>
-      'អ្នកបានសម្គាល់ថាចង់រំលឹកមេរៀននេះ។ អ្នកអាចបើកវាម្ដងទៀតពីផែនទីសិក្សា។';
+  String get lessonRevisitBody => 'អ្នកបានសម្គាល់ថាចង់រំលឹកមេរៀននេះ។ អ្នកអាចបើកវាម្ដងទៀតពីផែនទីសិក្សា។';
 
   @override
   String get lessonNextAction => 'ចាប់ផ្តើមមេរៀនបន្ទាប់';
@@ -1490,6 +1468,9 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get lessonStartAction => 'ចាប់ផ្តើមមេរៀន';
+
+  @override
+  String get startHere => 'ចាប់ផ្តើមទីនេះ';
 
   @override
   String get lessonOptions => 'ជម្រើសមេរៀន';
@@ -1510,8 +1491,16 @@ class AppLocalizationsKm extends AppLocalizations {
   String get lessonUnmute => 'បើកសំឡេង';
 
   @override
-  String get lessonExitBody =>
-      'ចម្លើយដែលបានពិនិត្យត្រូវបានរក្សាទុក។ សំណេរដែលមិនទាន់បានរក្សាទុកនឹងបាត់បង់ ប្រសិនបើអ្នកចាកចេញ។';
+  String get lessonExitBody => 'ចម្លើយដែលបានពិនិត្យត្រូវបានរក្សាទុក។ សំណេរដែលមិនទាន់បានរក្សាទុកនឹងបាត់បង់ ប្រសិនបើអ្នកចាកចេញ។';
+
+  @override
+  String get lessonExitTitle => 'ចាកចេញពីមេរៀន?';
+
+  @override
+  String get lessonKeepLearning => 'បន្តរៀន';
+
+  @override
+  String get lessonLeaveAction => 'ចាកចេញ';
 
   @override
   String get lessonAiHint => 'ទទួលតម្រុយ';
@@ -1538,29 +1527,28 @@ class AppLocalizationsKm extends AppLocalizations {
   String get lessonAnswerRetry => 'មិនទាន់ត្រឹមត្រូវទេ។ សាកល្បងវិធីផ្សេងទៀត។';
 
   @override
-  String get learningLoadErrorBody =>
-      'មេរៀនរបស់អ្នកមិនអាចផ្ទុកបាននៅពេលនេះ។ សូមព្យាយាមម្ដងទៀត។';
+  String get learningLoadErrorBody => 'មេរៀនរបស់អ្នកមិនអាចផ្ទុកបាននៅពេលនេះ។ សូមព្យាយាមម្ដងទៀត។';
 
   @override
   String get savedLessonsEmptyTitle => 'រក្សាគំនិតល្អទុកសម្រាប់ពេលក្រោយ';
 
   @override
-  String get savedLessonsEmptyBody =>
-      'បានឃើញរូបមន្តដែលគួររំលឹកឡើងវិញ? រក្សាទុកមេរៀនពីម៉ឺនុយរបស់វា។ អ្នកនឹងរកឃើញវានៅទីនេះ។';
+  String get savedLessonsLabel => 'មេរៀនបានរក្សាទុក';
+
+  @override
+  String get savedLessonsEmptyBody => 'បានឃើញរូបមន្តដែលគួររំលឹកឡើងវិញ? រក្សាទុកមេរៀនពីម៉ឺនុយរបស់វា។ អ្នកនឹងរកឃើញវានៅទីនេះ។';
 
   @override
   String get splashTagline => 'រៀនថ្ងៃនេះ កសាងថ្ងៃស្អែក';
 
   @override
-  String get splashDescription =>
-      'ដៃគូសិក្សា STEM ថ្នាក់ទី១២ របស់អ្នក ដើម្បីកម្ពុជាដ៏ភ្លឺស្វាង។';
+  String get splashDescription => 'ដៃគូសិក្សា STEM ថ្នាក់ទី១២ របស់អ្នក ដើម្បីកម្ពុជាដ៏ភ្លឺស្វាង។';
 
   @override
   String get mascotSelectTitle => 'ជ្រើសរើសដៃគូសិក្សារបស់អ្នក';
 
   @override
-  String get mascotSelectSubtitle =>
-      'គេនឹងលើកទឹកចិត្ត និងអបអរជោគជ័យជាមួយអ្នកគ្រប់ពេល។';
+  String get mascotSelectSubtitle => 'គេនឹងលើកទឹកចិត្ត និងអបអរជោគជ័យជាមួយអ្នកគ្រប់ពេល។';
 
   @override
   String get mascotCrocodile => 'ក្រពើ';
@@ -1648,8 +1636,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get aiCoachTitle => 'គ្រូជំនួយ AI';
 
   @override
-  String get aiCoachGreeting =>
-      'សួស្តី! ខ្ញុំជាគ្រូជំនួយ AI របស់អ្នក។ សួរខ្ញុំអំពីមេរៀនអ្វីក៏បាន ខ្ញុំនឹងជួយអ្នករៀនម្តងមួយជំហាន!';
+  String get aiCoachGreeting => 'សួស្តី! ខ្ញុំជាគ្រូជំនួយ AI របស់អ្នក។ សួរខ្ញុំអំពីមេរៀនអ្វីក៏បាន ខ្ញុំនឹងជួយអ្នករៀនម្តងមួយជំហាន!';
 
   @override
   String get aiTryAskingAbout => 'សាកសួរអំពី៖';
@@ -1720,8 +1707,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get communityNoPostsTitle => 'មិនទាន់មានការបង្ហោះ';
 
   @override
-  String get communityNoPostsBody =>
-      'ក្លាយជាអ្នកដំបូងដែលចាប់ផ្តើមការពិភាក្សានៅទីនេះ។';
+  String get communityNoPostsBody => 'ក្លាយជាអ្នកដំបូងដែលចាប់ផ្តើមការពិភាក្សានៅទីនេះ។';
 
   @override
   String get communityNotFound => 'រកមិនឃើញសហគមន៍នេះទេ។';
@@ -1795,41 +1781,34 @@ class AppLocalizationsKm extends AppLocalizations {
   String get createCommunityNameLength => 'ប្រើពី ៣ ដល់ ៥០ តួអក្សរ។';
 
   @override
-  String get createCommunityNameChars =>
-      'ប្រើតែអក្សរ លេខ ដកឃ្លា និង & \' . , ( ) + # -';
+  String get createCommunityNameChars => 'ប្រើតែអក្សរ លេខ ដកឃ្លា និង & \' . , ( ) + # -';
 
   @override
   String get createCommunityNameLetters => 'ឈ្មោះត្រូវមានអក្សរយ៉ាងហោចណាស់មួយ។';
 
   @override
-  String get createCommunityNameReserved =>
-      'ឈ្មោះនេះត្រូវបានបម្រុងទុក។ សូមសាកល្បងឈ្មោះផ្សេង។';
+  String get createCommunityNameReserved => 'ឈ្មោះនេះត្រូវបានបម្រុងទុក។ សូមសាកល្បងឈ្មោះផ្សេង។';
 
   @override
   String get createCommunityDescription => 'តើវានិយាយអំពីអ្វី?';
 
   @override
-  String get createCommunityDescriptionHint =>
-      'ប្រាប់អ្នកដទៃពីអ្វីដែលពួកគេនឹងរៀន ឬពិភាក្សានៅទីនេះ។';
+  String get createCommunityDescriptionHint => 'ប្រាប់អ្នកដទៃពីអ្វីដែលពួកគេនឹងរៀន ឬពិភាក្សានៅទីនេះ។';
 
   @override
   String get createCommunityRulesTitle => 'មុនពេលបង្កើត';
 
   @override
-  String get createCommunityRulePublic =>
-      'អ្នកប្រើ RIKSA ទាំងអស់អាចស្វែងរក ចូលរួម និងបង្ហោះក្នុងសហគមន៍របស់អ្នក។';
+  String get createCommunityRulePublic => 'អ្នកប្រើ RIKSA ទាំងអស់អាចស្វែងរក ចូលរួម និងបង្ហោះក្នុងសហគមន៍របស់អ្នក។';
 
   @override
-  String get createCommunityRuleOwner =>
-      'អ្នកក្លាយជាម្ចាស់ ហើយនៅជាសមាជិកដរាបណាអ្នកជាម្ចាស់។';
+  String get createCommunityRuleOwner => 'អ្នកក្លាយជាម្ចាស់ ហើយនៅជាសមាជិកដរាបណាអ្នកជាម្ចាស់។';
 
   @override
-  String get createCommunityRuleConduct =>
-      'សូមរក្សាភាពសុភាព សុវត្ថិភាព និងនិយាយតាមប្រធានបទ។ សហគមន៍ដែលបំពានច្បាប់នឹងត្រូវលុប។';
+  String get createCommunityRuleConduct => 'សូមរក្សាភាពសុភាព សុវត្ថិភាព និងនិយាយតាមប្រធានបទ។ សហគមន៍ដែលបំពានច្បាប់នឹងត្រូវលុប។';
 
   @override
-  String get createCommunityRuleLimit =>
-      'អ្នកត្រូវមានគណនីដែលបានផ្ទៀងផ្ទាត់។ អាចបង្កើតបាន ៣ ក្នុងមួយថ្ងៃ និងជាម្ចាស់បានរហូតដល់ ៥។';
+  String get createCommunityRuleLimit => 'អ្នកត្រូវមានគណនីដែលបានផ្ទៀងផ្ទាត់។ អាចបង្កើតបាន ៣ ក្នុងមួយថ្ងៃ និងជាម្ចាស់បានរហូតដល់ ៥។';
 
   @override
   String get createCommunityCreated => 'សហគមន៍របស់អ្នករួចរាល់ហើយ';
@@ -1840,8 +1819,7 @@ class AppLocalizationsKm extends AppLocalizations {
   }
 
   @override
-  String get aiChatLoadFailedBody =>
-      'សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្ដងទៀត។ គ្មានអ្វីក្នុងការសន្ទនានេះបាត់បង់ទេ។';
+  String get aiChatLoadFailedBody => 'សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្ដងទៀត។ គ្មានអ្វីក្នុងការសន្ទនានេះបាត់បង់ទេ។';
 
   @override
   String get discardChangesTitle => 'បោះបង់ការកែប្រែរបស់អ្នក?';
@@ -1862,26 +1840,22 @@ class AppLocalizationsKm extends AppLocalizations {
   String get lessonDetailLoadFailed => 'យើងមិនអាចបើកមេរៀននេះបានទេ';
 
   @override
-  String get loadFailedCheckConnection =>
-      'សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្ដងទៀត។';
+  String get loadFailedCheckConnection => 'សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្ដងទៀត។';
 
   @override
   String get backToSubjects => 'ត្រឡប់ទៅមុខវិជ្ជា';
 
   @override
-  String get savedLessonsLoadFailed =>
-      'យើងមិនអាចផ្ទុកមេរៀនដែលអ្នករក្សាទុកបានទេ';
+  String get savedLessonsLoadFailed => 'យើងមិនអាចផ្ទុកមេរៀនដែលអ្នករក្សាទុកបានទេ';
 
   @override
-  String get savedLessonsSomeFailed =>
-      'មេរៀនដែលរក្សាទុកមួយចំនួនមិនអាចផ្ទុកបានទេ។';
+  String get savedLessonsSomeFailed => 'មេរៀនដែលរក្សាទុកមួយចំនួនមិនអាចផ្ទុកបានទេ។';
 
   @override
   String get savedLessonsUnavailableTitle => 'មេរៀនទាំងនេះលែងមានទៀតហើយ';
 
   @override
-  String get savedLessonsUnavailableBody =>
-      'ពួកវាប្រហែលជាត្រូវបានដកចេញពីវគ្គសិក្សា។';
+  String get savedLessonsUnavailableBody => 'ពួកវាប្រហែលជាត្រូវបានដកចេញពីវគ្គសិក្សា។';
 
   @override
   String get savedLessonsClear => 'សម្អាតមេរៀនដែលរក្សាទុក';
@@ -1896,15 +1870,13 @@ class AppLocalizationsKm extends AppLocalizations {
   String get composeLoadingCommunities => 'កំពុងផ្ទុកសហគមន៍របស់អ្នក…';
 
   @override
-  String get composeCommunitiesFailed =>
-      'យើងមិនអាចផ្ទុកសហគមន៍របស់អ្នកបានទេ។ អត្ថបទរបស់អ្នកនៅដដែល។';
+  String get composeCommunitiesFailed => 'យើងមិនអាចផ្ទុកសហគមន៍របស់អ្នកបានទេ។ អត្ថបទរបស់អ្នកនៅដដែល។';
 
   @override
   String get blogChooseTopicRequired => 'ជ្រើសរើសប្រធានបទ (ចាំបាច់)';
 
   @override
-  String get blogTopicsLoading =>
-      'ប្រធានបទកំពុងផ្ទុក។ សូមព្យាយាមម្ដងទៀតបន្តិចទៀត។';
+  String get blogTopicsLoading => 'ប្រធានបទកំពុងផ្ទុក។ សូមព្យាយាមម្ដងទៀតបន្តិចទៀត។';
 
   @override
   String get blogTopicsFailed => 'យើងមិនអាចផ្ទុកប្រធានបទបានទេ។';
@@ -1913,76 +1885,61 @@ class AppLocalizationsKm extends AppLocalizations {
   String get blogTopicsEmpty => 'មិនទាន់មានប្រធានបទនៅឡើយទេ។';
 
   @override
-  String get recoveryErrorNetwork =>
-      'យើងមិនអាចតភ្ជាប់ទៅ Riksa បានទេ។ សូមពិនិត្យអ៊ីនធឺណិត ហើយព្យាយាមម្ដងទៀត។';
+  String get recoveryErrorNetwork => 'យើងមិនអាចតភ្ជាប់ទៅ Riksa បានទេ។ សូមពិនិត្យអ៊ីនធឺណិត ហើយព្យាយាមម្ដងទៀត។';
 
   @override
-  String get recoveryErrorRateLimited =>
-      'អ្នកបានព្យាយាមច្រើនដងហើយ! សូមសម្រាកបន្តិច រួចព្យាយាមម្ដងទៀត។';
+  String get recoveryErrorRateLimited => 'អ្នកបានព្យាយាមច្រើនដងហើយ! សូមសម្រាកបន្តិច រួចព្យាយាមម្ដងទៀត។';
 
   @override
-  String get recoveryErrorServer =>
-      'មានបញ្ហាខាងយើង។ សូមព្យាយាមម្ដងទៀតបន្តិចទៀត។';
+  String get recoveryErrorServer => 'មានបញ្ហាខាងយើង។ សូមព្យាយាមម្ដងទៀតបន្តិចទៀត។';
 
   @override
-  String get recoveryErrorPassword =>
-      'ជិតរួចហើយ! ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួ រួមមានអក្សរធំ អក្សរតូច និងលេខ។';
+  String get recoveryErrorPassword => 'ជិតរួចហើយ! ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួ រួមមានអក្សរធំ អក្សរតូច និងលេខ។';
 
   @override
-  String get recoveryErrorCode =>
-      'លេខកូដនេះមិនដំណើរការទេ។ វាប្រហែលជាផុតកំណត់ សូមស្នើលេខកូដថ្មី ហើយព្យាយាមម្ដងទៀត។';
+  String get recoveryErrorCode => 'លេខកូដនេះមិនដំណើរការទេ។ វាប្រហែលជាផុតកំណត់ សូមស្នើលេខកូដថ្មី ហើយព្យាយាមម្ដងទៀត។';
 
   @override
-  String get recoveryErrorAccount =>
-      'យើងរកគណនីនេះមិនឃើញទេ។ សូមពិនិត្យអក្ខរាវិរុទ្ធ ហើយព្យាយាមម្ដងទៀត។';
+  String get recoveryErrorAccount => 'យើងរកគណនីនេះមិនឃើញទេ។ សូមពិនិត្យអក្ខរាវិរុទ្ធ ហើយព្យាយាមម្ដងទៀត។';
 
   @override
-  String get recoveryErrorDetails =>
-      'មិនបានសម្រេចទេ។ សូមពិនិត្យព័ត៌មានរបស់អ្នក ហើយព្យាយាមម្ដងទៀត។';
+  String get recoveryErrorDetails => 'មិនបានសម្រេចទេ។ សូមពិនិត្យព័ត៌មានរបស់អ្នក ហើយព្យាយាមម្ដងទៀត។';
 
   @override
   String get recoveryErrorGeneric => 'មានបញ្ហាកើតឡើង។ សូមព្យាយាមម្ដងទៀត។';
 
   @override
-  String get recoveryNeedIdentifier =>
-      'សូមប្រាប់ឈ្មោះអ្នកប្រើ អ៊ីមែល ឬ Telegram ID របស់អ្នក ដើម្បីយើងដឹងថាជួយគណនីណា។';
+  String get recoveryNeedIdentifier => 'សូមប្រាប់ឈ្មោះអ្នកប្រើ អ៊ីមែល ឬ Telegram ID របស់អ្នក ដើម្បីយើងដឹងថាជួយគណនីណា។';
 
   @override
-  String get recoveryCodeLength =>
-      'លេខកូដមាន ៦ ខ្ទង់។ សូមពិនិត្យសាររបស់អ្នក ហើយព្យាយាមម្ដងទៀត។';
+  String get recoveryCodeLength => 'លេខកូដមាន ៦ ខ្ទង់។ សូមពិនិត្យសាររបស់អ្នក ហើយព្យាយាមម្ដងទៀត។';
 
   @override
-  String get recoveryChecklistIncomplete =>
-      'ជិតរួចហើយ! ពាក្យសម្ងាត់ត្រូវបំពេញគ្រប់លក្ខខណ្ឌក្នុងបញ្ជី។';
+  String get recoveryChecklistIncomplete => 'ជិតរួចហើយ! ពាក្យសម្ងាត់ត្រូវបំពេញគ្រប់លក្ខខណ្ឌក្នុងបញ្ជី។';
 
   @override
-  String get recoveryPasswordsDiffer =>
-      'ពាក្យសម្ងាត់ទាំងពីរមិនដូចគ្នាទេ។ សូមវាយបញ្ចូលម្ដងទៀត។';
+  String get recoveryPasswordsDiffer => 'ពាក្យសម្ងាត់ទាំងពីរមិនដូចគ្នាទេ។ សូមវាយបញ្ចូលម្ដងទៀត។';
 
   @override
-  String get recoveryPasswordSaved =>
-      'រួចរាល់! សូមចូលដោយប្រើពាក្យសម្ងាត់ថ្មីរបស់អ្នក។';
+  String get recoveryPasswordSaved => 'រួចរាល់! សូមចូលដោយប្រើពាក្យសម្ងាត់ថ្មីរបស់អ្នក។';
 
   @override
   String get recoveryStepIdentifierTitle => 'ភ្លេចពាក្យសម្ងាត់មែនទេ?';
 
   @override
-  String get recoveryStepIdentifierSubtitle =>
-      'កុំបារម្ភ វាកើតឡើងចំពោះគ្រប់គ្នា។ ប្រាប់យើងថាអ្នកជានរណា យើងនឹងផ្ញើលេខកូដទៅ។';
+  String get recoveryStepIdentifierSubtitle => 'កុំបារម្ភ វាកើតឡើងចំពោះគ្រប់គ្នា។ ប្រាប់យើងថាអ្នកជានរណា យើងនឹងផ្ញើលេខកូដទៅ។';
 
   @override
   String get recoveryStepCodeTitle => 'ពិនិត្យសាររបស់អ្នក';
 
   @override
-  String get recoveryStepCodeSubtitle =>
-      'យើងបានផ្ញើលេខកូដ ៦ ខ្ទង់ទៅអ៊ីមែល ឬ Telegram របស់អ្នក។ សូមបញ្ចូលវាខាងក្រោម។';
+  String get recoveryStepCodeSubtitle => 'យើងបានផ្ញើលេខកូដ ៦ ខ្ទង់ទៅអ៊ីមែល ឬ Telegram របស់អ្នក។ សូមបញ្ចូលវាខាងក្រោម។';
 
   @override
   String get recoveryStepPasswordTitle => 'បង្កើតពាក្យសម្ងាត់ថ្មី';
 
   @override
-  String get recoveryStepPasswordSubtitle =>
-      'ជ្រើសរើសអ្វីដែលអ្នកចាំបាន តែអ្នកដទៃទាយមិនឃើញ។';
+  String get recoveryStepPasswordSubtitle => 'ជ្រើសរើសអ្វីដែលអ្នកចាំបាន តែអ្នកដទៃទាយមិនឃើញ។';
 
   @override
   String get recoveryIdentifierLabel => 'ឈ្មោះអ្នកប្រើ អ៊ីមែល ឬ Telegram ID';
@@ -2056,8 +2013,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get emailVerifyFailedTitle => 'ការផ្ទៀងផ្ទាត់បរាជ័យ';
 
   @override
-  String get emailVerifyFailedBody =>
-      'តំណផ្ទៀងផ្ទាត់នេះមិនត្រឹមត្រូវ ឬផុតកំណត់។';
+  String get emailVerifyFailedBody => 'តំណផ្ទៀងផ្ទាត់នេះមិនត្រឹមត្រូវ ឬផុតកំណត់។';
 
   @override
   String socialLikeLabel(int count) {
@@ -2141,13 +2097,7 @@ class AppLocalizationsKm extends AppLocalizations {
   }
 
   @override
-  String leaderboardYourRankLabel(
-    int rank,
-    String name,
-    String scope,
-    String tier,
-    int xp,
-  ) {
+  String leaderboardYourRankLabel(int rank, String name, String scope, String tier, int xp) {
     return 'ចំណាត់ថ្នាក់របស់អ្នកគឺទី $rank។ $name, $scope, $tier, $xp XP។';
   }
 
@@ -2161,27 +2111,22 @@ class AppLocalizationsKm extends AppLocalizations {
   String get progressHistoryRankTab => 'ការប្ដូរចំណាត់ថ្នាក់';
 
   @override
-  String get progressHistoryXpFailed =>
-      'យើងមិនអាចផ្ទុកប្រវត្តិ XP របស់អ្នកបានទេ';
+  String get progressHistoryXpFailed => 'យើងមិនអាចផ្ទុកប្រវត្តិ XP របស់អ្នកបានទេ';
 
   @override
-  String get progressHistoryRankFailed =>
-      'យើងមិនអាចផ្ទុកប្រវត្តិចំណាត់ថ្នាក់របស់អ្នកបានទេ';
+  String get progressHistoryRankFailed => 'យើងមិនអាចផ្ទុកប្រវត្តិចំណាត់ថ្នាក់របស់អ្នកបានទេ';
 
   @override
   String get progressHistoryXpEmptyTitle => 'មិនទាន់មាន XP ទេ';
 
   @override
-  String get progressHistoryXpEmptyBody =>
-      'បញ្ចប់មេរៀនមួយ ដើម្បីចាប់ផ្ដើមប្រវត្តិរបស់អ្នក។';
+  String get progressHistoryXpEmptyBody => 'បញ្ចប់មេរៀនមួយ ដើម្បីចាប់ផ្ដើមប្រវត្តិរបស់អ្នក។';
 
   @override
-  String get progressHistoryRankEmptyTitle =>
-      'មិនទាន់មានការប្ដូរចំណាត់ថ្នាក់ទេ';
+  String get progressHistoryRankEmptyTitle => 'មិនទាន់មានការប្ដូរចំណាត់ថ្នាក់ទេ';
 
   @override
-  String get progressHistoryRankEmptyBody =>
-      'បន្តរកបាន XP ដើម្បីឡើងចំណាត់ថ្នាក់។';
+  String get progressHistoryRankEmptyBody => 'បន្តរកបាន XP ដើម្បីឡើងចំណាត់ថ្នាក់។';
 
   @override
   String progressHistoryRankRow(String scope) {
@@ -2212,8 +2157,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get profileSetupTitle => 'រៀបចំប្រវត្តិរូបរបស់អ្នក';
 
   @override
-  String get profileSetupSubtitle =>
-      'ព័ត៌មានខ្លីៗជួយឱ្យមិត្តរួមថ្នាក់ស្គាល់អ្នក និងរក្សាវឌ្ឍនភាពជារបស់អ្នក។';
+  String get profileSetupSubtitle => 'ព័ត៌មានខ្លីៗជួយឱ្យមិត្តរួមថ្នាក់ស្គាល់អ្នក និងរក្សាវឌ្ឍនភាពជារបស់អ្នក។';
 
   @override
   String get profileSetupCta => 'រៀបចំប្រវត្តិរូប';
@@ -2222,29 +2166,25 @@ class AppLocalizationsKm extends AppLocalizations {
   String get profileSetupStepPhotoTitle => 'បន្ថែមរូបភាព';
 
   @override
-  String get profileSetupStepPhotoBody =>
-      'ជ្រើសរើសរូបតំណាង ឬបញ្ចូលរូបភាពផ្ទាល់ខ្លួន។';
+  String get profileSetupStepPhotoBody => 'ជ្រើសរើសរូបតំណាង ឬបញ្ចូលរូបភាពផ្ទាល់ខ្លួន។';
 
   @override
   String get profileSetupStepNameTitle => 'ឈ្មោះរបស់អ្នក';
 
   @override
-  String get profileSetupStepNameBody =>
-      'ឈ្មោះដែលមិត្តរួមថ្នាក់ឃើញលើការបង្ហោះ និងចំណាត់ថ្នាក់។';
+  String get profileSetupStepNameBody => 'ឈ្មោះដែលមិត្តរួមថ្នាក់ឃើញលើការបង្ហោះ និងចំណាត់ថ្នាក់។';
 
   @override
   String get profileSetupStepBioTitle => 'ប្រវត្តិរូបខ្លី';
 
   @override
-  String get profileSetupStepBioBody =>
-      'និយាយពីអ្វីដែលអ្នកកំពុងរៀន ក្នុងមួយ ឬពីរបន្ទាត់។';
+  String get profileSetupStepBioBody => 'និយាយពីអ្វីដែលអ្នកកំពុងរៀន ក្នុងមួយ ឬពីរបន្ទាត់។';
 
   @override
   String get profileSetupStepProvinceTitle => 'ខេត្តរបស់អ្នក';
 
   @override
-  String get profileSetupStepProvinceBody =>
-      'ប្រើសម្រាប់ចំណាត់ថ្នាក់ខេត្ត និងសហគមន៍ក្នុងតំបន់។';
+  String get profileSetupStepProvinceBody => 'ប្រើសម្រាប់ចំណាត់ថ្នាក់ខេត្ត និងសហគមន៍ក្នុងតំបន់។';
 
   @override
   String get supportDocumentComingSoon => 'នឹងមានឆាប់ៗ';
@@ -2259,7 +2199,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get blogWritePost => 'សរសេរអត្ថបទ';
 
   @override
-  String get blogYourPosts => 'អត្ថបទរបស់អ្នក';
+  String get blogYourPosts => 'អត្ថបទរបស់ខ្ញុំ';
 
   @override
   String get blogFeedFailedTitle => 'អត្ថបទកំពុងសម្រាក';
@@ -2268,8 +2208,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get blogFeedEmptyTitle => 'មិនទាន់មានអត្ថបទទេ';
 
   @override
-  String get blogFeedEmptyBody =>
-      'ក្លាយជាសិស្សដំបូងដែលចែករំលែកអ្វីមានប្រយោជន៍ជាមួយសហគមន៍ Riksa។';
+  String get blogFeedEmptyBody => 'ក្លាយជាសិស្សដំបូងដែលចែករំលែកអ្វីមានប្រយោជន៍ជាមួយសហគមន៍ Riksa។';
 
   @override
   String get blogPostDeleted => 'បានលុបអត្ថបទ';
@@ -2291,8 +2230,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get blogMyPostsEmptyTitle => 'មិនទាន់មានអត្ថបទទេ';
 
   @override
-  String get blogMyPostsEmptyBody =>
-      'អ្វីគ្រប់យ៉ាងដែលអ្នកសរសេរនឹងបង្ហាញនៅទីនេះ ជាមួយស្ថានភាពត្រួតពិនិត្យ។';
+  String get blogMyPostsEmptyBody => 'អ្វីគ្រប់យ៉ាងដែលអ្នកសរសេរនឹងបង្ហាញនៅទីនេះ ជាមួយស្ថានភាពត្រួតពិនិត្យ។';
 
   @override
   String get blogMyPostsFilteredTitle => 'គ្មានអ្វីនៅទីនេះ';
@@ -2319,8 +2257,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get blogDeleteConfirmTitle => 'លុបអត្ថបទនេះ?';
 
   @override
-  String get blogDeleteConfirmBody =>
-      'អត្ថបទ រួមទាំងចំនួនចូលចិត្ត និងចំនួនមើល នឹងត្រូវលុបចោលសម្រាប់គ្រប់គ្នា។ មិនអាចត្រឡប់វិញបានទេ។';
+  String get blogDeleteConfirmBody => 'អត្ថបទ រួមទាំងចំនួនចូលចិត្ត និងចំនួនមើល នឹងត្រូវលុបចោលសម្រាប់គ្រប់គ្នា។ មិនអាចត្រឡប់វិញបានទេ។';
 
   @override
   String get blogKeepPost => 'រក្សាអត្ថបទ';
@@ -2350,12 +2287,10 @@ class AppLocalizationsKm extends AppLocalizations {
   String get blogReviewBackTitle => 'ត្រឡប់ទៅត្រួតពិនិត្យវិញ';
 
   @override
-  String get blogReviewBackBody =>
-      'ការកែប្រែរបស់អ្នកបានរក្សាទុក។ អត្ថបទនឹងត្រឡប់ទៅប្លុកវិញ នៅពេលអ្នកត្រួតពិនិត្យអនុម័តកំណែនេះ។';
+  String get blogReviewBackBody => 'ការកែប្រែរបស់អ្នកបានរក្សាទុក។ អត្ថបទនឹងត្រឡប់ទៅប្លុកវិញ នៅពេលអ្នកត្រួតពិនិត្យអនុម័តកំណែនេះ។';
 
   @override
-  String get blogReviewSubmittedBody =>
-      'អត្ថបទរបស់អ្នកបានដាក់ស្នើ។ វានឹងបង្ហាញក្នុងប្លុក នៅពេលអ្នកត្រួតពិនិត្យអនុម័ត ហើយអ្នកអាចតាមដានស្ថានភាពនៅក្នុង អត្ថបទរបស់អ្នក។';
+  String get blogReviewSubmittedBody => 'អត្ថបទរបស់អ្នកបានដាក់ស្នើ។ វានឹងបង្ហាញក្នុងប្លុក នៅពេលអ្នកត្រួតពិនិត្យអនុម័ត ហើយអ្នកអាចតាមដានស្ថានភាពនៅក្នុង អត្ថបទរបស់អ្នក។';
 
   @override
   String get blogDone => 'រួចរាល់';
@@ -2373,8 +2308,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get blogTitleHint => 'ចំណងជើង';
 
   @override
-  String get blogBodyHint =>
-      'ចែករំលែកអ្វីដែលអ្នករៀនបាន។ Markdown ប្រើបាននៅទីនេះ។';
+  String get blogBodyHint => 'ចែករំលែកអ្វីដែលអ្នករៀនបាន។ Markdown ប្រើបាននៅទីនេះ។';
 
   @override
   String get blogCoverUrlLabel => 'តំណរូបភាពគម្រប (ជាជម្រើស)';
@@ -2481,4 +2415,418 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get authBuddySuccess => 'យេ! អ្នកបានចូលហើយ!';
+
+  @override
+  String get buddyHomeGreeting => 'ត្រៀមបោះជំហានបន្ទាប់ហើយឬនៅ?';
+
+  @override
+  String get buddyWelcomeBack => 'សូមស្វាគមន៍មកវិញ។ បន្តពីកន្លែងដែលអ្នកបានឈប់។';
+
+  @override
+  String get buddyLessonCompleted => 'អ្នកសម្រេចបានហើយ!';
+
+  @override
+  String buddyCareTitle(String name) {
+    return 'TODO(km): Today with $name';
+  }
+
+  @override
+  String get buddyCareLesson => 'TODO(km): Finish a lesson';
+
+  @override
+  String get buddyCareRead => 'TODO(km): Read a story';
+
+  @override
+  String get buddyCareShare => 'TODO(km): Share with the community';
+
+  @override
+  String get buddyChooseAction => 'TODO(km): Choose a buddy';
+
+  @override
+  String buddyCareProgress(int count) {
+    return 'TODO(km): $count of 1 complete';
+  }
+
+  @override
+  String buddyEnergyLively(String name) {
+    return 'TODO(km): $name is full of energy.';
+  }
+
+  @override
+  String buddyEnergySteady(String name) {
+    return 'TODO(km): One lesson keeps $name going.';
+  }
+
+  @override
+  String buddyEnergySleepy(String name) {
+    return 'TODO(km): $name is getting sleepy.';
+  }
+
+  @override
+  String buddyEnergyNapping(String name) {
+    return 'TODO(km): $name is napping. A lesson wakes them up.';
+  }
+
+  @override
+  String buddyLessonEnergyLine(String name) {
+    return 'TODO(km): +35 energy · $name is full of energy';
+  }
+
+  @override
+  String buddyReadEnjoyed(String name) {
+    return 'TODO(km): $name enjoyed that story';
+  }
+
+  @override
+  String get buddyRankImproved => 'វឌ្ឍនភាពរបស់អ្នកបានធ្វើឱ្យចំណាត់ថ្នាក់កើនឡើង។';
+
+  @override
+  String get buddyCommunityJoined => 'សូមស្វាគមន៍មកកាន់សហគមន៍ថ្មីរបស់អ្នក!';
+
+  @override
+  String homeStreakDays(int count) {
+    return '$count ថ្ងៃ';
+  }
+
+  @override
+  String get homeTodaysStudy => 'ការសិក្សាថ្ងៃនេះ';
+
+  @override
+  String get homeStartHere => 'ចាប់ផ្តើមទីនេះ';
+
+  @override
+  String get homeStartHereBody => 'ជ្រើសរើសមេរៀនដំបូង ហើយចាប់ផ្តើមម្តងមួយជំហាន។';
+
+  @override
+  String homeLessonMinutes(int minutes) {
+    return '$minutes នាទី';
+  }
+
+  @override
+  String get homeContinue => 'បន្ត';
+
+  @override
+  String get homeProvinceSquad => 'ក្រុមសិក្សាខេត្តរបស់អ្នក';
+
+  @override
+  String get homeProvinceMissing => 'ជ្រើសរើសខេត្តដើម្បីមើលក្រុមសិក្សារបស់អ្នក។';
+
+  @override
+  String get homeSelectProvince => 'ជ្រើសរើសខេត្ត';
+
+  @override
+  String homeProvinceRank(int rank) {
+    return 'អ្នកស្ថិតនៅលេខ #$rank សប្តាហ៍នេះ';
+  }
+
+  @override
+  String homeNearbyLearner(int rank, String name) {
+    return '#$rank $name';
+  }
+
+  @override
+  String get homeYou => 'អ្នក';
+
+  @override
+  String get homeViewProvinceRanks => 'មើលចំណាត់ថ្នាក់ខេត្ត';
+
+  @override
+  String get homeFromCommunities => 'ពីសហគមន៍របស់អ្នក';
+
+  @override
+  String homeCommunityPostMeta(String community, String author, int count) {
+    return '$community · $author · មតិ $count';
+  }
+
+  @override
+  String get homeSeeCommunityFeed => 'មើលព័ត៌មានសហគមន៍';
+
+  @override
+  String get lessonShareLearning => 'ចែករំលែកអ្វីដែលខ្ញុំបានរៀន';
+
+  @override
+  String get resumeLearningTitle => 'បន្តការរៀន';
+
+  @override
+  String get resumeLearningEmptyTitle => 'មិនមានមេរៀនកំពុងរៀនទេ';
+
+  @override
+  String get resumeLearningEmptyBody => 'ជ្រើសរើសមេរៀនដើម្បីចាប់ផ្តើមជំហានសិក្សាបន្ទាប់។';
+
+  @override
+  String get leaderboardNearbyLearners => 'អ្នកសិក្សានៅជិតចំណាត់ថ្នាក់របស់អ្នក';
+
+  @override
+  String get leaderboardSearchLearners => 'ស្វែងរកអ្នកសិក្សា';
+
+  @override
+  String get buddyReactions => 'ប្រតិកម្មរបស់មិត្តសិក្សា';
+
+  @override
+  String get buddyReactionsHint => 'អនុញ្ញាតឱ្យមិត្តសិក្សាបង្ហាញចលនា និងនិយាយ';
+
+  @override
+  String get profileStudyBuddy => 'មិត្តសិក្សា';
+
+  @override
+  String profileBuddyNamed(String name) {
+    return '$name មិត្តសិក្សារបស់អ្នក';
+  }
+
+  @override
+  String get aiBuddyHandoff => 'មិត្តសិក្សារបស់អ្នកអាចជួយចាប់ផ្តើម ហើយគ្រូ AI នឹងពន្យល់សំណួរ។';
+
+  @override
+  String homeProvinceSquadNamed(String province) {
+    return 'ក្រុមសិក្សា $province';
+  }
+
+  @override
+  String get streakReminderTitle => '🔥 រក្សាខ្សែពិន្ទុបន្តរបស់អ្នក!';
+
+  @override
+  String get streakReminderBody => 'ចំណាយពេល ៥ នាទីយប់នេះដើម្បីរៀន និងរក្សាការសិក្សាបន្តរបស់អ្នក។';
+
+  @override
+  String get reminderPermissionTitle => 'តើអ្នកចង់បានការរំលឹកនៅម៉ោង ៨ យប់ទេ?';
+
+  @override
+  String reminderPermissionBody(String buddyName) {
+    return '$buddyName៖ តើខ្ញុំអាចរំលឹកអ្នក ដើម្បីកុំឱ្យស្ទ្រីករបស់អ្នកដាច់បានទេ?';
+  }
+
+  @override
+  String get reminderPermissionAllow => 'បើកការរំលឹក';
+
+  @override
+  String reminderNotificationTitle(String buddyName, int streakDays) {
+    return '$buddyName៖ ស្ទ្រីក $streakDays ថ្ងៃរបស់អ្នកនឹងដាច់នៅយប់នេះ 😢';
+  }
+
+  @override
+  String reminderNotificationTitleNoStreak(String buddyName) {
+    return '$buddyName៖ ចំណាយពេលរៀនមេរៀនមួយនៅយប់នេះ';
+  }
+
+  @override
+  String get reminderNotificationBody => 'បញ្ចប់មេរៀនមួយនៅយប់នេះ ដើម្បីបន្តស្ទ្រីករបស់អ្នក។';
+
+  @override
+  String get drawerGeneral => 'ទូទៅ';
+
+  @override
+  String get drawerAbout => 'អំពី';
+
+  @override
+  String get drawerUserAgreement => 'កិច្ចព្រមព្រៀងអ្នកប្រើប្រាស់';
+
+  @override
+  String get drawerPrivacyCenter => 'មជ្ឈមណ្ឌលឯកជនភាព';
+
+  @override
+  String get aiCopyAnswer => 'ចម្លងចម្លើយ';
+
+  @override
+  String get aiCopiedClipboard => 'បានចម្លងទៅក្តារតម្កល់';
+
+  @override
+  String get aiCopy => 'ចម្លង';
+
+  @override
+  String get aiLoginRequired => 'សូមចូលគណនីដើម្បីជជែកជាមួយគ្រូ AI។';
+
+  @override
+  String get buddyHeadOpenSemantics => 'បើកកិច្ចការថ្ងៃនេះ';
+
+  @override
+  String get buddyHeadTodayTitle => 'កិច្ចការថ្ងៃនេះ';
+
+  @override
+  String buddyHeadGreeting(String name) {
+    return '$name៖ តោះធ្វើឱ្យថ្ងៃនេះមានន័យ!';
+  }
+
+  @override
+  String get buddyHeadCurrentStreak => 'ស្ទ្រីកបច្ចុប្បន្នរបស់អ្នក';
+
+  @override
+  String buddyHeadStreakDays(int count) {
+    return '$count ថ្ងៃ';
+  }
+
+  @override
+  String buddyHeadProgress(int progress, int target) {
+    return '$progress ក្នុងចំណោម $target';
+  }
+
+  @override
+  String buddyHeadProgressShort(int progress, int target) {
+    return '$progress/$target';
+  }
+
+  @override
+  String get buddyHeadStartLesson => 'ចាប់ផ្តើមមេរៀន';
+
+  @override
+  String get buddyHeadGuestPrompt => 'រក្សាស្ទ្រីករបស់អ្នក — ចូលគណនី';
+
+  @override
+  String get buddyHeadSignIn => 'ចូលគណនី';
+
+  @override
+  String get buddyHeadHideTitle => 'លាក់មិត្តសិក្សារហូតដល់ថ្ងៃស្អែក?';
+
+  @override
+  String get buddyHeadHideBody => 'មិត្តសិក្សារបស់អ្នកនឹងត្រឡប់មកវិញនៅថ្ងៃស្អែក។';
+
+  @override
+  String get buddyHeadHideAction => 'លាក់ថ្ងៃនេះ';
+
+  @override
+  String get questPreviewLesson => 'បញ្ចប់មេរៀន ១';
+
+  @override
+  String get questPreviewAnswers => 'ឆ្លើយត្រូវ ៣ សំណួរ';
+
+  @override
+  String get questPreviewSocial => 'ប្រតិកម្ម ឬបញ្ចេញមតិលើប្រកាស';
+
+  @override
+  String get questClaim => 'ទទួលរង្វាន់';
+
+  @override
+  String get questClaimed => 'បានទទួលហើយ';
+
+  @override
+  String get questSignInToClaim => 'ចូលគណនីដើម្បីទទួលរង្វាន់';
+
+  @override
+  String get questClaimFailed => 'មិនអាចទទួលកិច្ចការនេះបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get questLoadFailed => 'មិនអាចផ្ទុកកិច្ចការថ្ងៃនេះបានទេ។';
+
+  @override
+  String get questPreviewStreak => 'មើលកិច្ចការថ្ងៃនេះ';
+
+  @override
+  String get questRetry => 'ព្យាយាមម្តងទៀត';
+
+  @override
+  String get resourceSectionTitle => 'ធនធានសិក្សា';
+
+  @override
+  String resourceEntryCount(int count) {
+    return 'ធនធាន ($count)';
+  }
+
+  @override
+  String get resourceShareAction => 'ចែករំលែកធនធាន';
+
+  @override
+  String get resourceLoadFailed => 'មិនអាចផ្ទុកធនធានបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get resourceSaveFailed => 'មិនអាចកែប្រែធនធានដែលបានរក្សាទុកបានទេ។';
+
+  @override
+  String get resourceOpenFailed => 'មិនអាចបើកតំណនេះបានទេ។';
+
+  @override
+  String get resourceEmptyTitle => 'មិត្តរៀនរបស់អ្នកកំពុងរង់ចាំធនធានល្អមួយ';
+
+  @override
+  String get resourceEmptyBody => 'ចែករំលែកតំណ វីដេអូ ឬឯកសារ PDF ដែលមានប្រយោជន៍សម្រាប់មេរៀននេះ។';
+
+  @override
+  String resourceSaveCount(int count) {
+    return 'បានរក្សាទុក $count ដង';
+  }
+
+  @override
+  String get resourceUnsaveAction => 'ដកធនធានចេញពីធនធានដែលបានរក្សាទុក';
+
+  @override
+  String get resourceSaveAction => 'រក្សាទុកធនធាន';
+
+  @override
+  String get resourceDeleteAction => 'លុបធនធាន';
+
+  @override
+  String get resourceDeleteConfirm => 'លុបធនធាននេះសម្រាប់អ្នករាល់គ្នាមែនទេ?';
+
+  @override
+  String get resourceDeleteFailed => 'មិនអាចលុបធនធាននេះបានទេ។';
+
+  @override
+  String get resourceReportAction => 'រាយការណ៍ធនធាន';
+
+  @override
+  String get resourceReportConfirm => 'រាយការណ៍ធនធាននេះដើម្បីពិនិត្យមែនទេ?';
+
+  @override
+  String get resourceReportSent => 'បានផ្ញើរបាយការណ៍ដើម្បីពិនិត្យហើយ។';
+
+  @override
+  String get resourceReportFailed => 'មិនអាចរាយការណ៍ធនធាននេះបានទេ។';
+
+  @override
+  String get resourceShareTitle => 'ចែករំលែកធនធានសិក្សា';
+
+  @override
+  String get resourceTitleLabel => 'ចំណងជើង';
+
+  @override
+  String get resourceTitleError => 'ប្រើចំណងជើងដែលមានពី ៣ ដល់ ១២០ តួអក្សរ។';
+
+  @override
+  String get resourceUrlLabel => 'អាសយដ្ឋានគេហទំព័រ';
+
+  @override
+  String get resourceUrlError => 'បញ្ចូលអាសយដ្ឋាន http ឬ https ដែលត្រឹមត្រូវ។';
+
+  @override
+  String get resourceKindLabel => 'ប្រភេទ';
+
+  @override
+  String get resourceKindLink => 'តំណ';
+
+  @override
+  String get resourceKindPdf => 'PDF';
+
+  @override
+  String get resourceKindVideo => 'វីដេអូ';
+
+  @override
+  String get resourceRateLimit => 'អ្នកអាចចែករំលែកធនធានបានរហូតដល់ ១០ ក្នុងមួយថ្ងៃ។';
+
+  @override
+  String get resourceShareFailed => 'មិនអាចចែករំលែកធនធាននេះបានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get resourceConfirm => 'បញ្ជាក់';
+
+  @override
+  String get milestoneCelebrationLabel => 'សម្រេចបានចំណុចសំខាន់';
+
+  @override
+  String milestoneStreakMessage(String name, int days) {
+    return '$name រៀនជាប់គ្នាបាន $days ថ្ងៃ!';
+  }
+
+  @override
+  String milestoneRankMessage(String name, String rank) {
+    return '$name ឡើងដល់ថ្នាក់ $rank!';
+  }
+
+  @override
+  String milestoneUnitMessage(String name, String unit) {
+    return '$name បានបញ្ចប់ $unit!';
+  }
+
+  @override
+  String get milestoneShareTitle => 'ចែករំលែកចំណុចសំខាន់ៗរបស់ខ្ញុំ';
+
+  @override
+  String get milestoneShareHint => 'ឲ្យមិត្តភក្តិអបអរស្ទ្រីក ថ្នាក់ និងឯកតាមេរៀនដែលអ្នកបានបញ្ចប់។';
 }

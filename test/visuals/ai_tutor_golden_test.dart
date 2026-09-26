@@ -16,7 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> _loadFonts() async {
   final redditSans = FontLoader(RiksaTypography.latinFamily)
-    ..addFont(rootBundle.load('assets/fonts/RedditSans-Variable.ttf'));
+    ..addFont(rootBundle.load('assets/fonts/Poppins-Regular.ttf'));
   final khmer = FontLoader(RiksaTypography.khmerFamily)
     ..addFont(rootBundle.load('assets/fonts/NotoSansKhmer-Variable.ttf'));
   final configuredRoot = Platform.environment['FLUTTER_ROOT'];

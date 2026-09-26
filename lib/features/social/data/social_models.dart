@@ -151,6 +151,58 @@ class SocialAuthor {
   );
 }
 
+enum SocialPostKind {
+  user,
+  milestone;
+
+  static SocialPostKind fromWire(Object? value) =>
+      value?.toString().toUpperCase() == 'MILESTONE'
+      ? SocialPostKind.milestone
+      : SocialPostKind.user;
+}
+
+enum SocialMilestoneType {
+  streak,
+  rankUp,
+  unitComplete;
+
+  static SocialMilestoneType? fromWire(Object? value) =>
+      switch (value?.toString().toUpperCase()) {
+        'STREAK' => streak,
+        'RANK_UP' => rankUp,
+        'UNIT_COMPLETE' => unitComplete,
+        _ => null,
+      };
+}
+
+class SocialMilestone {
+  const SocialMilestone({
+    required this.type,
+    required this.title,
+    required this.titleKm,
+    this.value,
+  });
+
+  final SocialMilestoneType type;
+  final String title;
+  final String titleKm;
+  final int? value;
+
+  String getTitle(String languageCode) =>
+      languageCode == 'km' && titleKm.isNotEmpty ? titleKm : title;
+
+  factory SocialMilestone.fromJson(Map<String, dynamic> json) {
+    final type = SocialMilestoneType.fromWire(json['type']);
+    if (type == null) throw const FormatException('Unknown milestone type');
+    return SocialMilestone(
+      type: type,
+      title: json['title'] as String? ?? '',
+      titleKm: json['titleKm'] as String? ?? '',
+      value: (json['value'] as num?)?.toInt(),
+    );
+  }
+}
+
 class SocialPost {
   const SocialPost({
     required this.id,
@@ -165,6 +217,8 @@ class SocialPost {
     required this.updatedAt,
     this.mediaUrl,
     this.myReaction,
+    this.kind = SocialPostKind.user,
+    this.milestone,
   });
 
   final String id;
@@ -177,6 +231,8 @@ class SocialPost {
   final SocialAuthor author;
   final SocialCategory category;
   final SocialReaction? myReaction;
+  final SocialPostKind kind;
+  final SocialMilestone? milestone;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -205,6 +261,12 @@ class SocialPost {
     updatedAt:
         DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
         DateTime.now(),
+    kind: SocialPostKind.fromWire(json['kind']),
+    milestone: (json['milestone'] as Map?) == null
+        ? null
+        : SocialMilestone.fromJson(
+            (json['milestone'] as Map).cast<String, dynamic>(),
+          ),
   );
 
   SocialPost copyWith({
@@ -226,6 +288,8 @@ class SocialPost {
     myReaction: clearReaction ? null : myReaction ?? this.myReaction,
     createdAt: createdAt,
     updatedAt: updatedAt,
+    kind: kind,
+    milestone: milestone,
   );
 }
 
