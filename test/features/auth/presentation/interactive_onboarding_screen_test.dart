@@ -6,8 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/providers/locale_provider.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
+import 'package:riksa_app/features/auth/data/onboarding_models.dart';
 import 'package:riksa_app/features/auth/presentation/interactive_onboarding_screen.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
+import 'package:riksa_app/features/auth/providers/onboarding_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,8 +23,28 @@ class _TestLocaleNotifier extends LocaleNotifier {
 }
 
 class _TestAuthNotifier extends AuthNotifier {
+  _TestAuthNotifier([this._initialState = const Unauthenticated()]);
+
+  final AuthState _initialState;
+  int provinceSelectionSaveCount = 0;
+
   @override
-  AuthState build() => const Unauthenticated();
+  AuthState build() => _initialState;
+
+  @override
+  Future<bool> saveProvinceSelection(String provinceId) async {
+    provinceSelectionSaveCount++;
+    if (_initialState is Authenticated) return true;
+    return super.saveProvinceSelection(provinceId);
+  }
+}
+
+class _PreparedQuizNotifier extends OnboardingNotifier {
+  @override
+  OnboardingSetupData build() => const OnboardingSetupData(
+    subject: OnboardingSubject.physics,
+    quizAnswer1Index: 0,
+  );
 }
 
 const _testProvinces = [
@@ -42,12 +64,16 @@ Widget _buildApp({
   Locale locale = const Locale('en'),
   double textScale = 1,
   required GoRouter router,
+  _TestAuthNotifier Function()? authNotifierFactory,
+  bool preparedQuiz = false,
 }) {
   return ProviderScope(
     overrides: [
       localeProvider.overrideWith(() => _TestLocaleNotifier(locale)),
-      authProvider.overrideWith(_TestAuthNotifier.new),
+      authProvider.overrideWith(authNotifierFactory ?? _TestAuthNotifier.new),
       provinceOptionsProvider.overrideWith((ref) async => _testProvinces),
+      if (preparedQuiz)
+        onboardingProvider.overrideWith(_PreparedQuizNotifier.new),
     ],
     child: MaterialApp.router(
       routerConfig: router,
@@ -89,6 +115,10 @@ GoRouter _onboardingRouter() => GoRouter(
           ),
         ),
       ],
+    ),
+    GoRoute(
+      path: '/auth/login',
+      builder: (_, _) => Scaffold(body: Text('Login route')),
     ),
   ],
 );
@@ -173,6 +203,79 @@ void main() {
     },
   );
 
+  testWidgets('saved province skips its step and is not overwritten', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    late _TestAuthNotifier authNotifier;
+    final router = _onboardingRouter();
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      _buildApp(
+        router: router,
+        preparedQuiz: true,
+        authNotifierFactory: () => authNotifier = _TestAuthNotifier(
+          const Authenticated(
+            AuthUser(
+              id: 'returning-user',
+              username: 'learner',
+              displayName: 'Learner',
+              emailVerified: true,
+              phoneVerified: false,
+              role: 'USER',
+              provinceId: 'province-siem-reap',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final continueButton = find.byKey(const Key('onboarding_continue_btn'));
+    await tester.tap(continueButton);
+    await tester.pumpAndSettle();
+    expect(find.text('2/3'), findsOneWidget);
+
+    await tester.tap(continueButton);
+    await tester.pumpAndSettle();
+    expect(find.text('Which province are you representing?'), findsNothing);
+    expect(find.text('Your Physics roadmap is ready'), findsOneWidget);
+    expect(find.text('3/3'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('onboarding_start_learning')));
+    await tester.pumpAndSettle();
+
+    expect(authNotifier.provinceSelectionSaveCount, 0);
+  });
+
+  testWidgets('first onboarding page links returning learners to login', (
+    tester,
+  ) async {
+    final router = _onboardingRouter();
+    addTearDown(router.dispose);
+    await tester.pumpWidget(_buildApp(router: router));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey('onboarding_returning_account')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(router.routeInformationProvider.value.uri.path, '/auth/login');
+    expect(
+      router
+          .routeInformationProvider
+          .value
+          .uri
+          .queryParameters['onboardingReturning'],
+      'true',
+    );
+  });
+
   testWidgets(
     'subject, first question and province fit Khmer at 200% text scale',
     (tester) async {
@@ -189,7 +292,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
 
-      await tester.tap(find.text('រូបវិទ្យា'));
+      // The returning-account link sits above the subjects, so at 200% text
+      // the subject may start below the fold.
+      final subject = find.text('រូបវិទ្យា');
+      await tester.ensureVisible(subject);
+      await tester.pumpAndSettle();
+      await tester.tap(subject);
       await tester.pumpAndSettle();
       final answer = find.text('F = m × a');
       await tester.ensureVisible(answer);

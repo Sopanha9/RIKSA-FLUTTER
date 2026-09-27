@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riksa_app/app/router/app_router.dart';
+import 'package:riksa_app/core/providers/locale_provider.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
@@ -13,6 +14,7 @@ import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_catalog_screen.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_experience_screen.dart';
 import 'package:riksa_app/features/learning/presentation/subject_roadmap_screen.dart';
+import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.dart';
 import 'package:riksa_app/features/learning/providers/learning_home_provider.dart';
 import 'package:riksa_app/features/learning/providers/learning_roadmap_provider.dart';
 import 'package:riksa_app/features/userProfile/data/public_profile.dart';
@@ -56,6 +58,11 @@ class _SwitchableAuthNotifier extends AuthNotifier {
   void becomeGuest() => state = const Unauthenticated();
 }
 
+class _EmptyLessonCatalogNotifier extends LessonCatalogNotifier {
+  @override
+  LessonCatalogState build() => const LessonCatalogState();
+}
+
 class _PendingProfiles implements PublicProfileRepository {
   final Completer<PublicProfile> completer = Completer<PublicProfile>();
 
@@ -65,6 +72,88 @@ class _PendingProfiles implements PublicProfileRepository {
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets(
+    'returning learner login from onboarding completes setup and lands in Learn',
+    (tester) async {
+      tester.view.physicalSize = const Size(393, 852);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      late GoRouter router;
+      late WidgetRef appRef;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith(_SwitchableAuthNotifier.new),
+            learningHomeProvider.overrideWith(
+              (ref) async => const LearningHomeData(
+                subjects: [],
+                resumeSubject: null,
+                resumeLesson: null,
+              ),
+            ),
+            lessonCatalogProvider.overrideWith(_EmptyLessonCatalogNotifier.new),
+          ],
+          child: Consumer(
+            builder: (context, ref, _) {
+              appRef = ref;
+              router = ref.watch(goRouterProvider);
+              return MaterialApp.router(
+                theme: AppTheme.light,
+                routerConfig: router,
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(disableAnimations: true),
+                  child: child!,
+                ),
+                localizationsDelegates: const [
+                  AppLocalizations.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: const [Locale('en'), Locale('km')],
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      router.go('/onboarding');
+      await tester.pumpAndSettle();
+      expect(find.text('I already have an account'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('onboarding_login')));
+      await tester.pumpAndSettle();
+
+      expect(
+        router.routerDelegate.currentConfiguration.uri.path,
+        '/auth/login',
+      );
+      expect(
+        router
+            .routerDelegate
+            .currentConfiguration
+            .uri
+            .queryParameters['onboardingReturning'],
+        'true',
+      );
+      expect(appRef.read(localeProvider).hasCompletedOnboarding, isFalse);
+
+      (appRef.read(authProvider.notifier) as _SwitchableAuthNotifier)
+          .authenticate();
+      await tester.pumpAndSettle();
+
+      expect(router.routerDelegate.currentConfiguration.uri.path, '/learn');
+      expect(appRef.read(localeProvider).hasCompletedOnboarding, isTrue);
+      final preferences = await SharedPreferences.getInstance();
+      expect(preferences.getBool('riksa_onboarding_completed'), isTrue);
+      expect(find.text('Which province are you representing?'), findsNothing);
+    },
+  );
 
   testWidgets('routes another profile and redirects your own id to /profile', (
     tester,

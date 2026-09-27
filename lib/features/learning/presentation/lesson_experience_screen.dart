@@ -800,6 +800,7 @@ class _LessonExperienceScreenState
     LessonExercise exercise,
     _LessonSection section,
   ) async {
+    if (_submitting.contains(exercise.id)) return;
     final answer = _answers[exercise.id]?.text.trim() ?? '';
     if (answer.isEmpty) return;
     final authenticated = ref.read(authProvider) is Authenticated;
@@ -852,7 +853,11 @@ class _LessonExperienceScreenState
     } catch (error) {
       if (mounted) _showError(error);
     } finally {
-      if (mounted) setState(() => _submitting.remove(exercise.id));
+      if (mounted) {
+        setState(() => _submitting.remove(exercise.id));
+      } else {
+        _submitting.remove(exercise.id);
+      }
     }
   }
 

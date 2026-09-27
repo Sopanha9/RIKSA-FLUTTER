@@ -665,6 +665,9 @@ class AppLocalizationsKm extends AppLocalizations {
   String get onboardingCommunityTitle => 'មិត្តភក្តិរបស់អ្នកនៅទីនេះ';
 
   @override
+  String get onboardingReturningAccount => 'ខ្ញុំមានគណនីរួចហើយ';
+
+  @override
   String get onboardingGetStarted => 'ចាប់ផ្តើម';
 
   @override

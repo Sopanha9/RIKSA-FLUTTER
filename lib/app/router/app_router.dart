@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/providers/locale_provider.dart';
 import '../../features/ai/presentation/ai_tutor_screen.dart';
 import '../../features/ai/presentation/ai_chat_screen.dart';
 import '../../features/auth/presentation/auth_switcher_screen.dart';
@@ -109,6 +112,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return '/auth/login?from=${Uri.encodeComponent(state.uri.toString())}';
       }
       if (isLoggedIn && (isAuthRoute || isLanguage)) {
+        if (isAuthRoute &&
+            state.uri.queryParameters['onboardingReturning'] == 'true') {
+          // State updates synchronously; only the disk write finishes later.
+          unawaited(ref.read(localeProvider.notifier).completeOnboarding());
+          return kLandingLocation;
+        }
         return authenticatedLandingFor(state.uri);
       }
       return null;

@@ -411,6 +411,10 @@
   "@onboardingCommunityTitle": {
     "description": "Onboarding page 1 headline (the community)."
   },
+  "onboardingReturningAccount": "I already have an account",
+  "@onboardingReturningAccount": {
+    "description": "Secondary action for returning learners during onboarding."
+  },
   "onboardingGetStarted": "Get started",
   "@onboardingGetStarted": {
     "description": "Primary action on the last onboarding page."

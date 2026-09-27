@@ -684,6 +684,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingCommunityTitle => 'Your people are here';
 
   @override
+  String get onboardingReturningAccount => 'I already have an account';
+
+  @override
   String get onboardingGetStarted => 'Get started';
 
   @override

@@ -1286,6 +1286,12 @@ abstract class AppLocalizations {
   /// **'Your people are here'**
   String get onboardingCommunityTitle;
 
+  /// Secondary action for returning learners during onboarding.
+  ///
+  /// In en, this message translates to:
+  /// **'I already have an account'**
+  String get onboardingReturningAccount;
+
   /// Primary action on the last onboarding page.
   ///
   /// In en, this message translates to:

@@ -259,8 +259,7 @@ class _OnboardingSplashScreenState extends ConsumerState<OnboardingSplashScreen>
     final notifier = ref.read(localeProvider.notifier);
     await notifier.setLocale(ref.read(localeProvider).locale);
     await notifier.completeIntro();
-    await notifier.completeOnboarding();
-    if (mounted) context.go('/auth/login');
+    if (mounted) context.go('/auth/login?onboardingReturning=true');
   }
 
   /// Swipes on the sheet turn pages too, so the whole screen feels like one
@@ -459,22 +458,15 @@ class _OnboardingSplashScreenState extends ConsumerState<OnboardingSplashScreen>
                             minimumSize: const Size(48, 44),
                             foregroundColor: palette.inkMuted,
                           ),
-                          child: Text.rich(
-                            TextSpan(
-                              text: '${l10n.haveAccount} ',
-                              children: [
-                                TextSpan(
-                                  text: l10n.login,
-                                  style: TextStyle(
-                                    color: palette.brand,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          child: Text(
+                            l10n.onboardingReturningAccount,
+                            textAlign: TextAlign.center,
                             style: RiksaTypography.bodyStyleFor(
-                              l10n.haveAccount,
-                              const TextStyle(fontSize: 14),
+                              l10n.onboardingReturningAccount,
+                              const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),

@@ -12,6 +12,7 @@ import '../../../core/sound/learning_sound.dart';
 import '../../../core/sound/sound_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
+import '../../../l10n/gen/app_localizations.dart';
 import '../../mascot/domain/mascot.dart';
 import '../../mascot/presentation/widgets/mascot_face.dart';
 import '../../mascot/presentation/widgets/mascot_scene.dart';
@@ -100,19 +101,30 @@ class _InteractiveOnboardingScreenState
     _buddy.mood = page == _payoffPage ? MascotMood.happy : MascotMood.idle;
   }
 
-  Future<void> _next(OnboardingSetupData data) async {
+  Future<void> _next(
+    OnboardingSetupData data, {
+    required bool hasSavedProvince,
+  }) async {
     if (_submitting) return;
     if (_currentPage < _totalPages - 1) {
-      _goTo(_currentPage + 1);
+      _goTo(
+        hasSavedProvince && _currentPage == _questionPage
+            ? _payoffPage
+            : _currentPage + 1,
+      );
       return;
     }
     await _saveAndNavigate(_startLocation(data));
   }
 
-  Future<void> _back() async {
+  Future<void> _back({required bool hasSavedProvince}) async {
     if (_submitting) return;
     if (_currentPage > 0) {
-      _goTo(_currentPage - 1);
+      _goTo(
+        hasSavedProvince && _currentPage == _payoffPage
+            ? _questionPage
+            : _currentPage - 1,
+      );
       return;
     }
     final router = GoRouter.maybeOf(context);
@@ -131,7 +143,10 @@ class _InteractiveOnboardingScreenState
     setState(() => _submitting = true);
     await ref.read(onboardingProvider.notifier).commitSetup();
     final provinceId = ref.read(onboardingProvider).provinceId;
-    if (provinceId == null) {
+    final auth = ref.read(authProvider);
+    final hasSavedProvince =
+        auth is Authenticated && (auth.user.provinceId?.isNotEmpty ?? false);
+    if (provinceId == null || hasSavedProvince) {
       await ref.read(localeProvider.notifier).completeOnboarding();
     } else {
       // Completing onboarding clears the pending squad, so a guest's province
@@ -210,6 +225,13 @@ class _InteractiveOnboardingScreenState
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authProvider, (_, next) {
+      final hasSavedProvince =
+          next is Authenticated && (next.user.provinceId?.isNotEmpty ?? false);
+      if (hasSavedProvince && _currentPage == _provincePage) {
+        _goTo(_payoffPage);
+      }
+    });
     final palette = context.riksa;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -218,6 +240,9 @@ class _InteractiveOnboardingScreenState
         ref.watch(localeProvider).locale;
     final lang = locale.languageCode;
     final setup = ref.watch(onboardingProvider);
+    final auth = ref.watch(authProvider);
+    final hasSavedProvince =
+        auth is Authenticated && (auth.user.provinceId?.isNotEmpty ?? false);
     final profile = ref.watch(mascotProvider).profile;
     final species = profile?.species ?? MascotSpecies.crocodile;
     final name = profile?.name ?? MascotProfile.defaultName(species);
@@ -225,6 +250,11 @@ class _InteractiveOnboardingScreenState
     final notifier = ref.read(onboardingProvider.notifier);
 
     final isPayoffScreen = _currentPage == _payoffPage;
+    final progressPage = hasSavedProvince && _currentPage > _questionPage
+        ? _currentPage - 1
+        : _currentPage;
+    final pageCount = hasSavedProvince ? _totalPages - 1 : _totalPages;
+    final l10n = AppLocalizations.of(context)!;
 
     final step = switch (_currentPage) {
       0 => _SubjectStep(
@@ -235,7 +265,7 @@ class _InteractiveOnboardingScreenState
           if (_currentPage != 0) return;
           notifier.setSubject(subject);
           _buddy.react(MascotMood.happy);
-          unawaited(_next(setup));
+          unawaited(_next(setup, hasSavedProvince: hasSavedProvince));
         },
       ),
       _questionPage => _QuizStep(
@@ -303,9 +333,9 @@ class _InteractiveOnboardingScreenState
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(12, 8, 16, 0),
                     child: _OnboardingHeader(
-                      currentPage: _currentPage,
-                      totalPages: _totalPages,
-                      onBack: _back,
+                      currentPage: progressPage,
+                      totalPages: pageCount,
+                      onBack: () => _back(hasSavedProvince: hasSavedProvince),
                     ),
                   ),
                 ),
@@ -384,7 +414,10 @@ class _InteractiveOnboardingScreenState
                                   FilledButton(
                                     key: const Key('onboarding_continue_btn'),
                                     onPressed: canContinue && !_submitting
-                                        ? () => _next(setup)
+                                        ? () => _next(
+                                            setup,
+                                            hasSavedProvince: hasSavedProvince,
+                                          )
                                         : null,
                                     style: FilledButton.styleFrom(
                                       backgroundColor: isDark
@@ -433,6 +466,23 @@ class _InteractiveOnboardingScreenState
                                               ),
                                             ],
                                           ),
+                                  ),
+                                ],
+                                if (_currentPage == 0) ...[
+                                  const SizedBox(height: 4),
+                                  TextButton(
+                                    key: const ValueKey(
+                                      'onboarding_returning_account',
+                                    ),
+                                    onPressed: _submitting
+                                        ? null
+                                        : () => context.go(
+                                            '/auth/login?onboardingReturning=true',
+                                          ),
+                                    child: Text(
+                                      l10n.onboardingReturningAccount,
+                                      textAlign: TextAlign.center,
+                                    ),
                                   ),
                                 ],
                               ],

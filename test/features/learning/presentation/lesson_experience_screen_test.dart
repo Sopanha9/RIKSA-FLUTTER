@@ -8,6 +8,7 @@ import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/learning/data/learning_api.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/lesson_experience_screen.dart';
+import 'package:riksa_app/features/learning/presentation/widgets/learning_atoms.dart';
 import 'package:riksa_app/features/learning/providers/lesson_catalog_provider.dart';
 import 'package:riksa_app/features/learning/providers/saved_lessons_provider.dart';
 import 'package:riksa_app/features/mascot/domain/mascot.dart';
@@ -128,6 +129,25 @@ class _FakeLearningApiWithExercises extends _FakeLearningApi {
       ),
     ],
   );
+}
+
+class _CountingLearningApi extends _FakeLearningApiWithExercises {
+  int answerChecks = 0;
+
+  @override
+  Future<LessonAnswerResult> checkAnswer({
+    required String lessonId,
+    required String exerciseId,
+    required String answer,
+  }) async {
+    answerChecks++;
+    return LessonAnswerResult(
+      exerciseId: exerciseId,
+      correct: true,
+      points: 10,
+      message: 'Correct',
+    );
+  }
 }
 
 Iterable<TextSpan> _textSpans(InlineSpan span) sync* {
@@ -327,6 +347,52 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('lesson-progress-track')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('same-frame answer taps issue one API request', (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    SharedPreferences.setMockInitialValues({});
+
+    final api = _CountingLearningApi();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [learningApiProvider.overrideWithValue(api)],
+        child: MaterialApp(
+          builder: _stillBuddy,
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: const LessonExperienceScreen(lessonId: 'biology-1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Try it yourself'));
+    await tester.pumpAndSettle();
+    // Choices stay hidden until the learner asks for them.
+    await tester.tap(find.byKey(const ValueKey('show-choices')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Unit of life'));
+    await tester.pump();
+
+    final checkButton = tester.widget<LearningPrimaryButton>(
+      find.byKey(const ValueKey('check-answer')),
+    );
+    checkButton.onPressed!();
+    checkButton.onPressed!();
+    await tester.pumpAndSettle();
+
+    expect(api.answerChecks, 1);
     expect(tester.takeException(), isNull);
   });
 
