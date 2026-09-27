@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../core/providers/locale_provider.dart';
+import '../../../core/sound/learning_sound.dart';
+import '../../../core/sound/sound_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../mascot/domain/mascot.dart';
@@ -34,8 +36,9 @@ Duration _sizeDuration(BuildContext context) {
 ///
 /// The buddy stands in its home scene at the top, talks the learner through
 /// each step and reacts to every choice; the step itself sits on a sheet
-/// below. The steps are a starting subject, a home province (the learner's
-/// leaderboard squad) and a roadmap confirmation.
+/// below. The steps are a starting subject, one question from it (so the
+/// learner is doing the subject within seconds of picking it), a home
+/// province (the learner's leaderboard squad) and a roadmap confirmation.
 class InteractiveOnboardingScreen extends ConsumerStatefulWidget {
   const InteractiveOnboardingScreen({super.key, this.onComplete});
 
@@ -52,8 +55,10 @@ class _InteractiveOnboardingScreenState
 
   int _currentPage = 0;
   bool _forward = true;
-  static const int _totalPages = 3;
-  static const int _payoffPage = 2;
+  static const int _totalPages = 4;
+  static const int _questionPage = 1;
+  static const int _provincePage = 2;
+  static const int _payoffPage = 3;
   bool _submitting = false;
   final TextEditingController _provinceSearchController =
       TextEditingController();
@@ -79,7 +84,8 @@ class _InteractiveOnboardingScreenState
   bool _isStepComplete(OnboardingSetupData data) {
     return switch (_currentPage) {
       0 => data.subject != null,
-      1 => data.provinceId != null,
+      _questionPage => data.quizAnswer1Index != null,
+      _provincePage => data.provinceId != null,
       _ => true,
     };
   }
@@ -159,7 +165,30 @@ class _InteractiveOnboardingScreenState
               'ចាប់ផ្តើមពី${subject.title(lang)}គឺល្អណាស់។',
             );
     }
-    if (_currentPage == 1) {
+    if (_currentPage == _questionPage) {
+      final answer = setup.quizAnswer1Index;
+      final subject = setup.subject;
+      if (answer == null || subject == null) {
+        return _t(
+          lang,
+          'Quick one to warm up. You\'ve got this!',
+          'សំណួរខ្លីមួយដើម្បីកម្តៅខ្លួន។ អ្នកធ្វើបាន!',
+        );
+      }
+      final question = OnboardingCuratedQuestions.forSubject(subject).first;
+      return answer == question.correctIndex
+          ? _t(
+              lang,
+              'Yes! That\'s your first win.',
+              'ត្រូវហើយ! នេះជាជ័យជម្នះដំបូងរបស់អ្នក។',
+            )
+          : _t(
+              lang,
+              'Close! Now you know it for the exam.',
+              'ជិតហើយ! ឥឡូវអ្នកដឹងសម្រាប់ការប្រឡងហើយ។',
+            );
+    }
+    if (_currentPage == _provincePage) {
       return setup.provinceId == null
           ? _t(
               lang,
@@ -202,12 +231,31 @@ class _InteractiveOnboardingScreenState
         selectedSubject: setup.subject,
         lang: lang,
         onSelect: (subject) {
+          // A double tap must not advance twice and skip the first question.
+          if (_currentPage != 0) return;
           notifier.setSubject(subject);
           _buddy.react(MascotMood.happy);
           unawaited(_next(setup));
         },
       ),
-      1 => _ProvinceStep(
+      _questionPage => _QuizStep(
+        key: const ValueKey('first_question_step'),
+        question: OnboardingCuratedQuestions.forSubject(
+          setup.subject ?? OnboardingSubject.math,
+        ).first,
+        selectedAnswerIndex: setup.quizAnswer1Index,
+        lang: lang,
+        species: species,
+        buddyName: name,
+        onSelectAnswer: (index, isCorrect) {
+          notifier.answerFirstQuestion(index);
+          ref.playSound(
+            isCorrect ? LearningSound.correct : LearningSound.wrong,
+          );
+          _buddy.react(isCorrect ? MascotMood.celebrate : MascotMood.sad);
+        },
+      ),
+      _provincePage => _ProvinceStep(
         selectedProvinceId: setup.provinceId,
         selectedProvinceName: lang == 'km'
             ? setup.provinceNameKhmer
@@ -300,7 +348,13 @@ class _InteractiveOnboardingScreenState
                                     switchOutCurve: Curves.easeIn,
                                     layoutBuilder: (current, previous) => Stack(
                                       alignment: Alignment.topCenter,
-                                      children: [...previous, ?current],
+                                      // The step on its way out must not
+                                      // take a second tap meant for the next.
+                                      children: [
+                                        for (final child in previous)
+                                          IgnorePointer(child: child),
+                                        ?current,
+                                      ],
                                     ),
                                     transitionBuilder: (child, animation) {
                                       final incoming =
@@ -1507,8 +1561,7 @@ class _WeekPreview extends StatelessWidget {
 // ignore: unused_element
 class _QuizStep extends StatelessWidget {
   const _QuizStep({
-    required this.questionNumber,
-    required this.totalQuestions,
+    super.key,
     required this.question,
     required this.selectedAnswerIndex,
     required this.lang,
@@ -1517,8 +1570,6 @@ class _QuizStep extends StatelessWidget {
     required this.onSelectAnswer,
   });
 
-  final int questionNumber;
-  final int totalQuestions;
   final OnboardingQuizQuestion question;
   final int? selectedAnswerIndex;
   final String lang;
@@ -1537,7 +1588,7 @@ class _QuizStep extends StatelessWidget {
     final isCorrect = selectedAnswerIndex == question.correctIndex;
     final subject = question.subject;
     final challenge =
-        '${subject.title(lang)} · ${_t(lang, 'Challenge $questionNumber of $totalQuestions', 'ការសាកល្បង $questionNumber នៃ $totalQuestions')}';
+        '${subject.title(lang)} · ${_t(lang, 'Your first question', 'សំណួរដំបូងរបស់អ្នក')}';
 
     return ListView(
       children: [
@@ -1599,14 +1650,16 @@ class _QuizStep extends StatelessWidget {
               ? Padding(
                   key: const ValueKey('feedback'),
                   padding: const EdgeInsets.only(top: 4),
-                  child: _BuddyFeedback(
-                    species: species,
-                    buddyName: buddyName,
-                    isCorrect: isCorrect,
-                    message: isCorrect
-                        ? question.kruAiSuccess(lang)
-                        : question.kruAiHint(lang),
-                    lang: lang,
+                  child: _RevealOnAppear(
+                    child: _BuddyFeedback(
+                      species: species,
+                      buddyName: buddyName,
+                      isCorrect: isCorrect,
+                      message: isCorrect
+                          ? question.kruAiSuccess(lang)
+                          : question.kruAiHint(lang),
+                      lang: lang,
+                    ),
                   ),
                 )
               : const SizedBox(
@@ -1727,6 +1780,49 @@ class _QuizStep extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Scrolls its child into view once it has grown in, so the buddy's
+/// explanation is not left below the fold on a phone.
+class _RevealOnAppear extends StatefulWidget {
+  const _RevealOnAppear({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_RevealOnAppear> createState() => _RevealOnAppearState();
+}
+
+class _RevealOnAppearState extends State<_RevealOnAppear> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _reveal());
+  }
+
+  Future<void> _reveal() async {
+    // The card grows in, so wait for the list's extent to settle; revealing it
+    // any earlier would scroll to a card that is still too short.
+    var extent = -1.0;
+    for (var frame = 0; frame < 60; frame++) {
+      if (!mounted) return;
+      final position = Scrollable.maybeOf(context)?.position;
+      if (position == null || !position.hasContentDimensions) return;
+      if (position.maxScrollExtent == extent && extent >= 0) break;
+      extent = position.maxScrollExtent;
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    if (!mounted) return;
+    await Scrollable.ensureVisible(
+      context,
+      alignment: 1,
+      duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+      curve: RiksaMotion.standardCurve,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class _Pill extends StatelessWidget {

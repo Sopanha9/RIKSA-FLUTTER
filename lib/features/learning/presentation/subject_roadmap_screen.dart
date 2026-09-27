@@ -11,6 +11,7 @@ import '../data/learning_models.dart';
 import '../providers/learning_roadmap_provider.dart';
 import 'learning_design.dart';
 import 'roadmap_stones.dart';
+import 'subject_map.dart';
 import 'widgets/learning_atoms.dart';
 import 'widgets/learning_status_bar.dart';
 
@@ -68,6 +69,8 @@ class _RoadmapBody extends StatelessWidget {
     final stones = buildRoadmapStones(roadmap);
     final summary = RoadmapSummary.of(roadmap, stones);
     final subject = stemSubjectFor(roadmap.categoryName);
+    final mapArt = subjectMapArtFor(subject);
+    final mapLessons = [for (final unit in stones) ...unit.lessons];
 
     return CustomScrollView(
       key: const PageStorageKey('subject-roadmap-scroll'),
@@ -78,6 +81,8 @@ class _RoadmapBody extends StatelessWidget {
             name: roadmap.categoryName,
             subject: subject,
             summary: summary,
+            // On the map the buddy stands at the current lesson instead.
+            showBuddy: mapArt == null || mapLessons.isEmpty,
           ),
         ),
         if (stones.isEmpty)
@@ -89,6 +94,14 @@ class _RoadmapBody extends StatelessWidget {
                 title: l10n.roadmapEmpty,
                 body: l10n.roadmapEmptyBody,
               ),
+            ),
+          )
+        else if (mapArt != null && mapLessons.isNotEmpty)
+          SliverPadding(
+            // Clears the floating navigation bar below the goal.
+            padding: const EdgeInsets.only(bottom: 132),
+            sliver: SliverToBoxAdapter(
+              child: SubjectMap(art: mapArt, lessons: mapLessons),
             ),
           )
         else
@@ -105,10 +118,12 @@ class _RoadmapBody extends StatelessWidget {
                         stone: stones[index],
                         completedOutOfOrder:
                             stones[index].status == LearningStatus.done &&
-                            stones.take(index).any(
-                              (earlier) =>
-                                  earlier.status != LearningStatus.done,
-                            ),
+                            stones
+                                .take(index)
+                                .any(
+                                  (earlier) =>
+                                      earlier.status != LearningStatus.done,
+                                ),
                       ),
               ),
             ),
@@ -127,11 +142,13 @@ class _RoadmapHeader extends StatelessWidget {
     required this.name,
     required this.subject,
     required this.summary,
+    this.showBuddy = true,
   });
 
   final String name;
   final StemSubject subject;
   final RoadmapSummary summary;
+  final bool showBuddy;
 
   @override
   Widget build(BuildContext context) {
@@ -210,14 +227,16 @@ class _RoadmapHeader extends StatelessWidget {
                       const SizedBox(width: RiksaSpacing.md),
                       Column(
                         children: [
-                          BuddyFaceReaction(
-                            face: summary.completed > 0
-                                ? MascotFace.proud
-                                : MascotFace.determined,
-                            size: 42,
-                            loops: 1,
-                          ),
-                          const SizedBox(height: RiksaSpacing.xxs),
+                          if (showBuddy) ...[
+                            BuddyFaceReaction(
+                              face: summary.completed > 0
+                                  ? MascotFace.proud
+                                  : MascotFace.determined,
+                              size: 42,
+                              loops: 1,
+                            ),
+                            const SizedBox(height: RiksaSpacing.xxs),
+                          ],
                           _ProgressRing(
                             fraction: summary.fraction,
                             color: context.riksa.ink,
@@ -562,9 +581,10 @@ class _StoneCardState extends State<_StoneCard> {
   }
 
   String _subtitle(AppLocalizations l10n) => switch (widget.stone.status) {
-    LearningStatus.done => widget.completedOutOfOrder
-        ? l10n.roadmapCompletedEarlier
-        : l10n.completedLabel,
+    LearningStatus.done =>
+      widget.completedOutOfOrder
+          ? l10n.roadmapCompletedEarlier
+          : l10n.completedLabel,
     LearningStatus.current => l10n.unitProgressShort(
       widget.stone.completedLessons,
       widget.stone.totalLessons,

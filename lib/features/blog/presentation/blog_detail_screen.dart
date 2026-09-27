@@ -273,8 +273,7 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen>
   }
 
   void _openProfile(PublicProfile? profile) {
-    final path = publicProfilePath(profile?.id ?? _post?.authorId);
-    if (path != null) context.push(path);
+    openUserProfile(context, profile?.id ?? _post?.authorId);
   }
 
   @override

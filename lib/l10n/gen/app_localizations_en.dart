@@ -18,10 +18,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginSubtitle => 'Sign in to continue your learning journey.';
 
   @override
-  String get authReasonSaveProgress => 'Sign in to save your lesson progress and streak.';
+  String get authReasonSaveProgress =>
+      'Sign in to save your lesson progress and streak.';
 
   @override
-  String get authReasonSaveLesson => 'Sign in to save this lesson to your library.';
+  String get authReasonSaveLesson =>
+      'Sign in to save this lesson to your library.';
 
   @override
   String get authReasonPost => 'Sign in to share a post with your community.';
@@ -164,7 +166,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPassword => 'Forgot password?';
 
   @override
-  String get passwordRecoveryUnavailable => 'Password recovery is not available yet.';
+  String get passwordRecoveryUnavailable =>
+      'Password recovery is not available yet.';
 
   @override
   String get requiredField => 'This field is required';
@@ -176,22 +179,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidEmail => 'Enter a valid email address';
 
   @override
-  String get weakPassword => 'Password must be 8+ chars with upper, lower, and digit';
+  String get weakPassword =>
+      'Password must be 8+ chars with upper, lower, and digit';
 
   @override
   String get passwordsDoNotMatch => 'Passwords do not match';
 
   @override
-  String get displayNameTooLong => 'Display name must be 100 characters or fewer';
+  String get displayNameTooLong =>
+      'Display name must be 100 characters or fewer';
 
   @override
   String get usernameTooLong => 'Username must be between 3 and 50 characters';
 
   @override
-  String get signInSecureNote => 'Your session stays protected and refreshes automatically.';
+  String get signInSecureNote =>
+      'Your session stays protected and refreshes automatically.';
 
   @override
-  String get registerEmailNote => 'You can verify your email later from your profile.';
+  String get registerEmailNote =>
+      'You can verify your email later from your profile.';
 
   @override
   String get loginFailed => 'Login failed. Check your credentials.';
@@ -203,10 +210,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get googleFailed => 'Google sign-in failed';
 
   @override
-  String get googleNotConfigured => 'Google sign-in is not configured for this build yet.';
+  String get googleNotConfigured =>
+      'Google sign-in is not configured for this build yet.';
 
   @override
-  String get googleUnsupported => 'Use the Google button provided by your browser to continue.';
+  String get googleUnsupported =>
+      'Use the Google button provided by your browser to continue.';
 
   @override
   String get telegramEyebrow => 'No password needed';
@@ -215,19 +224,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get telegramAuthTitle => 'Continue with Telegram';
 
   @override
-  String get telegramAuthSubtitle => 'No Telegram ID to remember. Pick a way to sign in. New to Riksa? Both options create your account.';
+  String get telegramAuthSubtitle =>
+      'No Telegram ID to remember. Pick a way to sign in. New to Riksa? Both options create your account.';
 
   @override
   String get telegramAuthorize => 'Open Telegram';
 
   @override
-  String get telegramAuthorizeHint => 'Fastest: tap Confirm in the Riksa bot and come straight back.';
+  String get telegramAuthorizeHint =>
+      'Fastest: tap Confirm in the Riksa bot and come straight back.';
 
   @override
   String get telegramUseCode => 'Log in with code';
 
   @override
-  String get telegramUseCodeHint => 'Telegram on another device? Get a code from the bot and paste it here.';
+  String get telegramUseCodeHint =>
+      'Telegram on another device? Get a code from the bot and paste it here.';
 
   @override
   String get telegramTheBot => 'the Riksa bot';
@@ -266,13 +278,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get telegramPasteCode => 'Paste code';
 
   @override
-  String get telegramCodeInvalidFormat => 'Enter the 8-character code from the bot';
+  String get telegramCodeInvalidFormat =>
+      'Enter the 8-character code from the bot';
 
   @override
-  String get telegramCodeRejected => 'This code is invalid or expired. Send /code to the bot for a new one.';
+  String get telegramCodeRejected =>
+      'This code is invalid or expired. Send /code to the bot for a new one.';
 
   @override
-  String get telegramNoCodeInClipboard => 'No sign-in code found in your clipboard.';
+  String get telegramNoCodeInClipboard =>
+      'No sign-in code found in your clipboard.';
 
   @override
   String get telegramSignIn => 'Sign in';
@@ -284,13 +299,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get telegramSwitchToCode => 'Having trouble? Log in with code';
 
   @override
-  String get telegramPrivacyNote => 'Riksa only receives your public Telegram name and username. Never your phone number or chats.';
+  String get telegramPrivacyNote =>
+      'Riksa only receives your public Telegram name and username. Never your phone number or chats.';
 
   @override
   String get telegramWaitingTitle => 'Waiting for Telegram';
 
   @override
-  String get telegramWaitingSubtitle => 'Confirm the request in the Riksa bot, then return to this screen.';
+  String get telegramWaitingSubtitle =>
+      'Confirm the request in the Riksa bot, then return to this screen.';
 
   @override
   String telegramExpiresIn(String time) {
@@ -304,22 +321,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get telegramCopyLink => 'Copy link';
 
   @override
-  String get telegramLinkCopied => 'Link copied. Open it on any device with Telegram.';
+  String get telegramLinkCopied =>
+      'Link copied. Open it on any device with Telegram.';
 
   @override
-  String get telegramOpenFailed => 'Couldn\'t open Telegram. Install Telegram, or copy the link and open it on another device.';
+  String get telegramOpenFailed =>
+      'Couldn\'t open Telegram. Install Telegram, or copy the link and open it on another device.';
 
   @override
-  String get telegramStartFailed => 'Couldn\'t start Telegram authorization. Please try again.';
+  String get telegramStartFailed =>
+      'Couldn\'t start Telegram authorization. Please try again.';
 
   @override
-  String get telegramExpired => 'This request expired. Start again to get a fresh link.';
+  String get telegramExpired =>
+      'This request expired. Start again to get a fresh link.';
 
   @override
   String get telegramDenied => 'The request was declined in Telegram.';
 
   @override
-  String get telegramSignupExpired => 'Your Telegram approval expired before the account was created. Please authorize again.';
+  String get telegramSignupExpired =>
+      'Your Telegram approval expired before the account was created. Please authorize again.';
 
   @override
   String get telegramProfileEyebrow => 'Telegram connected';
@@ -328,7 +350,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get telegramProfileTitle => 'Set up your Riksa profile';
 
   @override
-  String get telegramProfileSubtitle => 'Choose how other learners will see you. You can change your display name later.';
+  String get telegramProfileSubtitle =>
+      'Choose how other learners will see you. You can change your display name later.';
 
   @override
   String telegramConnectedAs(String name) {
@@ -402,13 +425,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get askCommunity => 'Ask the community';
 
   @override
-  String get askCommunitySubtitle => 'Get help from learners who have been there.';
+  String get askCommunitySubtitle =>
+      'Get help from learners who have been there.';
 
   @override
   String get writeArticle => 'Write an article';
 
   @override
-  String get writeArticleSubtitle => 'A longer piece for the blog, reviewed before it appears.';
+  String get writeArticleSubtitle =>
+      'A longer piece for the blog, reviewed before it appears.';
 
   @override
   String get yourArticles => 'Your articles';
@@ -467,19 +492,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get publish => 'Publish';
 
   @override
-  String get publishFailed => 'We couldn’t publish this yet. Check your content and try again.';
+  String get publishFailed =>
+      'We couldn’t publish this yet. Check your content and try again.';
 
   @override
   String get noCommunities => 'Communities are not available yet.';
 
   @override
-  String get blogEmptyMessage => 'Fresh stories from the RIKSA community will appear here.';
+  String get blogEmptyMessage =>
+      'Fresh stories from the RIKSA community will appear here.';
 
   @override
   String get communityHeadline => 'Learn together. Share what clicks.';
 
   @override
-  String get communitySubtitle => 'Ask questions, swap useful ideas, and celebrate progress with learners across RIKSA.';
+  String get communitySubtitle =>
+      'Ask questions, swap useful ideas, and celebrate progress with learners across RIKSA.';
 
   @override
   String get forYou => 'For you';
@@ -530,7 +558,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedEmptyTitle => 'Your community feed is ready';
 
   @override
-  String get feedEmptyMessage => 'Posts from this community will appear here as learners start sharing.';
+  String get feedEmptyMessage =>
+      'Posts from this community will appear here as learners start sharing.';
 
   @override
   String get feedErrorTitle => 'We couldn’t load the community';
@@ -560,7 +589,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deletePostTitle => 'Delete this post?';
 
   @override
-  String get deletePostMessage => 'The post and its replies are removed for everyone. This cannot be undone.';
+  String get deletePostMessage =>
+      'The post and its replies are removed for everyone. This cannot be undone.';
 
   @override
   String get keepPost => 'Keep post';
@@ -608,7 +638,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get postUnavailable => 'Post unavailable';
 
   @override
-  String get postUnavailableMessage => 'This post may have been removed or is no longer visible.';
+  String get postUnavailableMessage =>
+      'This post may have been removed or is no longer visible.';
 
   @override
   String get profile => 'Profile';
@@ -626,13 +657,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setUpProfile => 'Set up profile';
 
   @override
-  String get onboardingLearningBody => 'Lessons, an AI coach, and friends who explain things their way. Studying feels lighter with company.';
+  String get onboardingLearningBody =>
+      'Lessons, an AI coach, and friends who explain things their way. Studying feels lighter with company.';
 
   @override
-  String get onboardingAchievementBody => 'Keep your streak, climb the leaderboard, and let your buddy cheer every win.';
+  String get onboardingAchievementBody =>
+      'Keep your streak, climb the leaderboard, and let your buddy cheer every win.';
 
   @override
-  String get onboardingCommunityBody => 'Join communities, share what you are working on, and ask anything. Someone always has your back.';
+  String get onboardingCommunityBody =>
+      'Join communities, share what you are working on, and ask anything. Someone always has your back.';
 
   @override
   String get onboardingLearningTitle => 'Learn together, not alone';
@@ -650,7 +684,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectProvinceTitle => 'Select your province';
 
   @override
-  String get selectProvinceSubtitle => 'Your province personalizes local communities and provincial rankings. It will be saved securely to your profile after you sign in.';
+  String get selectProvinceSubtitle =>
+      'Your province personalizes local communities and provincial rankings. It will be saved securely to your profile after you sign in.';
 
   @override
   String get searchProvince => 'Search provinces';
@@ -671,7 +706,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get provinceLoadFailed => 'We couldn’t load the provinces.';
 
   @override
-  String get provinceSaveFailed => 'We couldn’t save your province. Please try again.';
+  String get provinceSaveFailed =>
+      'We couldn’t save your province. Please try again.';
 
   @override
   String get home => 'Home';
@@ -704,7 +740,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get learningHeadline => 'Find your next lesson';
 
   @override
-  String get learningSubtitle => 'Choose your grade, subject, and level to learn at your pace.';
+  String get learningSubtitle =>
+      'Choose your grade, subject, and level to learn at your pace.';
 
   @override
   String get learningHeaderSubtitle => 'A little progress, every day';
@@ -778,7 +815,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get completedLabel => 'Completed';
 
   @override
-  String get roadmapCompletedEarlier => 'Completed earlier · this unit stays open';
+  String get roadmapCompletedEarlier =>
+      'Completed earlier · this unit stays open';
 
   @override
   String get generalSubject => 'General';
@@ -833,22 +871,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourSubjects => 'Your subjects';
 
   @override
-  String get mathematicsSubjectDescription => 'Build confidence with numbers and problem solving';
+  String get mathematicsSubjectDescription =>
+      'Build confidence with numbers and problem solving';
 
   @override
-  String get physicsSubjectDescription => 'Understand motion, forces, and the universe';
+  String get physicsSubjectDescription =>
+      'Understand motion, forces, and the universe';
 
   @override
-  String get chemistrySubjectDescription => 'Discover matter, reactions, and change';
+  String get chemistrySubjectDescription =>
+      'Discover matter, reactions, and change';
 
   @override
-  String get biologySubjectDescription => 'Explore living systems and life science';
+  String get biologySubjectDescription =>
+      'Explore living systems and life science';
 
   @override
-  String get technologySubjectDescription => 'Practice computing and digital technology';
+  String get technologySubjectDescription =>
+      'Practice computing and digital technology';
 
   @override
-  String get generalSubjectDescription => 'Explore this subject and its lessons';
+  String get generalSubjectDescription =>
+      'Explore this subject and its lessons';
 
   @override
   String get continueReading => 'Continue reading';
@@ -883,13 +927,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSubjectsYet => 'No STEM subjects yet';
 
   @override
-  String get noSubjectsYetBody => 'Grade 12 subjects appear here as soon as they are published.';
+  String get noSubjectsYetBody =>
+      'Grade 12 subjects appear here as soon as they are published.';
 
   @override
   String get everySubjectFinished => 'Every subject is finished';
 
   @override
-  String get everySubjectFinishedBody => 'You have worked through the whole Grade 12 STEM syllabus.';
+  String get everySubjectFinishedBody =>
+      'You have worked through the whole Grade 12 STEM syllabus.';
 
   @override
   String unitOfTotal(int current, int total) {
@@ -950,7 +996,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roadmapEmpty => 'This subject has no lessons yet';
 
   @override
-  String get roadmapEmptyBody => 'Lessons appear here as soon as they are published.';
+  String get roadmapEmptyBody =>
+      'Lessons appear here as soon as they are published.';
 
   @override
   String get lessonLocked => 'Finish the lessons before this one to unlock it';
@@ -962,19 +1009,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noLessonsFound => 'No lessons found';
 
   @override
-  String get noLessonsForFilters => 'Try another grade, subject, or difficulty.';
+  String get noLessonsForFilters =>
+      'Try another grade, subject, or difficulty.';
 
   @override
   String get lessonPreviewHeading => 'Ready when you are';
 
   @override
-  String get lessonPreviewBody => 'Take it one step at a time. Your progress is saved along the way.';
+  String get lessonPreviewBody =>
+      'Take it one step at a time. Your progress is saved along the way.';
 
   @override
   String get beginLesson => 'Begin lesson';
 
   @override
-  String get lessonContentUnavailable => 'Lesson activities will appear when the learning service provides the lesson detail.';
+  String get lessonContentUnavailable =>
+      'Lesson activities will appear when the learning service provides the lesson detail.';
 
   @override
   String get backToLessons => 'Back to lessons';
@@ -1044,10 +1094,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentActivity => 'Recent activity';
 
   @override
-  String get noAchievements => 'Achievements and their progress will appear here.';
+  String get noAchievements =>
+      'Achievements and their progress will appear here.';
 
   @override
-  String get noRecentActivity => 'Your XP activity will appear here as you learn.';
+  String get noRecentActivity =>
+      'Your XP activity will appear here as you learn.';
 
   @override
   String get profileLoadFailed => 'We couldn’t load your learning profile.';
@@ -1143,7 +1195,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get learningSounds => 'Learning sounds';
 
   @override
-  String get learningSoundsHint => 'Play a sound for correct answers, mistakes and finished lessons.';
+  String get learningSoundsHint =>
+      'Play a sound for correct answers, mistakes and finished lessons.';
 
   @override
   String get darkMode => 'Dark mode';
@@ -1185,7 +1238,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changesSaved => 'Your profile was updated.';
 
   @override
-  String get profileSaveFailed => 'We couldn’t save your profile. Please try again.';
+  String get profileSaveFailed =>
+      'We couldn’t save your profile. Please try again.';
 
   @override
   String get deleteAccount => 'Delete Account';
@@ -1194,22 +1248,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAccountTitle => 'Delete your RIKSA account?';
 
   @override
-  String get deleteAccountConfirmation => 'This would permanently remove your learning history, XP, achievements, and posts. Continue?';
+  String get deleteAccountConfirmation =>
+      'This would permanently remove your learning history, XP, achievements, and posts. Continue?';
 
   @override
   String get cancel => 'Cancel';
 
   @override
-  String get deleteUnavailable => 'Account deletion is not available from the API yet. Contact RIKSA support for help.';
+  String get deleteUnavailable =>
+      'Account deletion is not available from the API yet. Contact RIKSA support for help.';
 
   @override
-  String get accountIdentifiersReadOnly => 'Email, phone, and username are secured account identifiers and cannot currently be changed here.';
+  String get accountIdentifiersReadOnly =>
+      'Email, phone, and username are secured account identifiers and cannot currently be changed here.';
 
   @override
   String get chooseAvatar => 'Choose an avatar';
 
   @override
-  String get humationAvatarSubtitle => 'Pick a hand-drawn character for your RIKSA profile.';
+  String get humationAvatarSubtitle =>
+      'Pick a hand-drawn character for your RIKSA profile.';
 
   @override
   String get editCover => 'Edit cover';
@@ -1218,19 +1276,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chooseProfileCover => 'Choose a profile cover';
 
   @override
-  String get profileCoverSubtitle => 'Pick a color and pattern that feels like you.';
+  String get profileCoverSubtitle =>
+      'Pick a color and pattern that feels like you.';
 
   @override
   String get chooseFromPhotos => 'Choose from photos';
 
   @override
-  String get imageSelectionFailed => 'We couldn’t use that image. Please try another one.';
+  String get imageSelectionFailed =>
+      'We couldn’t use that image. Please try another one.';
 
   @override
   String get notProvided => 'Not provided';
 
   @override
-  String get supportDocumentUnavailable => 'This document will be available here after the RIKSA support content is published.';
+  String get supportDocumentUnavailable =>
+      'This document will be available here after the RIKSA support content is published.';
 
   @override
   String get aiTutor => 'AI Tutor';
@@ -1248,19 +1309,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get publicProfileUnavailable => 'Profile unavailable';
 
   @override
-  String get publicProfileUnavailableMessage => 'This person may have deleted their account, been suspended, or limited access to their profile.';
+  String get publicProfileUnavailableMessage =>
+      'This person may have deleted their account, been suspended, or limited access to their profile.';
 
   @override
-  String get publicProfileLoadFailed => 'We couldn’t load this public profile. Please try again.';
+  String get publicProfileLoadFailed =>
+      'We couldn’t load this public profile. Please try again.';
 
   @override
   String get publicPostsLoadFailed => 'We couldn’t load this person’s posts.';
 
   @override
-  String get noPublicPosts => 'This person hasn’t shared any community posts yet.';
+  String get noPublicPosts =>
+      'This person hasn’t shared any community posts yet.';
 
   @override
-  String get noPublicAchievements => 'No earned achievements are available yet.';
+  String get noPublicAchievements =>
+      'No earned achievements are available yet.';
 
   @override
   String get noPublicRank => 'No public ranking is available yet.';
@@ -1299,7 +1364,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiChatsEmptyTitle => 'Ask anything you are learning';
 
   @override
-  String get aiChatsEmptyBody => 'Start a private conversation in Khmer or English about any lesson.';
+  String get aiChatsEmptyBody =>
+      'Start a private conversation in Khmer or English about any lesson.';
 
   @override
   String get aiStartChat => 'Start a chat';
@@ -1420,7 +1486,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonWorkFirst => 'Work it out first';
 
   @override
-  String get lessonWorkHint => 'Write your answer and how you got there. Then compare it with the choices.';
+  String get lessonWorkHint =>
+      'Write your answer and how you got there. Then compare it with the choices.';
 
   @override
   String get lessonAnswerHint => 'Write your answer';
@@ -1451,7 +1518,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonReflectionTitle => 'What will you take away?';
 
   @override
-  String get lessonReflectionBody => 'Put one idea into your own words. Note anything you want to revisit.';
+  String get lessonReflectionBody =>
+      'Put one idea into your own words. Note anything you want to revisit.';
 
   @override
   String get lessonReflectionHint => 'I understood… I still want to work on…';
@@ -1478,10 +1546,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guestSaveProgressTitle => 'Save your progress';
 
   @override
-  String get guestSaveProgressBody => 'Sign in to keep your answers and finish this lesson.';
+  String get guestSaveProgressBody =>
+      'Sign in to keep your answers and finish this lesson.';
 
   @override
-  String get guestSaveProgressBuddyLine => 'Your buddy is cheering you on. Sign in to keep your learning progress.';
+  String get guestSaveProgressBuddyLine =>
+      'Your buddy is cheering you on. Sign in to keep your learning progress.';
 
   @override
   String get guestSaveProgressSignIn => 'Sign in';
@@ -1493,13 +1563,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonSavedReflection => 'Your reflection';
 
   @override
-  String get lessonCompletedBody => 'One more step through your syllabus. Take a break or continue when you are ready.';
+  String get lessonCompletedBody =>
+      'One more step through your syllabus. Take a break or continue when you are ready.';
 
   @override
   String get lessonRevisitTitle => 'Worth another look';
 
   @override
-  String get lessonRevisitBody => 'You marked this lesson for another look. You can reopen it from your roadmap.';
+  String get lessonRevisitBody =>
+      'You marked this lesson for another look. You can reopen it from your roadmap.';
 
   @override
   String get lessonNextAction => 'Start next lesson';
@@ -1538,7 +1610,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonUnmute => 'Unmute sound';
 
   @override
-  String get lessonExitBody => 'Checked answers are saved. Your unfinished writing will be lost if you leave.';
+  String get lessonExitBody =>
+      'Checked answers are saved. Your unfinished writing will be lost if you leave.';
 
   @override
   String get lessonExitTitle => 'Leave this lesson?';
@@ -1574,7 +1647,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonAnswerRetry => 'Not quite yet. Try another approach.';
 
   @override
-  String get learningLoadErrorBody => 'Your lessons couldn’t load this time. Give it another try.';
+  String get learningLoadErrorBody =>
+      'Your lessons couldn’t load this time. Give it another try.';
 
   @override
   String get savedLessonsEmptyTitle => 'Keep a good idea for later';
@@ -1583,19 +1657,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedLessonsLabel => 'Saved lessons';
 
   @override
-  String get savedLessonsEmptyBody => 'Found a formula worth revisiting? Save the lesson from its menu. It will be waiting here.';
+  String get savedLessonsEmptyBody =>
+      'Found a formula worth revisiting? Save the lesson from its menu. It will be waiting here.';
 
   @override
   String get splashTagline => 'Learn Today, Build Tomorrow';
 
   @override
-  String get splashDescription => 'Your Grade 12 STEM learning companion for a brighter Cambodia.';
+  String get splashDescription =>
+      'Your Grade 12 STEM learning companion for a brighter Cambodia.';
 
   @override
   String get mascotSelectTitle => 'Choose your study buddy';
 
   @override
-  String get mascotSelectSubtitle => 'They\'ll cheer you on and celebrate every win with you.';
+  String get mascotSelectSubtitle =>
+      'They\'ll cheer you on and celebrate every win with you.';
 
   @override
   String get mascotCrocodile => 'Crocodile';
@@ -1683,7 +1760,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiCoachTitle => 'AI Study Coach';
 
   @override
-  String get aiCoachGreeting => 'Hi! I\'m your AI Study Coach. Ask me anything about your lessons, and I\'ll help you learn step by step!';
+  String get aiCoachGreeting =>
+      'Hi! I\'m your AI Study Coach. Ask me anything about your lessons, and I\'ll help you learn step by step!';
 
   @override
   String get aiTryAskingAbout => 'Try asking about:';
@@ -1817,7 +1895,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createCommunityIcon => 'Community icon';
 
   @override
-  String get createCommunityIconHint => 'Optional. A square picture works best.';
+  String get createCommunityIconHint =>
+      'Optional. A square picture works best.';
 
   @override
   String get createCommunityName => 'Community name';
@@ -1829,34 +1908,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createCommunityNameLength => 'Use 3 to 50 characters.';
 
   @override
-  String get createCommunityNameChars => 'Use only letters, numbers, spaces and & \' . , ( ) + # -';
+  String get createCommunityNameChars =>
+      'Use only letters, numbers, spaces and & \' . , ( ) + # -';
 
   @override
-  String get createCommunityNameLetters => 'The name needs at least one letter.';
+  String get createCommunityNameLetters =>
+      'The name needs at least one letter.';
 
   @override
-  String get createCommunityNameReserved => 'This name is reserved. Try another one.';
+  String get createCommunityNameReserved =>
+      'This name is reserved. Try another one.';
 
   @override
   String get createCommunityDescription => 'What is it about?';
 
   @override
-  String get createCommunityDescriptionHint => 'Tell people what they will learn or discuss here.';
+  String get createCommunityDescriptionHint =>
+      'Tell people what they will learn or discuss here.';
 
   @override
   String get createCommunityRulesTitle => 'Before you create';
 
   @override
-  String get createCommunityRulePublic => 'Everyone on RIKSA can find, join and post in your community.';
+  String get createCommunityRulePublic =>
+      'Everyone on RIKSA can find, join and post in your community.';
 
   @override
-  String get createCommunityRuleOwner => 'You become its owner and stay a member while you own it.';
+  String get createCommunityRuleOwner =>
+      'You become its owner and stay a member while you own it.';
 
   @override
-  String get createCommunityRuleConduct => 'Keep it kind, safe and on topic. Communities that break the rules are removed.';
+  String get createCommunityRuleConduct =>
+      'Keep it kind, safe and on topic. Communities that break the rules are removed.';
 
   @override
-  String get createCommunityRuleLimit => 'You need a verified account. You can create up to 3 a day and own up to 5.';
+  String get createCommunityRuleLimit =>
+      'You need a verified account. You can create up to 3 a day and own up to 5.';
 
   @override
   String get createCommunityCreated => 'Your community is ready';
@@ -1867,7 +1954,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get aiChatLoadFailedBody => 'Check your connection and try again. Nothing in this chat was lost.';
+  String get aiChatLoadFailedBody =>
+      'Check your connection and try again. Nothing in this chat was lost.';
 
   @override
   String get discardChangesTitle => 'Discard your changes?';
@@ -1888,7 +1976,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonDetailLoadFailed => 'We couldn’t open this lesson';
 
   @override
-  String get loadFailedCheckConnection => 'Check your connection and try again.';
+  String get loadFailedCheckConnection =>
+      'Check your connection and try again.';
 
   @override
   String get backToSubjects => 'Back to subjects';
@@ -1900,10 +1989,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedLessonsSomeFailed => 'Some saved lessons couldn’t load.';
 
   @override
-  String get savedLessonsUnavailableTitle => 'These lessons are no longer available';
+  String get savedLessonsUnavailableTitle =>
+      'These lessons are no longer available';
 
   @override
-  String get savedLessonsUnavailableBody => 'They may have been removed from the course.';
+  String get savedLessonsUnavailableBody =>
+      'They may have been removed from the course.';
 
   @override
   String get savedLessonsClear => 'Clear saved lessons';
@@ -1918,13 +2009,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get composeLoadingCommunities => 'Loading your communities…';
 
   @override
-  String get composeCommunitiesFailed => 'We couldn’t load your communities. Your writing is safe.';
+  String get composeCommunitiesFailed =>
+      'We couldn’t load your communities. Your writing is safe.';
 
   @override
   String get blogChooseTopicRequired => 'Choose a topic (required)';
 
   @override
-  String get blogTopicsLoading => 'Topics are still loading. Try again in a moment.';
+  String get blogTopicsLoading =>
+      'Topics are still loading. Try again in a moment.';
 
   @override
   String get blogTopicsFailed => 'We couldn’t load topics.';
@@ -1933,61 +2026,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blogTopicsEmpty => 'No topics are available yet.';
 
   @override
-  String get recoveryErrorNetwork => 'We couldn’t reach Riksa. Check your internet and try again.';
+  String get recoveryErrorNetwork =>
+      'We couldn’t reach Riksa. Check your internet and try again.';
 
   @override
-  String get recoveryErrorRateLimited => 'That’s a lot of tries! Take a short break, then try again.';
+  String get recoveryErrorRateLimited =>
+      'That’s a lot of tries! Take a short break, then try again.';
 
   @override
-  String get recoveryErrorServer => 'Something went wrong on our side. Please try again in a moment.';
+  String get recoveryErrorServer =>
+      'Something went wrong on our side. Please try again in a moment.';
 
   @override
-  String get recoveryErrorPassword => 'Almost there! Your password needs at least 8 characters, with an uppercase letter, a lowercase letter and a number.';
+  String get recoveryErrorPassword =>
+      'Almost there! Your password needs at least 8 characters, with an uppercase letter, a lowercase letter and a number.';
 
   @override
-  String get recoveryErrorCode => 'That code didn’t work. It may have expired, so ask for a new one and try again.';
+  String get recoveryErrorCode =>
+      'That code didn’t work. It may have expired, so ask for a new one and try again.';
 
   @override
-  String get recoveryErrorAccount => 'We couldn’t find that account. Check the spelling and try again.';
+  String get recoveryErrorAccount =>
+      'We couldn’t find that account. Check the spelling and try again.';
 
   @override
-  String get recoveryErrorDetails => 'That didn’t work. Please check your details and try again.';
+  String get recoveryErrorDetails =>
+      'That didn’t work. Please check your details and try again.';
 
   @override
   String get recoveryErrorGeneric => 'Something went wrong. Please try again.';
 
   @override
-  String get recoveryNeedIdentifier => 'Tell us your username, email or Telegram ID so we know whose account to help with.';
+  String get recoveryNeedIdentifier =>
+      'Tell us your username, email or Telegram ID so we know whose account to help with.';
 
   @override
-  String get recoveryCodeLength => 'The code has 6 digits. Check your message and try again.';
+  String get recoveryCodeLength =>
+      'The code has 6 digits. Check your message and try again.';
 
   @override
-  String get recoveryChecklistIncomplete => 'Almost there! Your password just needs everything in the checklist ticked.';
+  String get recoveryChecklistIncomplete =>
+      'Almost there! Your password just needs everything in the checklist ticked.';
 
   @override
-  String get recoveryPasswordsDiffer => 'The two passwords don’t match yet. Try typing them again.';
+  String get recoveryPasswordsDiffer =>
+      'The two passwords don’t match yet. Try typing them again.';
 
   @override
-  String get recoveryPasswordSaved => 'All set! Sign in with your new password.';
+  String get recoveryPasswordSaved =>
+      'All set! Sign in with your new password.';
 
   @override
   String get recoveryStepIdentifierTitle => 'Forgot your password?';
 
   @override
-  String get recoveryStepIdentifierSubtitle => 'No worries, it happens to everyone. Tell us who you are and we’ll send you a code.';
+  String get recoveryStepIdentifierSubtitle =>
+      'No worries, it happens to everyone. Tell us who you are and we’ll send you a code.';
 
   @override
   String get recoveryStepCodeTitle => 'Check your messages';
 
   @override
-  String get recoveryStepCodeSubtitle => 'We sent a 6-digit code to your email or Telegram. Enter it below.';
+  String get recoveryStepCodeSubtitle =>
+      'We sent a 6-digit code to your email or Telegram. Enter it below.';
 
   @override
   String get recoveryStepPasswordTitle => 'Create a new password';
 
   @override
-  String get recoveryStepPasswordSubtitle => 'Pick something you will remember but others can’t guess.';
+  String get recoveryStepPasswordSubtitle =>
+      'Pick something you will remember but others can’t guess.';
 
   @override
   String get recoveryIdentifierLabel => 'Username, email or Telegram ID';
@@ -2061,7 +2169,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailVerifyFailedTitle => 'Verification failed';
 
   @override
-  String get emailVerifyFailedBody => 'This verification link is invalid or expired.';
+  String get emailVerifyFailedBody =>
+      'This verification link is invalid or expired.';
 
   @override
   String socialLikeLabel(int count) {
@@ -2147,7 +2256,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String leaderboardYourRankLabel(int rank, String name, String scope, String tier, int xp) {
+  String leaderboardYourRankLabel(
+    int rank,
+    String name,
+    String scope,
+    String tier,
+    int xp,
+  ) {
     return 'Your rank is $rank. $name, $scope, $tier, $xp XP.';
   }
 
@@ -2170,13 +2285,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progressHistoryXpEmptyTitle => 'No XP yet';
 
   @override
-  String get progressHistoryXpEmptyBody => 'Complete a lesson to start your history.';
+  String get progressHistoryXpEmptyBody =>
+      'Complete a lesson to start your history.';
 
   @override
   String get progressHistoryRankEmptyTitle => 'No rank changes yet';
 
   @override
-  String get progressHistoryRankEmptyBody => 'Keep earning XP to move up the leaderboard.';
+  String get progressHistoryRankEmptyBody =>
+      'Keep earning XP to move up the leaderboard.';
 
   @override
   String progressHistoryRankRow(String scope) {
@@ -2207,7 +2324,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSetupTitle => 'Set up your profile';
 
   @override
-  String get profileSetupSubtitle => 'A few details help classmates recognise you and keep your progress yours.';
+  String get profileSetupSubtitle =>
+      'A few details help classmates recognise you and keep your progress yours.';
 
   @override
   String get profileSetupCta => 'Set up profile';
@@ -2216,25 +2334,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSetupStepPhotoTitle => 'Add a photo';
 
   @override
-  String get profileSetupStepPhotoBody => 'Pick an avatar or upload your own picture.';
+  String get profileSetupStepPhotoBody =>
+      'Pick an avatar or upload your own picture.';
 
   @override
   String get profileSetupStepNameTitle => 'Your name';
 
   @override
-  String get profileSetupStepNameBody => 'The name classmates see on posts and rankings.';
+  String get profileSetupStepNameBody =>
+      'The name classmates see on posts and rankings.';
 
   @override
   String get profileSetupStepBioTitle => 'A short bio';
 
   @override
-  String get profileSetupStepBioBody => 'Say what you are studying for in a line or two.';
+  String get profileSetupStepBioBody =>
+      'Say what you are studying for in a line or two.';
 
   @override
   String get profileSetupStepProvinceTitle => 'Your province';
 
   @override
-  String get profileSetupStepProvinceBody => 'Used for provincial rankings and local communities.';
+  String get profileSetupStepProvinceBody =>
+      'Used for provincial rankings and local communities.';
 
   @override
   String get supportDocumentComingSoon => 'Coming soon';
@@ -2258,7 +2380,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blogFeedEmptyTitle => 'Nothing posted yet';
 
   @override
-  String get blogFeedEmptyBody => 'Be the first learner to share something useful with the Riksa community.';
+  String get blogFeedEmptyBody =>
+      'Be the first learner to share something useful with the Riksa community.';
 
   @override
   String get blogPostDeleted => 'Post deleted';
@@ -2280,13 +2403,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blogMyPostsEmptyTitle => 'No articles yet';
 
   @override
-  String get blogMyPostsEmptyBody => 'Articles you write appear here, including their review status.';
+  String get blogMyPostsEmptyBody =>
+      'Articles you write appear here, including their review status.';
 
   @override
   String get blogMyPostsFilteredTitle => 'Nothing here';
 
   @override
-  String get blogMyPostsFilteredBody => 'You have no articles with this status right now.';
+  String get blogMyPostsFilteredBody =>
+      'You have no articles with this status right now.';
 
   @override
   String get blogStatusPending => 'In review';
@@ -2307,7 +2432,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blogDeleteConfirmTitle => 'Delete this post?';
 
   @override
-  String get blogDeleteConfirmBody => 'The post and its likes and views are removed for everyone. This cannot be undone.';
+  String get blogDeleteConfirmBody =>
+      'The post and its likes and views are removed for everyone. This cannot be undone.';
 
   @override
   String get blogKeepPost => 'Keep post';
@@ -2337,10 +2463,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blogReviewBackTitle => 'Back in review';
 
   @override
-  String get blogReviewBackBody => 'Your changes were saved. The post returns to the blog once a moderator approves this version.';
+  String get blogReviewBackBody =>
+      'Your changes were saved. The post returns to the blog once a moderator approves this version.';
 
   @override
-  String get blogReviewSubmittedBody => 'Your post was submitted. It appears in the blog once a moderator approves it, and you can follow its status under Your posts.';
+  String get blogReviewSubmittedBody =>
+      'Your post was submitted. It appears in the blog once a moderator approves it, and you can follow its status under Your posts.';
 
   @override
   String get blogDone => 'Done';
@@ -2545,7 +2673,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeStartHere => 'Start here';
 
   @override
-  String get homeStartHereBody => 'Choose your first lesson and begin one step at a time.';
+  String get homeStartHereBody =>
+      'Choose your first lesson and begin one step at a time.';
 
   @override
   String homeLessonMinutes(int minutes) {
@@ -2559,7 +2688,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeProvinceSquad => 'Your province study squad';
 
   @override
-  String get homeProvinceMissing => 'Choose your province to see your study squad.';
+  String get homeProvinceMissing =>
+      'Choose your province to see your study squad.';
 
   @override
   String get homeSelectProvince => 'Choose province';
@@ -2601,7 +2731,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resumeLearningEmptyTitle => 'No lesson in progress';
 
   @override
-  String get resumeLearningEmptyBody => 'Choose a lesson to begin your next learning step.';
+  String get resumeLearningEmptyBody =>
+      'Choose a lesson to begin your next learning step.';
 
   @override
   String get leaderboardNearbyLearners => 'Learners around your rank';
@@ -2613,7 +2744,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get buddyReactions => 'Buddy reactions';
 
   @override
-  String get buddyReactionsHint => 'Allow animated and speaking buddy reactions';
+  String get buddyReactionsHint =>
+      'Allow animated and speaking buddy reactions';
 
   @override
   String get profileStudyBuddy => 'Study buddy';
@@ -2624,7 +2756,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get aiBuddyHandoff => 'Your buddy can help you start; Kru AI will explain the question.';
+  String get aiBuddyHandoff =>
+      'Your buddy can help you start; Kru AI will explain the question.';
 
   @override
   String homeProvinceSquadNamed(String province) {
@@ -2635,7 +2768,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get streakReminderTitle => '🔥 Keep your learning streak alive!';
 
   @override
-  String get streakReminderBody => 'Take 5 minutes tonight to practice and protect your streak.';
+  String get streakReminderBody =>
+      'Take 5 minutes tonight to practice and protect your streak.';
 
   @override
   String get reminderPermissionTitle => 'A small reminder at 8 PM?';
@@ -2659,7 +2793,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get reminderNotificationBody => 'Finish one lesson tonight and keep your streak going.';
+  String get reminderNotificationBody =>
+      'Finish one lesson tonight and keep your streak going.';
 
   @override
   String get drawerGeneral => 'General';
@@ -2786,7 +2921,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resourceEmptyTitle => 'Your buddy is ready for a good resource';
 
   @override
-  String get resourceEmptyBody => 'Share a helpful link, video, or PDF for this lesson.';
+  String get resourceEmptyBody =>
+      'Share a helpful link, video, or PDF for this lesson.';
 
   @override
   String resourceSaveCount(int count) {
@@ -2851,7 +2987,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resourceRateLimit => 'You can share up to 10 resources each day.';
 
   @override
-  String get resourceShareFailed => 'This resource could not be shared. Try again.';
+  String get resourceShareFailed =>
+      'This resource could not be shared. Try again.';
 
   @override
   String get resourceConfirm => 'Confirm';
@@ -2878,5 +3015,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get milestoneShareTitle => 'Share my milestones';
 
   @override
-  String get milestoneShareHint => 'Let friends celebrate your streaks, ranks, and finished units.';
+  String get milestoneShareHint =>
+      'Let friends celebrate your streaks, ranks, and finished units.';
 }

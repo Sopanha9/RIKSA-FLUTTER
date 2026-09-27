@@ -278,7 +278,13 @@ class AuthNotifier extends Notifier<AuthState> {
     var user = await api.getProfile();
     final pendingProvinceId = ref.read(localeProvider).pendingProvinceId;
     if (pendingProvinceId != null && pendingProvinceId.isNotEmpty) {
-      user = await api.updateProvince(pendingProvinceId);
+      // A province picked during onboarding only fills an empty profile. An
+      // existing account keeps its saved province; changing it is an explicit
+      // action from the profile, not a side effect of signing in elsewhere.
+      final savedProvinceId = user.provinceId;
+      if (savedProvinceId == null || savedProvinceId.isEmpty) {
+        user = await api.updateProvince(pendingProvinceId);
+      }
       await ref.read(localeProvider.notifier).completeOnboarding();
     }
     return user;

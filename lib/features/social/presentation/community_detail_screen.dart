@@ -332,7 +332,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen> {
             },
             onAuthorTap: publicProfilePath(post.author.id) == null
                 ? null
-                : () => context.push(publicProfilePath(post.author.id)!),
+                : () => openUserProfile(context, post.author.id),
             onReact: () => _react(post),
             onShare: () => _share(post),
             onEdit: post.author.id == currentUserId

@@ -16,6 +16,7 @@ import '../../../mascot/providers/mascot_provider.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../providers/profile_cover_provider.dart';
 import '../../providers/profile_provider.dart';
+import '../public_profile_navigation.dart';
 import 'profile_ui.dart';
 
 /// The account menu, on the X drawer layout.
@@ -63,7 +64,7 @@ class RiksaProfileDrawer extends ConsumerWidget {
                       itemKey: const ValueKey('drawer-profile'),
                       icon: Icons.person_outline_rounded,
                       label: l10n.profile,
-                      onTap: () => _go(context, '/profile'),
+                      onTap: () => _openProfile(context),
                     ),
                   _DrawerItem(
                     itemKey: const ValueKey('drawer-progress'),
@@ -75,7 +76,7 @@ class RiksaProfileDrawer extends ConsumerWidget {
                     itemKey: const ValueKey('drawer-my-posts'),
                     icon: Icons.chat_bubble_outline_rounded,
                     label: l10n.myPosts,
-                    onTap: () => _go(context, '/profile'),
+                    onTap: () => _openProfile(context),
                   ),
                   _DrawerItem(
                     itemKey: const ValueKey('drawer-my-articles'),
@@ -139,6 +140,11 @@ class RiksaProfileDrawer extends ConsumerWidget {
   void _go(BuildContext context, String path) {
     Navigator.of(context).pop();
     context.push(path);
+  }
+
+  void _openProfile(BuildContext context) {
+    Navigator.of(context).pop();
+    openOwnProfile(context);
   }
 
   /// FAQ and the legal documents in one sheet. None is published yet, so each
@@ -251,7 +257,7 @@ class _DrawerIdentity extends ConsumerWidget {
           : signedIn.displayName.trim();
       void openProfile() {
         Navigator.of(context).pop();
-        context.push('/profile');
+        openOwnProfile(context);
       }
 
       return Column(

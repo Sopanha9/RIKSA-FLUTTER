@@ -395,8 +395,8 @@ class _ProfileHeader extends ConsumerWidget {
   final AuthUser user;
   final AsyncValue<ProfileDashboardData> dashboard;
 
-  static const double _coverHeight = 64;
-  static const double _avatarRadius = 34;
+  static const double _coverHeight = 84;
+  static const double _avatarRadius = 42;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -452,14 +452,14 @@ class _ProfileHeader extends ConsumerWidget {
                       PositionedDirectional(
                         start: 14,
                         top: _coverHeight - _avatarRadius,
-                        child: RiksaProfileAvatar(
+                        child: ProfileHeroAvatar(
                           key: const ValueKey('profile-hero-avatar'),
                           user: user,
                           radius: _avatarRadius,
                           avatarPath: localAvatar,
                           frameTier: game?.currentTier,
-                          borderColor: context.riksa.surface,
-                          ringColor: context.riksa.surface,
+                          editLabel: l10n.changePhoto,
+                          onEdit: () => context.push('/profile/edit'),
                         ),
                       ),
                     ],
@@ -1019,8 +1019,9 @@ class _PostsTabState extends ConsumerState<_PostsTab> {
                               onAuthorTap:
                                   publicProfilePath(post.author.id) == null
                                   ? null
-                                  : () => context.push(
-                                      publicProfilePath(post.author.id)!,
+                                  : () => openUserProfile(
+                                      context,
+                                      post.author.id,
                                     ),
                               onReact: () async {
                                 await ref

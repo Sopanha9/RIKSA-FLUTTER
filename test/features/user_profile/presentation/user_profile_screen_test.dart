@@ -208,6 +208,11 @@ void main() {
     expect(find.byKey(const ValueKey('profile-cover')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-hero-avatar')), findsOneWidget);
     expect(find.byKey(const ValueKey('avatar-frame-gold')), findsWidgets);
+    // The owner gets a shortcut to changing the photo on the avatar itself.
+    expect(
+      find.byKey(const ValueKey('profile-hero-avatar-edit')),
+      findsOneWidget,
+    );
     final verificationBadge = tester.widget<Icon>(
       find.byKey(const ValueKey('profile-verification-badge')),
     );

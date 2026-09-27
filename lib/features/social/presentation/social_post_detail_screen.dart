@@ -478,8 +478,9 @@ class _SocialPostDetailScreenState
   }
 
   VoidCallback? _authorTap(SocialAuthor author) {
-    final path = publicProfilePath(author.id);
-    return path == null ? null : () => context.push(path);
+    return publicProfilePath(author.id) == null
+        ? null
+        : () => openUserProfile(context, author.id);
   }
 }
 

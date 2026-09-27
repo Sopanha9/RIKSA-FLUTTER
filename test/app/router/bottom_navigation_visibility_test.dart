@@ -1,10 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riksa_app/app/router/app_shell.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/features/auth/data/auth_models.dart';
+import 'package:riksa_app/features/auth/providers/auth_provider.dart';
+import 'package:riksa_app/features/userProfile/presentation/public_profile_navigation.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
+
+class _SignedInNotifier extends AuthNotifier {
+  @override
+  AuthState build() => const Authenticated(
+    AuthUser(
+      id: 'me',
+      username: 'sophea',
+      displayName: 'Sophea',
+      emailVerified: true,
+      phoneVerified: false,
+      role: 'USER',
+    ),
+  );
+}
 
 /// Mirrors the shape the real router gives its branches: branch 0 holds screens
 /// as flat siblings of the tab root, branch 1 nests them underneath it. The tab
@@ -47,6 +65,8 @@ GoRouter _router(String initialLocation) {
           ),
         ],
       ),
+      // Other learners' profiles sit outside the shell, as in the real router.
+      GoRoute(path: '/profile/:userId', builder: screen),
     ],
   );
 }
@@ -63,16 +83,19 @@ Future<GoRouter> _pumpShell(WidgetTester tester, String initialLocation) async {
   addTearDown(router.dispose);
 
   await tester.pumpWidget(
-    MaterialApp.router(
-      theme: AppTheme.light,
-      routerConfig: router,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [Locale('en'), Locale('km')],
+    ProviderScope(
+      overrides: [authProvider.overrideWith(_SignedInNotifier.new)],
+      child: MaterialApp.router(
+        theme: AppTheme.light,
+        routerConfig: router,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('km')],
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -155,6 +178,60 @@ void main() {
 
     router.go('/profile');
     await tester.pumpAndSettle();
+    expect(_tabs, findsOneWidget);
+  });
+
+  testWidgets('pushing the profile from another tab keeps the tabs', (
+    tester,
+  ) async {
+    // The feed avatar, the drawer and the leaderboard all open the learner's
+    // own profile. It is a tab root, so it must land as a destination with the
+    // tabs in place rather than stack on top of the tab it was opened from.
+    await _pumpShell(tester, '/home');
+
+    openOwnProfile(tester.element(find.text('/home')));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('/profile'), findsOneWidget);
+    expect(_tabs, findsOneWidget);
+  });
+
+  testWidgets('tapping your own name opens the profile tab, not a pushed copy', (
+    tester,
+  ) async {
+    // Post authors and leaderboard rows open whoever they name. For the
+    // learner themself that has to be the profile tab with the tabs in place;
+    // a push of /profile/<own id> would redirect into a screen with no way out.
+    await _pumpShell(tester, '/home');
+
+    openUserProfile(tester.element(find.text('/home')), 'me');
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('/profile'), findsOneWidget);
+    expect(_tabs, findsOneWidget);
+
+    // Someone else's profile is still a pushed page of its own.
+    openUserProfile(tester.element(find.text('/profile')), 'someone-else');
+    await tester.pumpAndSettle();
+    expect(find.text('/profile/someone-else'), findsOneWidget);
+  });
+
+  testWidgets('the drawer profile item lands on the profile tab with tabs', (
+    tester,
+  ) async {
+    await _pumpShell(tester, '/home');
+
+    final shell = tester.firstState<ScaffoldState>(
+      find.byKey(const ValueKey('main-app-shell')),
+    );
+    shell.openDrawer();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('drawer-profile')));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('/profile'), findsOneWidget);
     expect(_tabs, findsOneWidget);
   });
 }

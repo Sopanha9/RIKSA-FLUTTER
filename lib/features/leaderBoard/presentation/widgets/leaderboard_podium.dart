@@ -135,8 +135,7 @@ class LeaderboardPodium extends StatelessWidget {
   }
 
   void _openProfile(BuildContext context, String userId) {
-    final path = publicProfilePath(userId);
-    if (path != null) context.push(path);
+    openUserProfile(context, userId);
   }
 }
 

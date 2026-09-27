@@ -173,6 +173,12 @@ void main() {
       taps++;
       await tester.pumpAndSettle();
 
+      // The learner answers a Physics question seconds after picking it.
+      await tester.tap(find.text('F = m × a'));
+      taps++;
+      await tester.pumpAndSettle();
+      await tap(const Key('onboarding_continue_btn'));
+
       await tester.tap(find.text('ភ្នំពេញ'));
       taps++;
       await tester.pumpAndSettle();
@@ -185,8 +191,8 @@ void main() {
         router.routerDelegate.currentConfiguration.uri.path,
         '/learn/subject/PHYSICS',
       );
-      // Buddy, language, subject and squad are the only decisions.
-      expect(taps, lessThanOrEqualTo(8));
+      // Buddy, language, subject, one answer and squad are the only decisions.
+      expect(taps, lessThanOrEqualTo(10));
       expect(find.text('Physics'), findsWidgets);
       expect(find.byKey(const ValueKey('subject-tile-math-id')), findsNothing);
       expect(tester.takeException(), isNull);

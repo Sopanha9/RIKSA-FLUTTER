@@ -5,9 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
+import 'package:riksa_app/features/learning/presentation/learning_design.dart';
+import 'package:riksa_app/features/learning/presentation/subject_map.dart';
 import 'package:riksa_app/features/learning/presentation/subject_roadmap_screen.dart';
 import 'package:riksa_app/features/learning/providers/learning_roadmap_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 RoadmapLesson _rl(
   String id,
@@ -48,9 +51,10 @@ RoadmapUnit _ru(
   lessons: lessons,
 );
 
+// Physics has no map art yet, so it still draws the stone list.
 final _roadmap = LearningRoadmap(
   categoryId: 'math',
-  categoryName: 'Mathematics',
+  categoryName: 'Physics',
   completedLessons: 1,
   totalLessons: 4,
   progress: .25,
@@ -88,6 +92,11 @@ Future<void> _pump(
       child: MaterialApp.router(
         theme: AppTheme.light,
         routerConfig: router,
+        // The buddy on the map idles forever; reduced motion lets it settle.
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        ),
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -115,7 +124,80 @@ GoRouter _router() => GoRouter(
   ],
 );
 
+final _mathRoadmap = LearningRoadmap(
+  categoryId: _roadmap.categoryId,
+  categoryName: 'Mathematics',
+  completedLessons: _roadmap.completedLessons,
+  totalLessons: _roadmap.totalLessons,
+  progress: _roadmap.progress,
+  currentLessonId: _roadmap.currentLessonId,
+  activeDates: const [],
+  units: _roadmap.units,
+);
+
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  group('Mathematics map', () {
+    test('spreads every lesson along the road, top to bottom', () {
+      final art = subjectMapArtFor(StemSubject.mathematics)!;
+      final layout = SubjectMapLayout.of(art, width: 393, lessons: 14);
+
+      // Start, two middle sections and the goal.
+      expect(layout.pieces, hasLength(4));
+      expect(layout.pieces.first, art.start);
+      expect(layout.pieces.last, art.goal);
+      expect(layout.nodes, hasLength(14));
+      for (var i = 1; i < layout.nodes.length; i++) {
+        expect(layout.nodes[i].dy, greaterThan(layout.nodes[i - 1].dy));
+      }
+      for (final node in layout.nodes) {
+        expect(node.dx, inInclusiveRange(0, 393));
+        expect(node.dy, inInclusiveRange(0, layout.height));
+      }
+    });
+
+    test('a short subject needs only the start and the goal', () {
+      final art = subjectMapArtFor(StemSubject.mathematics)!;
+      final layout = SubjectMapLayout.of(art, width: 393, lessons: 4);
+      expect(layout.pieces, [art.start, art.goal]);
+      expect(layout.nodes, hasLength(4));
+    });
+
+    testWidgets('puts each lesson on the map and opens the open ones', (
+      tester,
+    ) async {
+      final router = _router();
+      addTearDown(router.dispose);
+      await _pump(tester, roadmap: () async => _mathRoadmap, router: router);
+
+      for (final id in ['one', 'two', 'three', 'four']) {
+        expect(find.byKey(ValueKey('map-lesson-$id')), findsOneWidget);
+      }
+      // One lesson is done, so the current stop says to carry on.
+      expect(find.text('CONTINUE'), findsOneWidget);
+      expect(find.byKey(const ValueKey('roadmap-unit-u1')), findsNothing);
+
+      final locked = find.byKey(const ValueKey('map-lesson-four'));
+      await tester.ensureVisible(locked);
+      await tester.pumpAndSettle();
+      await tester.tap(locked);
+      await tester.pump();
+      expect(
+        find.text('Finish the lessons before this one to unlock it'),
+        findsOneWidget,
+      );
+      expect(find.text('lesson-four'), findsNothing);
+
+      final open = find.byKey(const ValueKey('map-lesson-three'));
+      await tester.ensureVisible(open);
+      await tester.pumpAndSettle();
+      await tester.tap(open);
+      await tester.pumpAndSettle();
+      expect(find.text('lesson-three'), findsOneWidget);
+    });
+  });
+
   testWidgets('draws the whole path, its position and its destination', (
     tester,
   ) async {
@@ -123,7 +205,7 @@ void main() {
     addTearDown(router.dispose);
     await _pump(tester, roadmap: () async => _roadmap, router: router);
 
-    expect(find.text('Mathematics'), findsOneWidget);
+    expect(find.text('Physics'), findsOneWidget);
     expect(find.text('1 of 4 lessons · Unit 2 of 3'), findsOneWidget);
     expect(find.byKey(const ValueKey('roadmap-progress-ring')), findsOneWidget);
 

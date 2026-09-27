@@ -427,7 +427,7 @@ class _PublicPosts extends StatelessWidget {
             onTap: () => context.push('/community/posts/${post.id}'),
             onAuthorTap: publicProfilePath(post.author.id) == null
                 ? null
-                : () => context.push(publicProfilePath(post.author.id)!),
+                : () => openUserProfile(context, post.author.id),
             onReact: () => onReact(post.id),
             onShare: () => onShare(post.id),
             onEdit: post.author.id == currentUserId

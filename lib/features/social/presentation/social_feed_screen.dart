@@ -371,8 +371,7 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
   }
 
   void _openProfile(String userId) {
-    final path = publicProfilePath(userId);
-    if (path != null) context.push(path);
+    openUserProfile(context, userId);
   }
 
   void _showFailure() {
@@ -567,7 +566,7 @@ class _HeaderAvatarButton extends ConsumerWidget {
         child: InkWell(
           key: const ValueKey('home-sidebar-menu-button'),
           customBorder: const CircleBorder(),
-          onTap: open ?? () => context.push('/profile'),
+          onTap: open ?? () => openOwnProfile(context),
           child: RiksaAvatarImage(
             value: user?.avatarUrl,
             label: name.isEmpty ? '?' : name,
@@ -933,8 +932,7 @@ class _GlassBlogCard extends ConsumerWidget {
   final VoidCallback onLike;
 
   void _openProfile(BuildContext context, PublicProfile? profile) {
-    final path = publicProfilePath(profile?.id ?? post.authorId);
-    if (path != null) context.push(path);
+    openUserProfile(context, profile?.id ?? post.authorId);
   }
 
   @override

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_components.dart';
@@ -100,10 +99,7 @@ class RankingsSheet extends StatelessWidget {
                               currentUser != null &&
                               listRows[index].userId == currentUser!.id,
                           onTap: () {
-                            final path = publicProfilePath(
-                              listRows[index].userId,
-                            );
-                            if (path != null) context.push(path);
+                            openUserProfile(context, listRows[index].userId);
                           },
                         ),
                       ),

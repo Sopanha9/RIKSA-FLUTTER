@@ -366,7 +366,6 @@ class BlogTimelineRow extends ConsumerWidget {
   }
 
   void _openProfile(BuildContext context, PublicProfile? profile) {
-    final path = publicProfilePath(profile?.id ?? post.authorId);
-    if (path != null) context.push(path);
+    openUserProfile(context, profile?.id ?? post.authorId);
   }
 }

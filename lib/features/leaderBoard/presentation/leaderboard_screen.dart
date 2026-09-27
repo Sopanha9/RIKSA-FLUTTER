@@ -6,6 +6,7 @@ import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/userProfile/data/profile_models.dart';
+import 'package:riksa_app/features/userProfile/presentation/public_profile_navigation.dart';
 import 'package:riksa_app/features/userProfile/presentation/widgets/profile_ui.dart';
 import 'package:riksa_app/features/userProfile/providers/profile_provider.dart';
 import 'widgets/leaderboard_header.dart';
@@ -173,16 +174,14 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                       currentUser.displayName.trim().isNotEmpty
                                       ? currentUser.displayName.trim()
                                       : currentUser.username,
-                                  onTap: () => context.push('/profile'),
+                                  onTap: () => openOwnProfile(context),
                                 ),
                               if (showCurrentUserRank &&
                                   _searchQuery.isEmpty) ...[
                                 const SizedBox(height: RiksaSpacing.md),
                                 Text(
                                   l10n.leaderboardNearbyLearners,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
+                                  style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(fontWeight: FontWeight.w700),
                                 ),
                                 const SizedBox(height: RiksaSpacing.xs),
@@ -243,8 +242,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
   List<LeaderboardRow> _nearbyRows(List<LeaderboardRow> rows, int rank) {
     final sorted = [...rows]
-      ..sort((a, b) =>
-          (a.rank - rank).abs().compareTo((b.rank - rank).abs()));
+      ..sort((a, b) => (a.rank - rank).abs().compareTo((b.rank - rank).abs()));
     return sorted.take(3).toList(growable: false)
       ..sort((a, b) => a.rank.compareTo(b.rank));
   }

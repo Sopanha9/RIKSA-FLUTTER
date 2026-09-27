@@ -306,8 +306,14 @@ class _FloatingBuddyState extends ConsumerState<FloatingBuddy> {
     }.contains(parts[1]);
   }
 
+  /// A subject's roadmap has its own buddy standing on the map, so a second
+  /// one floating over it would only crowd the screen.
+  bool _isSubjectRoute(String path) =>
+      path.startsWith('/learn/roadmap/') || path.startsWith('/learn/subject/');
+
   bool _isHiddenRoute(String path) =>
       _isLessonRoute(path) ||
+      _isSubjectRoute(path) ||
       path.startsWith('/auth') ||
       path.startsWith('/onboarding');
 

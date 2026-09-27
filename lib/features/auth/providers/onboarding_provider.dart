@@ -77,6 +77,11 @@ class OnboardingNotifier extends Notifier<OnboardingSetupData> {
     );
   }
 
+  /// Records the answer to the first question, asked right after the subject.
+  void answerFirstQuestion(int index) {
+    state = state.copyWith(quizAnswer1Index: index);
+  }
+
   void setProvince({
     required String id,
     required String nameLatin,

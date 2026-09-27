@@ -31,6 +31,23 @@ void main() {
     expect(find.byKey(const ValueKey('floating-buddy-head')), findsNothing);
   });
 
+  testWidgets('hides on a subject map, which has its own buddy', (
+    tester,
+  ) async {
+    final router = _router();
+    await tester.pumpWidget(_app(router: router));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const ValueKey('floating-buddy-head')), findsOneWidget);
+
+    router.go('/learn/roadmap/math-id');
+    await tester.pump();
+    expect(find.byKey(const ValueKey('floating-buddy-head')), findsNothing);
+
+    router.go('/learn/subject/MATHEMATICS');
+    await tester.pump();
+    expect(find.byKey(const ValueKey('floating-buddy-head')), findsNothing);
+  });
+
   testWidgets('guest sheet previews quests without calling the API', (
     tester,
   ) async {
@@ -158,6 +175,14 @@ GoRouter _router() => GoRouter(
   routes: [
     GoRoute(path: '/learn', builder: (_, _) => const _LearningPage()),
     GoRoute(path: '/learn/:id', builder: (_, _) => const _LearningPage()),
+    GoRoute(
+      path: '/learn/roadmap/:id',
+      builder: (_, _) => const _LearningPage(),
+    ),
+    GoRoute(
+      path: '/learn/subject/:id',
+      builder: (_, _) => const _LearningPage(),
+    ),
     GoRoute(path: '/auth/login', builder: (_, _) => const Scaffold()),
   ],
 );

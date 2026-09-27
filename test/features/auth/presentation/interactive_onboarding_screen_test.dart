@@ -97,7 +97,7 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   testWidgets(
-    'subject, then province, then Start learning opens that subject',
+    'subject, first question, province, then Start learning opens that subject',
     (tester) async {
       tester.view.physicalSize = const Size(393, 852);
       tester.view.devicePixelRatio = 1;
@@ -110,15 +110,36 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Pick your starting subject'), findsOneWidget);
-      expect(find.text('1/3'), findsOneWidget);
+      expect(find.text('1/4'), findsOneWidget);
       expect(find.text('Physics'), findsOneWidget);
 
       await tester.tap(find.text('Physics'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Which province are you representing?'), findsOneWidget);
-      expect(find.text('2/3'), findsOneWidget);
+      // Picking a subject leads straight into one of its questions.
+      expect(find.byKey(const ValueKey('first_question_step')), findsOneWidget);
+      expect(find.text('2/4'), findsOneWidget);
       final continueButton = find.byKey(const Key('onboarding_continue_btn'));
+      expect(tester.widget<FilledButton>(continueButton).onPressed, isNull);
+
+      await tester.tap(find.text('F = m × a'));
+      await tester.pumpAndSettle();
+      expect(find.text("Yes! That's your first win."), findsWidgets);
+      // The buddy's explanation is scrolled up from below the fold.
+      final questionList = find.descendant(
+        of: find.byKey(const ValueKey('first_question_step')),
+        matching: find.byType(Scrollable),
+      );
+      expect(
+        tester.state<ScrollableState>(questionList.first).position.pixels,
+        greaterThan(0),
+      );
+
+      await tester.tap(continueButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Which province are you representing?'), findsOneWidget);
+      expect(find.text('3/4'), findsOneWidget);
       expect(tester.widget<FilledButton>(continueButton).onPressed, isNull);
 
       await tester.tap(find.text('Phnom Penh'));
@@ -129,7 +150,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Your Physics roadmap is ready'), findsOneWidget);
-      expect(find.text('3/3'), findsOneWidget);
+      expect(find.text('4/4'), findsOneWidget);
       expect(find.text('Start learning'), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('onboarding_start_learning')));
@@ -152,41 +173,50 @@ void main() {
     },
   );
 
-  testWidgets('subject and province fit Khmer at 200% text scale', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(393, 852);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets(
+    'subject, first question and province fit Khmer at 200% text scale',
+    (tester) async {
+      tester.view.physicalSize = const Size(393, 852);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    final router = _onboardingRouter();
-    addTearDown(router.dispose);
-    await tester.pumpWidget(
-      _buildApp(router: router, locale: const Locale('km'), textScale: 2),
-    );
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
+      final router = _onboardingRouter();
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        _buildApp(router: router, locale: const Locale('km'), textScale: 2),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
 
-    await tester.tap(find.text('រូបវិទ្យា'));
-    await tester.pumpAndSettle();
-    final province = find.text('ភ្នំពេញ');
-    await tester.scrollUntilVisible(
-      province,
-      80,
-      // At 200% the province list starts below the fold in the step's own
-      // scroll view.
-      scrollable: find
-          .descendant(
-            of: find.byType(CustomScrollView).last,
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
-    expect(tester.takeException(), isNull);
+      await tester.tap(find.text('រូបវិទ្យា'));
+      await tester.pumpAndSettle();
+      final answer = find.text('F = m × a');
+      await tester.ensureVisible(answer);
+      await tester.tap(answer);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final next = find.byKey(const Key('onboarding_continue_btn'));
+      await tester.tap(next);
+      await tester.pumpAndSettle();
+      final province = find.text('ភ្នំពេញ');
+      await tester.scrollUntilVisible(
+        province,
+        80,
+        // At 200% the province list starts below the fold in the step's own
+        // scroll view.
+        scrollable: find
+            .descendant(
+              of: find.byType(CustomScrollView).last,
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      expect(tester.takeException(), isNull);
 
-    await tester.tap(province);
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-  });
+      await tester.tap(province);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

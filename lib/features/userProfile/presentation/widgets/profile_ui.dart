@@ -176,6 +176,160 @@ class RiksaProfileAvatar extends StatelessWidget {
   }
 }
 
+/// The learner's own avatar at the top of their profile.
+///
+/// A solid accent ring with a surface gap lifts the photo off the cover, and a
+/// soft shadow in the same accent keeps it from reading as a flat sticker. A
+/// learner who has earned a rank frame wears that artwork instead of the ring,
+/// since the frame is already a ring of its own. The camera badge is the
+/// shortcut to changing the photo, so it only appears when [onEdit] is given.
+class ProfileHeroAvatar extends StatelessWidget {
+  const ProfileHeroAvatar({
+    super.key,
+    required this.user,
+    required this.radius,
+    this.avatarPath,
+    this.frameTier,
+    this.onEdit,
+    this.editLabel,
+  }) : assert(onEdit == null || editLabel != null);
+
+  final AuthUser user;
+  final double radius;
+  final String? avatarPath;
+  final String? frameTier;
+  final VoidCallback? onEdit;
+  final String? editLabel;
+
+  static const double _ring = 3;
+  static const double _gap = 3;
+  static const double _badge = 28;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.riksa;
+    final accent = ProfilePalette.green(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final name = user.displayName.trim().isEmpty
+        ? user.username
+        : user.displayName.trim();
+    final diameter = radius * 2;
+    final framed = riksaAvatarFrameAssetPath(frameTier) != null;
+    final value = avatarPath ?? user.avatarUrl;
+
+    final Widget portrait = framed
+        ? RiksaAvatarImage(
+            value: value,
+            label: name,
+            size: diameter,
+            backgroundColor: palette.surfaceRaised,
+            foregroundColor: palette.ink,
+            frameTier: frameTier,
+          )
+        : DecoratedBox(
+            key: const ValueKey('profile-hero-avatar-ring'),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accent,
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: isDark ? .32 : .24),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(_ring),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: palette.surface,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(_gap),
+                  child: RiksaAvatarImage(
+                    value: value,
+                    label: name,
+                    size: diameter - (_ring + _gap) * 2,
+                    backgroundColor: palette.surfaceRaised,
+                    foregroundColor: palette.ink,
+                  ),
+                ),
+              ),
+            ),
+          );
+
+    return SizedBox.square(
+      dimension: diameter,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(child: portrait),
+          if (onEdit != null)
+            PositionedDirectional(
+              end: framed ? radius * .12 : -2,
+              bottom: framed ? radius * .12 : -2,
+              child: _ProfileHeroEditBadge(
+                label: editLabel!,
+                onTap: onEdit!,
+                size: _badge,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileHeroEditBadge extends StatelessWidget {
+  const _ProfileHeroEditBadge({
+    required this.label,
+    required this.onTap,
+    required this.size,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.riksa;
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        button: true,
+        label: label,
+        excludeSemantics: true,
+        child: Material(
+          type: MaterialType.circle,
+          color: ProfilePalette.green(context),
+          elevation: 0,
+          child: InkWell(
+            key: const ValueKey('profile-hero-avatar-edit'),
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: palette.surface, width: 2.5),
+              ),
+              child: Icon(
+                Icons.photo_camera_rounded,
+                size: size * .5,
+                color: palette.onBrand,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class ProfilePanel extends StatelessWidget {
   const ProfilePanel({super.key, required this.child, this.padding});
 

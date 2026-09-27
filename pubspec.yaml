@@ -105,6 +105,7 @@ flutter:
     - assets/images/onboarding/
     - assets/images/lessonsCard/
     - assets/images/subjects/
+    - assets/images/maps/math/
     - assets/images/avatar_frames/
     - assets/rive/
     - assets/audio/

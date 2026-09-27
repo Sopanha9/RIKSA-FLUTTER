@@ -11,6 +11,7 @@ import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/subject_roadmap_screen.dart';
 import 'package:riksa_app/features/learning/providers/learning_roadmap_provider.dart';
+import 'package:riksa_app/features/mascot/domain/mascot.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 Future<void> _loadFonts() async {
@@ -61,6 +62,11 @@ Future<void> _pumpRoadmap(WidgetTester tester, {required Brightness theme}) =>
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
           theme: theme == Brightness.dark ? AppTheme.dark : AppTheme.light,
+          // The buddy on the map idles forever; reduced motion lets it settle.
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -72,6 +78,33 @@ Future<void> _pumpRoadmap(WidgetTester tester, {required Brightness theme}) =>
         ),
       ),
     );
+
+/// Decodes the Mathematics map art and the buddy before the golden is taken,
+/// at the size the map asks for, so the scenery is in the picture.
+Future<void> _precacheMap(WidgetTester tester) async {
+  final context = tester.element(find.byType(LearningRoadmapScreen));
+  final width = tester.view.physicalSize.width.round();
+  await tester.runAsync(() async {
+    for (final piece in [
+      'assets/images/maps/math/start.webp',
+      'assets/images/maps/math/middle.webp',
+      'assets/images/maps/math/goal.webp',
+    ]) {
+      await precacheImage(
+        ResizeImage(AssetImage(piece), width: width),
+        context,
+      );
+    }
+    for (final frame in [
+      ...MascotSprites.frames(MascotSpecies.crocodile, MascotMood.greeting),
+      // The header's buddy face, which otherwise loads only some runs.
+      ...MascotFaceSprites.frames(MascotSpecies.crocodile, MascotFace.proud),
+    ]) {
+      await precacheImage(AssetImage(frame), context);
+    }
+  });
+  await tester.pumpAndSettle();
+}
 
 void main() {
   setUpAll(_loadFonts);
@@ -89,6 +122,7 @@ void main() {
 
       await _pumpRoadmap(tester, theme: brightness);
       await tester.pumpAndSettle();
+      await _precacheMap(tester);
 
       expect(tester.takeException(), isNull);
       await expectLater(
@@ -117,9 +151,10 @@ void main() {
           theme: AppTheme.light,
           locale: const Locale('km'),
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: const TextScaler.linear(2)),
+            data: MediaQuery.of(context).copyWith(
+              textScaler: const TextScaler.linear(2),
+              disableAnimations: true,
+            ),
             child: child!,
           ),
           localizationsDelegates: const [
