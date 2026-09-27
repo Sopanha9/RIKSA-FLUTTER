@@ -79,6 +79,7 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
 
   @override
   LessonCatalogState build() {
+    watchCurrentUserId(ref);
     // Notifier state is not initialized until build returns. Defer the first
     // load so load() can safely read and update state.
     unawaited(Future<void>.microtask(load));

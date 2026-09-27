@@ -11,6 +11,7 @@ final profileApiProvider = Provider<ProfileApi>((ref) {
 final profileDashboardProvider = FutureProvider<ProfileDashboardData>((
   ref,
 ) async {
+  watchCurrentUserId(ref);
   final api = ref.watch(profileApiProvider);
   final results = await Future.wait<Object>([
     api.gamificationProfile(),
@@ -32,7 +33,10 @@ final profileRankProvider = FutureProvider<LeaderboardRank>((ref) {
 });
 
 final rankHistoryProvider = FutureProvider<List<RankHistoryEntry>>(
-  (ref) => ref.watch(profileApiProvider).rankHistory(),
+  (ref) {
+    watchCurrentUserId(ref);
+    return ref.watch(profileApiProvider).rankHistory();
+  },
 );
 
 /// Ranked board rows for a scope, sourced from `GET /leaderboard`.
