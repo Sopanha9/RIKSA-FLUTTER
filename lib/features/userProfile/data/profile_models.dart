@@ -23,6 +23,7 @@ class GamificationProfile {
     required this.currentStreak,
     required this.highestStreak,
     required this.xpToNext,
+    this.xpBalance = 0,
     this.currentTier,
     this.currentTierIcon,
     this.nextTier,
@@ -37,6 +38,9 @@ class GamificationProfile {
   final String? currentTierIcon;
   final String? nextTier;
   final int xpToNext;
+
+  /// XP available to spend in the buddy market. This is independent of rank XP.
+  final int xpBalance;
 
   /// XP at which the current tier begins.
   final int currentTierMinXp;
@@ -86,6 +90,7 @@ class GamificationProfile {
         currentTierMinXp: (json['currentTierMinXp'] as num?)?.toInt() ?? 0,
         nextTierMinXp: (json['nextTierMinXp'] as num?)?.toInt() ?? 0,
         xpToNext: (json['xpToNext'] as num?)?.toInt() ?? 0,
+        xpBalance: (json['xpBalance'] as num?)?.toInt() ?? 0,
       );
 }
 

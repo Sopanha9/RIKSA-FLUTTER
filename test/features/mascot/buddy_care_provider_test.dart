@@ -398,6 +398,87 @@ void main() {
       );
     },
   );
+
+  test(
+    'unequip updates optimistically and rolls back after server failure',
+    () async {
+      final previous = BuddyEquipped(
+        slot: BuddyItemSlot.hat,
+        itemId: 'old-hat',
+        assetKey: 'hat_old',
+      );
+      final api = _FakeBuddyApi()
+        ..me = BuddyMe(
+          care: BuddyCare.initial(DateTime.now()),
+          species: MascotSpecies.crocodile,
+          name: 'Server buddy',
+          today: const [],
+          equipped: {BuddyItemSlot.hat: previous},
+        )
+        ..failEquip = true;
+      final container = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          buddyApiProvider.overrideWithValue(api),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(buddyCareProvider);
+      await _flushAsyncWork();
+      (container.read(authProvider.notifier) as _TestAuthNotifier).signIn();
+      await _flushAsyncWork();
+
+      final request = container
+          .read(buddyCareProvider.notifier)
+          .equip(BuddyItemSlot.hat, null);
+      expect(
+        container.read(buddyLookProvider).equipped,
+        isNot(contains(BuddyItemSlot.hat)),
+      );
+      await expectLater(request, throwsA(isA<StateError>()));
+
+      expect(api.equipCalls, 1);
+      expect(
+        container.read(buddyLookProvider).equipped[BuddyItemSlot.hat],
+        'hat_old',
+      );
+    },
+  );
+
+  test('unequip success leaves the slot empty', () async {
+    final api = _FakeBuddyApi()
+      ..me = BuddyMe(
+        care: BuddyCare.initial(DateTime.now()),
+        species: MascotSpecies.crocodile,
+        name: 'Server buddy',
+        today: const [],
+        equipped: const {
+          BuddyItemSlot.hat: BuddyEquipped(
+            slot: BuddyItemSlot.hat,
+            itemId: 'old-hat',
+            assetKey: 'hat_old',
+          ),
+        },
+      );
+    final container = ProviderContainer(
+      overrides: [
+        authProvider.overrideWith(_TestAuthNotifier.new),
+        buddyApiProvider.overrideWithValue(api),
+      ],
+    );
+    addTearDown(container.dispose);
+    container.read(buddyCareProvider);
+    await _flushAsyncWork();
+    (container.read(authProvider.notifier) as _TestAuthNotifier).signIn();
+    await _flushAsyncWork();
+
+    await container
+        .read(buddyCareProvider.notifier)
+        .equip(BuddyItemSlot.hat, null);
+
+    expect(api.equipCalls, 1);
+    expect(container.read(buddyLookProvider).equipped, isEmpty);
+  });
 }
 
 BuddyMe _withChosen(BuddyMe me, bool chosen) => BuddyMe(

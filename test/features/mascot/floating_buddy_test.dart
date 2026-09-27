@@ -196,7 +196,8 @@ void main() {
 
     expect(repository.chestOpenCalls, 1);
     expect(find.text('+50 XP earned'), findsOneWidget);
-    expect(find.text('Sprout cap'), findsOneWidget);
+    // The reward is announced in a sentence that links to the wardrobe.
+    expect(find.textContaining('Sprout cap'), findsOneWidget);
   });
 
   testWidgets('409 chest response keeps the chest available', (tester) async {

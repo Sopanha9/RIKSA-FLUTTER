@@ -616,6 +616,19 @@ class _ProfileHeader extends ConsumerWidget {
             ),
           ],
         ),
+        const SizedBox(height: 10),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: OutlinedButton.icon(
+            key: const ValueKey('profile-market-entry'),
+            onPressed: () => context.push('/market'),
+            icon: const Icon(Icons.storefront_rounded, size: 18),
+            label: Text(
+              l10n.marketEntryXp(decimal.format(game?.xpBalance ?? 0)),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
       ],
     );
   }

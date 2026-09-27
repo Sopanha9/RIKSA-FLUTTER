@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../features/quests/data/quest_models.dart';
@@ -64,14 +65,12 @@ class _BuddyPanelContentState extends ConsumerState<BuddyPanelContent> {
     final weekAsync = widget.isGuest ? null : ref.watch(weeklyQuestsProvider);
     final today = todayAsync?.value ?? widget.todayPreview;
     final week = weekAsync?.value ?? widget.weekPreview;
+    final gamification = widget.isGuest
+        ? null
+        : ref.watch(profileDashboardProvider).value?.gamification;
     final streak = widget.isGuest
         ? 0
-        : (ref
-                  .watch(profileDashboardProvider)
-                  .value
-                  ?.gamification
-                  .currentStreak ??
-              widget.initialStreak);
+        : (gamification?.currentStreak ?? widget.initialStreak);
     final buddyName =
         ref.watch(mascotProvider).profile?.name ??
         MascotProfile.defaultName(MascotSpecies.crocodile);
@@ -150,6 +149,7 @@ class _BuddyPanelContentState extends ConsumerState<BuddyPanelContent> {
                         locale: locale,
                         onOpen: _openChest,
                         onRequireAccount: widget.requireAccountAction,
+                        onNavigate: widget.onNavigate,
                       ),
                     ),
                   ],
@@ -225,6 +225,22 @@ class _BuddyPanelContentState extends ConsumerState<BuddyPanelContent> {
                   ),
                 const SizedBox(height: 10),
                 _ResetsCountdown(resetsAt: countdownAt ?? _guestReset(_tab)),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  key: const ValueKey('buddy-market-entry'),
+                  onPressed: () => widget.onNavigate('/market'),
+                  icon: const Icon(Icons.storefront_rounded, size: 18),
+                  label: Text(
+                    widget.isGuest
+                        ? l10n.marketBrowse
+                        : l10n.marketSpendXp(
+                            NumberFormat.decimalPattern(
+                              locale,
+                            ).format(gamification?.xpBalance ?? 0),
+                          ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
                 if (widget.isGuest) ...[
                   const SizedBox(height: 14),
                   Text(
@@ -546,6 +562,7 @@ class _WeeklyChestTile extends StatelessWidget {
     required this.locale,
     required this.onOpen,
     required this.onRequireAccount,
+    required this.onNavigate,
   });
 
   final WeeklyChest chest;
@@ -553,6 +570,7 @@ class _WeeklyChestTile extends StatelessWidget {
   final String locale;
   final VoidCallback onOpen;
   final bool Function(String reason) onRequireAccount;
+  final void Function(String path) onNavigate;
 
   @override
   Widget build(BuildContext context) {
@@ -602,11 +620,19 @@ class _WeeklyChestTile extends StatelessWidget {
               ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             if (itemName != null)
-              Text(
-                itemName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall,
+              TextButton.icon(
+                onPressed: () => onNavigate('/market/wardrobe'),
+                icon: const Icon(Icons.checkroom_rounded, size: 16),
+                label: Text(
+                  l10n.wardrobeChestWear(itemName),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 32),
+                  alignment: AlignmentDirectional.centerStart,
+                ),
               ),
           ] else ...[
             Text(

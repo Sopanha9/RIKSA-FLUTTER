@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/core/widgets/riksa_achievement_image.dart';
@@ -37,6 +38,7 @@ class _AuthNotifier extends AuthNotifier {
 const _dashboard = ProfileDashboardData(
   gamification: GamificationProfile(
     totalXp: 1520,
+    xpBalance: 1240,
     currentStreak: 14,
     highestStreak: 14,
     currentTier: 'GOLD',
@@ -109,6 +111,69 @@ final _post = SocialPost(
 void main() {
   setUpAll(loadAchievementPreviewFonts);
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets('own profile market button opens the market route', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 1500);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final router = GoRouter(
+      initialLocation: '/profile',
+      routes: [
+        GoRoute(
+          path: '/profile',
+          builder: (context, state) => const UserProfileScreen(),
+        ),
+        GoRoute(
+          path: '/market',
+          builder: (context, state) =>
+              const Scaffold(body: Center(child: Text('Market destination'))),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_AuthNotifier.new),
+          profileDashboardProvider.overrideWith((ref) async => _dashboard),
+          userPostsProvider.overrideWith(
+            (ref, userId) async =>
+                SocialFeedPage(posts: [_post], hasNextPage: false),
+          ),
+          profileRankProvider.overrideWith(
+            (ref) async => const LeaderboardRank(
+              countryRank: 12,
+              countryScore: 1520,
+              countryTier: 'GOLD',
+            ),
+          ),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final entry = find.byKey(const ValueKey('profile-market-entry'));
+    await tester.ensureVisible(entry);
+    await tester.tap(entry);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Market destination'), findsOneWidget);
+  });
+
   for (final dark in [false, true]) {
     for (final scale in [1.0, 2.0]) {
       testWidgets(
@@ -231,6 +296,7 @@ void main() {
     expect(find.byKey(const ValueKey('profile-settings')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-edit')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-stats')), findsOneWidget);
+    expect(find.text('Market · 1,240 XP to spend'), findsOneWidget);
     expect(find.byKey(const ValueKey('profile-learning-card')), findsOneWidget);
     // Progress is measured through the current tier, not from zero XP:
     // 1,520 sits 1,020 into the 1,500 band from Gold to Platinum.

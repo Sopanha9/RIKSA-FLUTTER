@@ -128,6 +128,257 @@ abstract class AppLocalizations {
   /// **'Riksa'**
   String get appName;
 
+  /// No description provided for @marketTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Buddy market'**
+  String get marketTitle;
+
+  /// No description provided for @marketBrowse.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse the market'**
+  String get marketBrowse;
+
+  /// No description provided for @marketBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'{balance} XP to spend'**
+  String marketBalance(String balance);
+
+  /// No description provided for @marketRankNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending XP never lowers your rank.'**
+  String get marketRankNote;
+
+  /// No description provided for @marketHats.
+  ///
+  /// In en, this message translates to:
+  /// **'Hats'**
+  String get marketHats;
+
+  /// No description provided for @marketGlasses.
+  ///
+  /// In en, this message translates to:
+  /// **'Glasses'**
+  String get marketGlasses;
+
+  /// No description provided for @marketPreviewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap an item to try it on.'**
+  String get marketPreviewHint;
+
+  /// No description provided for @marketSelectItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an item to try on'**
+  String get marketSelectItem;
+
+  /// No description provided for @marketBuyFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy for {price} XP'**
+  String marketBuyFor(int price);
+
+  /// No description provided for @marketEquip.
+  ///
+  /// In en, this message translates to:
+  /// **'Equip'**
+  String get marketEquip;
+
+  /// No description provided for @marketEquipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipped'**
+  String get marketEquipped;
+
+  /// No description provided for @marketOwned.
+  ///
+  /// In en, this message translates to:
+  /// **'Owned'**
+  String get marketOwned;
+
+  /// No description provided for @marketLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get marketLocked;
+
+  /// No description provided for @marketNeedMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Need {amount} more XP'**
+  String marketNeedMore(int amount);
+
+  /// No description provided for @marketNotEnoughXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough XP (need {amount} more)'**
+  String marketNotEnoughXp(int amount);
+
+  /// No description provided for @marketAvailableFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Available for {time}'**
+  String marketAvailableFor(String time);
+
+  /// No description provided for @marketRarityCommon.
+  ///
+  /// In en, this message translates to:
+  /// **'Common'**
+  String get marketRarityCommon;
+
+  /// No description provided for @marketRarityRare.
+  ///
+  /// In en, this message translates to:
+  /// **'Rare'**
+  String get marketRarityRare;
+
+  /// No description provided for @marketRarityEpic.
+  ///
+  /// In en, this message translates to:
+  /// **'Epic'**
+  String get marketRarityEpic;
+
+  /// No description provided for @marketLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The market could not load. Check your connection and try again.'**
+  String get marketLoadFailed;
+
+  /// No description provided for @marketEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no items in this slot yet.'**
+  String get marketEmpty;
+
+  /// No description provided for @marketConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm purchase'**
+  String get marketConfirmTitle;
+
+  /// No description provided for @marketConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Get {item} for {price} XP? Your spendable balance will change from {balance} XP to {after} XP.'**
+  String marketConfirmBody(
+    String item,
+    String price,
+    String balance,
+    String after,
+  );
+
+  /// No description provided for @marketConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm and buy'**
+  String get marketConfirm;
+
+  /// No description provided for @marketRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry purchase'**
+  String get marketRetry;
+
+  /// No description provided for @marketCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get marketCancel;
+
+  /// No description provided for @marketErrorInsufficientBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Your spendable XP changed. Refresh the market and try again.'**
+  String get marketErrorInsufficientBalance;
+
+  /// No description provided for @marketErrorAlreadyOwned.
+  ///
+  /// In en, this message translates to:
+  /// **'You already own this item. Your XP was not charged again.'**
+  String get marketErrorAlreadyOwned;
+
+  /// No description provided for @marketErrorNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This item is no longer available.'**
+  String get marketErrorNotAvailable;
+
+  /// No description provided for @marketErrorLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This item is locked and cannot be purchased yet.'**
+  String get marketErrorLocked;
+
+  /// No description provided for @marketErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not confirm the purchase. Check your connection and retry.'**
+  String get marketErrorNetwork;
+
+  /// No description provided for @marketPurchaseSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'You got {item}!'**
+  String marketPurchaseSuccess(String item);
+
+  /// No description provided for @marketWearNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Wear it now'**
+  String get marketWearNow;
+
+  /// No description provided for @marketContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue browsing'**
+  String get marketContinue;
+
+  /// No description provided for @marketEntryXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Market · {balance} XP to spend'**
+  String marketEntryXp(String balance);
+
+  /// No description provided for @marketSpendXp.
+  ///
+  /// In en, this message translates to:
+  /// **'Spend XP · {balance}'**
+  String marketSpendXp(String balance);
+
+  /// No description provided for @wardrobeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardrobe'**
+  String get wardrobeTitle;
+
+  /// No description provided for @wardrobeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not own any items in this slot yet.'**
+  String get wardrobeEmpty;
+
+  /// No description provided for @wardrobeUnequip.
+  ///
+  /// In en, this message translates to:
+  /// **'Take off'**
+  String get wardrobeUnequip;
+
+  /// No description provided for @wardrobeEquipFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your buddy could not change outfits. Try again.'**
+  String get wardrobeEquipFailed;
+
+  /// No description provided for @wardrobeChestWear.
+  ///
+  /// In en, this message translates to:
+  /// **'You got {item}! Wear it'**
+  String wardrobeChestWear(String item);
+
   /// Login screen heading
   ///
   /// In en, this message translates to:

@@ -24,6 +24,161 @@ class AppLocalizationsKm extends AppLocalizations {
   String get appName => 'Riksa';
 
   @override
+  String get marketTitle => 'ផ្សារមិត្តភក្តិ';
+
+  @override
+  String get marketBrowse => 'មើលទំនិញក្នុងផ្សារ';
+
+  @override
+  String marketBalance(String balance) {
+    return 'XP $balance សម្រាប់ចំណាយ';
+  }
+
+  @override
+  String get marketRankNote =>
+      'ការចំណាយ XP មិនធ្វើឱ្យចំណាត់ថ្នាក់របស់អ្នកធ្លាក់ចុះទេ។';
+
+  @override
+  String get marketHats => 'មួក';
+
+  @override
+  String get marketGlasses => 'វ៉ែនតា';
+
+  @override
+  String get marketPreviewHint => 'ចុចលើទំនិញដើម្បីសាកពាក់។';
+
+  @override
+  String get marketSelectItem => 'ជ្រើសរើសទំនិញដើម្បីសាកពាក់';
+
+  @override
+  String marketBuyFor(int price) {
+    return 'ទិញក្នុងតម្លៃ XP $price';
+  }
+
+  @override
+  String get marketEquip => 'ពាក់';
+
+  @override
+  String get marketEquipped => 'កំពុងពាក់';
+
+  @override
+  String get marketOwned => 'មានរួចហើយ';
+
+  @override
+  String get marketLocked => 'ត្រូវបានចាក់សោ';
+
+  @override
+  String marketNeedMore(int amount) {
+    return 'ត្រូវការ XP បន្ថែម $amount';
+  }
+
+  @override
+  String marketNotEnoughXp(int amount) {
+    return 'XP មិនគ្រប់ (ត្រូវការ $amount បន្ថែម)';
+  }
+
+  @override
+  String marketAvailableFor(String time) {
+    return 'នៅសល់ពេល $time';
+  }
+
+  @override
+  String get marketRarityCommon => 'ធម្មតា';
+
+  @override
+  String get marketRarityRare => 'កម្រ';
+
+  @override
+  String get marketRarityEpic => 'ពិសេស';
+
+  @override
+  String get marketLoadFailed =>
+      'មិនអាចបើកផ្សារបានទេ។ សូមពិនិត្យអ៊ីនធឺណិត ហើយព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get marketEmpty => 'មិនទាន់មានទំនិញក្នុងប្រភេទនេះទេ។';
+
+  @override
+  String get marketConfirmTitle => 'បញ្ជាក់ការទិញ';
+
+  @override
+  String marketConfirmBody(
+    String item,
+    String price,
+    String balance,
+    String after,
+  ) {
+    return 'ទិញ $item ក្នុងតម្លៃ XP $price មែនទេ? XP ដែលអាចចំណាយបាននឹងប្ដូរពី $balance ទៅ $after។';
+  }
+
+  @override
+  String get marketConfirm => 'បញ្ជាក់ និងទិញ';
+
+  @override
+  String get marketRetry => 'ព្យាយាមទិញម្ដងទៀត';
+
+  @override
+  String get marketCancel => 'បោះបង់';
+
+  @override
+  String get marketErrorInsufficientBalance =>
+      'XP ដែលអាចចំណាយបានបានផ្លាស់ប្ដូរ។ សូមផ្ទុកផ្សារឡើងវិញ ហើយព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get marketErrorAlreadyOwned =>
+      'អ្នកមានទំនិញនេះរួចហើយ។ XP របស់អ្នកមិនត្រូវបានកាត់ម្ដងទៀតទេ។';
+
+  @override
+  String get marketErrorNotAvailable => 'ទំនិញនេះលែងមានទៀតហើយ។';
+
+  @override
+  String get marketErrorLocked =>
+      'ទំនិញនេះត្រូវបានចាក់សោ ហើយមិនទាន់អាចទិញបានទេ។';
+
+  @override
+  String get marketErrorNetwork =>
+      'មិនអាចបញ្ជាក់ការទិញបានទេ។ សូមពិនិត្យអ៊ីនធឺណិត ហើយព្យាយាមម្ដងទៀត។';
+
+  @override
+  String marketPurchaseSuccess(String item) {
+    return 'អ្នកបានទទួល $item!';
+  }
+
+  @override
+  String get marketWearNow => 'ពាក់ឥឡូវនេះ';
+
+  @override
+  String get marketContinue => 'បន្តមើលទំនិញ';
+
+  @override
+  String marketEntryXp(String balance) {
+    return 'ផ្សារ · XP $balance សម្រាប់ចំណាយ';
+  }
+
+  @override
+  String marketSpendXp(String balance) {
+    return 'ចំណាយ XP · $balance';
+  }
+
+  @override
+  String get wardrobeTitle => 'ទូខោអាវ';
+
+  @override
+  String get wardrobeEmpty => 'អ្នកមិនទាន់មានទំនិញក្នុងប្រភេទនេះទេ។';
+
+  @override
+  String get wardrobeUnequip => 'ដោះចេញ';
+
+  @override
+  String get wardrobeEquipFailed =>
+      'មិនអាចប្ដូរសម្លៀកបំពាក់មិត្តភក្តិបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String wardrobeChestWear(String item) {
+    return 'អ្នកបានទទួល $item! ពាក់វា';
+  }
+
+  @override
   String get welcomeBack => 'សួស្ដី​ម្ដង​ទៀត';
 
   @override

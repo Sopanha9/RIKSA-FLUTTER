@@ -11,6 +11,8 @@ import '../../features/auth/presentation/auth_switcher_screen.dart';
 import '../../features/auth/presentation/account_recovery_screen.dart';
 import '../../features/auth/presentation/splash_animation_screen.dart';
 import '../../features/mascot/presentation/mascot_select_screen.dart';
+import '../../features/market/presentation/market_screen.dart';
+import '../../features/market/presentation/wardrobe_screen.dart';
 import '../../features/auth/presentation/language_select_screen.dart';
 import '../../features/auth/presentation/onboarding_splash_screen.dart';
 import '../../features/auth/presentation/interactive_onboarding_screen.dart';
@@ -51,6 +53,7 @@ const kLandingLocation = '/learn';
 
 bool _guestCanView(String location) =>
     location == '/learn' ||
+    location == '/market' ||
     location.startsWith('/learn/roadmap/') ||
     (location.startsWith('/learn/') &&
         location != '/learn/saved' &&
@@ -147,6 +150,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/province-select',
         builder: (context, state) => const ProvinceSelectScreen(),
+      ),
+      GoRoute(
+        path: '/market',
+        builder: (context, state) => const MarketScreen(),
+      ),
+      GoRoute(
+        path: '/market/wardrobe',
+        builder: (context, state) => const WardrobeScreen(),
       ),
       GoRoute(
         path: '/auth/login',

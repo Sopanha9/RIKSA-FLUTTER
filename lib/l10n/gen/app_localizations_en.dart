@@ -24,6 +24,160 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appName => 'Riksa';
 
   @override
+  String get marketTitle => 'Buddy market';
+
+  @override
+  String get marketBrowse => 'Browse the market';
+
+  @override
+  String marketBalance(String balance) {
+    return '$balance XP to spend';
+  }
+
+  @override
+  String get marketRankNote => 'Spending XP never lowers your rank.';
+
+  @override
+  String get marketHats => 'Hats';
+
+  @override
+  String get marketGlasses => 'Glasses';
+
+  @override
+  String get marketPreviewHint => 'Tap an item to try it on.';
+
+  @override
+  String get marketSelectItem => 'Choose an item to try on';
+
+  @override
+  String marketBuyFor(int price) {
+    return 'Buy for $price XP';
+  }
+
+  @override
+  String get marketEquip => 'Equip';
+
+  @override
+  String get marketEquipped => 'Equipped';
+
+  @override
+  String get marketOwned => 'Owned';
+
+  @override
+  String get marketLocked => 'Locked';
+
+  @override
+  String marketNeedMore(int amount) {
+    return 'Need $amount more XP';
+  }
+
+  @override
+  String marketNotEnoughXp(int amount) {
+    return 'Not enough XP (need $amount more)';
+  }
+
+  @override
+  String marketAvailableFor(String time) {
+    return 'Available for $time';
+  }
+
+  @override
+  String get marketRarityCommon => 'Common';
+
+  @override
+  String get marketRarityRare => 'Rare';
+
+  @override
+  String get marketRarityEpic => 'Epic';
+
+  @override
+  String get marketLoadFailed =>
+      'The market could not load. Check your connection and try again.';
+
+  @override
+  String get marketEmpty => 'There are no items in this slot yet.';
+
+  @override
+  String get marketConfirmTitle => 'Confirm purchase';
+
+  @override
+  String marketConfirmBody(
+    String item,
+    String price,
+    String balance,
+    String after,
+  ) {
+    return 'Get $item for $price XP? Your spendable balance will change from $balance XP to $after XP.';
+  }
+
+  @override
+  String get marketConfirm => 'Confirm and buy';
+
+  @override
+  String get marketRetry => 'Retry purchase';
+
+  @override
+  String get marketCancel => 'Cancel';
+
+  @override
+  String get marketErrorInsufficientBalance =>
+      'Your spendable XP changed. Refresh the market and try again.';
+
+  @override
+  String get marketErrorAlreadyOwned =>
+      'You already own this item. Your XP was not charged again.';
+
+  @override
+  String get marketErrorNotAvailable => 'This item is no longer available.';
+
+  @override
+  String get marketErrorLocked =>
+      'This item is locked and cannot be purchased yet.';
+
+  @override
+  String get marketErrorNetwork =>
+      'We could not confirm the purchase. Check your connection and retry.';
+
+  @override
+  String marketPurchaseSuccess(String item) {
+    return 'You got $item!';
+  }
+
+  @override
+  String get marketWearNow => 'Wear it now';
+
+  @override
+  String get marketContinue => 'Continue browsing';
+
+  @override
+  String marketEntryXp(String balance) {
+    return 'Market · $balance XP to spend';
+  }
+
+  @override
+  String marketSpendXp(String balance) {
+    return 'Spend XP · $balance';
+  }
+
+  @override
+  String get wardrobeTitle => 'Wardrobe';
+
+  @override
+  String get wardrobeEmpty => 'You do not own any items in this slot yet.';
+
+  @override
+  String get wardrobeUnequip => 'Take off';
+
+  @override
+  String get wardrobeEquipFailed =>
+      'Your buddy could not change outfits. Try again.';
+
+  @override
+  String wardrobeChestWear(String item) {
+    return 'You got $item! Wear it';
+  }
+
+  @override
   String get welcomeBack => 'Welcome back!';
 
   @override
