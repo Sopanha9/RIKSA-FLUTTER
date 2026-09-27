@@ -5311,6 +5311,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Let friends celebrate your streaks, ranks, and finished units.'**
   String get milestoneShareHint;
+
+  /// No description provided for @postOpenPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Open photo'**
+  String get postOpenPhoto;
+
+  /// No description provided for @photoViewerClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close photo'**
+  String get photoViewerClose;
+
+  /// No description provided for @composerWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Write'**
+  String get composerWrite;
+
+  /// No description provided for @composerPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get composerPreview;
 }
 
 class _AppLocalizationsDelegate

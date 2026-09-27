@@ -182,9 +182,13 @@ int _lineStartOf(String text, int index) {
 /// Buttons never take focus themselves, so the keyboard stays up and the
 /// selection survives the tap.
 class BlogMarkdownToolbar extends StatelessWidget {
-  const BlogMarkdownToolbar({super.key, required this.onAction});
+  const BlogMarkdownToolbar({super.key, required this.onAction, this.actions});
 
   final ValueChanged<BlogMarkdownAction> onAction;
+
+  /// Optional subset of controls for composers with a smaller formatting set.
+  /// When omitted, the original blog toolbar is shown unchanged.
+  final List<BlogMarkdownAction>? actions;
 
   static List<(BlogMarkdownAction, IconData, String)> _controls(
     AppLocalizations l10n,
@@ -214,7 +218,13 @@ class BlogMarkdownToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.riksa;
-    final controls = _controls(AppLocalizations.of(context)!);
+    final allControls = _controls(AppLocalizations.of(context)!);
+    final selectedActions = actions;
+    final controls = selectedActions == null
+        ? allControls
+        : allControls
+              .where((control) => selectedActions.contains(control.$1))
+              .toList();
     return SizedBox(
       // Icons stay 21px; the strip is tall enough for a 48px tap target.
       height: 48,

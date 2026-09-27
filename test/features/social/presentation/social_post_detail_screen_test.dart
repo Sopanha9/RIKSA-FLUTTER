@@ -9,6 +9,7 @@ import 'package:riksa_app/core/network/dio_client.dart';
 import 'package:riksa_app/core/storage/session_store.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
+import 'package:riksa_app/features/auth/data/external_link_opener.dart';
 import 'package:riksa_app/features/social/data/social_api.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 import 'package:riksa_app/features/social/presentation/social_post_detail_screen.dart';
@@ -55,6 +56,36 @@ final _comment = SocialComment(
   postId: 'post-1',
   createdAt: DateTime.utc(2026, 8, 2),
   updatedAt: DateTime.utc(2026, 8, 2),
+);
+
+SocialComment _reply(String id) => SocialComment(
+  id: id,
+  content: 'A reply',
+  author: _commentAuthor,
+  postId: 'post-1',
+  parentId: 'comment-1',
+  createdAt: DateTime.utc(2026, 8, 3),
+  updatedAt: DateTime.utc(2026, 8, 3),
+);
+
+SocialPost _postWith({
+  String? title,
+  String? content,
+  String? mediaUrl,
+  int? commentCount,
+}) => SocialPost(
+  id: _post.id,
+  title: title ?? _post.title,
+  content: content ?? _post.content,
+  mediaUrl: mediaUrl ?? _post.mediaUrl,
+  reactionCount: _post.reactionCount,
+  commentCount: commentCount ?? _post.commentCount,
+  shareCount: _post.shareCount,
+  myReaction: _post.myReaction,
+  author: _post.author,
+  category: _post.category,
+  createdAt: _post.createdAt,
+  updatedAt: _post.updatedAt,
 );
 
 void main() {
@@ -339,11 +370,204 @@ void main() {
       );
     },
   );
+
+  testWidgets('opens https markdown links and ignores unsafe schemes', (
+    tester,
+  ) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    final client = DioClient(
+      SessionStore(const FlutterSecureStorage()),
+      baseUrl: 'http://riksa.test/api/v1',
+    );
+    addTearDown(client.dispose);
+    final api = _FakeSocialApi(client)
+      ..postValue = _postWith(
+        content:
+            '[HTTPS](https://example.org/notes)\n\n[Unsafe](javascript:alert(1))',
+      );
+    Uri? opened;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          socialApiProvider.overrideWithValue(api),
+          externalLinkOpenerProvider.overrideWithValue((uri) async {
+            opened = uri;
+            return true;
+          }),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: const SocialPostDetailScreen(postId: 'post-1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('HTTPS'));
+    await tester.pump();
+    expect(opened, Uri.parse('https://example.org/notes'));
+    await tester.tap(find.text('Unsafe'));
+    await tester.pump();
+    expect(opened, Uri.parse('https://example.org/notes'));
+  });
+
+  testWidgets('post photos open the viewer and close by button or swipe', (
+    tester,
+  ) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    final client = DioClient(
+      SessionStore(const FlutterSecureStorage()),
+      baseUrl: 'http://riksa.test/api/v1',
+    );
+    addTearDown(client.dispose);
+    final api = _FakeSocialApi(client)
+      ..postValue = _postWith(mediaUrl: 'https://example.org/photo.png');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [socialApiProvider.overrideWithValue(api)],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: const SocialPostDetailScreen(postId: 'post-1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('post-detail-photo')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('photo-viewer-close')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('photo-viewer-close')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('photo-viewer-close')), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('post-detail-photo')));
+    await tester.pumpAndSettle();
+    await tester.dragFrom(const Offset(195, 300), const Offset(195, 500));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('photo-viewer-close')), findsNothing);
+  });
+
+  testWidgets('Khmer detail text fits at 200 percent text scale', (
+    tester,
+  ) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    final client = DioClient(
+      SessionStore(const FlutterSecureStorage()),
+      baseUrl: 'http://riksa.test/api/v1',
+    );
+    addTearDown(client.dispose);
+    final api = _FakeSocialApi(client)
+      ..postValue = _postWith(
+        title: 'ការរៀនដោយការពន្យល់ជំហាននីមួយៗ',
+        content:
+            'សូមសរសេរចម្លើយពីការចងចាំ រួចពិនិត្យវាម្ដងទៀត។\n\n- ជំហានទីមួយ\n- ជំហានទីពីរ',
+      );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [socialApiProvider.overrideWithValue(api)],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+            child: const SocialPostDetailScreen(postId: 'post-1'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const ValueKey('social-post-markdown')), findsOneWidget);
+  });
+
+  testWidgets('deleting a comment removes its replies from the count', (
+    tester,
+  ) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    final client = DioClient(
+      SessionStore(const FlutterSecureStorage()),
+      baseUrl: 'http://riksa.test/api/v1',
+    );
+    addTearDown(client.dispose);
+    final replyOne = _reply('reply-1');
+    final replyTwo = _reply('reply-2');
+    final api = _FakeSocialApi(client)
+      ..postValue = _post.copyWith(commentCount: 3)
+      ..commentsValue = [_comment, replyOne, replyTwo];
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          socialApiProvider.overrideWithValue(api),
+          currentUserIdProvider.overrideWithValue('user-3'),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: const SocialPostDetailScreen(postId: 'post-1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final deleteButton = find.byKey(
+      const ValueKey('comment-delete-button-comment-1'),
+    );
+    await tester.ensureVisible(deleteButton);
+    await tester.tap(deleteButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<Text>(
+            find.descendant(
+              of: find.byKey(const ValueKey('post-detail-comment-count')),
+              matching: find.byType(Text),
+            ),
+          )
+          .data,
+      '0',
+    );
+    expect(find.byKey(const ValueKey('comment-card-reply-1')), findsNothing);
+    expect(find.byKey(const ValueKey('comment-card-reply-2')), findsNothing);
+  });
 }
 
 class _FakeSocialApi extends SocialApi {
   _FakeSocialApi(super.client);
 
+  SocialPost postValue = _post;
+  List<SocialComment> commentsValue = [_comment];
   String? lastCreatedParentId;
   String? lastDeletedCommentId;
 
@@ -359,14 +583,14 @@ class _FakeSocialApi extends SocialApi {
   }) async => SocialFeedPage(posts: [_post], hasNextPage: false);
 
   @override
-  Future<SocialPost> post(String id) async => _post;
+  Future<SocialPost> post(String id) async => postValue;
 
   @override
   Future<SocialCommentPage> comments({
     required String postId,
     String? cursor,
     int limit = 20,
-  }) async => SocialCommentPage(comments: [_comment], hasNextPage: false);
+  }) async => SocialCommentPage(comments: commentsValue, hasNextPage: false);
 
   @override
   Future<SocialComment> createComment({

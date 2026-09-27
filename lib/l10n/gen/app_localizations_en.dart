@@ -3017,4 +3017,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get milestoneShareHint =>
       'Let friends celebrate your streaks, ranks, and finished units.';
+
+  @override
+  String get postOpenPhoto => 'Open photo';
+
+  @override
+  String get photoViewerClose => 'Close photo';
+
+  @override
+  String get composerWrite => 'Write';
+
+  @override
+  String get composerPreview => 'Preview';
 }

@@ -927,5 +927,9 @@
   "milestoneUnitMessage": "{name} បានបញ្ចប់ {unit}!",
   "@milestoneUnitMessage": {"placeholders":{"name":{"type":"String"},"unit":{"type":"String"}}},
   "milestoneShareTitle": "ចែករំលែកចំណុចសំខាន់ៗរបស់ខ្ញុំ",
-  "milestoneShareHint": "ឲ្យមិត្តភក្តិអបអរស្ទ្រីក ថ្នាក់ និងឯកតាមេរៀនដែលអ្នកបានបញ្ចប់។"
+  "milestoneShareHint": "ឲ្យមិត្តភក្តិអបអរស្ទ្រីក ថ្នាក់ និងឯកតាមេរៀនដែលអ្នកបានបញ្ចប់។",
+  "postOpenPhoto": "បើករូបភាព",
+  "photoViewerClose": "បិទរូបភាព",
+  "composerWrite": "សរសេរ",
+  "composerPreview": "មើលជាមុន"
 }

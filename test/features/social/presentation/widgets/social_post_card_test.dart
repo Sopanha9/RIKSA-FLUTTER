@@ -73,7 +73,8 @@ void main() {
 
     final title = tester.widget<Text>(find.text('របៀបរៀនមានប្រសិទ្ធភាព'));
     final content = tester.widget<Text>(
-      find.text('សង្ខេបមេរៀន។\n\n• រំលឹកឡើងវិញ'),
+      // Previews fold blank lines so they don't spend the 4-line budget.
+      find.text('សង្ខេបមេរៀន។\n• រំលឹកឡើងវិញ'),
     );
     expect(title.style?.fontFamily, RiksaTypography.khmerBodyFamily);
     expect(content.style?.fontFamily, RiksaTypography.khmerBodyFamily);

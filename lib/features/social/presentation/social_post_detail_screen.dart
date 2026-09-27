@@ -18,8 +18,12 @@ import '../../userProfile/presentation/public_profile_navigation.dart';
 import '../data/social_api.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
+import '../../auth/data/external_link_opener.dart';
 import 'widgets/social_owner_menu.dart';
 import 'widgets/social_palette.dart';
+import 'widgets/social_markdown_style.dart';
+import 'widgets/post_photo.dart';
+import 'widgets/photo_viewer.dart';
 
 class SocialPostDetailScreen extends ConsumerStatefulWidget {
   const SocialPostDetailScreen({super.key, required this.postId});
@@ -244,8 +248,12 @@ class _SocialPostDetailScreenState
       final updatedComments = _comments
           .where((c) => c.id != comment.id && c.parentId != comment.id)
           .toList();
+      final removedCommentCount = _comments.length - updatedComments.length;
       final updatedPost = _post?.copyWith(
-        commentCount: math.max(0, (_post?.commentCount ?? 1) - 1),
+        commentCount: math.max(
+          0,
+          (_post?.commentCount ?? removedCommentCount) - removedCommentCount,
+        ),
       );
       setState(() {
         _comments = updatedComments;
@@ -335,6 +343,7 @@ class _SocialPostDetailScreenState
                   onReact: _react,
                   onComment: _commentFocus.requestFocus,
                   onShare: _share,
+                  onTapLink: _openPostLink,
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -347,7 +356,10 @@ class _SocialPostDetailScreenState
                       ),
                     ),
                     const SizedBox(width: 8),
-                    _CountBadge(count: _post!.commentCount),
+                    _CountBadge(
+                      key: const ValueKey('post-detail-comment-count'),
+                      count: _post!.commentCount,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -482,6 +494,17 @@ class _SocialPostDetailScreenState
         ? null
         : () => openUserProfile(context, author.id);
   }
+
+  void _openPostLink(String? href) {
+    if (href == null) return;
+    final uri = Uri.tryParse(href);
+    if (uri == null ||
+        (uri.scheme != 'http' && uri.scheme != 'https') ||
+        !uri.hasAuthority) {
+      return;
+    }
+    unawaited(ref.read(externalLinkOpenerProvider)(uri));
+  }
 }
 
 class _PostBody extends StatelessWidget {
@@ -491,6 +514,7 @@ class _PostBody extends StatelessWidget {
     required this.onReact,
     required this.onComment,
     required this.onShare,
+    required this.onTapLink,
   });
 
   final SocialPost post;
@@ -498,6 +522,7 @@ class _PostBody extends StatelessWidget {
   final VoidCallback onReact;
   final VoidCallback onComment;
   final VoidCallback onShare;
+  final ValueChanged<String?> onTapLink;
 
   @override
   Widget build(BuildContext context) {
@@ -526,7 +551,8 @@ class _PostBody extends StatelessWidget {
               data: post.markdownContent,
               selectable: true,
               softLineBreak: true,
-              styleSheet: _socialMarkdownStyleSheet(
+              onTapLink: (text, href, title) => onTapLink(href),
+              styleSheet: socialMarkdownStyleSheet(
                 context,
                 post.markdownContent,
               ),
@@ -534,20 +560,26 @@ class _PostBody extends StatelessWidget {
           ],
           if (post.hasMedia) ...[
             const SizedBox(height: 16),
-            ClipRRect(
-              borderRadius: AppRadii.mediumBorder,
-              child: Image.network(
-                post.mediaUrl!,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 180,
-                  color: context.riksa.surfaceRaised,
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.image_not_supported_outlined,
-                    color: context.riksa.inkMuted,
-                    size: 34,
+            Semantics(
+              button: true,
+              label: AppLocalizations.of(context)!.postOpenPhoto,
+              child: InkWell(
+                key: const ValueKey('post-detail-photo'),
+                borderRadius: AppRadii.mediumBorder,
+                onTap: () => openPhotoViewer(
+                  context,
+                  urls: [post.mediaUrl!],
+                  initialIndex: 0,
+                  heroTag: postPhotoHeroTag(post.mediaUrl!, postId: post.id),
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(context).height * .7,
+                  ),
+                  child: PostPhoto(
+                    url: post.mediaUrl!,
+                    fit: BoxFit.contain,
+                    heroTag: postPhotoHeroTag(post.mediaUrl!, postId: post.id),
                   ),
                 ),
               ),
@@ -894,65 +926,6 @@ String _relativeCommentAge(BuildContext context, DateTime createdAt) {
   return Localizations.localeOf(context).languageCode == 'km' ? 'ឥឡូវ' : 'now';
 }
 
-MarkdownStyleSheet _socialMarkdownStyleSheet(
-  BuildContext context,
-  String content,
-) {
-  final theme = Theme.of(context);
-  final hasKhmer = RiksaTypography.containsKhmer(content);
-
-  TextStyle socialStyle(TextStyle? style) =>
-      RiksaTypography.bodyStyleFor(content, style) ?? const TextStyle();
-
-  final paragraph = socialStyle(
-    theme.textTheme.bodyMedium?.copyWith(
-      color: context.riksa.inkMuted,
-      height: 1.42,
-      fontSize: 13,
-    ),
-  );
-  final heading = socialStyle(
-    theme.textTheme.titleLarge?.copyWith(
-      color: context.riksa.ink,
-      fontWeight: FontWeight.w600,
-      height: hasKhmer ? 1.5 : 1.35,
-    ),
-  );
-
-  return MarkdownStyleSheet.fromTheme(theme).copyWith(
-    textAlign: WrapAlignment.spaceBetween,
-    p: paragraph,
-    pPadding: const EdgeInsets.only(bottom: 5),
-    h1: heading.copyWith(fontSize: 20),
-    h2: heading.copyWith(fontSize: 18),
-    h3: heading.copyWith(fontSize: 16),
-    h1Padding: const EdgeInsets.only(top: 8, bottom: 6),
-    h2Padding: const EdgeInsets.only(top: 7, bottom: 5),
-    h3Padding: const EdgeInsets.only(top: 6, bottom: 4),
-    strong: socialStyle(const TextStyle(fontWeight: FontWeight.w700)),
-    em: socialStyle(const TextStyle(fontStyle: FontStyle.italic)),
-    code: socialStyle(
-      theme.textTheme.bodyMedium?.copyWith(
-        color: context.riksa.ink,
-        backgroundColor: context.riksa.surfaceRaised,
-      ),
-    ),
-    codeblockDecoration: BoxDecoration(
-      color: context.riksa.surfaceRaised,
-      borderRadius: AppRadii.smallBorder,
-      border: Border.all(color: context.riksa.outline),
-    ),
-    codeblockPadding: const EdgeInsets.all(12),
-    blockquote: paragraph.copyWith(color: context.riksa.inkMuted),
-    listBullet: paragraph,
-    blockSpacing: 10,
-    listIndent: 22,
-    horizontalRuleDecoration: BoxDecoration(
-      border: Border(top: BorderSide(color: context.riksa.outline)),
-    ),
-  );
-}
-
 class _Avatar extends StatelessWidget {
   const _Avatar({required this.author, this.radius = 22, this.onTap});
 
@@ -1021,7 +994,7 @@ class _DetailAction extends StatelessWidget {
 }
 
 class _CountBadge extends StatelessWidget {
-  const _CountBadge({required this.count});
+  const _CountBadge({super.key, required this.count});
 
   final int count;
 

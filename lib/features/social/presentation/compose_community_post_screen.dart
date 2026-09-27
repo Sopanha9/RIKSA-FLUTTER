@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/unsaved_changes_guard.dart';
+import '../../blog/presentation/widgets/markdown_toolbar.dart';
 import '../../auth/presentation/require_account.dart';
 import '../../mascot/providers/buddy_care_provider.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -16,6 +18,7 @@ import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
 import 'widgets/community_avatar.dart';
 import 'widgets/post_image_field.dart';
+import 'widgets/social_markdown_style.dart';
 
 /// Writes a community post, or rewrites one the reader already owns.
 ///
@@ -49,6 +52,7 @@ class _ComposeCommunityPostScreenState
   final _contentController = TextEditingController();
   String? _categoryId;
   bool _submitting = false;
+  bool _previewing = false;
 
   /// The uploaded image's URL. Null means the post carries no picture.
   String? _mediaUrl;
@@ -396,21 +400,40 @@ class _ComposeCommunityPostScreenState
                               : null,
                         ),
                         const SizedBox(height: 16),
-                        TextFormField(
-                          key: const ValueKey('compose-body'),
-                          controller: _contentController,
-                          enabled: !_submitting,
-                          minLines: 8,
-                          maxLines: null,
-                          style: bodyStyle,
-                          keyboardType: TextInputType.multiline,
-                          textCapitalization: TextCapitalization.sentences,
-                          decoration: bare(l10n.detailsLabel, bodyStyle),
-                          validator: (value) =>
-                              value == null || value.trim().length < 10
-                              ? l10n.detailsLabel
-                              : null,
+                        Visibility(
+                          visible: !_previewing,
+                          maintainState: true,
+                          child: TextFormField(
+                            key: const ValueKey('compose-body'),
+                            controller: _contentController,
+                            enabled: !_submitting,
+                            minLines: 8,
+                            maxLines: null,
+                            style: bodyStyle,
+                            keyboardType: TextInputType.multiline,
+                            textCapitalization: TextCapitalization.sentences,
+                            decoration: bare(l10n.detailsLabel, bodyStyle),
+                            validator: (value) =>
+                                value == null || value.trim().length < 10
+                                ? l10n.detailsLabel
+                                : null,
+                          ),
                         ),
+                        if (_previewing)
+                          Padding(
+                            key: const ValueKey('compose-markdown-preview'),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: MarkdownBody(
+                              data: normalizeSocialMarkdown(
+                                _contentController.text,
+                              ),
+                              softLineBreak: true,
+                              styleSheet: socialMarkdownStyleSheet(
+                                context,
+                                _contentController.text,
+                              ),
+                            ),
+                          ),
                         if (_mediaUrl != null || _uploadingImage) ...[
                           const SizedBox(height: 16),
                           PostImageField(
@@ -425,7 +448,7 @@ class _ComposeCommunityPostScreenState
                     ),
                   ),
                 ),
-                // Sits on top of the keyboard, like a mobile editor toolbar.
+                // Sits above the keyboard, like a mobile editor toolbar.
                 DecoratedBox(
                   decoration: BoxDecoration(
                     color: palette.canvas,
@@ -438,27 +461,65 @@ class _ComposeCommunityPostScreenState
                         horizontal: 8,
                         vertical: 4,
                       ),
-                      child: Row(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          IconButton(
-                            key: const ValueKey('compose-add-photo'),
-                            onPressed: busy ? null : _pickImage,
-                            tooltip: _mediaUrl == null
-                                ? l10n.addPhoto
-                                : l10n.changePhoto,
-                            style: IconButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              foregroundColor: palette.brand,
+                          if (!_previewing)
+                            BlogMarkdownToolbar(
+                              actions: const [
+                                BlogMarkdownAction.bold,
+                                BlogMarkdownAction.italic,
+                                BlogMarkdownAction.bulletList,
+                                BlogMarkdownAction.numberedList,
+                                BlogMarkdownAction.quote,
+                                BlogMarkdownAction.link,
+                              ],
+                              onAction: _format,
                             ),
-                            icon: const Icon(Icons.image_outlined),
-                          ),
-                          Text(
-                            _mediaUrl == null
-                                ? l10n.addPhoto
-                                : l10n.changePhoto,
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color: palette.inkMuted,
-                            ),
+                          Row(
+                            children: [
+                              IconButton(
+                                key: const ValueKey('compose-add-photo'),
+                                onPressed: busy ? null : _pickImage,
+                                tooltip: _mediaUrl == null
+                                    ? l10n.addPhoto
+                                    : l10n.changePhoto,
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  foregroundColor: palette.brand,
+                                ),
+                                icon: const Icon(Icons.image_outlined),
+                              ),
+                              Text(
+                                _mediaUrl == null
+                                    ? l10n.addPhoto
+                                    : l10n.changePhoto,
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  color: palette.inkMuted,
+                                ),
+                              ),
+                              const Spacer(),
+                              TextButton(
+                                key: const ValueKey('compose-write'),
+                                onPressed: _previewing
+                                    ? () {
+                                        FocusScope.of(context).unfocus();
+                                        setState(() => _previewing = false);
+                                      }
+                                    : null,
+                                child: Text(l10n.composerWrite),
+                              ),
+                              TextButton(
+                                key: const ValueKey('compose-preview'),
+                                onPressed: !_previewing
+                                    ? () {
+                                        FocusScope.of(context).unfocus();
+                                        setState(() => _previewing = true);
+                                      }
+                                    : null,
+                                child: Text(l10n.composerPreview),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -482,6 +543,13 @@ class _ComposeCommunityPostScreenState
           _CommunitySheet(communities: communities, selectedId: _categoryId),
     );
     if (picked != null && mounted) setState(() => _categoryId = picked);
+  }
+
+  void _format(BlogMarkdownAction action) {
+    _contentController.value = applyBlogMarkdown(
+      _contentController.value,
+      action,
+    );
   }
 }
 

@@ -1,5 +1,7 @@
 library;
 
+import 'package:markdown/markdown.dart' as markdown;
+
 class CommunityStreak {
   const CommunityStreak({
     required this.current,
@@ -298,12 +300,33 @@ String normalizeSocialMarkdown(String value) => value
     .replaceAll(r'\n', '\n')
     .replaceAll(r'\t', '\t');
 
-String socialMarkdownPreview(String value) => normalizeSocialMarkdown(value)
-    .replaceAll(RegExp(r'^[ \t]{0,3}#{1,6}[ \t]+', multiLine: true), '')
-    .replaceAll(RegExp(r'^[ \t]*[-+][ \t]+', multiLine: true), '• ')
-    .replaceAll('**', '')
-    .replaceAll('__', '')
-    .replaceAll('`', '');
+String socialMarkdownPreview(String value) {
+  final source = normalizeSocialMarkdown(value);
+  final nodes = markdown.Document().parseLines(source.split('\n'));
+
+  String collect(markdown.Node node) {
+    if (node is markdown.Text) return node.text;
+    if (node is! markdown.Element) return '';
+    if (node.tag == 'img') return '[photo]';
+
+    final children = node.children?.map(collect).join() ?? '';
+    if (node.tag == 'li') return '\u2022 ${children.trim()}\n';
+    if (node.tag == 'pre') return '${children.trimRight()}\n';
+    if (node.tag == 'p' ||
+        node.tag == 'blockquote' ||
+        RegExp(r'^h[1-6]$').hasMatch(node.tag)) {
+      return '${children.trimRight()}\n';
+    }
+    return children;
+  }
+
+  final text = nodes.map(collect).join();
+  return text
+      .replaceAll('\r', '')
+      .replaceAll(RegExp(r'[\t ]+\n'), '\n')
+      .replaceAll(RegExp(r'\n[\t ]*\n+'), '\n')
+      .trim();
+}
 
 class SocialComment {
   const SocialComment({

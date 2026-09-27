@@ -2976,4 +2976,16 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get milestoneShareHint =>
       'ឲ្យមិត្តភក្តិអបអរស្ទ្រីក ថ្នាក់ និងឯកតាមេរៀនដែលអ្នកបានបញ្ចប់។';
+
+  @override
+  String get postOpenPhoto => 'បើករូបភាព';
+
+  @override
+  String get photoViewerClose => 'បិទរូបភាព';
+
+  @override
+  String get composerWrite => 'សរសេរ';
+
+  @override
+  String get composerPreview => 'មើលជាមុន';
 }

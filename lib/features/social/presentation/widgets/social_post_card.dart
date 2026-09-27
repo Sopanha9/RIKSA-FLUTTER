@@ -6,6 +6,8 @@ import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../data/social_models.dart';
 import 'milestone_post_card.dart';
+import 'post_photo.dart';
+import 'photo_viewer.dart';
 import 'social_owner_menu.dart';
 
 /// One post as a timeline row, on the X layout: the avatar owns a left column,
@@ -141,28 +143,25 @@ class SocialPostCard extends StatelessWidget {
                         ],
                         if (post.hasMedia) ...[
                           const SizedBox(height: 10),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: DecoratedBox(
-                              position: DecorationPosition.foreground,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: palette.outline),
-                              ),
-                              child: AspectRatio(
-                                aspectRatio: 16 / 9,
-                                child: Image.network(
+                          Semantics(
+                            button: true,
+                            label: l10n.postOpenPhoto,
+                            child: GestureDetector(
+                              key: ValueKey('post-feed-photo-${post.id}'),
+                              onTap: () => openPhotoViewer(
+                                context,
+                                urls: [post.mediaUrl!],
+                                initialIndex: 0,
+                                heroTag: postPhotoHeroTag(
                                   post.mediaUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      ColoredBox(
-                                        color: palette.surfaceRaised,
-                                        child: Icon(
-                                          Icons.image_not_supported_outlined,
-                                          color: palette.inkMuted,
-                                          size: 32,
-                                        ),
-                                      ),
+                                  postId: post.id,
+                                ),
+                              ),
+                              child: PostPhoto(
+                                url: post.mediaUrl!,
+                                heroTag: postPhotoHeroTag(
+                                  post.mediaUrl!,
+                                  postId: post.id,
                                 ),
                               ),
                             ),

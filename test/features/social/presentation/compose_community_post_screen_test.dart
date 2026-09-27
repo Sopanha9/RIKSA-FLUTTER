@@ -109,6 +109,33 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('bold formats the selection and preview renders markdown', (
+    tester,
+  ) async {
+    await _pump(tester, _Feed(const SocialFeedFailure('offline')));
+
+    final bodyFinder = find.byKey(const ValueKey('compose-body'));
+    final controller = tester.widget<TextFormField>(bodyFinder).controller!;
+    await tester.tap(bodyFinder);
+    controller.value = const TextEditingValue(
+      text: 'important',
+      selection: TextSelection(baseOffset: 0, extentOffset: 9),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('blog-markdown-bold')));
+    await tester.pump();
+    expect(controller.text, '**important**');
+
+    await tester.tap(find.byKey(const ValueKey('compose-preview')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('compose-markdown-preview')),
+      findsOneWidget,
+    );
+    expect(find.text('important'), findsOneWidget);
+  });
 }
 
 FilledButton _publish(WidgetTester tester) =>

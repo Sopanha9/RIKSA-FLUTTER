@@ -2,6 +2,69 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 
 void main() {
+  test('social markdown previews flatten common markdown structures', () {
+    final cases = <({String name, String markdown, String preview})>[
+      (
+        name: 'bold, italic, asterisks, and underscores',
+        markdown: '**bold** _italic_ *star* __under__',
+        preview: 'bold italic star under',
+      ),
+      (
+        name: 'links keep their visible text',
+        markdown: 'Read [the notes](https://example.org/notes).',
+        preview: 'Read the notes.',
+      ),
+      (
+        name: 'images become a photo marker',
+        markdown: 'See ![the diagram](https://example.org/image.png).',
+        preview: 'See [photo].',
+      ),
+      (
+        name: 'blockquote markers are omitted',
+        markdown: '> Keep the units consistent.',
+        preview: 'Keep the units consistent.',
+      ),
+      (
+        name: 'numbered lists become bullets',
+        markdown: '1. first\n2. second',
+        preview: '• first\n• second',
+      ),
+      (
+        name: 'asterisk lists become bullets',
+        markdown: '* first\n* second',
+        preview: '• first\n• second',
+      ),
+      (
+        name: 'headings retain their text',
+        markdown: '# Main\n\n## Follow up',
+        preview: 'Main\nFollow up',
+      ),
+      (
+        name: 'code fences keep their contents',
+        markdown: '```dart\nfinal answer = 42;\n```',
+        preview: 'final answer = 42;',
+      ),
+      (
+        name: 'blank lines collapse to a single break',
+        markdown: 'First\n\n\nSecond',
+        preview: 'First\nSecond',
+      ),
+      (
+        name: 'Khmer text is preserved',
+        markdown: 'សូមពិនិត្យចម្លើយម្ដងទៀត។',
+        preview: 'សូមពិនិត្យចម្លើយម្ដងទៀត។',
+      ),
+    ];
+
+    for (final testCase in cases) {
+      expect(
+        socialMarkdownPreview(testCase.markdown),
+        testCase.preview,
+        reason: testCase.name,
+      );
+    }
+  });
+
   test(
     'old posts default to USER while milestone data parses when present',
     () {

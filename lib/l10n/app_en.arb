@@ -1402,5 +1402,9 @@
   "milestoneUnitMessage": "{name} finished {unit}!",
   "@milestoneUnitMessage": {"placeholders":{"name":{"type":"String"},"unit":{"type":"String"}}},
   "milestoneShareTitle": "Share my milestones",
-  "milestoneShareHint": "Let friends celebrate your streaks, ranks, and finished units."
+  "milestoneShareHint": "Let friends celebrate your streaks, ranks, and finished units.",
+  "postOpenPhoto": "Open photo",
+  "photoViewerClose": "Close photo",
+  "composerWrite": "Write",
+  "composerPreview": "Preview"
 }
