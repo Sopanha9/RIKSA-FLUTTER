@@ -7,7 +7,13 @@ abstract interface class QuestsRepository {
   Future<DailyQuest> claim(String id);
 }
 
-class QuestsApi implements QuestsRepository {
+abstract interface class WeeklyQuestsRepository {
+  Future<WeeklyQuests> week();
+  Future<WeeklyQuest> claimWeekly(String id);
+  Future<WeeklyChest> openChest();
+}
+
+class QuestsApi implements QuestsRepository, WeeklyQuestsRepository {
   QuestsApi(this._client);
 
   final DioClient _client;
@@ -19,8 +25,29 @@ class QuestsApi implements QuestsRepository {
   }
 
   @override
+  Future<WeeklyQuests> week() async {
+    final response = await _client.dio.get('/quests/week');
+    return WeeklyQuests.fromJson(jsonMap(response));
+  }
+
+  @override
   Future<DailyQuest> claim(String id) async {
     final response = await _client.dio.post('/quests/$id/claim');
     return DailyQuest.fromJson(jsonMap(response));
+  }
+
+  @override
+  Future<WeeklyQuest> claimWeekly(String id) async {
+    final response = await _client.dio.post('/quests/$id/claim');
+    return WeeklyQuest.fromJson(jsonMap(response));
+  }
+
+  @override
+  Future<WeeklyChest> openChest() async {
+    final response = await _client.dio.post('/quests/chest/open');
+    final json = jsonMap(response);
+    return WeeklyChest.fromJson(
+      (json['chest'] as Map?)?.cast<String, dynamic>() ?? json,
+    );
   }
 }

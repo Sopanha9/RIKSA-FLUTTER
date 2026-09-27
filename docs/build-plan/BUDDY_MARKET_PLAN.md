@@ -500,6 +500,18 @@ Deferred from the 2026-09-27 run sheet:
   client-side auto-load in C4.
 - Sync saved lessons to the server.
 
+From the Agy audit of the files the first audit skipped (2026-09-27). G1
+(profile stats/catalog not reset on account change) is fixed in
+`924ac90`. Still open:
+- G2 `learning_home_provider.dart:152` reads roadmap futures with `ref.read`,
+  so an open home screen doesn't update after lesson progress (switching to
+  `watch` needs care to avoid rebuild loops).
+- G3 `lesson_catalog_provider.dart:201` swallows a failed next-page load.
+- G4 `user_profile_screen.dart:1008` builds all posts in a `Column`.
+- G5 `profile_cover.dart:116` decodes the cover at full size (`cacheWidth`).
+- G6 `profile_ui.dart:614`, `riksa_profile_drawer.dart:503` tap targets < 48px.
+- G7 `public_profile_screen.dart:230` articles tab renders empty space.
+
 - Items as quest/achievement rewards (not only purchases).
 - Limited seasonal drops (Khmer New Year, Pchum Ben, exam season).
 - Province-themed items (ties into the province leaderboard).

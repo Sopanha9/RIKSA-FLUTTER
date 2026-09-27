@@ -2880,6 +2880,106 @@ class AppLocalizationsKm extends AppLocalizations {
   String get buddyHeadHideAction => 'លាក់ថ្ងៃនេះ';
 
   @override
+  String buddyPanelClaimable(String name) {
+    return '$name សូមទទួល XP របស់អ្នក!';
+  }
+
+  @override
+  String buddyPanelStreakAtRisk(String name) {
+    return '$name នៅសល់មេរៀន ១ ទៀត ហើយស្ទ្រីករបស់អ្នកនឹងមានសុវត្ថិភាព។';
+  }
+
+  @override
+  String buddyPanelAllDone(String name) {
+    return 'ធ្វើរួចទាំងអស់ហើយ — ជួបគ្នាថ្ងៃស្អែក $name។';
+  }
+
+  @override
+  String buddyPanelGreeting(String name) {
+    return '$name ត្រៀមរៀនពេលអ្នករួចរាល់។';
+  }
+
+  @override
+  String get buddyPanelToday => 'ថ្ងៃនេះ';
+
+  @override
+  String get buddyPanelThisWeek => 'សប្តាហ៍នេះ';
+
+  @override
+  String get buddyPanelStreak => 'ស្ទ្រីក';
+
+  @override
+  String buddyPanelDays(int count) {
+    return '$count ថ្ងៃ';
+  }
+
+  @override
+  String get buddyPanelWeeklyChest => 'ទ្រូងរង្វាន់ប្រចាំសប្តាហ៍';
+
+  @override
+  String buddyPanelProgress(int progress, int target, int xp) {
+    return '$progress/$target · +$xp XP';
+  }
+
+  @override
+  String buddyPanelResetsIn(int hours, int minutes) {
+    return 'កំណត់ឡើងវិញក្នុងរយៈពេល $hours ម៉ោង $minutes នាទី';
+  }
+
+  @override
+  String get buddyPanelGuestPrompt =>
+      'ចូលគណនីដើម្បីរក្សាស្ទ្រីក និងរង្វាន់របស់អ្នក។';
+
+  @override
+  String get buddyPanelClose => 'បិទផ្ទាំងកិច្ចការ';
+
+  @override
+  String buddyPanelDailyBonus(int xp) {
+    return 'ប្រាក់រង្វាន់ប្រចាំថ្ងៃ +$xp XP';
+  }
+
+  @override
+  String get buddyPanelGo => 'ទៅ →';
+
+  @override
+  String get buddyPanelStartLesson => 'ចាប់ផ្តើមមេរៀន';
+
+  @override
+  String get buddyPanelSignIn => 'ចូលគណនី';
+
+  @override
+  String get weeklyPreviewLessons => 'បញ្ចប់មេរៀន ៥';
+
+  @override
+  String get weeklyPreviewAnswers => 'ឆ្លើយត្រូវ ១៥ សំណួរ';
+
+  @override
+  String get weeklyPreviewActiveDays => 'រៀន ៥ ថ្ងៃ';
+
+  @override
+  String get weeklyPreviewSocial => 'ធ្វើសកម្មភាពសង្គម ៣ ដង';
+
+  @override
+  String get chestOpen => 'បើក';
+
+  @override
+  String chestProgress(int points, int target) {
+    return '$points/$target ពិន្ទុ';
+  }
+
+  @override
+  String chestOpenedXp(int xp) {
+    return 'ទទួលបាន +$xp XP';
+  }
+
+  @override
+  String get chestOpenFailed =>
+      'មិនអាចបើកទ្រូងរង្វាន់បានទេ។ សូមព្យាយាមម្តងទៀត។';
+
+  @override
+  String get weeklyLoadFailed => 'មិនអាចផ្ទុកកិច្ចការសប្តាហ៍នេះបានទេ។';
+
+  @override
   String get questPreviewLesson => 'បញ្ចប់មេរៀន ១';
 
   @override

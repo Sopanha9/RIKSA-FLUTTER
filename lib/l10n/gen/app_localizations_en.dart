@@ -2924,6 +2924,105 @@ class AppLocalizationsEn extends AppLocalizations {
   String get buddyHeadHideAction => 'Hide today';
 
   @override
+  String buddyPanelClaimable(String name) {
+    return '$name, claim your XP!';
+  }
+
+  @override
+  String buddyPanelStreakAtRisk(String name) {
+    return '1 lesson left and your streak is safe, $name.';
+  }
+
+  @override
+  String buddyPanelAllDone(String name) {
+    return 'All done — see you tomorrow, $name.';
+  }
+
+  @override
+  String buddyPanelGreeting(String name) {
+    return 'Ready when you are, $name.';
+  }
+
+  @override
+  String get buddyPanelToday => 'Today';
+
+  @override
+  String get buddyPanelThisWeek => 'This week';
+
+  @override
+  String get buddyPanelStreak => 'Streak';
+
+  @override
+  String buddyPanelDays(int count) {
+    return '$count days';
+  }
+
+  @override
+  String get buddyPanelWeeklyChest => 'Weekly chest';
+
+  @override
+  String buddyPanelProgress(int progress, int target, int xp) {
+    return '$progress/$target · +$xp XP';
+  }
+
+  @override
+  String buddyPanelResetsIn(int hours, int minutes) {
+    return 'Resets in ${hours}h ${minutes}m';
+  }
+
+  @override
+  String get buddyPanelGuestPrompt =>
+      'Sign in to keep your streak and rewards.';
+
+  @override
+  String get buddyPanelClose => 'Close quest panel';
+
+  @override
+  String buddyPanelDailyBonus(int xp) {
+    return '+$xp XP daily bonus';
+  }
+
+  @override
+  String get buddyPanelGo => 'Go →';
+
+  @override
+  String get buddyPanelStartLesson => 'Start a lesson';
+
+  @override
+  String get buddyPanelSignIn => 'Sign in';
+
+  @override
+  String get weeklyPreviewLessons => 'Complete 5 lessons';
+
+  @override
+  String get weeklyPreviewAnswers => 'Get 15 answers right';
+
+  @override
+  String get weeklyPreviewActiveDays => 'Study on 5 days';
+
+  @override
+  String get weeklyPreviewSocial => 'Take 3 social actions';
+
+  @override
+  String get chestOpen => 'Open';
+
+  @override
+  String chestProgress(int points, int target) {
+    return '$points/$target points';
+  }
+
+  @override
+  String chestOpenedXp(int xp) {
+    return '+$xp XP earned';
+  }
+
+  @override
+  String get chestOpenFailed => 'The chest could not be opened. Try again.';
+
+  @override
+  String get weeklyLoadFailed => 'This week\'s quests could not load.';
+
+  @override
   String get questPreviewLesson => 'Finish 1 lesson';
 
   @override

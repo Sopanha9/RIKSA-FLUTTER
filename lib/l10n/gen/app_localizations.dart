@@ -5132,6 +5132,162 @@ abstract class AppLocalizations {
   /// **'Hide today'**
   String get buddyHeadHideAction;
 
+  /// No description provided for @buddyPanelClaimable.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, claim your XP!'**
+  String buddyPanelClaimable(String name);
+
+  /// No description provided for @buddyPanelStreakAtRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'1 lesson left and your streak is safe, {name}.'**
+  String buddyPanelStreakAtRisk(String name);
+
+  /// No description provided for @buddyPanelAllDone.
+  ///
+  /// In en, this message translates to:
+  /// **'All done — see you tomorrow, {name}.'**
+  String buddyPanelAllDone(String name);
+
+  /// No description provided for @buddyPanelGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready when you are, {name}.'**
+  String buddyPanelGreeting(String name);
+
+  /// No description provided for @buddyPanelToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get buddyPanelToday;
+
+  /// No description provided for @buddyPanelThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get buddyPanelThisWeek;
+
+  /// No description provided for @buddyPanelStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get buddyPanelStreak;
+
+  /// No description provided for @buddyPanelDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String buddyPanelDays(int count);
+
+  /// No description provided for @buddyPanelWeeklyChest.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly chest'**
+  String get buddyPanelWeeklyChest;
+
+  /// No description provided for @buddyPanelProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{progress}/{target} · +{xp} XP'**
+  String buddyPanelProgress(int progress, int target, int xp);
+
+  /// No description provided for @buddyPanelResetsIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets in {hours}h {minutes}m'**
+  String buddyPanelResetsIn(int hours, int minutes);
+
+  /// No description provided for @buddyPanelGuestPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to keep your streak and rewards.'**
+  String get buddyPanelGuestPrompt;
+
+  /// No description provided for @buddyPanelClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close quest panel'**
+  String get buddyPanelClose;
+
+  /// No description provided for @buddyPanelDailyBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'+{xp} XP daily bonus'**
+  String buddyPanelDailyBonus(int xp);
+
+  /// No description provided for @buddyPanelGo.
+  ///
+  /// In en, this message translates to:
+  /// **'Go →'**
+  String get buddyPanelGo;
+
+  /// No description provided for @buddyPanelStartLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a lesson'**
+  String get buddyPanelStartLesson;
+
+  /// No description provided for @buddyPanelSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get buddyPanelSignIn;
+
+  /// No description provided for @weeklyPreviewLessons.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 5 lessons'**
+  String get weeklyPreviewLessons;
+
+  /// No description provided for @weeklyPreviewAnswers.
+  ///
+  /// In en, this message translates to:
+  /// **'Get 15 answers right'**
+  String get weeklyPreviewAnswers;
+
+  /// No description provided for @weeklyPreviewActiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Study on 5 days'**
+  String get weeklyPreviewActiveDays;
+
+  /// No description provided for @weeklyPreviewSocial.
+  ///
+  /// In en, this message translates to:
+  /// **'Take 3 social actions'**
+  String get weeklyPreviewSocial;
+
+  /// No description provided for @chestOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get chestOpen;
+
+  /// No description provided for @chestProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{points}/{target} points'**
+  String chestProgress(int points, int target);
+
+  /// No description provided for @chestOpenedXp.
+  ///
+  /// In en, this message translates to:
+  /// **'+{xp} XP earned'**
+  String chestOpenedXp(int xp);
+
+  /// No description provided for @chestOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The chest could not be opened. Try again.'**
+  String get chestOpenFailed;
+
+  /// No description provided for @weeklyLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This week\'s quests could not load.'**
+  String get weeklyLoadFailed;
+
   /// No description provided for @questPreviewLesson.
   ///
   /// In en, this message translates to:
