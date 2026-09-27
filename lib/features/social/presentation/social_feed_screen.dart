@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,9 +45,19 @@ class SocialFeedScreen extends ConsumerStatefulWidget {
 }
 
 class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
+  static const _maxAutomaticPagesPerFilter = 5;
+  static const _timelineHeaderExtent = 105.0;
+  static const _feedBottomSpacerExtent = 96.0;
+  static const _underfilledScrollExtent =
+      _timelineHeaderExtent + _feedBottomSpacerExtent;
+  static const _yourArticlesLinkExtent = 40.0;
+
   late final ScrollController _scrollController;
   late _SocialSection _section;
   String _searchQuery = '';
+  int _automaticPagesLoaded = 0;
+
+  String get _filterKey => '${_section.name}|$_searchQuery';
 
   @override
   void initState() {
@@ -63,6 +75,7 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
       _section = widget.startInCommunities
           ? _SocialSection.communities
           : _SocialSection.feed;
+      _automaticPagesLoaded = 0;
       if (_scrollController.hasClients) _scrollController.jumpTo(0);
     }
   }
@@ -132,8 +145,7 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
               selected: _section,
               onSelected: _selectSection,
               searchQuery: _searchQuery,
-              onSearchChanged: (value) =>
-                  setState(() => _searchQuery = value.trim().toLowerCase()),
+              onSearchChanged: _setSearchQuery,
               onFilter: _showContentFilter,
             ),
             if (_section == _SocialSection.feed && _searchQuery.isEmpty)
@@ -145,7 +157,9 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
             else
               ..._contentSlivers(state),
             // Room for the last post to scroll clear of the post button.
-            const SliverToBoxAdapter(child: SizedBox(height: 96)),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: _feedBottomSpacerExtent),
+            ),
           ],
         ),
       ),
@@ -154,6 +168,15 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
 
   String _t(String en, String km) =>
       Localizations.localeOf(context).languageCode == 'km' ? km : en;
+
+  void _setSearchQuery(String value) {
+    final query = value.trim().toLowerCase();
+    if (query == _searchQuery) return;
+    setState(() {
+      _searchQuery = query;
+      _automaticPagesLoaded = 0;
+    });
+  }
 
   List<Widget> _contentSlivers(SocialFeedState state) {
     final l10n = AppLocalizations.of(context)!;
@@ -172,89 +195,123 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
           ),
         ),
       ],
-      SocialFeedLoaded(:final posts, :final categories) => [
-        ...() {
-          final joined = {
-            for (final category in categories)
-              if (category.joined) category.id,
-          };
-          final scoped = _section == _SocialSection.communities
-              ? posts.where((post) => joined.contains(post.category.id))
-              : posts;
-          final filteredPosts = scoped.where(_matchesPostSearch).toList();
-          return <Widget>[
-            if (filteredPosts.isEmpty &&
-                _section == _SocialSection.communities &&
-                _searchQuery.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: _FeedMessage(
-                  icon: Icons.groups_2_outlined,
-                  title: joined.isEmpty
-                      ? _t('Join a community', 'ចូលរួមសហគមន៍')
-                      : _t('Nothing new yet', 'មិនទាន់មានអ្វីថ្មី'),
-                  message: joined.isEmpty
-                      ? _t(
-                          'Posts from the communities you join show up here.',
-                          'ការបង្ហោះពីសហគមន៍ដែលអ្នកចូលរួម នឹងបង្ហាញនៅទីនេះ។',
-                        )
-                      : _t(
-                          'Your communities have been quiet. Start something!',
-                          'សហគមន៍របស់អ្នកនៅស្ងាត់។ ចាប់ផ្ដើមអ្វីមួយ!',
-                        ),
-                  buttonLabel: l10n.communitiesMenu,
-                  onPressed: () => context.push('/communities'),
-                ),
-              )
-            else if (filteredPosts.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: _FeedMessage(
-                  icon: Icons.forum_outlined,
-                  title: _searchQuery.isEmpty
-                      ? l10n.feedEmptyTitle
-                      : l10n.noSearchResults,
-                  message: _searchQuery.isEmpty
-                      ? l10n.feedEmptyMessage
-                      : l10n.searchCommunityHint,
-                ),
-              )
-            else
-              SliverList.builder(
-                itemCount: filteredPosts.length,
-                itemBuilder: (context, index) {
-                  final post = filteredPosts[index];
-                  return SocialPostCard(
-                    post: post,
-                    // Through the router, not Navigator: a raw push leaves
-                    // go_router still believing the feed is on screen, and
-                    // the shell reads it to decide whether the tab bar
-                    // belongs over this screen.
-                    onTap: () => context.push('/community/posts/${post.id}'),
-                    onAuthorTap: publicProfilePath(post.author.id) == null
-                        ? null
-                        : () => _openProfile(post.author.id),
-                    onReact: () => _react(post.id),
-                    onShare: () => _share(post.id),
-                    onEdit: post.author.id == currentUserId
-                        ? () => _editPost(post)
+      SocialFeedLoaded(
+        :final posts,
+        :final categories,
+        :final hasNextPage,
+        :final isLoadingMore,
+      ) =>
+        [
+          ...() {
+            final joined = {
+              for (final category in categories)
+                if (category.joined) category.id,
+            };
+            final scoped = _section == _SocialSection.communities
+                ? posts.where((post) => joined.contains(post.category.id))
+                : posts;
+            final filteredPosts = scoped.where(_matchesPostSearch).toList();
+            final isEmpty = filteredPosts.isEmpty;
+            _scheduleAutoLoad(
+              isBlog: false,
+              hasNextPage: hasNextPage,
+              isLoadingMore: isLoadingMore,
+            );
+            final canManuallyLoad =
+                isEmpty &&
+                hasNextPage &&
+                !isLoadingMore &&
+                _automaticPagesLoaded >= _maxAutomaticPagesPerFilter;
+            return <Widget>[
+              if (isEmpty &&
+                  _section == _SocialSection.communities &&
+                  _searchQuery.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _FeedMessage(
+                    icon: Icons.groups_2_outlined,
+                    title: joined.isEmpty
+                        ? _t('Join a community', 'ចូលរួមសហគមន៍')
+                        : _t('Nothing new yet', 'មិនទាន់មានអ្វីថ្មី'),
+                    message: joined.isEmpty
+                        ? _t(
+                            'Posts from the communities you join show up here.',
+                            'ការបង្ហោះពីសហគមន៍ដែលអ្នកចូលរួម នឹងបង្ហាញនៅទីនេះ។',
+                          )
+                        : _t(
+                            'Your communities have been quiet. Start something!',
+                            'សហគមន៍របស់អ្នកនៅស្ងាត់។ ចាប់ផ្ដើមអ្វីមួយ!',
+                          ),
+                    buttonLabel: l10n.communitiesMenu,
+                    onPressed: () => context.push('/communities'),
+                    secondaryButtonLabel: canManuallyLoad
+                        ? l10n.loadMore
                         : null,
-                    onDelete: post.author.id == currentUserId
-                        ? () => _deletePost(post)
+                    onSecondaryPressed: canManuallyLoad
+                        ? () => ref.read(socialFeedProvider.notifier).loadMore()
                         : null,
-                  );
-                },
-              ),
-            if (state.isLoadingMore)
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: CircularProgressIndicator()),
+                    isLoading: isLoadingMore,
+                  ),
+                )
+              else if (isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _FeedMessage(
+                    icon: Icons.forum_outlined,
+                    title: _searchQuery.isEmpty
+                        ? l10n.feedEmptyTitle
+                        : l10n.noSearchResults,
+                    message: _searchQuery.isEmpty
+                        ? l10n.feedEmptyMessage
+                        : l10n.searchCommunityHint,
+                    buttonLabel: canManuallyLoad ? l10n.loadMore : null,
+                    onPressed: canManuallyLoad
+                        ? () => ref.read(socialFeedProvider.notifier).loadMore()
+                        : null,
+                    isLoading: isLoadingMore,
+                  ),
+                )
+              else
+                SliverList.builder(
+                  itemCount: filteredPosts.length,
+                  itemBuilder: (context, index) {
+                    final post = filteredPosts[index];
+                    return SocialPostCard(
+                      post: post,
+                      // Through the router, not Navigator: a raw push leaves
+                      // go_router still believing the feed is on screen, and
+                      // the shell reads it to decide whether the tab bar
+                      // belongs over this screen.
+                      onTap: () => context.push('/community/posts/${post.id}'),
+                      onAuthorTap: publicProfilePath(post.author.id) == null
+                          ? null
+                          : () => _openProfile(post.author.id),
+                      onReact: () => _react(post.id),
+                      onShare: () => _share(post.id),
+                      onEdit: post.author.id == currentUserId
+                          ? () => _editPost(post)
+                          : null,
+                      onDelete: post.author.id == currentUserId
+                          ? () => _deletePost(post)
+                          : null,
+                    );
+                  },
                 ),
-              ),
-          ];
-        }(),
-      ],
+              if (isLoadingMore && !isEmpty)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Center(
+                      child: SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+                ),
+            ];
+          }(),
+        ],
     };
   }
 
@@ -274,11 +331,22 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
           ),
         ),
       ],
-      BlogFeedLoaded(:final posts, :final isLoadingMore) => [
+      BlogFeedLoaded(:final posts, :final hasMore, :final isLoadingMore) => [
         ...() {
           final filteredPosts = posts.where(_matchesBlogSearch).toList();
+          final isEmpty = filteredPosts.isEmpty;
+          _scheduleAutoLoad(
+            isBlog: true,
+            hasNextPage: hasMore,
+            isLoadingMore: isLoadingMore,
+          );
+          final canManuallyLoad =
+              isEmpty &&
+              hasMore &&
+              !isLoadingMore &&
+              _automaticPagesLoaded >= _maxAutomaticPagesPerFilter;
           return <Widget>[
-            if (filteredPosts.isEmpty)
+            if (isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: _FeedMessage(
@@ -287,6 +355,11 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
                   message: _searchQuery.isEmpty
                       ? l10n.blogEmptyMessage
                       : l10n.noSearchResults,
+                  buttonLabel: canManuallyLoad ? l10n.loadMore : null,
+                  onPressed: canManuallyLoad
+                      ? () => ref.read(blogFeedProvider.notifier).loadMore()
+                      : null,
+                  isLoading: isLoadingMore,
                 ),
               )
             else
@@ -302,11 +375,16 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
                   ),
                 ),
               ),
-            if (isLoadingMore)
+            if (isLoadingMore && !isEmpty)
               const SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: CircularProgressIndicator()),
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Center(
+                    child: SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
                 ),
               ),
           ];
@@ -383,7 +461,10 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
 
   void _selectSection(_SocialSection section) {
     if (_section == section) return;
-    setState(() => _section = section);
+    setState(() {
+      _section = section;
+      _automaticPagesLoaded = 0;
+    });
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(0);
     }
@@ -449,6 +530,86 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
     if (_searchQuery.isEmpty) return true;
     return post.title.toLowerCase().contains(_searchQuery) ||
         post.content.toLowerCase().contains(_searchQuery);
+  }
+
+  void _scheduleAutoLoad({
+    required bool isBlog,
+    required bool hasNextPage,
+    required bool isLoadingMore,
+  }) {
+    if (!hasNextPage ||
+        isLoadingMore ||
+        _automaticPagesLoaded >= _maxAutomaticPagesPerFilter) {
+      return;
+    }
+    final filterKey = _filterKey;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted ||
+          filterKey != _filterKey ||
+          _automaticPagesLoaded >= _maxAutomaticPagesPerFilter) {
+        return;
+      }
+
+      final hasVisibleResults = isBlog
+          ? _hasVisibleBlogResults()
+          : _hasVisibleSocialResults();
+      final loadedState = isBlog
+          ? ref.read(blogFeedProvider)
+          : ref.read(socialFeedProvider);
+      final canLoad = switch ((isBlog, loadedState)) {
+        (true, BlogFeedLoaded(:final hasMore, :final isLoadingMore)) =>
+          hasMore && !isLoadingMore,
+        (false, SocialFeedLoaded(:final hasNextPage, :final isLoadingMore)) =>
+          hasNextPage && !isLoadingMore,
+        _ => false,
+      };
+      final isFilteredList =
+          _section == _SocialSection.communities || _searchQuery.isNotEmpty;
+      if (!canLoad ||
+          (hasVisibleResults &&
+              (!isFilteredList || !_scrollContentIsShorterThanViewport()))) {
+        return;
+      }
+
+      _automaticPagesLoaded++;
+      unawaited(
+        isBlog
+            ? ref.read(blogFeedProvider.notifier).loadMore()
+            : ref.read(socialFeedProvider.notifier).loadMore(),
+      );
+    });
+  }
+
+  bool _hasVisibleSocialResults() {
+    final current = ref.read(socialFeedProvider);
+    if (current is! SocialFeedLoaded) return false;
+    final joined = {
+      for (final category in current.categories)
+        if (category.joined) category.id,
+    };
+    return current.posts.any(
+      (post) =>
+          (_section != _SocialSection.communities ||
+              joined.contains(post.category.id)) &&
+          _matchesPostSearch(post),
+    );
+  }
+
+  bool _hasVisibleBlogResults() {
+    final current = ref.read(blogFeedProvider);
+    return current is BlogFeedLoaded && current.posts.any(_matchesBlogSearch);
+  }
+
+  bool _scrollContentIsShorterThanViewport() {
+    if (!_scrollController.hasClients) return true;
+    final position = _scrollController.position;
+    if (!position.hasContentDimensions) return true;
+    // The app bar can scroll away by 105 px and the last sliver adds 96 px.
+    // The in-app blog view also has a short articles link above its list.
+    final structuralExtent =
+        _underfilledScrollExtent +
+        (_section == _SocialSection.blog ? _yourArticlesLinkExtent : 0);
+    return position.maxScrollExtent <= structuralExtent;
   }
 
   Future<void> _showCreateMenu() async {
@@ -1141,6 +1302,9 @@ class _FeedMessage extends StatelessWidget {
     required this.message,
     this.buttonLabel,
     this.onPressed,
+    this.secondaryButtonLabel,
+    this.onSecondaryPressed,
+    this.isLoading = false,
   });
 
   final IconData icon;
@@ -1148,6 +1312,9 @@ class _FeedMessage extends StatelessWidget {
   final String message;
   final String? buttonLabel;
   final VoidCallback? onPressed;
+  final String? secondaryButtonLabel;
+  final VoidCallback? onSecondaryPressed;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -1193,6 +1360,24 @@ class _FeedMessage extends StatelessWidget {
                   onPressed: onPressed,
                   child: Text(buttonLabel!),
                 ),
+              ),
+            ],
+            if (onSecondaryPressed != null && secondaryButtonLabel != null) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: 160,
+                child: OutlinedButton(
+                  key: const ValueKey('feed-load-more'),
+                  onPressed: onSecondaryPressed,
+                  child: Text(secondaryButtonLabel!),
+                ),
+              ),
+            ],
+            if (isLoading) ...[
+              const SizedBox(height: 16),
+              const SizedBox.square(
+                dimension: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
               ),
             ],
           ],

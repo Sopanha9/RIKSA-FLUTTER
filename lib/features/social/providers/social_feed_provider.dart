@@ -157,7 +157,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
         return;
       }
       state = latest.copyWith(
-        posts: [...latest.posts, ...page.posts],
+        posts: _appendUnique(latest.posts, page.posts),
         hasNextPage: page.hasNextPage,
         endCursor: page.endCursor,
         isLoadingMore: false,
@@ -198,16 +198,14 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
           .react(postId: postId, reaction: reaction);
       if (requestVersion != _requestVersion) return false;
       final latest = state;
-      if (latest is SocialFeedLoaded) {
-        state = latest.copyWith(posts: _replace(latest.posts, updated));
-      }
+      if (latest is! SocialFeedLoaded) return false;
+      state = latest.copyWith(posts: _replace(latest.posts, updated));
       return true;
     } catch (_) {
       if (requestVersion != _requestVersion) return false;
       final latest = state;
-      if (latest is SocialFeedLoaded) {
-        state = latest.copyWith(posts: _replace(latest.posts, original));
-      }
+      if (latest is! SocialFeedLoaded) return false;
+      state = latest.copyWith(posts: _replace(latest.posts, original));
       return false;
     }
   }
@@ -245,9 +243,13 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
           );
       if (requestVersion != _requestVersion) return null;
       final latest = state;
-      if (latest is SocialFeedLoaded) {
-        state = latest.copyWith(posts: [created, ...latest.posts]);
-      }
+      if (latest is! SocialFeedLoaded) return null;
+      state = latest.copyWith(
+        posts: [
+          created,
+          ...latest.posts.where((post) => post.id != created.id),
+        ],
+      );
       return null;
     } catch (error) {
       return _message(error);
@@ -273,7 +275,11 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
             mediaUrl: mediaUrl,
           );
       if (requestVersion != _requestVersion) return null;
-      syncPost(updated);
+      final latest = state;
+      if (latest is SocialFeedLoaded &&
+          latest.posts.any((post) => post.id == updated.id)) {
+        state = latest.copyWith(posts: _replace(latest.posts, updated));
+      }
       // The author's profile tab reads its own copy of the feed.
       ref.invalidate(userPostsProvider);
       return null;
@@ -289,7 +295,16 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
     try {
       await ref.read(socialApiProvider).deletePost(id);
       if (requestVersion != _requestVersion) return null;
-      removePost(id);
+      final latest = state;
+      if (latest is SocialFeedLoaded &&
+          latest.posts.any((post) => post.id == id)) {
+        state = latest.copyWith(
+          posts: [
+            for (final post in latest.posts)
+              if (post.id != id) post,
+          ],
+        );
+      }
       ref.invalidate(userPostsProvider);
       return null;
     } catch (error) {
@@ -316,9 +331,8 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
       final updated = await ref.read(socialApiProvider).share(postId);
       if (requestVersion != _requestVersion) return false;
       final current = state;
-      if (current is SocialFeedLoaded) {
-        state = current.copyWith(posts: _replace(current.posts, updated));
-      }
+      if (current is! SocialFeedLoaded) return false;
+      state = current.copyWith(posts: _replace(current.posts, updated));
       return true;
     } catch (_) {
       return false;
@@ -362,14 +376,13 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
           .setCategoryJoined(categoryId, joined: !category.joined);
       if (requestVersion != _requestVersion) return false;
       final latest = state;
-      if (latest is SocialFeedLoaded) {
-        state = latest.copyWith(
-          categories: [
-            for (final item in latest.categories)
-              if (item.id == categoryId) updated else item,
-          ],
-        );
-      }
+      if (latest is! SocialFeedLoaded) return false;
+      state = latest.copyWith(
+        categories: [
+          for (final item in latest.categories)
+            if (item.id == categoryId) updated else item,
+        ],
+      );
       return true;
     } catch (_) {
       return false;
@@ -380,6 +393,14 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
     for (final post in posts)
       if (post.id == replacement.id) replacement else post,
   ];
+
+  List<SocialPost> _appendUnique(
+    List<SocialPost> current,
+    List<SocialPost> incoming,
+  ) {
+    final ids = current.map((post) => post.id).toSet();
+    return [...current, ...incoming.where((post) => ids.add(post.id))];
+  }
 
   String _message(Object error) {
     if (error is SocialApiException) return error.message;

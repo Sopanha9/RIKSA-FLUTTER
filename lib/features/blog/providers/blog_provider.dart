@@ -185,22 +185,34 @@ class BlogFeedNotifier extends Notifier<BlogFeedState> {
             page: current.page + 1,
             size: _pageSize,
           );
-      if (requestVersion != _requestVersion) return;
+      final latest = state;
+      if (requestVersion != _requestVersion ||
+          latest is! BlogFeedLoaded ||
+          latest.page != current.page ||
+          latest.categoryId != current.categoryId) {
+        return;
+      }
       state = BlogFeedLoaded(
-        posts: [...current.posts, ...page.content],
+        posts: _appendUnique(latest.posts, page.content),
         page: page.page,
         totalPages: page.totalPages,
-        categoryId: current.categoryId,
-        loadedAt: current.loadedAt,
+        categoryId: latest.categoryId,
+        loadedAt: latest.loadedAt,
       );
     } catch (_) {
-      if (requestVersion != _requestVersion) return;
+      final latest = state;
+      if (requestVersion != _requestVersion ||
+          latest is! BlogFeedLoaded ||
+          latest.page != current.page ||
+          latest.categoryId != current.categoryId) {
+        return;
+      }
       state = BlogFeedLoaded(
-        posts: current.posts,
-        page: current.page,
-        totalPages: current.totalPages,
-        categoryId: current.categoryId,
-        loadedAt: current.loadedAt,
+        posts: latest.posts,
+        page: latest.page,
+        totalPages: latest.totalPages,
+        categoryId: latest.categoryId,
+        loadedAt: latest.loadedAt,
       );
     }
   }
@@ -250,15 +262,18 @@ class BlogFeedNotifier extends Notifier<BlogFeedState> {
     try {
       final updated = await ref.read(blogApiProvider).toggleLike(postId);
       if (requestVersion != _requestVersion) return;
+      final latest = state;
+      if (latest is! BlogFeedLoaded) return;
       state = BlogFeedLoaded(
         posts: [
-          for (final post in current.posts)
+          for (final post in latest.posts)
             if (post.id == postId) updated else post,
         ],
-        page: current.page,
-        totalPages: current.totalPages,
-        categoryId: current.categoryId,
-        loadedAt: current.loadedAt,
+        page: latest.page,
+        totalPages: latest.totalPages,
+        categoryId: latest.categoryId,
+        isLoadingMore: latest.isLoadingMore,
+        loadedAt: latest.loadedAt,
       );
     } catch (_) {
       if (requestVersion != _requestVersion) return;
@@ -269,6 +284,14 @@ class BlogFeedNotifier extends Notifier<BlogFeedState> {
   String _msg(Object e) {
     if (e is DioException) return dioErrorMessage(e);
     return 'Something went wrong';
+  }
+
+  List<BlogPost> _appendUnique(
+    List<BlogPost> current,
+    List<BlogPost> incoming,
+  ) {
+    final ids = current.map((post) => post.id).toSet();
+    return [...current, ...incoming.where((post) => ids.add(post.id))];
   }
 }
 
