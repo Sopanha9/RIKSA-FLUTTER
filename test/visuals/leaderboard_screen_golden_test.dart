@@ -176,6 +176,9 @@ void main() {
           'goldens/leaderboard_redesign_en_${dark ? 'dark' : 'light'}.png',
         ),
       );
+      // Let one-shot buddy face animations and image loads finish so no
+      // timer is still pending when the widget tree is torn down.
+      await tester.pump(const Duration(seconds: 5));
     });
   }
 }

@@ -98,6 +98,30 @@ abstract class AppLocalizations {
     Locale('km'),
   ];
 
+  /// Accessible name for a crocodile buddy look.
+  ///
+  /// In en, this message translates to:
+  /// **'Crocodile'**
+  String get buddyLookCrocodile;
+
+  /// Accessible name for a capybara buddy look.
+  ///
+  /// In en, this message translates to:
+  /// **'Capybara'**
+  String get buddyLookCapybara;
+
+  /// Accessible name for a buddy's hat slot.
+  ///
+  /// In en, this message translates to:
+  /// **'hat'**
+  String get buddyLookHat;
+
+  /// Accessible name for a buddy's eyewear slot.
+  ///
+  /// In en, this message translates to:
+  /// **'glasses'**
+  String get buddyLookEyewear;
+
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:

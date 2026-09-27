@@ -13,6 +13,8 @@ import '../../social/presentation/widgets/social_owner_menu.dart';
 import '../../social/presentation/widgets/social_post_card.dart';
 import '../../social/providers/social_feed_provider.dart';
 import '../data/public_profile.dart';
+import '../../mascot/presentation/widgets/buddy_look.dart';
+import '../../mascot/domain/mascot.dart';
 import '../providers/public_profile_provider.dart';
 import 'public_profile_navigation.dart';
 import 'widgets/profile_ui.dart';
@@ -26,10 +28,6 @@ class PublicProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<PublicProfileScreen> createState() =>
       _PublicProfileScreenState();
 }
-
-// Public profiles intentionally omit buddy identity. Add it only when the
-// backend PublicProfile contract exposes mascotSpecies and mascotName; using
-// mascotProvider here would incorrectly show the signed-in learner's buddy.
 
 class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   ProfileTab _tab = ProfileTab.posts;
@@ -184,10 +182,58 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                         label: l10n.achievements,
                       ),
                     ],
-                    footer: ProfileTierPanel(
-                      tier: profile.currentTier,
-                      totalXpLabel:
-                          '${NumberFormat.compact(locale: locale).format(profile.totalXp)} XP',
+                    footer: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (profile.buddy case final buddy?) ...[
+                          Row(
+                            key: const ValueKey('public-profile-buddy-look'),
+                            children: [
+                              BuddyLook(
+                                species: buddy.species,
+                                face: MascotFace.proud,
+                                equipped: buddy.equipped,
+                                size: 46,
+                                loops: 1,
+                                semanticLabel: buddy.name,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.profileStudyBuddy,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            color: context.riksa.inkMuted,
+                                          ),
+                                    ),
+                                    Text(
+                                      buddy.name,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        ProfileTierPanel(
+                          tier: profile.currentTier,
+                          totalXpLabel:
+                              '${NumberFormat.compact(locale: locale).format(profile.totalXp)} XP',
+                        ),
+                      ],
                     ),
                   ),
                 ),

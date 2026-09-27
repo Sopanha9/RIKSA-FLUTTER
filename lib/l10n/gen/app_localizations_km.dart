@@ -9,6 +9,18 @@ class AppLocalizationsKm extends AppLocalizations {
   AppLocalizationsKm([String locale = 'km']) : super(locale);
 
   @override
+  String get buddyLookCrocodile => 'ក្រពើ';
+
+  @override
+  String get buddyLookCapybara => 'កាពីបារ៉ា';
+
+  @override
+  String get buddyLookHat => 'មួក';
+
+  @override
+  String get buddyLookEyewear => 'វ៉ែនតា';
+
+  @override
   String get appName => 'Riksa';
 
   @override

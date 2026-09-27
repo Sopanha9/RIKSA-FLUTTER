@@ -19,6 +19,10 @@ class BuddyCareState {
     required this.name,
     this.today = const [],
     this.userId,
+    this.equipped = const {},
+    this.balance,
+    this.chosen = true,
+    this.serverSynced = false,
   });
 
   factory BuddyCareState.initial(DateTime now) => BuddyCareState(
@@ -32,6 +36,10 @@ class BuddyCareState {
   final String name;
   final List<BuddyTodayAction> today;
   final String? userId;
+  final Map<BuddyItemSlot, BuddyEquipped> equipped;
+  final int? balance;
+  final bool chosen;
+  final bool serverSynced;
 
   BuddyCareState copyWith({
     BuddyCare? care,
@@ -39,6 +47,10 @@ class BuddyCareState {
     String? name,
     List<BuddyTodayAction>? today,
     String? userId,
+    Map<BuddyItemSlot, BuddyEquipped>? equipped,
+    int? balance,
+    bool? chosen,
+    bool? serverSynced,
     bool clearUser = false,
   }) => BuddyCareState(
     care: care ?? this.care,
@@ -46,14 +58,26 @@ class BuddyCareState {
     name: name ?? this.name,
     today: today ?? this.today,
     userId: clearUser ? null : userId ?? this.userId,
+    equipped: equipped ?? this.equipped,
+    balance: balance ?? this.balance,
+    chosen: chosen ?? this.chosen,
+    serverSynced: serverSynced ?? this.serverSynced,
   );
 
-  factory BuddyCareState.fromMe(BuddyMe me, {String? userId}) => BuddyCareState(
+  factory BuddyCareState.fromMe(
+    BuddyMe me, {
+    String? userId,
+    bool serverSynced = true,
+  }) => BuddyCareState(
     care: me.care,
     species: me.species,
     name: me.name,
     today: me.today,
     userId: userId,
+    equipped: me.equipped,
+    balance: me.balance,
+    chosen: me.chosen,
+    serverSynced: serverSynced,
   );
 }
 
@@ -69,6 +93,7 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
   String? _activeUserId;
   String? _syncingUserId;
   Future<void>? _syncOperation;
+  final Map<BuddyItemSlot, int> _equipVersions = {};
 
   @override
   BuddyCareState build() {
@@ -88,11 +113,22 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
     });
     ref.listen<MascotState>(mascotProvider, (previous, next) {
       final profile = next.profile;
-      if (profile == null ||
-          (state.species == profile.species && state.name == profile.name)) {
+      if (profile == null) return;
+      final auth = ref.read(authProvider);
+      final confirmedForSignedInUser =
+          next.choiceConfirmedLocally &&
+          auth is Authenticated &&
+          _activeUserId == auth.userId;
+      if (state.species == profile.species &&
+          state.name == profile.name &&
+          (!confirmedForSignedInUser || state.chosen)) {
         return;
       }
-      state = state.copyWith(species: profile.species, name: profile.name);
+      state = state.copyWith(
+        species: profile.species,
+        name: profile.name,
+        chosen: confirmedForSignedInUser ? true : null,
+      );
       unawaited(_saveCurrentState());
     });
     final auth = ref.read(authProvider);
@@ -168,7 +204,7 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
           final cached = BuddyMe.fromJson(
             Map<String, dynamic>.from(jsonDecode(cachedJson) as Map),
           );
-          _applyServerState(cached, userId);
+          _applyServerState(cached, userId, serverSynced: false);
         }
       } catch (_) {
         cachedJson = null;
@@ -182,36 +218,43 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
       } catch (_) {
         // If the local guest cache is unavailable, still load the server buddy.
       }
-      final BuddyMe remote;
+      var remote = await ref.read(buddyApiProvider).getMe();
       final hasPendingGuestChoice =
-          prefs?.getBool(MascotNotifier.guestChoicePendingKey) ?? false;
-      if ((guestJson != null || hasPendingGuestChoice) && prefs != null) {
-        final guestCare = guestJson == null
-            ? null
-            : BuddyCare.fromJson(
-                Map<String, dynamic>.from(jsonDecode(guestJson) as Map),
-              );
-        final profile = hasPendingGuestChoice
-            ? await _profileFromPreferences(prefs)
-            : null;
+          prefs != null &&
+          ((prefs.getBool(MascotNotifier.guestChoicePendingKey) ?? false) ||
+              prefs.getString('riksa_mascot_species_guest') != null);
+      if (!remote.chosen && hasPendingGuestChoice) {
+        BuddyCare? guestCare;
+        try {
+          if (guestJson != null) {
+            guestCare = BuddyCare.fromJson(
+              Map<String, dynamic>.from(jsonDecode(guestJson) as Map),
+            );
+          }
+        } catch (_) {
+          // A malformed care cache cannot suppress the guest buddy choice.
+        }
+        final profile = await _profileFromPreferences(prefs);
         remote = await ref
             .read(buddyApiProvider)
             .updateMe(
-              species: profile?.species,
-              name: profile?.name,
+              species: profile.species,
+              name: profile.name,
               guestEnergy: guestCare?.energy,
               guestBond: guestCare?.bond,
             );
+      }
+      if (hasPendingGuestChoice) {
+        // A server buddy always wins. Once the account has loaded, clear the
+        // guest choice so it cannot be replayed against another account.
         try {
-          if (guestJson != null) await prefs.remove(_guestKey);
-          if (hasPendingGuestChoice) {
-            await prefs.remove(MascotNotifier.guestChoicePendingKey);
-          }
+          await prefs.remove(_guestKey);
+          await prefs.remove(MascotNotifier.guestChoicePendingKey);
+          await prefs.remove('riksa_mascot_species_guest');
+          await prefs.remove('riksa_mascot_name_guest');
         } catch (_) {
-          // Removing a stale local copy is best-effort after a successful sync.
+          // Cleanup is best-effort after the server buddy has loaded.
         }
-      } else {
-        remote = await ref.read(buddyApiProvider).getMe();
       }
       if (!ref.mounted || _syncingUserId != userId) return;
       _activeUserId = userId;
@@ -220,18 +263,29 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
       } catch (_) {
         // The server response remains usable when its local cache cannot save.
       }
-      _applyServerState(remote, userId);
+      _applyServerState(remote, userId, serverSynced: true);
     } catch (_) {
       if (cachedJson == null && ref.mounted) {
         _activeUserId = userId;
-        state = state.copyWith(userId: userId);
+        state = state.copyWith(userId: userId, serverSynced: true);
+      } else if (ref.mounted && _syncingUserId == userId) {
+        // Keep a cached look visible and allow the app to continue offline.
+        state = state.copyWith(serverSynced: true);
       }
     }
   }
 
-  void _applyServerState(BuddyMe me, String userId) {
+  void _applyServerState(
+    BuddyMe me,
+    String userId, {
+    required bool serverSynced,
+  }) {
     _activeUserId = userId;
-    state = BuddyCareState.fromMe(me, userId: userId);
+    state = BuddyCareState.fromMe(
+      me,
+      userId: userId,
+      serverSynced: serverSynced,
+    );
     unawaited(
       ref
           .read(mascotProvider.notifier)
@@ -252,7 +306,7 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
     try {
       final me = await ref.read(buddyApiProvider).getMe();
       if (!ref.mounted || _activeUserId != userId) return;
-      _applyServerState(me, userId);
+      _applyServerState(me, userId, serverSynced: true);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
         '$_signedInKeyPrefix$userId',
@@ -313,6 +367,9 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
           species: state.species,
           name: state.name,
           today: state.today,
+          equipped: state.equipped,
+          balance: state.balance,
+          chosen: state.chosen,
         ).toJson();
         await prefs.setString('$_signedInKeyPrefix$userId', jsonEncode(json));
       } else {
@@ -320,6 +377,59 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
       }
     } catch (_) {
       // Buddy care stays usable when its optional local cache is unavailable.
+    }
+  }
+
+  /// Changes the server equipped slot with an optimistic local look update.
+  /// [assetKey] is supplied by the selecting UI so the new item can paint
+  /// before the server returns its canonical item record.
+  Future<void> equip(
+    BuddyItemSlot slot,
+    String? itemId, {
+    String? assetKey,
+  }) async {
+    final userId = _activeUserId;
+    if (userId == null || state.userId != userId) {
+      throw StateError('A signed-in buddy is required to equip items.');
+    }
+    final previous = state.equipped[slot];
+    final version = (_equipVersions[slot] ?? 0) + 1;
+    _equipVersions[slot] = version;
+    final optimistic = Map<BuddyItemSlot, BuddyEquipped>.of(state.equipped);
+    if (itemId == null) {
+      optimistic.remove(slot);
+    } else {
+      optimistic[slot] = BuddyEquipped(
+        slot: slot,
+        itemId: itemId,
+        assetKey: assetKey ?? '',
+      );
+    }
+    state = state.copyWith(equipped: Map.unmodifiable(optimistic));
+    await _saveCurrentState();
+    try {
+      final me = await ref.read(buddyApiProvider).equip(slot, itemId);
+      if (!ref.mounted ||
+          _activeUserId != userId ||
+          _equipVersions[slot] != version) {
+        return;
+      }
+      _applyServerState(me, userId, serverSynced: true);
+      await _saveCurrentState();
+    } catch (_) {
+      if (ref.mounted &&
+          _activeUserId == userId &&
+          _equipVersions[slot] == version) {
+        final rollback = Map<BuddyItemSlot, BuddyEquipped>.of(state.equipped);
+        if (previous == null) {
+          rollback.remove(slot);
+        } else {
+          rollback[slot] = previous;
+        }
+        state = state.copyWith(equipped: Map.unmodifiable(rollback));
+        await _saveCurrentState();
+      }
+      rethrow;
     }
   }
 
@@ -360,3 +470,15 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
 final buddyCareProvider = NotifierProvider<BuddyCareNotifier, BuddyCareState>(
   BuddyCareNotifier.new,
 );
+
+final buddyLookProvider = Provider<PublicBuddyLook>((ref) {
+  final buddy = ref.watch(buddyCareProvider);
+  return PublicBuddyLook(
+    species: buddy.species,
+    name: buddy.name,
+    equipped: Map.unmodifiable({
+      for (final entry in buddy.equipped.entries)
+        if (entry.value.assetKey.isNotEmpty) entry.key: entry.value.assetKey,
+    }),
+  );
+});

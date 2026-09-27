@@ -12,7 +12,10 @@ import 'widgets/mascot_view.dart';
 /// First-run step between the welcome and language selection: the learner
 /// picks the buddy that will study with them, and names it.
 class MascotSelectScreen extends ConsumerStatefulWidget {
-  const MascotSelectScreen({super.key});
+  const MascotSelectScreen({super.key, this.serverPrompt = false});
+
+  /// Sign-in gate for accounts whose server buddy is still the silent default.
+  final bool serverPrompt;
 
   @override
   ConsumerState<MascotSelectScreen> createState() => _MascotSelectScreenState();
@@ -28,6 +31,8 @@ class _MascotSelectScreenState extends ConsumerState<MascotSelectScreen> {
   bool _nameEdited = false;
   bool _selectionEdited = false;
   bool _submitting = false;
+  late MascotSpecies _serverDefaultSpecies;
+  late String _serverDefaultName;
 
   @override
   void initState() {
@@ -36,6 +41,8 @@ class _MascotSelectScreenState extends ConsumerState<MascotSelectScreen> {
     _species = saved?.species ?? MascotSpecies.crocodile;
     _name.text = saved?.name ?? MascotProfile.defaultName(_species);
     _nameEdited = saved != null;
+    _serverDefaultSpecies = _species;
+    _serverDefaultName = _name.text;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       MascotScenes.precacheAll(context);
@@ -63,6 +70,10 @@ class _MascotSelectScreenState extends ConsumerState<MascotSelectScreen> {
     await ref.read(mascotProvider.notifier).choose(_species, _name.text);
     if (!mounted) return;
     _stage.react(MascotMood.celebrate);
+    if (widget.serverPrompt) {
+      context.go('/learn');
+      return;
+    }
     // Opened from settings it returns there; on first run, which replaces the
     // stack, it carries on to language.
     final router = GoRouter.of(context);
@@ -71,6 +82,16 @@ class _MascotSelectScreenState extends ConsumerState<MascotSelectScreen> {
     } else {
       router.go('/language-select');
     }
+  }
+
+  Future<void> _keepServerDefault() async {
+    if (!widget.serverPrompt || _submitting) return;
+    setState(() {
+      _species = _serverDefaultSpecies;
+      _name.text = _serverDefaultName;
+      _nameEdited = true;
+    });
+    await _continue();
   }
 
   @override
@@ -98,117 +119,144 @@ class _MascotSelectScreenState extends ConsumerState<MascotSelectScreen> {
     final palette = context.riksa;
     final isDark = theme.brightness == Brightness.dark;
 
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        backgroundColor: palette.canvas,
-        body: Stack(
-          children: [
-            Positioned.fill(child: MascotSceneBackdrop(species: _species)),
-            Column(
-              children: [
-                Expanded(
-                  child: SafeArea(
-                    bottom: false,
-                    child: _Stage(
-                      species: _species,
-                      controller: _stage,
-                      name: _name,
-                      traits: _traits(strings, _species),
-                      tapHint: strings.mascotTapHint,
+    return PopScope<void>(
+      canPop: !widget.serverPrompt,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && widget.serverPrompt) {
+          _keepServerDefault();
+        }
+      },
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Scaffold(
+          backgroundColor: palette.canvas,
+          body: Stack(
+            children: [
+              Positioned.fill(child: MascotSceneBackdrop(species: _species)),
+              Column(
+                children: [
+                  Expanded(
+                    child: SafeArea(
+                      bottom: false,
+                      child: _Stage(
+                        species: _species,
+                        controller: _stage,
+                        name: _name,
+                        traits: _traits(strings, _species),
+                        tapHint: strings.mascotTapHint,
+                      ),
                     ),
                   ),
-                ),
-                MascotSceneSheet(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        strings.mascotSelectTitle,
-                        style: RiksaTypography.titleStyleFor(
+                  MascotSceneSheet(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
                           strings.mascotSelectTitle,
-                          theme.textTheme.headlineMedium,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        strings.mascotSelectSubtitle,
-                        style: RiksaTypography.bodyStyleFor(
-                          strings.mascotSelectSubtitle,
-                          theme.textTheme.bodyMedium?.copyWith(
-                            color: palette.inkMuted,
+                          style: RiksaTypography.titleStyleFor(
+                            strings.mascotSelectTitle,
+                            theme.textTheme.headlineMedium,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          for (final species in MascotSpecies.values) ...[
-                            if (species != MascotSpecies.values.first)
-                              const SizedBox(width: 12),
-                            Expanded(
-                              child: _SpeciesTile(
-                                key: Key('mascot_${species.name}'),
-                                species: species,
-                                label: _label(strings, species),
-                                selected: species == _species,
-                                onTap: () => _select(species),
+                        const SizedBox(height: 4),
+                        Text(
+                          strings.mascotSelectSubtitle,
+                          style: RiksaTypography.bodyStyleFor(
+                            strings.mascotSelectSubtitle,
+                            theme.textTheme.bodyMedium?.copyWith(
+                              color: palette.inkMuted,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            for (final species in MascotSpecies.values) ...[
+                              if (species != MascotSpecies.values.first)
+                                const SizedBox(width: 12),
+                              Expanded(
+                                child: _SpeciesTile(
+                                  key: Key('mascot_${species.name}'),
+                                  species: species,
+                                  label: _label(strings, species),
+                                  selected: species == _species,
+                                  onTap: () => _select(species),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          key: const Key('mascot_name'),
+                          controller: _name,
+                          maxLength: MascotProfile.maxNameLength,
+                          textCapitalization: TextCapitalization.words,
+                          textInputAction: TextInputAction.done,
+                          onChanged: (_) {
+                            _nameEdited = true;
+                            _selectionEdited = true;
+                          },
+                          onSubmitted: (_) => _continue(),
+                          decoration: InputDecoration(
+                            labelText: strings.mascotNameLabel,
+                            counterText: '',
+                            prefixIcon: const Icon(
+                              Icons.edit_rounded,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton(
+                          key: const Key('mascot_continue'),
+                          onPressed: _submitting ? null : _continue,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: isDark
+                                ? palette.brand
+                                : palette.brandStrong,
+                            foregroundColor: palette.onBrand,
+                            shadowColor: Colors.transparent,
+                            elevation: 0,
+                            side: BorderSide.none,
+                            shape: const StadiumBorder(),
+                            minimumSize: const Size.fromHeight(52),
+                          ),
+                          child: Text(
+                            strings.continueLabel,
+                            style: RiksaTypography.bodyStyleFor(
+                              strings.continueLabel,
+                              const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        key: const Key('mascot_name'),
-                        controller: _name,
-                        maxLength: MascotProfile.maxNameLength,
-                        textCapitalization: TextCapitalization.words,
-                        textInputAction: TextInputAction.done,
-                        onChanged: (_) {
-                          _nameEdited = true;
-                          _selectionEdited = true;
-                        },
-                        onSubmitted: (_) => _continue(),
-                        decoration: InputDecoration(
-                          labelText: strings.mascotNameLabel,
-                          counterText: '',
-                          prefixIcon: const Icon(Icons.edit_rounded, size: 20),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton(
-                        key: const Key('mascot_continue'),
-                        onPressed: _submitting ? null : _continue,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: isDark
-                              ? palette.brand
-                              : palette.brandStrong,
-                          foregroundColor: palette.onBrand,
-                          shadowColor: Colors.transparent,
-                          elevation: 0,
-                          side: BorderSide.none,
-                          shape: const StadiumBorder(),
-                          minimumSize: const Size.fromHeight(52),
-                        ),
-                        child: Text(
-                          strings.continueLabel,
-                          style: RiksaTypography.bodyStyleFor(
-                            strings.continueLabel,
-                            const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (widget.serverPrompt)
+                PositionedDirectional(
+                  start: 8,
+                  top: MediaQuery.viewPaddingOf(context).top + 4,
+                  child: IconButton(
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).backButtonTooltip,
+                    onPressed: _keepServerDefault,
+                    style: IconButton.styleFrom(
+                      backgroundColor: palette.surface.withValues(alpha: .9),
+                      foregroundColor: palette.ink,
+                    ),
+                    icon: const Icon(Icons.arrow_back_rounded),
                   ),
                 ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

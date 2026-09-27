@@ -5,8 +5,9 @@ import '../../../../core/theme/app_theme.dart';
 import '../../domain/buddy_behavior.dart';
 import '../../domain/mascot.dart';
 import '../../providers/buddy_preferences_provider.dart';
+import '../../providers/buddy_care_provider.dart';
 import '../../providers/mascot_provider.dart';
-import 'mascot_face.dart';
+import 'buddy_look.dart';
 import 'mascot_speech.dart';
 import 'mascot_view.dart';
 
@@ -65,10 +66,14 @@ class BuddyFaceReaction extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final enabled = ref.watch(buddyReactionsEnabledProvider);
-    final avatar = MascotFaceAvatar(
+    final look = ref.watch(buddyLookProvider);
+    final avatar = BuddyLook(
+      species: look.species,
       face: enabled ? face : MascotFace.neutral,
+      equipped: look.equipped,
       size: size,
       loops: enabled ? loops : 0,
+      semanticLabel: look.name,
     );
     if (enabled || MediaQuery.disableAnimationsOf(context)) return avatar;
     return MediaQuery(

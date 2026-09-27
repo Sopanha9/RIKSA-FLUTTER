@@ -1,4 +1,12 @@
 {
+  "buddyLookCrocodile": "Crocodile",
+  "@buddyLookCrocodile": { "description": "Accessible name for a crocodile buddy look." },
+  "buddyLookCapybara": "Capybara",
+  "@buddyLookCapybara": { "description": "Accessible name for a capybara buddy look." },
+  "buddyLookHat": "hat",
+  "@buddyLookHat": { "description": "Accessible name for a buddy's hat slot." },
+  "buddyLookEyewear": "glasses",
+  "@buddyLookEyewear": { "description": "Accessible name for a buddy's eyewear slot." },
   "@@locale": "en",
   "appName": "Riksa",
 

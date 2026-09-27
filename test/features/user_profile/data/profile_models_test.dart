@@ -115,4 +115,29 @@ void main() {
     expect(rank.provinceRank, 3);
     expect(rank.countryTier, 'GOLD');
   });
+
+  test(
+    'leaderboard rows tolerate old payloads and parse public buddy looks',
+    () {
+      final oldRow = LeaderboardRow.fromJson({
+        'rank': 5,
+        'userId': 'old-user',
+        'score': 120,
+      });
+      final row = LeaderboardRow.fromJson({
+        'rank': 1,
+        'userId': 'new-user',
+        'score': 1500,
+        'buddy': {
+          'species': 'crocodile',
+          'name': 'Rex',
+          'equipped': {'EYEWEAR': 'glasses_round'},
+        },
+      });
+
+      expect(oldRow.buddy, isNull);
+      expect(row.buddy?.species.name, 'crocodile');
+      expect(row.buddy?.equipped.values, contains('glasses_round'));
+    },
+  );
 }

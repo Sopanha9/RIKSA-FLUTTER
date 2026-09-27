@@ -13,12 +13,12 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_models.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../mascot/domain/mascot.dart';
-import '../../mascot/presentation/widgets/mascot_face.dart';
+import '../../mascot/presentation/widgets/buddy_look.dart';
+import '../../mascot/providers/buddy_care_provider.dart';
 import '../../mascot/presentation/widgets/mascot_scene.dart';
 import '../../mascot/presentation/widgets/mascot_speech.dart';
 import '../../mascot/presentation/widgets/mascot_view.dart';
 import '../../mascot/providers/buddy_preferences_provider.dart';
-import '../../mascot/providers/mascot_provider.dart';
 import '../providers/profile_cover_provider.dart';
 import '../providers/profile_provider.dart';
 import 'widgets/profile_ui.dart';
@@ -67,12 +67,9 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     _buddy.react(mood);
   }
 
-  Future<void> _confirmLogout(
-    String lang,
-    MascotSpecies species,
-    String name,
-  ) async {
+  Future<void> _confirmLogout(String lang, String name) async {
     final palette = context.riksa;
+    final buddyLook = ref.read(buddyLookProvider);
     final leave = await showModalBottomSheet<bool>(
       context: context,
       backgroundColor: palette.surface,
@@ -94,10 +91,12 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                MascotFaceView(
-                  species: species,
+                BuddyLook(
+                  species: buddyLook.species,
                   face: MascotFace.sad,
+                  equipped: buddyLook.equipped,
                   size: 88,
+                  semanticLabel: name,
                 ),
                 const SizedBox(height: RiksaSpacing.sm),
                 Text(
@@ -168,9 +167,9 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     final streakReminderEnabled =
         ref.watch(streakReminderStateProvider).value ?? true;
     final shareMilestones = user?.shareMilestones ?? true;
-    final mascot = ref.watch(mascotProvider).profile;
-    final species = mascot?.species ?? MascotSpecies.crocodile;
-    final buddyName = mascot?.name ?? MascotProfile.defaultName(species);
+    final buddyLook = ref.watch(buddyLookProvider);
+    final species = buddyLook.species;
+    final buddyName = buddyLook.name;
 
     final firstName = user?.displayName.trim().split(' ').first ?? '';
     final greeting = firstName.isEmpty
@@ -254,12 +253,14 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                                     shape: BoxShape.circle,
                                   ),
                                   alignment: Alignment.center,
-                                  child: MascotFaceView(
+                                  child: BuddyLook(
                                     species: species,
                                     face: reactionsEnabled
                                         ? MascotFace.happy
                                         : MascotFace.neutral,
+                                    equipped: buddyLook.equipped,
                                     size: 40,
+                                    semanticLabel: buddyName,
                                   ),
                                 ),
                               ),
@@ -493,8 +494,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                           label: l10n.logout,
                           icon: Icons.logout_rounded,
                           color: theme.colorScheme.error,
-                          onPressed: () =>
-                              _confirmLogout(lang, species, buddyName),
+                          onPressed: () => _confirmLogout(lang, buddyName),
                         ),
                         const SizedBox(height: RiksaSpacing.sm),
                       ],

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,6 +22,9 @@ class _FakeBuddyApi implements BuddyApi {
   );
   int getCalls = 0;
   int updateCalls = 0;
+  int equipCalls = 0;
+  Completer<BuddyMe>? getReply;
+  bool failEquip = false;
   int? mergedEnergy;
   int? mergedBond;
   MascotSpecies? submittedSpecies;
@@ -29,6 +33,7 @@ class _FakeBuddyApi implements BuddyApi {
   @override
   Future<BuddyMe> getMe() async {
     getCalls++;
+    if (getReply != null) return getReply!.future;
     return me;
   }
 
@@ -55,6 +60,35 @@ class _FakeBuddyApi implements BuddyApi {
       species: MascotSpecies.crocodile,
       name: 'Server buddy',
       today: const [],
+      equipped: me.equipped,
+      balance: me.balance,
+      chosen: true,
+    );
+    return me;
+  }
+
+  @override
+  Future<BuddyMe> equip(BuddyItemSlot slot, String? itemId) async {
+    equipCalls++;
+    if (failEquip) throw StateError('equip failed');
+    final equipped = Map<BuddyItemSlot, BuddyEquipped>.of(me.equipped);
+    if (itemId == null) {
+      equipped.remove(slot);
+    } else {
+      equipped[slot] = BuddyEquipped(
+        slot: slot,
+        itemId: itemId,
+        assetKey: 'server_$itemId',
+      );
+    }
+    me = BuddyMe(
+      care: me.care,
+      species: me.species,
+      name: me.name,
+      today: me.today,
+      equipped: Map.unmodifiable(equipped),
+      balance: me.balance,
+      chosen: me.chosen,
     );
     return me;
   }
@@ -128,6 +162,7 @@ void main() {
         MascotNotifier.guestChoicePendingKey: true,
       });
       final api = _FakeBuddyApi();
+      api.me = _withChosen(api.me, false);
       final container = ProviderContainer(
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
@@ -163,6 +198,7 @@ void main() {
 
   test('a guest buddy chosen before signup is submitted once', () async {
     final api = _FakeBuddyApi();
+    api.me = _withChosen(api.me, false);
     final container = ProviderContainer(
       overrides: [
         authProvider.overrideWith(_TestAuthNotifier.new),
@@ -192,7 +228,187 @@ void main() {
     expect(preferences.getBool(MascotNotifier.guestChoicePendingKey), isNull);
     expect(container.read(mascotProvider).profile?.name, 'Server buddy');
   });
+
+  test(
+    'cached look is visible first and is replaced by the server look',
+    () async {
+      final cached = BuddyMe(
+        care: BuddyCare.initial(DateTime.now()),
+        species: MascotSpecies.capybara,
+        name: 'Cached buddy',
+        today: const [],
+        equipped: const {
+          BuddyItemSlot.hat: BuddyEquipped(
+            slot: BuddyItemSlot.hat,
+            itemId: 'cached-id',
+            assetKey: 'hat_cached',
+          ),
+        },
+      );
+      SharedPreferences.setMockInitialValues({
+        'riksa_buddy_care_user_learner-1': jsonEncode(cached.toJson()),
+      });
+      final api = _FakeBuddyApi()..getReply = Completer<BuddyMe>();
+      final container = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          buddyApiProvider.overrideWithValue(api),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(buddyCareProvider);
+      final authNotifier =
+          container.read(authProvider.notifier) as _TestAuthNotifier;
+      authNotifier.signIn();
+      await _flushAsyncWork();
+
+      expect(container.read(buddyCareProvider).name, 'Cached buddy');
+      expect(
+        container.read(buddyLookProvider).equipped[BuddyItemSlot.hat],
+        'hat_cached',
+      );
+      api.getReply!.complete(
+        BuddyMe(
+          care: BuddyCare.initial(DateTime.now()),
+          species: MascotSpecies.crocodile,
+          name: 'Server buddy',
+          today: const [],
+          equipped: const {
+            BuddyItemSlot.eyewear: BuddyEquipped(
+              slot: BuddyItemSlot.eyewear,
+              itemId: 'server-glasses',
+              assetKey: 'glasses_server',
+            ),
+          },
+        ),
+      );
+      await _flushAsyncWork();
+
+      expect(container.read(buddyCareProvider).name, 'Server buddy');
+      expect(
+        container.read(buddyLookProvider).species,
+        MascotSpecies.crocodile,
+      );
+      expect(
+        container.read(buddyLookProvider).equipped[BuddyItemSlot.eyewear],
+        'glasses_server',
+      );
+      expect(
+        container.read(buddyLookProvider).equipped,
+        isNot(contains(BuddyItemSlot.hat)),
+      );
+    },
+  );
+
+  test(
+    'an unchosen server default without a guest choice stays unchosen',
+    () async {
+      final api = _FakeBuddyApi()..me = _withChosen(_FakeBuddyApi().me, false);
+      final container = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          buddyApiProvider.overrideWithValue(api),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(buddyCareProvider);
+      await _flushAsyncWork();
+      (container.read(authProvider.notifier) as _TestAuthNotifier).signIn();
+      await _flushAsyncWork();
+
+      expect(api.getCalls, 1);
+      expect(api.updateCalls, 0);
+      expect(container.read(buddyCareProvider).serverSynced, isTrue);
+      expect(container.read(buddyCareProvider).chosen, isFalse);
+    },
+  );
+
+  test(
+    'a saved server choice is never overwritten by a guest choice',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'riksa_mascot_species_guest': 'capybara',
+        'riksa_mascot_name_guest': 'Guest buddy',
+        MascotNotifier.guestChoicePendingKey: true,
+      });
+      final api = _FakeBuddyApi();
+      final container = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          buddyApiProvider.overrideWithValue(api),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(buddyCareProvider);
+      await _flushAsyncWork();
+      (container.read(authProvider.notifier) as _TestAuthNotifier).signIn();
+      await _flushAsyncWork();
+
+      expect(api.updateCalls, 0);
+      expect(
+        container.read(buddyCareProvider).species,
+        MascotSpecies.crocodile,
+      );
+      expect(container.read(buddyCareProvider).name, 'Server buddy');
+    },
+  );
+
+  test(
+    'equip updates optimistically and rolls back after server failure',
+    () async {
+      final previous = BuddyEquipped(
+        slot: BuddyItemSlot.hat,
+        itemId: 'old-hat',
+        assetKey: 'hat_old',
+      );
+      final api = _FakeBuddyApi()
+        ..me = BuddyMe(
+          care: BuddyCare.initial(DateTime.now()),
+          species: MascotSpecies.crocodile,
+          name: 'Server buddy',
+          today: const [],
+          equipped: {BuddyItemSlot.hat: previous},
+        )
+        ..failEquip = true;
+      final container = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          buddyApiProvider.overrideWithValue(api),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(buddyCareProvider);
+      await _flushAsyncWork();
+      (container.read(authProvider.notifier) as _TestAuthNotifier).signIn();
+      await _flushAsyncWork();
+
+      final request = container
+          .read(buddyCareProvider.notifier)
+          .equip(BuddyItemSlot.hat, 'new-hat', assetKey: 'hat_new');
+      expect(
+        container.read(buddyLookProvider).equipped[BuddyItemSlot.hat],
+        'hat_new',
+      );
+      await expectLater(request, throwsA(isA<StateError>()));
+
+      expect(api.equipCalls, 1);
+      expect(
+        container.read(buddyLookProvider).equipped[BuddyItemSlot.hat],
+        'hat_old',
+      );
+    },
+  );
 }
+
+BuddyMe _withChosen(BuddyMe me, bool chosen) => BuddyMe(
+  care: me.care,
+  species: me.species,
+  name: me.name,
+  today: me.today,
+  equipped: me.equipped,
+  balance: me.balance,
+  chosen: chosen,
+);
 
 Future<void> _flushAsyncWork() async {
   for (var i = 0; i < 5; i++) {

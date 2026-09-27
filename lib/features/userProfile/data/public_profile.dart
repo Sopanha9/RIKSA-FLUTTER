@@ -1,5 +1,7 @@
 library;
 
+import '../../mascot/data/buddy_api.dart';
+
 /// Public-only profile data returned by `GET /profiles/{userId}`.
 ///
 /// This model intentionally has no email, phone, gender, account-verification,
@@ -18,6 +20,7 @@ class PublicProfile {
     this.currentTierIcon,
     this.rank,
     this.coverUrl,
+    this.buddy,
   });
 
   final String id;
@@ -32,6 +35,7 @@ class PublicProfile {
   final List<PublicProfileAchievement> achievements;
   final PublicProfileRank? rank;
   final String? coverUrl;
+  final PublicBuddyLook? buddy;
 
   String get preferredName =>
       displayName.trim().isEmpty ? username.trim() : displayName.trim();
@@ -70,6 +74,7 @@ class PublicProfile {
       achievements: achievements,
       rank: rank?.hasRank == true ? rank : null,
       coverUrl: _nonBlankString(json['coverUrl']),
+      buddy: PublicBuddyLook.fromNullable(json['buddy']),
     );
   }
 
@@ -90,6 +95,7 @@ class PublicProfile {
     'achievements': achievements.map((value) => value.toJson()).toList(),
     'rank': rank?.toJson(),
     'coverUrl': coverUrl,
+    'buddy': buddy?.toJson(),
   };
 }
 

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../mascot/data/buddy_api.dart';
+import '../../../mascot/domain/mascot.dart';
+import '../../../mascot/presentation/widgets/buddy_look.dart';
 
 /// One ranked learner. The top three get a medal-coloured rank number and the
 /// signed-in learner's row is lime, as on the reference board.
@@ -15,6 +18,7 @@ class RankingListRow extends StatelessWidget {
     required this.avatarLabel,
     this.avatarUrl,
     this.tier,
+    this.buddy,
     this.isCurrentUser = false,
     this.onTap,
   });
@@ -22,6 +26,7 @@ class RankingListRow extends StatelessWidget {
   final String name, subtitle, avatarLabel;
   final int xp;
   final String? avatarUrl, tier;
+  final PublicBuddyLook? buddy;
   final bool isCurrentUser;
   final VoidCallback? onTap;
 
@@ -71,14 +76,24 @@ class RankingListRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                RiksaAvatarImage(
-                  value: avatarUrl,
-                  label: avatarLabel,
-                  size: 36,
-                  backgroundColor: palette.brandSoft,
-                  foregroundColor: palette.brand,
-                  frameTier: tier,
-                ),
+                if (buddy case final look?)
+                  BuddyLook(
+                    species: look.species,
+                    face: MascotFace.neutral,
+                    equipped: look.equipped,
+                    size: 36,
+                    loops: 1,
+                    semanticLabel: look.name,
+                  )
+                else
+                  RiksaAvatarImage(
+                    value: avatarUrl,
+                    label: avatarLabel,
+                    size: 36,
+                    backgroundColor: palette.brandSoft,
+                    foregroundColor: palette.brand,
+                    frameTier: tier,
+                  ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(

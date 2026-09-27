@@ -8,8 +8,8 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/buddy_care.dart';
 import '../../domain/mascot.dart';
 import '../../providers/buddy_care_provider.dart';
-import '../../providers/mascot_provider.dart';
-import 'mascot_face.dart';
+import '../../data/buddy_api.dart';
+import 'buddy_look.dart';
 import 'mascot_scene.dart';
 import 'mascot_view.dart';
 
@@ -64,9 +64,9 @@ class _BuddyCareCardState extends ConsumerState<BuddyCareCard> {
   @override
   Widget build(BuildContext context) {
     final care = ref.watch(buddyCareProvider);
-    final profile = ref.watch(mascotProvider).profile;
-    final species = profile?.species ?? care.species;
-    final name = profile?.name ?? (care.name.isEmpty ? 'Croco' : care.name);
+    final buddyLook = ref.watch(buddyLookProvider);
+    final species = buddyLook.species;
+    final name = buddyLook.name;
     final vitality = care.care.vitality;
     _syncMood(vitality);
     final l10n = AppLocalizations.of(context)!;
@@ -195,11 +195,13 @@ class _BuddyCareCardState extends ConsumerState<BuddyCareCard> {
                   end: 58,
                   bottom: 6,
                   child: ExcludeSemantics(
-                    child: MascotFaceAvatar(
+                    child: BuddyLook(
+                      species: species,
                       face: faceFor(vitality),
+                      equipped: buddyLook.equipped,
                       size: 24,
                       loops: 0,
-                      background: palette.surface,
+                      semanticLabel: name,
                     ),
                   ),
                 ),
@@ -216,6 +218,7 @@ class _BuddyCareCardState extends ConsumerState<BuddyCareCard> {
                   label: l10n.buddyCareLesson,
                   count: _count(care, BuddyCareSource.lesson),
                   done: _count(care, BuddyCareSource.lesson) > 0,
+                  look: buddyLook,
                 ),
                 _CareRow(
                   icon: Icons.auto_stories_rounded,
@@ -225,12 +228,14 @@ class _BuddyCareCardState extends ConsumerState<BuddyCareCard> {
                     BuddyCareSource.blogRead,
                   ).clamp(0, 1).toInt(),
                   done: _count(care, BuddyCareSource.blogRead) > 0,
+                  look: buddyLook,
                 ),
                 _CareRow(
                   icon: Icons.forum_outlined,
                   label: l10n.buddyCareShare,
                   count: _count(care, BuddyCareSource.post),
                   done: _count(care, BuddyCareSource.post) > 0,
+                  look: buddyLook,
                 ),
               ],
             ),
@@ -247,12 +252,14 @@ class _CareRow extends StatelessWidget {
     required this.label,
     required this.count,
     required this.done,
+    required this.look,
   });
 
   final IconData icon;
   final String label;
   final int count;
   final bool done;
+  final PublicBuddyLook look;
 
   @override
   Widget build(BuildContext context) {
@@ -278,11 +285,13 @@ class _CareRow extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ExcludeSemantics(
-                  child: MascotFaceAvatar(
+                  child: BuddyLook(
+                    species: look.species,
                     face: MascotFace.happy,
+                    equipped: look.equipped,
                     size: 18,
                     loops: 0,
-                    background: palette.surface,
+                    semanticLabel: look.name,
                   ),
                 ),
                 const SizedBox(width: 3),

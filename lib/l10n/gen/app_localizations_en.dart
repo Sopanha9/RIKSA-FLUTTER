@@ -9,6 +9,18 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get buddyLookCrocodile => 'Crocodile';
+
+  @override
+  String get buddyLookCapybara => 'Capybara';
+
+  @override
+  String get buddyLookHat => 'hat';
+
+  @override
+  String get buddyLookEyewear => 'glasses';
+
+  @override
   String get appName => 'Riksa';
 
   @override

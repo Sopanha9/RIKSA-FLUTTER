@@ -1,4 +1,12 @@
 {
+  "buddyLookCrocodile": "ក្រពើ",
+  "@buddyLookCrocodile": { "description": "Accessible name for a crocodile buddy look." },
+  "buddyLookCapybara": "កាពីបារ៉ា",
+  "@buddyLookCapybara": { "description": "Accessible name for a capybara buddy look." },
+  "buddyLookHat": "មួក",
+  "@buddyLookHat": { "description": "Accessible name for a buddy's hat slot." },
+  "buddyLookEyewear": "វ៉ែនតា",
+  "@buddyLookEyewear": { "description": "Accessible name for a buddy's eyewear slot." },
   "@@locale": "km",
   "appName": "Riksa",
   "welcomeBack": "សួស្ដី​ម្ដង​ទៀត",

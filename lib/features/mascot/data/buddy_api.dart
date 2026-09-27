@@ -7,6 +7,103 @@ import '../../auth/providers/auth_provider.dart';
 import '../domain/buddy_care.dart';
 import '../domain/mascot.dart';
 
+enum BuddyItemSlot {
+  hat('HAT'),
+  eyewear('EYEWEAR');
+
+  const BuddyItemSlot(this.apiName);
+
+  final String apiName;
+
+  static BuddyItemSlot? fromApiName(Object? value) {
+    final name = value?.toString().toUpperCase();
+    return BuddyItemSlot.values
+        .where((slot) => slot.apiName == name)
+        .firstOrNull;
+  }
+}
+
+@immutable
+class BuddyEquipped {
+  const BuddyEquipped({
+    required this.slot,
+    required this.itemId,
+    required this.assetKey,
+  });
+
+  final BuddyItemSlot slot;
+  final String itemId;
+  final String assetKey;
+
+  factory BuddyEquipped.fromJson(
+    BuddyItemSlot slot,
+    Map<String, dynamic> json,
+  ) => BuddyEquipped(
+    slot: slot,
+    itemId: json['itemId']?.toString() ?? '',
+    assetKey: json['assetKey']?.toString() ?? '',
+  );
+
+  Map<String, Object?> toJson() => {'itemId': itemId, 'assetKey': assetKey};
+}
+
+/// Public fields used to render another learner's buddy without private data.
+@immutable
+class PublicBuddyLook {
+  const PublicBuddyLook({
+    required this.species,
+    required this.name,
+    this.equipped = const {},
+  });
+
+  final MascotSpecies species;
+  final String name;
+  final Map<BuddyItemSlot, String> equipped;
+
+  factory PublicBuddyLook.fromJson(Map<String, dynamic> json) {
+    final speciesName = json['species']?.toString();
+    final species =
+        MascotSpecies.values
+            .where((item) => item.name == speciesName)
+            .firstOrNull ??
+        MascotSpecies.crocodile;
+    final rawEquipped = json['equipped'];
+    final equipped = <BuddyItemSlot, String>{};
+    if (rawEquipped is Map) {
+      for (final entry in rawEquipped.entries) {
+        final slot = BuddyItemSlot.fromApiName(entry.key);
+        final value = entry.value;
+        final assetKey = value is Map
+            ? value['assetKey']?.toString()
+            : value?.toString();
+        if (slot != null && assetKey?.trim().isNotEmpty == true) {
+          equipped[slot] = assetKey!.trim();
+        }
+      }
+    }
+    final name = json['name']?.toString().trim();
+    return PublicBuddyLook(
+      species: species,
+      name: name?.isNotEmpty == true
+          ? name!
+          : MascotProfileName.defaultName(species),
+      equipped: Map.unmodifiable(equipped),
+    );
+  }
+
+  static PublicBuddyLook? fromNullable(Object? value) => value is Map
+      ? PublicBuddyLook.fromJson(Map<String, dynamic>.from(value))
+      : null;
+
+  Map<String, Object?> toJson() => {
+    'species': species.name,
+    'name': name,
+    'equipped': {
+      for (final entry in equipped.entries) entry.key.apiName: entry.value,
+    },
+  };
+}
+
 final buddyApiProvider = Provider<BuddyApi>(
   (ref) => BuddyApi(ref.watch(dioClientProvider)),
 );
@@ -41,12 +138,20 @@ class BuddyMe {
     required this.species,
     required this.name,
     required this.today,
+    this.equipped = const {},
+    this.balance,
+    this.chosen = true,
   });
 
   final BuddyCare care;
   final MascotSpecies species;
   final String name;
   final List<BuddyTodayAction> today;
+  final Map<BuddyItemSlot, BuddyEquipped> equipped;
+  final int? balance;
+
+  /// Old servers omitted this flag; they are treated as already chosen.
+  final bool chosen;
 
   Map<String, Object?> toJson() => {
     ...care.toJson(),
@@ -61,6 +166,12 @@ class BuddyMe {
           'cap': item.cap,
         },
     ],
+    'equipped': {
+      for (final entry in equipped.entries)
+        entry.key.apiName: entry.value.toJson(),
+    },
+    'balance': balance,
+    'chosen': chosen,
   };
 
   factory BuddyMe.fromJson(Map<String, dynamic> json) {
@@ -93,6 +204,19 @@ class BuddyMe {
           .clamp(0, 5)
           .toInt(),
     ).settle(now);
+    final equipped = <BuddyItemSlot, BuddyEquipped>{};
+    final rawEquipped = json['equipped'];
+    if (rawEquipped is Map) {
+      for (final entry in rawEquipped.entries) {
+        final slot = BuddyItemSlot.fromApiName(entry.key);
+        if (slot != null && entry.value is Map) {
+          equipped[slot] = BuddyEquipped.fromJson(
+            slot,
+            Map<String, dynamic>.from(entry.value as Map),
+          );
+        }
+      }
+    }
     return BuddyMe(
       care: care,
       species: species,
@@ -100,6 +224,9 @@ class BuddyMe {
           ? json['name'].toString()
           : MascotProfileName.defaultName(species),
       today: today,
+      equipped: Map.unmodifiable(equipped),
+      balance: (json['balance'] as num?)?.toInt(),
+      chosen: json['chosen'] is bool ? json['chosen'] as bool : true,
     );
   }
 }
@@ -134,6 +261,14 @@ class BuddyApi {
     if (guestEnergy != null) data['guestEnergy'] = guestEnergy;
     if (guestBond != null) data['guestBond'] = guestBond;
     final response = await _client.dio.put('/buddy/me', data: data);
+    return BuddyMe.fromJson(jsonMap(response));
+  }
+
+  Future<BuddyMe> equip(BuddyItemSlot slot, String? itemId) async {
+    final response = await _client.dio.put(
+      '/buddy/me/equipped',
+      data: {'slot': slot.apiName, 'itemId': itemId},
+    );
     return BuddyMe.fromJson(jsonMap(response));
   }
 

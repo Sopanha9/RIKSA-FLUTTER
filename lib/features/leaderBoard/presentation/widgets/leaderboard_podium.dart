@@ -8,6 +8,8 @@ import '../../../../core/widgets/riksa_rank_badge.dart';
 import '../../../userProfile/data/profile_models.dart';
 import '../../../userProfile/presentation/public_profile_navigation.dart';
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../mascot/domain/mascot.dart';
+import '../../../mascot/presentation/widgets/buddy_look.dart';
 
 class LeaderboardPodium extends StatelessWidget {
   const LeaderboardPodium({
@@ -215,16 +217,25 @@ class _PodiumColumn extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: RiksaAvatarImage(
-                      value: row.avatarUrl,
-                      label: displayName,
-                      size: avatarSize - 5,
-                      backgroundColor: isDark
-                          ? palette.surfaceRaised
-                          : AppColors.editorialField,
-                      foregroundColor: palette.ink,
-                      frameTier: row.rankingTier,
-                    ),
+                    child: row.buddy != null
+                        ? BuddyLook(
+                            species: row.buddy!.species,
+                            face: MascotFace.neutral,
+                            equipped: row.buddy!.equipped,
+                            size: avatarSize - 5,
+                            loops: 1,
+                            semanticLabel: row.buddy!.name,
+                          )
+                        : RiksaAvatarImage(
+                            value: row.avatarUrl,
+                            label: displayName,
+                            size: avatarSize - 5,
+                            backgroundColor: isDark
+                                ? palette.surfaceRaised
+                                : AppColors.editorialField,
+                            foregroundColor: palette.ink,
+                            frameTier: row.rankingTier,
+                          ),
                   ),
                   // Rank number medal badge pinned at bottom-right (matching inspiration)
                   Positioned(

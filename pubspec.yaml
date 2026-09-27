@@ -102,6 +102,7 @@ flutter:
     - assets/images/mascots/crocodile/faces/
     - assets/images/mascots/capybara/faces/
     - assets/images/mascots/scenes/
+    - assets/images/market/anchors/
     - assets/images/rewards/
     - assets/images/onboarding/
     - assets/images/lessonsCard/

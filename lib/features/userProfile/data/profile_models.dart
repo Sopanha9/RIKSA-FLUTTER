@@ -1,5 +1,7 @@
 library;
 
+import '../../mascot/data/buddy_api.dart';
+
 /// The rank ladder in order, lowest first.
 ///
 /// Only the *order* is mirrored from the server's `TierType` enum, which is a
@@ -269,6 +271,7 @@ class LeaderboardRow {
     this.displayName,
     this.avatarUrl,
     this.snapshotDate,
+    this.buddy,
   });
 
   final int rank;
@@ -278,6 +281,7 @@ class LeaderboardRow {
   final String? displayName;
   final String? avatarUrl;
   final DateTime? snapshotDate;
+  final PublicBuddyLook? buddy;
 
   String get fallbackName =>
       (displayName ?? '').trim().isEmpty ? 'Learner' : displayName!.trim();
@@ -290,5 +294,6 @@ class LeaderboardRow {
     displayName: json['displayName'] as String?,
     avatarUrl: json['avatarUrl'] as String?,
     snapshotDate: DateTime.tryParse(json['snapshotDate']?.toString() ?? ''),
+    buddy: PublicBuddyLook.fromNullable(json['buddy']),
   );
 }

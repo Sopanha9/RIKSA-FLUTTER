@@ -98,4 +98,26 @@ void main() {
     expect(profile.rank, isNull);
     expect(profile.coverUrl, isNull);
   });
+
+  test(
+    'old profiles omit a buddy and new profiles parse public equipped keys',
+    () {
+      final oldProfile = PublicProfile.fromJson({
+        'user': {'id': 'old', 'username': 'old-user'},
+      });
+      final profile = PublicProfile.fromJson({
+        'user': {'id': 'new', 'username': 'new-user'},
+        'buddy': {
+          'species': 'capybara',
+          'name': 'Mochi',
+          'equipped': {'HAT': 'hat_straw'},
+        },
+      });
+
+      expect(oldProfile.buddy, isNull);
+      expect(profile.buddy?.species.name, 'capybara');
+      expect(profile.buddy?.name, 'Mochi');
+      expect(profile.buddy?.equipped.values, contains('hat_straw'));
+    },
+  );
 }

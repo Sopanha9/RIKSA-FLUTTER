@@ -95,6 +95,7 @@ class RankingsSheet extends StatelessWidget {
                           xp: listRows[index].score,
                           avatarUrl: listRows[index].avatarUrl,
                           avatarLabel: listRows[index].fallbackName,
+                          buddy: listRows[index].buddy,
                           isCurrentUser:
                               currentUser != null &&
                               listRows[index].userId == currentUser!.id,
