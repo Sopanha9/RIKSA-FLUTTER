@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/network/dio_client.dart';
+import '../../../core/network/json_response.dart';
 import '../../social/data/social_api.dart';
 import '../../social/data/social_models.dart';
 import 'public_profile.dart';
@@ -20,9 +21,7 @@ class HttpPublicProfileRepository implements PublicProfileRepository {
       final response = await _client.dio.get(
         '/profiles/${Uri.encodeComponent(userId)}',
       );
-      return PublicProfile.fromJson(
-        (response.data as Map).cast<String, dynamic>(),
-      );
+      return PublicProfile.fromJson(jsonMap(response));
     } on DioException catch (error) {
       if (const {403, 404, 410, 423}.contains(error.response?.statusCode)) {
         throw const PublicProfileUnavailableException();

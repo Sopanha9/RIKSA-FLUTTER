@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/network/api_config.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/network/json_response.dart';
 import '../../auth/data/auth_api.dart';
 import 'social_models.dart';
 
@@ -35,9 +36,7 @@ class SocialApi {
 
   Future<CommunityStreak> streak() async {
     final response = await _client.dio.get('/gamification/streak');
-    return CommunityStreak.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return CommunityStreak.fromJson(jsonMap(response));
   }
 
   Future<List<SocialCategory>> categories() async {
@@ -226,7 +225,7 @@ class SocialApi {
         data: form,
         options: Options(contentType: 'multipart/form-data'),
       );
-      final url = (response.data as Map)['url'];
+      final url = jsonMap(response)['url'];
       if (url is! String || url.isEmpty) {
         throw const SocialApiException('The image upload returned no link.');
       }
@@ -336,7 +335,7 @@ class SocialApi {
       '${ApiConfig.baseUrl}/graphql',
       data: {'query': query, 'variables': variables},
     );
-    final payload = (response.data as Map).cast<String, dynamic>();
+    final payload = jsonMap(response);
     final errors = payload['errors'] as List?;
     if (errors != null && errors.isNotEmpty) {
       final first = (errors.first as Map).cast<String, dynamic>();

@@ -81,6 +81,30 @@ void main() {
     expect(adapter.path, '/blog/post-1');
   });
 
+  test('an HTML response body throws a friendly DioException', () async {
+    final adapter = _RecordingAdapter(
+      body: '<html><body>Bad Gateway</body></html>',
+    );
+    final api = BlogApi(clientWith(adapter));
+
+    await expectLater(
+      api.listPosts(),
+      throwsA(
+        isA<DioException>()
+            .having(
+              (error) => error.type,
+              'exception type',
+              DioExceptionType.badResponse,
+            )
+            .having(
+              (error) => error.message,
+              'message',
+              'The server returned an unexpected response. Please try again.',
+            ),
+      ),
+    );
+  });
+
   test('a rejected write surfaces an actionable message', () async {
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
     DioException failure(int status) => DioException(
@@ -127,7 +151,7 @@ Map<String, dynamic> _postJson({
 class _RecordingAdapter implements HttpClientAdapter {
   _RecordingAdapter({required this.body, this.statusCode = 200});
 
-  final Map<String, dynamic>? body;
+  final Object? body;
   final int statusCode;
 
   String? method;
@@ -145,10 +169,19 @@ class _RecordingAdapter implements HttpClientAdapter {
     final data = options.data;
     requestBody = data is Map ? data.cast<String, dynamic>() : null;
     return ResponseBody.fromString(
-      body == null ? '' : jsonEncode(body),
+      switch (body) {
+        null => '',
+        String value => value,
+        _ => jsonEncode(body),
+      },
       statusCode,
       headers: {
-        Headers.contentTypeHeader: [Headers.jsonContentType],
+        Headers.contentTypeHeader: [
+          if (body is String)
+            'text/html; charset=utf-8'
+          else
+            Headers.jsonContentType,
+        ],
       },
     );
   }

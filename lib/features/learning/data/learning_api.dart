@@ -1,5 +1,6 @@
 import '../../../core/network/api_config.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/network/json_response.dart';
 import 'learning_models.dart';
 
 class LearningApi {
@@ -28,7 +29,7 @@ class LearningApi {
         if (grade != null) 'grade': grade,
       },
     );
-    return LessonPage.fromJson(response.data as Map<String, dynamic>);
+    return LessonPage.fromJson(jsonMap(response));
   }
 
   Future<List<LearningCategory>> categories() async {
@@ -36,7 +37,7 @@ class LearningApi {
       '${ApiConfig.baseUrl}/graphql',
       data: const {'query': '{ categories { id name } }'},
     );
-    final body = response.data as Map<String, dynamic>;
+    final body = jsonMap(response);
     final categories =
         (body['data'] as Map<String, dynamic>?)?['categories'] as List? ??
         const [];
@@ -58,16 +59,12 @@ class LearningApi {
       '/lessons/roadmap',
       queryParameters: {'categoryId': categoryId},
     );
-    return LearningRoadmap.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return LearningRoadmap.fromJson(jsonMap(response));
   }
 
   Future<LessonDetail> lesson(String lessonId) async {
     final response = await _client.dio.get('/lessons/$lessonId');
-    return LessonDetail.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return LessonDetail.fromJson(jsonMap(response));
   }
 
   Future<LessonAnswerResult> submitAnswer({
@@ -79,9 +76,7 @@ class LearningApi {
       '/lessons/$lessonId/exercises/$exerciseId/attempt',
       data: {'answer': answer},
     );
-    return LessonAnswerResult.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return LessonAnswerResult.fromJson(jsonMap(response));
   }
 
   Future<LessonAnswerResult> checkAnswer({
@@ -93,9 +88,7 @@ class LearningApi {
       '/learning/lessons/$lessonId/exercises/$exerciseId/check',
       data: {'answer': answer},
     );
-    return LessonAnswerResult.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return LessonAnswerResult.fromJson(jsonMap(response));
   }
 
   Future<LessonCompletionResult> completeLesson({
@@ -106,15 +99,11 @@ class LearningApi {
       '/lessons/$lessonId/complete',
       data: {'reflectionText': reflectionText},
     );
-    return LessonCompletionResult.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return LessonCompletionResult.fromJson(jsonMap(response));
   }
 
   Future<ContinueLearningResponse> continueLearning() async {
     final response = await _client.dio.get('/learning/me/continue');
-    return ContinueLearningResponse.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return ContinueLearningResponse.fromJson(jsonMap(response));
   }
 }

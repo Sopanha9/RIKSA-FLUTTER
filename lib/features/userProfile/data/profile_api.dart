@@ -1,4 +1,5 @@
 import '../../../core/network/dio_client.dart';
+import '../../../core/network/json_response.dart';
 import 'profile_models.dart';
 
 class ProfileApi {
@@ -8,14 +9,12 @@ class ProfileApi {
 
   Future<GamificationProfile> gamificationProfile() async {
     final response = await _client.dio.get('/gamification/me');
-    return GamificationProfile.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return GamificationProfile.fromJson(jsonMap(response));
   }
 
   Future<List<ProfileAchievement>> achievements() async {
     final response = await _client.dio.get('/gamification/achievements');
-    final values = response.data as List? ?? const [];
+    final values = jsonListOrEmpty(response);
     return values
         .map(
           (item) => ProfileAchievement.fromJson(
@@ -30,9 +29,7 @@ class ProfileApi {
       '/gamification/xp',
       queryParameters: {'limit': limit},
     );
-    return XpActivityPage.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return XpActivityPage.fromJson(jsonMap(response));
   }
 
   Future<List<RankHistoryEntry>> rankHistory({int limit = 50}) async {
@@ -40,7 +37,7 @@ class ProfileApi {
       '/gamification/rank-history',
       queryParameters: {'limit': limit},
     );
-    final data = (response.data as Map).cast<String, dynamic>();
+    final data = jsonMap(response);
     return ((data['edges'] as List?) ?? const [])
         .map(
           (item) =>
@@ -56,9 +53,7 @@ class ProfileApi {
       '/leaderboard/me',
       queryParameters: queryParameters,
     );
-    return LeaderboardRank.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return LeaderboardRank.fromJson(jsonMap(response));
   }
 
   /// Fetches the full ranked board for a scope.
@@ -73,7 +68,7 @@ class ProfileApi {
       '/leaderboard',
       queryParameters: {'scope': scope.apiName, 'scopeId': scopeId},
     );
-    final values = response.data as List? ?? const [];
+    final values = jsonListOrEmpty(response);
     return values
         .map(
           (item) =>

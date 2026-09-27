@@ -1,4 +1,5 @@
 import '../../../core/network/dio_client.dart';
+import '../../../core/network/json_response.dart';
 import 'quest_models.dart';
 
 abstract interface class QuestsRepository {
@@ -14,12 +15,12 @@ class QuestsApi implements QuestsRepository {
   @override
   Future<TodayQuests> today() async {
     final response = await _client.dio.get('/quests/today');
-    return TodayQuests.fromJson((response.data as Map).cast<String, dynamic>());
+    return TodayQuests.fromJson(jsonMap(response));
   }
 
   @override
   Future<DailyQuest> claim(String id) async {
     final response = await _client.dio.post('/quests/$id/claim');
-    return DailyQuest.fromJson((response.data as Map).cast<String, dynamic>());
+    return DailyQuest.fromJson(jsonMap(response));
   }
 }

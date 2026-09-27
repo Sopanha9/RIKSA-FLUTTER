@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/dio_client.dart';
+import '../../../core/network/json_response.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../domain/buddy_care.dart';
 import '../domain/mascot.dart';
@@ -118,7 +119,7 @@ class BuddyApi {
 
   Future<BuddyMe> getMe() async {
     final response = await _client.dio.get('/buddy/me');
-    return BuddyMe.fromJson(Map<String, dynamic>.from(response.data as Map));
+    return BuddyMe.fromJson(jsonMap(response));
   }
 
   Future<BuddyMe> updateMe({
@@ -133,7 +134,7 @@ class BuddyApi {
     if (guestEnergy != null) data['guestEnergy'] = guestEnergy;
     if (guestBond != null) data['guestBond'] = guestBond;
     final response = await _client.dio.put('/buddy/me', data: data);
-    return BuddyMe.fromJson(Map<String, dynamic>.from(response.data as Map));
+    return BuddyMe.fromJson(jsonMap(response));
   }
 
   Future<void> readComplete(String blogId) async {

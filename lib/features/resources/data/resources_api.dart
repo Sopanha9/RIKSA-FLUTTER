@@ -1,4 +1,5 @@
 import '../../../core/network/dio_client.dart';
+import '../../../core/network/json_response.dart';
 import 'resource_models.dart';
 
 abstract interface class ResourcesRepository {
@@ -26,9 +27,7 @@ class ResourcesApi implements ResourcesRepository {
       '/learning/lessons/$lessonId/resources',
       queryParameters: {'limit': 20, 'cursor': ?cursor},
     );
-    return LessonResourcePage.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return LessonResourcePage.fromJson(jsonMap(response));
   }
 
   @override
@@ -42,25 +41,19 @@ class ResourcesApi implements ResourcesRepository {
       '/learning/lessons/$lessonId/resources',
       data: {'title': title.trim(), 'url': url.trim(), 'kind': kind.wire},
     );
-    return LessonResource.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return LessonResource.fromJson(jsonMap(response));
   }
 
   @override
   Future<LessonResource> save(String id) async {
     final response = await _client.dio.post('/resources/$id/save');
-    return LessonResource.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return LessonResource.fromJson(jsonMap(response));
   }
 
   @override
   Future<LessonResource> unsave(String id) async {
     final response = await _client.dio.delete('/resources/$id/save');
-    return LessonResource.fromJson(
-      (response.data as Map).cast<String, dynamic>(),
-    );
+    return LessonResource.fromJson(jsonMap(response));
   }
 
   @override

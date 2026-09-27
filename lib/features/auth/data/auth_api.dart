@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/network/dio_client.dart';
+import '../../../core/network/json_response.dart';
 import 'auth_models.dart';
 
 /// Wraps the `/api/v1/auth` endpoints.
@@ -12,21 +13,21 @@ class AuthApi {
   Future<AuthResponse> login(LoginRequest req) async {
     return _guard(() async {
       final res = await _client.dio.post('/auth/login', data: req.toJson());
-      return AuthResponse.fromJson(_json(res.data));
+      return AuthResponse.fromJson(jsonMap(res));
     });
   }
 
   Future<AuthResponse> register(RegisterRequest req) async {
     return _guard(() async {
       final res = await _client.dio.post('/auth/register', data: req.toJson());
-      return AuthResponse.fromJson(_json(res.data));
+      return AuthResponse.fromJson(jsonMap(res));
     });
   }
 
   Future<AuthResponse> googleAuth(GoogleAuthRequest req) async {
     return _guard(() async {
       final res = await _client.dio.post('/auth/google', data: req.toJson());
-      return AuthResponse.fromJson(_json(res.data));
+      return AuthResponse.fromJson(jsonMap(res));
     });
   }
 
@@ -35,7 +36,7 @@ class AuthApi {
   Future<TelegramBotInfo> telegramBotInfo() async {
     return _guard(() async {
       final res = await _client.dio.get('/auth/telegram/bot');
-      return TelegramBotInfo.fromJson(_json(res.data));
+      return TelegramBotInfo.fromJson(jsonMap(res));
     });
   }
 
@@ -43,7 +44,7 @@ class AuthApi {
   Future<TelegramAuthChallenge> startTelegramAuth() async {
     return _guard(() async {
       final res = await _client.dio.post('/auth/telegram/start');
-      return TelegramAuthChallenge.fromJson(_json(res.data));
+      return TelegramAuthChallenge.fromJson(jsonMap(res));
     });
   }
 
@@ -55,7 +56,7 @@ class AuthApi {
         '/auth/telegram/status',
         data: {'requestToken': challenge.requestToken},
       );
-      return TelegramAuthPoll.fromJson(_json(res.data));
+      return TelegramAuthPoll.fromJson(jsonMap(res));
     });
   }
 
@@ -66,7 +67,7 @@ class AuthApi {
         '/auth/telegram/code',
         data: {'code': code},
       );
-      return TelegramAuthPoll.fromJson(_json(res.data));
+      return TelegramAuthPoll.fromJson(jsonMap(res));
     });
   }
 
@@ -76,7 +77,7 @@ class AuthApi {
         '/auth/telegram/complete',
         data: req.toJson(),
       );
-      return AuthResponse.fromJson(_json(res.data));
+      return AuthResponse.fromJson(jsonMap(res));
     });
   }
 
@@ -93,7 +94,7 @@ class AuthApi {
   Future<AuthUser> getProfile() async {
     return _guard(() async {
       final res = await _client.dio.get('/auth/me');
-      return AuthUser.fromJson(_json(res.data));
+      return AuthUser.fromJson(jsonMap(res));
     });
   }
 
@@ -128,14 +129,14 @@ class AuthApi {
         '/auth/me',
         data: {'provinceId': provinceId},
       );
-      return AuthUser.fromJson(_json(res.data));
+      return AuthUser.fromJson(jsonMap(res));
     });
   }
 
   Future<AuthUser> updateProfile(UpdateProfileRequest request) async {
     return _guard(() async {
       final res = await _client.dio.put('/auth/me', data: request.toJson());
-      return AuthUser.fromJson(_json(res.data));
+      return AuthUser.fromJson(jsonMap(res));
     });
   }
 
@@ -144,7 +145,7 @@ class AuthApi {
       '/auth/forgot-password',
       data: {'identifier': identifier},
     );
-    return _json(res.data)['message'] as String? ??
+    return jsonMap(res)['message'] as String? ??
         'A verification code has been sent.';
   });
 
@@ -161,8 +162,7 @@ class AuthApi {
         'newPassword': newPassword,
       },
     );
-    return _json(res.data)['message'] as String? ??
-        'Password reset successfully.';
+    return jsonMap(res)['message'] as String? ?? 'Password reset successfully.';
   });
 
   Future<bool> verifyEmail(String token) async => _guard(() async {
@@ -170,7 +170,7 @@ class AuthApi {
       '/auth/verify-email',
       data: {'token': token},
     );
-    return _json(res.data)['verified'] as bool? ?? false;
+    return jsonMap(res)['verified'] as bool? ?? false;
   });
 
   Future<T> _guard<T>(Future<T> Function() request) async {
@@ -191,12 +191,6 @@ class AuthApi {
         cause: error,
       );
     }
-  }
-
-  Map<String, dynamic> _json(Object? value) {
-    if (value is Map<String, dynamic>) return value;
-    if (value is Map) return Map<String, dynamic>.from(value);
-    throw const FormatException('Expected a JSON object');
   }
 }
 

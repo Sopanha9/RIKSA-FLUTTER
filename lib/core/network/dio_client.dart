@@ -5,6 +5,9 @@ import 'package:flutter/foundation.dart';
 
 import '../storage/session_store.dart';
 import 'api_config.dart';
+import 'json_response.dart';
+
+enum RefreshOutcome { refreshed, rejected, unavailable }
 
 /// Keys used to persist auth tokens in secure storage.
 class StorageKeys {
@@ -78,8 +81,11 @@ class DioClient {
             return handler.next(e);
           }
 
-          final refreshed = await _refreshSingleFlight();
-          if (!refreshed) {
+          final refreshOutcome = await _refreshSingleFlight();
+          if (refreshOutcome == RefreshOutcome.unavailable) {
+            return handler.next(e);
+          }
+          if (refreshOutcome == RefreshOutcome.rejected) {
             await _clearSession();
             _sessionExpiredController.add(null);
             return handler.next(e);
@@ -112,13 +118,13 @@ class DioClient {
     return d;
   }
 
-  Future<bool>? _refreshOperation;
+  Future<RefreshOutcome>? _refreshOperation;
 
-  Future<bool> _refreshSingleFlight() {
+  Future<RefreshOutcome> _refreshSingleFlight() {
     final active = _refreshOperation;
     if (active != null) return active;
 
-    late final Future<bool> operation;
+    late final Future<RefreshOutcome> operation;
     operation = _performRefresh().whenComplete(() {
       if (identical(_refreshOperation, operation)) {
         _refreshOperation = null;
@@ -128,34 +134,58 @@ class DioClient {
     return operation;
   }
 
-  Future<bool> _performRefresh() async {
+  Future<RefreshOutcome> _performRefresh() async {
+    final String? refreshToken;
     try {
-      final refreshToken = await getRefreshToken();
-      if (refreshToken == null || refreshToken.isEmpty) {
-        return false;
-      }
-      // Use a bare dio for refresh so we don't recurse into the interceptor
-      final raw = Dio(
-        BaseOptions(
-          baseUrl: _baseUrl,
-          connectTimeout: ApiConfig.connectTimeout,
-          receiveTimeout: ApiConfig.receiveTimeout,
-          headers: {'Content-Type': 'application/json'},
-        ),
-      );
-      if (httpClientAdapter != null) {
-        raw.httpClientAdapter = httpClientAdapter!;
-      }
-      final res = await raw.post(
+      refreshToken = await getRefreshToken();
+    } catch (_) {
+      return RefreshOutcome.unavailable;
+    }
+    if (refreshToken == null || refreshToken.isEmpty) {
+      return RefreshOutcome.rejected;
+    }
+
+    // Use a bare dio for refresh so we don't recurse into the interceptor.
+    final raw = Dio(
+      BaseOptions(
+        baseUrl: _baseUrl,
+        connectTimeout: ApiConfig.connectTimeout,
+        receiveTimeout: ApiConfig.receiveTimeout,
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
+    if (httpClientAdapter != null) raw.httpClientAdapter = httpClientAdapter!;
+
+    late final Response<dynamic> response;
+    try {
+      response = await raw.post(
         '/auth/refresh',
         data: {'refreshToken': refreshToken},
       );
-      final data = Map<String, dynamic>.from(res.data as Map);
-      if (!_hasValidTokenPair(data)) return false;
-      await _persistSession(data);
-      return true;
+    } on DioException catch (error) {
+      if (const {400, 401, 403}.contains(error.response?.statusCode)) {
+        return RefreshOutcome.rejected;
+      }
+      return RefreshOutcome.unavailable;
     } catch (_) {
-      return false;
+      return RefreshOutcome.unavailable;
+    }
+
+    // A body that is not JSON (a captive portal or proxy error page) says
+    // nothing about the refresh token, so it must not end the session.
+    late final Map<String, dynamic> data;
+    try {
+      data = jsonMap(response);
+    } on DioException {
+      return RefreshOutcome.unavailable;
+    }
+    if (!_hasValidTokenPair(data)) return RefreshOutcome.rejected;
+
+    try {
+      await _persistSession(data);
+      return RefreshOutcome.refreshed;
+    } catch (_) {
+      return RefreshOutcome.unavailable;
     }
   }
 

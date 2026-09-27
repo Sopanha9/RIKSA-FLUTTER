@@ -87,11 +87,154 @@ void main() {
     expect(await client.getAccessToken(), isNull);
     expect(await client.getRefreshToken(), isNull);
   });
+
+  test(
+    'a refresh timeout keeps the session and surfaces the original 401',
+    () async {
+      FlutterSecureStorage.setMockInitialValues({
+        StorageKeys.accessToken: 'expired-access',
+        StorageKeys.refreshToken: 'valid-refresh',
+      });
+      final adapter = _AuthAdapter()..refreshTimeout = true;
+      final client = DioClient(
+        SessionStore(const FlutterSecureStorage()),
+        baseUrl: 'http://riksa.test/api/v1',
+        httpClientAdapter: adapter,
+      );
+      addTearDown(client.dispose);
+      var sessionExpired = false;
+      final subscription = client.sessionExpired.listen((_) {
+        sessionExpired = true;
+      });
+      addTearDown(subscription.cancel);
+
+      await expectLater(
+        client.dio.get<Map<String, dynamic>>('/protected'),
+        throwsA(
+          isA<DioException>().having(
+            (error) => error.response?.statusCode,
+            'original response status',
+            401,
+          ),
+        ),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(adapter.refreshCalls, 1);
+      expect(await client.getAccessToken(), 'expired-access');
+      expect(await client.getRefreshToken(), 'valid-refresh');
+      expect(sessionExpired, isFalse);
+    },
+  );
+
+  test(
+    'a rejected refresh clears the session and emits session-expired',
+    () async {
+      FlutterSecureStorage.setMockInitialValues({
+        StorageKeys.accessToken: 'expired-access',
+        StorageKeys.refreshToken: 'revoked-refresh',
+      });
+      final adapter = _AuthAdapter()..refreshStatusCode = 401;
+      final client = DioClient(
+        SessionStore(const FlutterSecureStorage()),
+        baseUrl: 'http://riksa.test/api/v1',
+        httpClientAdapter: adapter,
+      );
+      addTearDown(client.dispose);
+      final expired = expectLater(client.sessionExpired.first, completes);
+
+      await expectLater(
+        client.dio.get<Map<String, dynamic>>('/protected'),
+        throwsA(
+          isA<DioException>().having(
+            (error) => error.response?.statusCode,
+            'original response status',
+            401,
+          ),
+        ),
+      );
+      await expired;
+
+      expect(adapter.refreshCalls, 1);
+      expect(await client.getAccessToken(), isNull);
+      expect(await client.getRefreshToken(), isNull);
+    },
+  );
+
+  test('an HTML page from refresh keeps the session', () async {
+    FlutterSecureStorage.setMockInitialValues({
+      StorageKeys.accessToken: 'expired-access',
+      StorageKeys.refreshToken: 'valid-refresh',
+    });
+    final adapter = _AuthAdapter()..refreshHtml = true;
+    final client = DioClient(
+      SessionStore(const FlutterSecureStorage()),
+      baseUrl: 'http://riksa.test/api/v1',
+      httpClientAdapter: adapter,
+    );
+    addTearDown(client.dispose);
+    var sessionExpired = false;
+    final subscription = client.sessionExpired.listen((_) {
+      sessionExpired = true;
+    });
+    addTearDown(subscription.cancel);
+
+    await expectLater(
+      client.dio.get<Map<String, dynamic>>('/protected'),
+      throwsA(isA<DioException>()),
+    );
+
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    expect(await client.getRefreshToken(), 'valid-refresh');
+    expect(sessionExpired, isFalse);
+  });
+
+  test(
+    'a 503 from refresh keeps the session and emits no expiration',
+    () async {
+      FlutterSecureStorage.setMockInitialValues({
+        StorageKeys.accessToken: 'expired-access',
+        StorageKeys.refreshToken: 'valid-refresh',
+      });
+      final adapter = _AuthAdapter()..refreshStatusCode = 503;
+      final client = DioClient(
+        SessionStore(const FlutterSecureStorage()),
+        baseUrl: 'http://riksa.test/api/v1',
+        httpClientAdapter: adapter,
+      );
+      addTearDown(client.dispose);
+      var sessionExpired = false;
+      final subscription = client.sessionExpired.listen((_) {
+        sessionExpired = true;
+      });
+      addTearDown(subscription.cancel);
+
+      await expectLater(
+        client.dio.get<Map<String, dynamic>>('/protected'),
+        throwsA(
+          isA<DioException>().having(
+            (error) => error.response?.statusCode,
+            'original response status',
+            401,
+          ),
+        ),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(adapter.refreshCalls, 1);
+      expect(await client.getAccessToken(), 'expired-access');
+      expect(await client.getRefreshToken(), 'valid-refresh');
+      expect(sessionExpired, isFalse);
+    },
+  );
 }
 
 class _AuthAdapter implements HttpClientAdapter {
   int refreshCalls = 0;
   bool acceptFreshAccess = true;
+  bool refreshTimeout = false;
+  bool refreshHtml = false;
+  int refreshStatusCode = 200;
 
   @override
   Future<ResponseBody> fetch(
@@ -104,7 +247,29 @@ class _AuthAdapter implements HttpClientAdapter {
     };
     if (options.path == '/auth/refresh') {
       refreshCalls++;
+      if (refreshTimeout) {
+        throw DioException(
+          requestOptions: options,
+          type: DioExceptionType.connectionTimeout,
+        );
+      }
       await Future<void>.delayed(const Duration(milliseconds: 80));
+      if (refreshHtml) {
+        return ResponseBody.fromString(
+          '<html>Sign in to the Wi-Fi</html>',
+          200,
+          headers: {
+            Headers.contentTypeHeader: ['text/html'],
+          },
+        );
+      }
+      if (refreshStatusCode != 200) {
+        return ResponseBody.fromString(
+          jsonEncode({'message': 'refresh failed'}),
+          refreshStatusCode,
+          headers: jsonHeaders,
+        );
+      }
       return ResponseBody.fromString(
         jsonEncode({
           'userId': 'user-id',
