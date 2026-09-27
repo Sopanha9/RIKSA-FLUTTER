@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:riksa_app/core/providers/current_user_provider.dart';
 import 'package:riksa_app/features/blog/data/blog_api.dart';
 import 'package:riksa_app/features/blog/data/blog_models.dart';
 import 'package:riksa_app/features/blog/providers/blog_provider.dart';
@@ -27,7 +28,10 @@ void main() {
 
   ProviderContainer containerWith() {
     final container = ProviderContainer(
-      overrides: [blogApiProvider.overrideWithValue(api)],
+      overrides: [
+        currentUserIdProvider.overrideWithValue(null),
+        blogApiProvider.overrideWithValue(api),
+      ],
     );
     addTearDown(container.dispose);
     return container;

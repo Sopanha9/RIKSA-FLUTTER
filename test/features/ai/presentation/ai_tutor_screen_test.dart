@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:riksa_app/core/providers/current_user_provider.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/ai/data/ai_chat_api.dart';
 import 'package:riksa_app/features/ai/data/ai_chat_models.dart';
@@ -194,6 +195,7 @@ Future<void> _pump(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        currentUserIdProvider.overrideWithValue(null),
         aiChatSessionsProvider.overrideWith((ref) async => chats),
         if (api != null) aiChatApiProvider.overrideWithValue(api),
       ],

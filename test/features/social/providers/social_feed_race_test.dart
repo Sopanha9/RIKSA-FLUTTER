@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riksa_app/core/network/dio_client.dart';
+import 'package:riksa_app/core/providers/current_user_provider.dart';
 import 'package:riksa_app/core/storage/session_store.dart';
 import 'package:riksa_app/features/social/data/social_api.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
@@ -38,7 +39,10 @@ void main() {
   test('older social response cannot replace a newer selection', () async {
     final api = _ControlledSocialApi();
     final container = ProviderContainer(
-      overrides: [socialApiProvider.overrideWithValue(api)],
+      overrides: [
+        currentUserIdProvider.overrideWithValue('learner-1'),
+        socialApiProvider.overrideWithValue(api),
+      ],
     );
     addTearDown(container.dispose);
     container.read(socialFeedProvider);

@@ -10,22 +10,29 @@ final questsRepositoryProvider = Provider<QuestsRepository>((ref) {
 });
 
 class TodayQuestsNotifier extends AsyncNotifier<TodayQuests> {
+  int _requestVersion = 0;
+
   @override
   Future<TodayQuests> build() async {
+    watchCurrentUserId(ref);
+    _requestVersion++;
     return ref.watch(questsRepositoryProvider).today();
   }
 
   Future<void> refresh() async {
+    final requestVersion = _requestVersion;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final result = await AsyncValue.guard(() async {
       return ref.read(questsRepositoryProvider).today();
     });
+    if (requestVersion == _requestVersion) state = result;
   }
 
   Future<void> claim(String id) async {
     final repository = ref.read(questsRepositoryProvider);
     final before = state.value;
     if (before == null) return;
+    final requestVersion = _requestVersion;
     state = AsyncData(
       TodayQuests(
         date: before.date,
@@ -37,6 +44,7 @@ class TodayQuestsNotifier extends AsyncNotifier<TodayQuests> {
     );
     try {
       final claimed = await repository.claim(id);
+      if (requestVersion != _requestVersion) return;
       final current = state.value ?? before;
       final quests = current.quests
           .map((quest) => quest.id == id ? claimed : quest)
@@ -50,7 +58,7 @@ class TodayQuestsNotifier extends AsyncNotifier<TodayQuests> {
       );
       ref.invalidate(profileDashboardProvider);
     } catch (_) {
-      state = AsyncData(before);
+      if (requestVersion == _requestVersion) state = AsyncData(before);
       rethrow;
     }
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:riksa_app/core/providers/current_user_provider.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/learning/data/learning_models.dart';
 import 'package:riksa_app/features/learning/presentation/saved_lessons_screen.dart';
@@ -81,7 +82,10 @@ void main() {
   testWidgets('renders empty state when no lessons are saved', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final container = ProviderContainer(
-      overrides: [lessonCatalogProvider.overrideWith(_TestCatalogNotifier.new)],
+      overrides: [
+        currentUserIdProvider.overrideWithValue(null),
+        lessonCatalogProvider.overrideWith(_TestCatalogNotifier.new),
+      ],
     );
     addTearDown(container.dispose);
 
@@ -96,7 +100,10 @@ void main() {
     tester,
   ) async {
     final container = ProviderContainer(
-      overrides: [lessonCatalogProvider.overrideWith(_TestCatalogNotifier.new)],
+      overrides: [
+        currentUserIdProvider.overrideWithValue(null),
+        lessonCatalogProvider.overrideWith(_TestCatalogNotifier.new),
+      ],
     );
     addTearDown(container.dispose);
 
@@ -131,6 +138,7 @@ void main() {
   ) async {
     final container = ProviderContainer(
       overrides: [
+        currentUserIdProvider.overrideWithValue(null),
         lessonCatalogProvider.overrideWith(_EmptyCatalogNotifier.new),
         learningHomeProvider.overrideWith(
           (ref) => Future<LearningHomeData>.error(Exception('offline')),
@@ -156,6 +164,7 @@ void main() {
   ) async {
     final container = ProviderContainer(
       overrides: [
+        currentUserIdProvider.overrideWithValue(null),
         lessonCatalogProvider.overrideWith(_EmptyCatalogNotifier.new),
         learningHomeProvider.overrideWith(
           (ref) async => const LearningHomeData(

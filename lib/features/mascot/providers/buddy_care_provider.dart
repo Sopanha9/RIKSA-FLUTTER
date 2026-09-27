@@ -63,8 +63,8 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
     with WidgetsBindingObserver {
   static const _guestKey = 'riksa_buddy_guest_care';
   static const _signedInKeyPrefix = 'riksa_buddy_care_user_';
-  static const _speciesKey = 'riksa_mascot_species';
-  static const _nameKey = 'riksa_mascot_name';
+  static const _guestSpeciesKey = 'riksa_mascot_species_guest';
+  static const _guestNameKey = 'riksa_mascot_name_guest';
 
   String? _activeUserId;
   String? _syncingUserId;
@@ -183,21 +183,30 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
         // If the local guest cache is unavailable, still load the server buddy.
       }
       final BuddyMe remote;
-      if (guestJson != null && prefs != null) {
-        final guestCare = BuddyCare.fromJson(
-          Map<String, dynamic>.from(jsonDecode(guestJson) as Map),
-        );
-        final profile = await _profileFromPreferences(prefs);
+      final hasPendingGuestChoice =
+          prefs?.getBool(MascotNotifier.guestChoicePendingKey) ?? false;
+      if ((guestJson != null || hasPendingGuestChoice) && prefs != null) {
+        final guestCare = guestJson == null
+            ? null
+            : BuddyCare.fromJson(
+                Map<String, dynamic>.from(jsonDecode(guestJson) as Map),
+              );
+        final profile = hasPendingGuestChoice
+            ? await _profileFromPreferences(prefs)
+            : null;
         remote = await ref
             .read(buddyApiProvider)
             .updateMe(
-              species: profile.species,
-              name: profile.name,
-              guestEnergy: guestCare.energy,
-              guestBond: guestCare.bond,
+              species: profile?.species,
+              name: profile?.name,
+              guestEnergy: guestCare?.energy,
+              guestBond: guestCare?.bond,
             );
         try {
-          await prefs.remove(_guestKey);
+          if (guestJson != null) await prefs.remove(_guestKey);
+          if (hasPendingGuestChoice) {
+            await prefs.remove(MascotNotifier.guestChoicePendingKey);
+          }
         } catch (_) {
           // Removing a stale local copy is best-effort after a successful sync.
         }
@@ -224,7 +233,9 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
     _activeUserId = userId;
     state = BuddyCareState.fromMe(me, userId: userId);
     unawaited(
-      ref.read(mascotProvider.notifier).acceptRemoteChoice(me.species, me.name),
+      ref
+          .read(mascotProvider.notifier)
+          .acceptRemoteChoice(me.species, me.name, userId: userId),
     );
   }
 
@@ -323,10 +334,10 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
   Future<MascotProfile> _profileFromPreferences(SharedPreferences prefs) async {
     final species =
         MascotSpecies.values
-            .where((value) => value.name == prefs.getString(_speciesKey))
+            .where((value) => value.name == prefs.getString(_guestSpeciesKey))
             .firstOrNull ??
         MascotSpecies.crocodile;
-    final storedName = prefs.getString(_nameKey)?.trim();
+    final storedName = prefs.getString(_guestNameKey)?.trim();
     return MascotProfile(
       species: species,
       name: storedName?.isNotEmpty == true

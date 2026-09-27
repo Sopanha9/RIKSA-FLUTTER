@@ -121,8 +121,8 @@ void main() {
 
     expect(find.text('language page'), findsOneWidget);
     final preferences = await SharedPreferences.getInstance();
-    expect(preferences.getString('riksa_mascot_species'), 'capybara');
-    expect(preferences.getString('riksa_mascot_name'), 'Mochi');
+    expect(preferences.getString('riksa_mascot_species_guest'), 'capybara');
+    expect(preferences.getString('riksa_mascot_name_guest'), 'Mochi');
   });
 
   testWidgets('opened from settings, continue saves and returns there', (
@@ -143,7 +143,7 @@ void main() {
     expect(find.text('settings page'), findsOneWidget);
     expect(find.text('language page'), findsNothing);
     final preferences = await SharedPreferences.getInstance();
-    expect(preferences.getString('riksa_mascot_species'), 'capybara');
+    expect(preferences.getString('riksa_mascot_species_guest'), 'capybara');
   });
 
   testWidgets('reduced motion shows still frames and settles', (tester) async {
@@ -157,8 +157,8 @@ void main() {
 
   test('a saved buddy is restored', () async {
     SharedPreferences.setMockInitialValues({
-      'riksa_mascot_species': 'capybara',
-      'riksa_mascot_name': 'Mochi',
+      'riksa_mascot_species_guest': 'capybara',
+      'riksa_mascot_name_guest': 'Mochi',
     });
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -176,8 +176,8 @@ void main() {
   ) async {
     await phone(tester);
     SharedPreferences.setMockInitialValues({
-      'riksa_mascot_species': 'capybara',
-      'riksa_mascot_name': 'Mochi',
+      'riksa_mascot_species_guest': 'capybara',
+      'riksa_mascot_name_guest': 'Mochi',
     });
     await tester.pumpWidget(_app());
     await tester.pump(const Duration(milliseconds: 100));
@@ -271,7 +271,7 @@ void main() {
 
   testWidgets('the avatar shows the chosen buddy', (tester) async {
     SharedPreferences.setMockInitialValues({
-      'riksa_mascot_species': 'capybara',
+      'riksa_mascot_species_guest': 'capybara',
     });
     await tester.pumpWidget(
       const ProviderScope(

@@ -12,9 +12,10 @@ final blogApiProvider = Provider<BlogApi>((ref) {
   return BlogApi(ref.watch(dioClientProvider));
 });
 
-final blogCategoriesProvider = FutureProvider<List<BlogCategory>>(
-  (ref) => ref.watch(blogApiProvider).categories(),
-);
+final blogCategoriesProvider = FutureProvider<List<BlogCategory>>((ref) {
+  watchCurrentUserId(ref);
+  return ref.watch(blogApiProvider).categories();
+});
 
 /// How many of the signed-in author's posts are still waiting on a
 /// moderator.
@@ -24,6 +25,7 @@ final blogCategoriesProvider = FutureProvider<List<BlogCategory>>(
 /// needed, so the request asks for a single row. Failures resolve to zero:
 /// a missing badge is better than an error where the blog list should be.
 final pendingBlogPostCountProvider = FutureProvider<int>((ref) async {
+  watchCurrentUserId(ref);
   try {
     final page = await ref
         .watch(blogApiProvider)
@@ -38,6 +40,7 @@ final pendingBlogPostCountProvider = FutureProvider<int>((ref) async {
 /// feed, this includes articles that are still in review or were rejected.
 final myArticlesPreviewProvider = FutureProvider.autoDispose
     .family<BlogPage, String>((ref, userId) {
+      watchCurrentUserId(ref);
       return ref.watch(blogApiProvider).myPosts(size: 10);
     });
 
@@ -110,19 +113,24 @@ class BlogFeedError extends BlogFeedState {
 
 class BlogFeedNotifier extends Notifier<BlogFeedState> {
   static const int _pageSize = 20;
+  int _requestVersion = 0;
 
   @override
   BlogFeedState build() {
+    watchCurrentUserId(ref);
+    _requestVersion++;
     load();
     return const BlogFeedLoading();
   }
 
   Future<void> load({String? categoryId}) async {
+    final requestVersion = ++_requestVersion;
     state = const BlogFeedLoading();
     try {
       final page = await ref
           .read(blogApiProvider)
           .listPosts(categoryId: categoryId, page: 0, size: _pageSize);
+      if (requestVersion != _requestVersion) return;
       state = BlogFeedLoaded(
         posts: page.content,
         page: page.page,
@@ -131,6 +139,7 @@ class BlogFeedNotifier extends Notifier<BlogFeedState> {
         loadedAt: DateTime.now(),
       );
     } catch (e) {
+      if (requestVersion != _requestVersion) return;
       state = BlogFeedError(_msg(e));
     }
   }
@@ -159,6 +168,7 @@ class BlogFeedNotifier extends Notifier<BlogFeedState> {
         !current.hasMore) {
       return;
     }
+    final requestVersion = _requestVersion;
     state = BlogFeedLoaded(
       posts: current.posts,
       page: current.page,
@@ -175,6 +185,7 @@ class BlogFeedNotifier extends Notifier<BlogFeedState> {
             page: current.page + 1,
             size: _pageSize,
           );
+      if (requestVersion != _requestVersion) return;
       state = BlogFeedLoaded(
         posts: [...current.posts, ...page.content],
         page: page.page,
@@ -183,6 +194,7 @@ class BlogFeedNotifier extends Notifier<BlogFeedState> {
         loadedAt: current.loadedAt,
       );
     } catch (_) {
+      if (requestVersion != _requestVersion) return;
       state = BlogFeedLoaded(
         posts: current.posts,
         page: current.page,
@@ -234,8 +246,10 @@ class BlogFeedNotifier extends Notifier<BlogFeedState> {
   Future<void> toggleLike(String postId) async {
     final current = state;
     if (current is! BlogFeedLoaded) return;
+    final requestVersion = _requestVersion;
     try {
       final updated = await ref.read(blogApiProvider).toggleLike(postId);
+      if (requestVersion != _requestVersion) return;
       state = BlogFeedLoaded(
         posts: [
           for (final post in current.posts)
@@ -247,6 +261,7 @@ class BlogFeedNotifier extends Notifier<BlogFeedState> {
         loadedAt: current.loadedAt,
       );
     } catch (_) {
+      if (requestVersion != _requestVersion) return;
       // Keep the cached list on failure.
     }
   }

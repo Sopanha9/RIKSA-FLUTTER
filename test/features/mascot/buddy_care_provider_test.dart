@@ -23,6 +23,8 @@ class _FakeBuddyApi implements BuddyApi {
   int updateCalls = 0;
   int? mergedEnergy;
   int? mergedBond;
+  MascotSpecies? submittedSpecies;
+  String? submittedName;
 
   @override
   Future<BuddyMe> getMe() async {
@@ -38,6 +40,8 @@ class _FakeBuddyApi implements BuddyApi {
     int? guestBond,
   }) async {
     updateCalls++;
+    submittedSpecies = species;
+    submittedName = name;
     mergedEnergy = guestEnergy;
     mergedBond = guestBond;
     me = BuddyMe(
@@ -119,8 +123,9 @@ void main() {
             careDay: phnomPenhCareDay(now),
           ).toJson(),
         ),
-        'riksa_mascot_species': 'capybara',
-        'riksa_mascot_name': 'Mochi',
+        'riksa_mascot_species_guest': 'capybara',
+        'riksa_mascot_name_guest': 'Mochi',
+        MascotNotifier.guestChoicePendingKey: true,
       });
       final api = _FakeBuddyApi();
       final container = ProviderContainer(
@@ -155,6 +160,38 @@ void main() {
       expect(prefs.getString('riksa_buddy_guest_care'), isNull);
     },
   );
+
+  test('a guest buddy chosen before signup is submitted once', () async {
+    final api = _FakeBuddyApi();
+    final container = ProviderContainer(
+      overrides: [
+        authProvider.overrideWith(_TestAuthNotifier.new),
+        buddyApiProvider.overrideWithValue(api),
+      ],
+    );
+    addTearDown(container.dispose);
+    container.read(buddyCareProvider);
+    await _flushAsyncWork();
+
+    await container
+        .read(mascotProvider.notifier)
+        .choose(MascotSpecies.capybara, 'Mochi');
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getBool(MascotNotifier.guestChoicePendingKey), isTrue);
+
+    final authNotifier =
+        container.read(authProvider.notifier) as _TestAuthNotifier;
+    authNotifier.signIn();
+    await _flushAsyncWork();
+    authNotifier.signIn();
+    await _flushAsyncWork();
+
+    expect(api.updateCalls, 1);
+    expect(api.submittedSpecies, MascotSpecies.capybara);
+    expect(api.submittedName, 'Mochi');
+    expect(preferences.getBool(MascotNotifier.guestChoicePendingKey), isNull);
+    expect(container.read(mascotProvider).profile?.name, 'Server buddy');
+  });
 }
 
 Future<void> _flushAsyncWork() async {

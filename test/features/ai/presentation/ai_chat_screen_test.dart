@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:riksa_app/core/providers/current_user_provider.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/ai/data/ai_chat_api.dart';
 import 'package:riksa_app/features/ai/data/ai_chat_models.dart';
@@ -16,7 +17,6 @@ import 'package:riksa_app/l10n/gen/app_localizations.dart';
 /// A tutor a student can trust means: nothing they typed disappears, and the
 /// tutor knows which lesson they came from.
 void main() {
-
   testWidgets('an existing chat loads instead of posing as a new one', (
     tester,
   ) async {
@@ -336,7 +336,6 @@ void main() {
   });
 }
 
-
 Future<void> _pump(
   WidgetTester tester, {
   required AiChatApi api,
@@ -352,7 +351,10 @@ Future<void> _pump(
 
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [aiChatApiProvider.overrideWithValue(api)],
+      overrides: [
+        currentUserIdProvider.overrideWithValue(null),
+        aiChatApiProvider.overrideWithValue(api),
+      ],
       child: MaterialApp(
         theme: AppTheme.light,
         localizationsDelegates: const [

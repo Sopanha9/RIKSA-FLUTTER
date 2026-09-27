@@ -14,6 +14,7 @@ final socialApiProvider = Provider<SocialApi>((ref) {
 });
 
 final communityStreakProvider = FutureProvider<CommunityStreak>((ref) async {
+  watchCurrentUserId(ref);
   final streak = await ref.watch(socialApiProvider).streak();
   if (streak.lastTrackedDate != null ||
       (streak.activityDates?.isNotEmpty ?? false)) {
@@ -36,6 +37,7 @@ final userPostsProvider = FutureProvider.family<SocialFeedPage, String>((
   ref,
   userId,
 ) {
+  watchCurrentUserId(ref);
   return ref.watch(socialApiProvider).feed(authorId: userId, limit: 50);
 });
 
@@ -96,6 +98,8 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
 
   @override
   SocialFeedState build() {
+    watchCurrentUserId(ref);
+    _requestVersion++;
     unawaited(load());
     return const SocialFeedLoading();
   }
@@ -171,6 +175,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
   }) async {
     final current = state;
     if (current is! SocialFeedLoaded) return false;
+    final requestVersion = _requestVersion;
     final index = current.posts.indexWhere((post) => post.id == postId);
     if (index < 0) return false;
 
@@ -191,12 +196,14 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
       final updated = await ref
           .read(socialApiProvider)
           .react(postId: postId, reaction: reaction);
+      if (requestVersion != _requestVersion) return false;
       final latest = state;
       if (latest is SocialFeedLoaded) {
         state = latest.copyWith(posts: _replace(latest.posts, updated));
       }
       return true;
     } catch (_) {
+      if (requestVersion != _requestVersion) return false;
       final latest = state;
       if (latest is SocialFeedLoaded) {
         state = latest.copyWith(posts: _replace(latest.posts, original));
@@ -227,8 +234,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
     if (!category.joined) return 'Join ${category.name} before posting.';
 
     try {
-      final categories = current.categories;
-      final latest = current;
+      final requestVersion = _requestVersion;
       final created = await ref
           .read(socialApiProvider)
           .createPost(
@@ -237,10 +243,11 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
             categoryId: categoryId,
             mediaUrl: mediaUrl,
           );
-      state = latest.copyWith(
-        categories: categories,
-        posts: [created, ...latest.posts],
-      );
+      if (requestVersion != _requestVersion) return null;
+      final latest = state;
+      if (latest is SocialFeedLoaded) {
+        state = latest.copyWith(posts: [created, ...latest.posts]);
+      }
       return null;
     } catch (error) {
       return _message(error);
@@ -255,6 +262,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
     required String content,
     String? mediaUrl,
   }) async {
+    final requestVersion = _requestVersion;
     try {
       final updated = await ref
           .read(socialApiProvider)
@@ -264,6 +272,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
             content: content,
             mediaUrl: mediaUrl,
           );
+      if (requestVersion != _requestVersion) return null;
       syncPost(updated);
       // The author's profile tab reads its own copy of the feed.
       ref.invalidate(userPostsProvider);
@@ -276,8 +285,10 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
   /// Deletes a post the signed-in user owns. Returns null on success, or a
   /// message to show the author when the server refuses.
   Future<String?> deletePost(String id) async {
+    final requestVersion = _requestVersion;
     try {
       await ref.read(socialApiProvider).deletePost(id);
+      if (requestVersion != _requestVersion) return null;
       removePost(id);
       ref.invalidate(userPostsProvider);
       return null;
@@ -300,8 +311,10 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
   }
 
   Future<bool> sharePost(String postId) async {
+    final requestVersion = _requestVersion;
     try {
       final updated = await ref.read(socialApiProvider).share(postId);
+      if (requestVersion != _requestVersion) return false;
       final current = state;
       if (current is SocialFeedLoaded) {
         state = current.copyWith(posts: _replace(current.posts, updated));
@@ -342,10 +355,12 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
         .where((item) => item.id == categoryId)
         .firstOrNull;
     if (category == null) return false;
+    final requestVersion = _requestVersion;
     try {
       final updated = await ref
           .read(socialApiProvider)
           .setCategoryJoined(categoryId, joined: !category.joined);
+      if (requestVersion != _requestVersion) return false;
       final latest = state;
       if (latest is SocialFeedLoaded) {
         state = latest.copyWith(
