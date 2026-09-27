@@ -3139,6 +3139,39 @@ class AppLocalizationsKm extends AppLocalizations {
   String get photoViewerClose => 'បិទរូបភាព';
 
   @override
+  String get postPhotosAdd => 'បន្ថែមរូបភាព';
+
+  @override
+  String get postPhotosRemove => 'លុបរូបភាព';
+
+  @override
+  String get postPhotosRetry => 'ព្យាយាមម្ដងទៀត';
+
+  @override
+  String get postPhotosReorder => 'រៀបលំដាប់រូបភាព';
+
+  @override
+  String get postPhotosUploadFailed => 'បង្ហោះរូបភាពមិនបានទេ';
+
+  @override
+  String postPhotosUploading(int progress) {
+    return 'កំពុងបង្ហោះ $progress%';
+  }
+
+  @override
+  String get postPhotosLimitReached =>
+      'អ្នកអាចបន្ថែមរូបភាពបានរហូតដល់ ៤ ប៉ុណ្ណោះ។';
+
+  @override
+  String get postPhotosBodyRequired =>
+      'សូមបន្ថែមព័ត៌មាន ឬភ្ជាប់រូបភាព មុនពេលបង្ហោះ។';
+
+  @override
+  String postPhotosPageIndicator(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
   String get composerWrite => 'សរសេរ';
 
   @override

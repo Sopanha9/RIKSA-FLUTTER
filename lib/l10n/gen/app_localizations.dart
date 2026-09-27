@@ -5576,6 +5576,60 @@ abstract class AppLocalizations {
   /// **'Close photo'**
   String get photoViewerClose;
 
+  /// No description provided for @postPhotosAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photos'**
+  String get postPhotosAdd;
+
+  /// No description provided for @postPhotosRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get postPhotosRemove;
+
+  /// No description provided for @postPhotosRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get postPhotosRetry;
+
+  /// No description provided for @postPhotosReorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder photo'**
+  String get postPhotosReorder;
+
+  /// No description provided for @postPhotosUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed'**
+  String get postPhotosUploadFailed;
+
+  /// No description provided for @postPhotosUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading {progress}%'**
+  String postPhotosUploading(int progress);
+
+  /// No description provided for @postPhotosLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You can add up to 4 photos.'**
+  String get postPhotosLimitReached;
+
+  /// No description provided for @postPhotosBodyRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add some details or attach a photo before publishing.'**
+  String get postPhotosBodyRequired;
+
+  /// No description provided for @postPhotosPageIndicator.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {total}'**
+  String postPhotosPageIndicator(int current, int total);
+
   /// No description provided for @composerWrite.
   ///
   /// In en, this message translates to:

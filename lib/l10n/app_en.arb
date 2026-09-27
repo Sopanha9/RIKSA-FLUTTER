@@ -1466,6 +1466,17 @@
   "milestoneShareHint": "Let friends celebrate your streaks, ranks, and finished units.",
   "postOpenPhoto": "Open photo",
   "photoViewerClose": "Close photo",
+  "postPhotosAdd": "Add photos",
+  "postPhotosRemove": "Remove photo",
+  "postPhotosRetry": "Retry",
+  "postPhotosReorder": "Reorder photo",
+  "postPhotosUploadFailed": "Upload failed",
+  "postPhotosUploading": "Uploading {progress}%",
+  "@postPhotosUploading": {"placeholders":{"progress":{"type":"int"}}},
+  "postPhotosLimitReached": "You can add up to 4 photos.",
+  "postPhotosBodyRequired": "Add some details or attach a photo before publishing.",
+  "postPhotosPageIndicator": "{current} / {total}",
+  "@postPhotosPageIndicator": {"placeholders":{"current":{"type":"int"},"total":{"type":"int"}}},
   "composerWrite": "Write",
   "composerPreview": "Preview"
 }

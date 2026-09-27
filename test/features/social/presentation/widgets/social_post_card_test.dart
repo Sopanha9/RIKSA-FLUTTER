@@ -151,6 +151,46 @@ void main() {
     expect(deletes, 1);
   });
 
+  testWidgets('an empty title uses the body preview as the main text', (
+    tester,
+  ) async {
+    await initializeDateFormatting('en');
+    final untitled = SocialPost(
+      id: 'untitled',
+      title: '',
+      content: 'First body line',
+      reactionCount: 0,
+      commentCount: 0,
+      shareCount: 0,
+      author: _ownedPost.author,
+      category: _ownedPost.category,
+      createdAt: _ownedPost.createdAt,
+      updatedAt: _ownedPost.updatedAt,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('km')],
+        home: Scaffold(
+          body: SocialPostCard(
+            post: untitled,
+            onTap: () {},
+            onReact: () {},
+            onShare: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('First body line'), findsOneWidget);
+  });
+
   testWidgets(
     'an official post shows its verified mark only when highlighted',
     (tester) async {

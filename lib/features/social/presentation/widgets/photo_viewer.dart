@@ -197,6 +197,44 @@ class _PhotoViewerState extends State<PhotoViewer> {
                 icon: const Icon(Icons.close_rounded),
               ),
             ),
+            if (widget.urls.length > 1)
+              Positioned(
+                bottom: 16,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Semantics(
+                    key: const ValueKey('photo-viewer-page-indicator'),
+                    liveRegion: true,
+                    label: l10n.postPhotosPageIndicator(
+                      _index + 1,
+                      widget.urls.length,
+                    ),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: .55),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        child: Text(
+                          l10n.postPhotosPageIndicator(
+                            _index + 1,
+                            widget.urls.length,
+                          ),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

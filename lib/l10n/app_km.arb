@@ -998,6 +998,17 @@
   "milestoneShareHint": "ឲ្យមិត្តភក្តិអបអរស្ទ្រីក ថ្នាក់ និងឯកតាមេរៀនដែលអ្នកបានបញ្ចប់។",
   "postOpenPhoto": "បើករូបភាព",
   "photoViewerClose": "បិទរូបភាព",
+  "postPhotosAdd": "បន្ថែមរូបភាព",
+  "postPhotosRemove": "លុបរូបភាព",
+  "postPhotosRetry": "ព្យាយាមម្ដងទៀត",
+  "postPhotosReorder": "រៀបលំដាប់រូបភាព",
+  "postPhotosUploadFailed": "បង្ហោះរូបភាពមិនបានទេ",
+  "postPhotosUploading": "កំពុងបង្ហោះ {progress}%",
+  "@postPhotosUploading": {"placeholders":{"progress":{"type":"int"}}},
+  "postPhotosLimitReached": "អ្នកអាចបន្ថែមរូបភាពបានរហូតដល់ ៤ ប៉ុណ្ណោះ។",
+  "postPhotosBodyRequired": "សូមបន្ថែមព័ត៌មាន ឬភ្ជាប់រូបភាព មុនពេលបង្ហោះ។",
+  "postPhotosPageIndicator": "{current} / {total}",
+  "@postPhotosPageIndicator": {"placeholders":{"current":{"type":"int"},"total":{"type":"int"}}},
   "composerWrite": "សរសេរ",
   "composerPreview": "មើលជាមុន"
 }

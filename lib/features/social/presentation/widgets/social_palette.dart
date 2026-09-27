@@ -6,6 +6,5 @@ import '../../../../core/theme/app_theme.dart';
 abstract final class SocialPalette {
   static Color pink(BuildContext context) => context.riksa.brand;
 
-  static Color onAubergine(BuildContext context) =>
-      context.riksa.onBrand;
+  static Color onAubergine(BuildContext context) => context.riksa.onBrand;
 }

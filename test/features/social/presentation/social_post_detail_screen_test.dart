@@ -13,6 +13,7 @@ import 'package:riksa_app/features/auth/data/external_link_opener.dart';
 import 'package:riksa_app/features/social/data/social_api.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 import 'package:riksa_app/features/social/presentation/social_post_detail_screen.dart';
+import 'package:riksa_app/features/social/presentation/widgets/post_photo.dart';
 import 'package:riksa_app/features/social/providers/social_feed_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
@@ -449,18 +450,100 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('post-detail-photo')));
+    await tester.tap(_detailPhoto());
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('photo-viewer-close')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('photo-viewer-close')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('photo-viewer-close')), findsNothing);
 
-    await tester.tap(find.byKey(const ValueKey('post-detail-photo')));
+    await tester.tap(_detailPhoto());
     await tester.pumpAndSettle();
     await tester.dragFrom(const Offset(195, 300), const Offset(195, 500));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('photo-viewer-close')), findsNothing);
+  });
+
+  testWidgets('an empty title uses the first body line in the detail header', (
+    tester,
+  ) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    final client = DioClient(
+      SessionStore(const FlutterSecureStorage()),
+      baseUrl: 'http://riksa.test/api/v1',
+    );
+    addTearDown(client.dispose);
+    final api = _FakeSocialApi(client)
+      ..postValue = _postWith(title: '', content: 'First line\nSecond line');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [socialApiProvider.overrideWithValue(api)],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: const SocialPostDetailScreen(postId: 'post-1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('First line'), findsOneWidget);
+    expect(find.text('Second line'), findsOneWidget);
+    expect(
+      tester
+          .widget<MarkdownBody>(
+            find.byKey(const ValueKey('social-post-markdown')),
+          )
+          .data,
+      'Second line',
+    );
+  });
+
+  testWidgets('single detail photos contain within the height cap', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    FlutterSecureStorage.setMockInitialValues({});
+    final client = DioClient(
+      SessionStore(const FlutterSecureStorage()),
+      baseUrl: 'http://riksa.test/api/v1',
+    );
+    addTearDown(client.dispose);
+    final api = _FakeSocialApi(client)
+      ..postValue = _postWith(mediaUrl: 'https://example.org/tall-photo.png');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [socialApiProvider.overrideWithValue(api)],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: const SocialPostDetailScreen(postId: 'post-1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final photo = find.byType(PostPhoto);
+    expect(tester.widget<PostPhoto>(photo).fit, BoxFit.contain);
+    expect(tester.getSize(photo).height, lessThanOrEqualTo(420));
   });
 
   testWidgets('Khmer detail text fits at 200 percent text scale', (
@@ -615,3 +698,10 @@ class _FakeSocialApi extends SocialApi {
     lastDeletedCommentId = id;
   }
 }
+
+/// The detail photo's key carries the post id, so match on its prefix.
+Finder _detailPhoto() => find.byWidgetPredicate(
+  (widget) =>
+      widget.key is ValueKey<String> &&
+      (widget.key! as ValueKey<String>).value.startsWith('post-detail-photo'),
+);

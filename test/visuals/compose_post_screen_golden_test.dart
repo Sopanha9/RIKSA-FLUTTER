@@ -72,11 +72,11 @@ class _FakeSocialApi extends SocialApi {
   final List<({String title, String content, String categoryId})> created = [];
 
   @override
-  Future<SocialPost> createPost({
+  Future<SocialPost> createPostWithMedia({
     required String title,
     required String content,
     required String categoryId,
-    String? mediaUrl,
+    List<SocialPostMedia> media = const [],
   }) async {
     created.add((title: title, content: content, categoryId: categoryId));
     return SocialPost(

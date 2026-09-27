@@ -6,8 +6,7 @@ import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../data/social_models.dart';
 import 'milestone_post_card.dart';
-import 'post_photo.dart';
-import 'photo_viewer.dart';
+import 'social_post_media_grid.dart';
 import 'social_owner_menu.dart';
 
 /// One post as a timeline row, on the X layout: the avatar owns a left column,
@@ -49,13 +48,15 @@ class SocialPostCard extends StatelessWidget {
     final palette = context.riksa;
     final isReacted = post.myReaction != null;
     final preview = post.plainTextPreview;
+    final hasTitle = post.title.trim().isNotEmpty;
+    final mainText = hasTitle ? post.title : preview;
     final authorName = post.author.displayName.trim().isEmpty
         ? post.author.username
         : post.author.displayName;
 
     return Semantics(
       container: true,
-      label: '${post.author.displayName}: ${post.title}',
+      label: '${post.author.displayName}: $mainText',
       child: Material(
         key: ValueKey('post-${post.id}'),
         color: Colors.transparent,
@@ -111,20 +112,27 @@ class SocialPostCard extends StatelessWidget {
                             post.milestone != null)
                           MilestonePostCard(post: post)
                         else ...[
-                          Text(
-                            post.title,
-                            style: RiksaTypography.bodyStyleFor(
-                              post.title,
-                              theme.textTheme.bodyLarge?.copyWith(
-                                fontSize: 15.5,
-                                fontWeight: FontWeight.w700,
-                                height: 1.35,
-                                letterSpacing: 0,
-                                color: palette.ink,
+                          if (mainText.isNotEmpty)
+                            Text(
+                              mainText,
+                              maxLines: hasTitle ? null : 4,
+                              overflow: hasTitle
+                                  ? TextOverflow.clip
+                                  : TextOverflow.ellipsis,
+                              style: RiksaTypography.bodyStyleFor(
+                                mainText,
+                                theme.textTheme.bodyLarge?.copyWith(
+                                  fontSize: hasTitle ? 15.5 : 15,
+                                  fontWeight: hasTitle
+                                      ? FontWeight.w700
+                                      : FontWeight.w400,
+                                  height: hasTitle ? 1.35 : 1.42,
+                                  letterSpacing: 0,
+                                  color: palette.ink,
+                                ),
                               ),
                             ),
-                          ),
-                          if (post.content.trim().isNotEmpty) ...[
+                          if (hasTitle && preview.isNotEmpty) ...[
                             const SizedBox(height: 3),
                             Text(
                               preview,
@@ -143,28 +151,10 @@ class SocialPostCard extends StatelessWidget {
                         ],
                         if (post.hasMedia) ...[
                           const SizedBox(height: 10),
-                          Semantics(
-                            button: true,
-                            label: l10n.postOpenPhoto,
-                            child: GestureDetector(
-                              key: ValueKey('post-feed-photo-${post.id}'),
-                              onTap: () => openPhotoViewer(
-                                context,
-                                urls: [post.mediaUrl!],
-                                initialIndex: 0,
-                                heroTag: postPhotoHeroTag(
-                                  post.mediaUrl!,
-                                  postId: post.id,
-                                ),
-                              ),
-                              child: PostPhoto(
-                                url: post.mediaUrl!,
-                                heroTag: postPhotoHeroTag(
-                                  post.mediaUrl!,
-                                  postId: post.id,
-                                ),
-                              ),
-                            ),
+                          SocialPostMediaGrid(
+                            postId: post.id,
+                            media: post.media,
+                            keyPrefix: 'post-feed-photo',
                           ),
                         ],
                         // The first icon lines up under the text above, as on

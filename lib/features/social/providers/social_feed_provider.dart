@@ -216,7 +216,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
     required String title,
     required String content,
     required String categoryId,
-    String? mediaUrl,
+    List<SocialPostMedia> media = const [],
   }) async {
     final current = state;
     if (current is! SocialFeedLoaded) {
@@ -235,11 +235,11 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
       final requestVersion = _requestVersion;
       final created = await ref
           .read(socialApiProvider)
-          .createPost(
+          .createPostWithMedia(
             title: title,
             content: content,
             categoryId: categoryId,
-            mediaUrl: mediaUrl,
+            media: media,
           );
       if (requestVersion != _requestVersion) return null;
       final latest = state;
@@ -262,17 +262,17 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
     required String id,
     required String title,
     required String content,
-    String? mediaUrl,
+    List<SocialPostMedia>? media,
   }) async {
     final requestVersion = _requestVersion;
     try {
       final updated = await ref
           .read(socialApiProvider)
-          .updatePost(
+          .updatePostWithMedia(
             id: id,
             title: title,
             content: content,
-            mediaUrl: mediaUrl,
+            media: media,
           );
       if (requestVersion != _requestVersion) return null;
       final latest = state;

@@ -94,6 +94,43 @@ void main() {
     },
   );
 
+  test('legacy mediaUrl payloads still expose one media item', () {
+    final post = SocialPost.fromJson({
+      'id': 'old-photo',
+      'mediaUrl': 'old.png',
+    });
+
+    expect(post.media, hasLength(1));
+    expect(post.media.single.url, 'old.png');
+    expect(post.mediaUrl, 'old.png');
+    expect(post.hasMedia, isTrue);
+  });
+
+  test('new media payloads preserve order and server dimensions', () {
+    final post = SocialPost.fromJson({
+      'id': 'multi-photo',
+      'mediaUrl': 'first.png',
+      'media': [
+        {'url': 'first.png', 'width': 1200, 'height': 800},
+        {'url': 'second.png', 'width': 600, 'height': 900},
+      ],
+    });
+
+    expect(post.media.map((photo) => photo.url), ['first.png', 'second.png']);
+    expect(post.media.first.aspectRatio, 1.5);
+    expect(post.media.last.aspectRatio, closeTo(2 / 3, .001));
+    expect(post.mediaUrl, 'first.png');
+    expect(post.copyWith(reactionCount: 4).media, post.media);
+  });
+
+  test('an explicit empty media list clears a stale compatibility URL', () {
+    final post = SocialPost.fromJson({'mediaUrl': 'old.png', 'media': []});
+
+    expect(post.media, isEmpty);
+    expect(post.mediaUrl, isNull);
+    expect(post.hasMedia, isFalse);
+  });
+
   test('SocialFeedPage parses GraphQL feed and reaction state', () {
     final page = SocialFeedPage.fromJson({
       'edges': [

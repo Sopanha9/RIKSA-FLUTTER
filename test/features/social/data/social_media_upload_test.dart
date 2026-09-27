@@ -10,7 +10,8 @@ import 'package:riksa_app/core/storage/session_store.dart';
 import 'package:riksa_app/features/social/data/social_api.dart';
 
 /// Post images are uploaded to the API, which stores the bytes and returns a
-/// link; the client's job is to send one multipart part and read the URL back.
+/// link and image dimensions; the client sends one multipart part and returns
+/// those server measurements to the composer.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -40,14 +41,21 @@ void main() {
     return SocialApi(client);
   }
 
-  test('uploadMedia posts the file and returns the stored link', () async {
+  test('uploadMedia posts the file and returns link and dimensions', () async {
     final adapter = _UploadAdapter(
-      body: {'id': 'abc.png', 'url': 'http://riksa.test/api/v1/media/abc.png'},
+      body: {
+        'id': 'abc.png',
+        'url': 'http://riksa.test/api/v1/media/abc.png',
+        'width': 1200,
+        'height': 800,
+      },
     );
 
-    final url = await apiWith(adapter).uploadMedia(image.path);
+    final media = await apiWith(adapter).uploadMedia(image.path);
 
-    expect(url, 'http://riksa.test/api/v1/media/abc.png');
+    expect(media.url, 'http://riksa.test/api/v1/media/abc.png');
+    expect(media.width, 1200);
+    expect(media.height, 800);
     expect(adapter.path, endsWith('/media'));
     expect(adapter.method, 'POST');
     expect(adapter.contentType, contains('multipart/form-data'));

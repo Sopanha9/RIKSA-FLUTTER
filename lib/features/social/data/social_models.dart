@@ -205,6 +205,31 @@ class SocialMilestone {
   }
 }
 
+class SocialPostMedia {
+  const SocialPostMedia({required this.url, this.width, this.height});
+
+  final String url;
+  final int? width;
+  final int? height;
+
+  double? get aspectRatio {
+    final mediaWidth = width;
+    final mediaHeight = height;
+    if (mediaWidth == null || mediaHeight == null || mediaHeight <= 0) {
+      return null;
+    }
+    final ratio = mediaWidth / mediaHeight;
+    return ratio.isFinite && ratio > 0 ? ratio : null;
+  }
+
+  factory SocialPostMedia.fromJson(Map<String, dynamic> json) =>
+      SocialPostMedia(
+        url: json['url'] as String? ?? '',
+        width: (json['width'] as num?)?.toInt(),
+        height: (json['height'] as num?)?.toInt(),
+      );
+}
+
 class SocialPost {
   const SocialPost({
     required this.id,
@@ -217,16 +242,21 @@ class SocialPost {
     required this.category,
     required this.createdAt,
     required this.updatedAt,
-    this.mediaUrl,
+    List<SocialPostMedia>? media,
+    String? mediaUrl,
     this.myReaction,
     this.kind = SocialPostKind.user,
     this.milestone,
-  });
+  }) : // Named parameters cannot be private, so the formal cannot be used.
+       // ignore: prefer_initializing_formals
+       _media = media,
+       _legacyMediaUrl = mediaUrl;
 
   final String id;
   final String title;
   final String content;
-  final String? mediaUrl;
+  final List<SocialPostMedia>? _media;
+  final String? _legacyMediaUrl;
   final int reactionCount;
   final int commentCount;
   final int shareCount;
@@ -238,50 +268,78 @@ class SocialPost {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  bool get hasMedia => mediaUrl != null && mediaUrl!.trim().isNotEmpty;
+  List<SocialPostMedia> get media {
+    final parsed = _media;
+    if (parsed != null) return parsed;
+    final legacyUrl = _legacyMediaUrl?.trim();
+    return legacyUrl == null || legacyUrl.isEmpty
+        ? const <SocialPostMedia>[]
+        : <SocialPostMedia>[SocialPostMedia(url: legacyUrl)];
+  }
+
+  String? get mediaUrl => _media == null
+      ? _legacyMediaUrl
+      : (media.isEmpty ? null : media.first.url);
+  bool get hasMedia => media.any((item) => item.url.trim().isNotEmpty);
   String get markdownContent => normalizeSocialMarkdown(content);
   String get plainTextPreview => socialMarkdownPreview(content);
 
-  factory SocialPost.fromJson(Map<String, dynamic> json) => SocialPost(
-    id: json['id']?.toString() ?? '',
-    title: json['title'] as String? ?? '',
-    content: json['content'] as String? ?? '',
-    mediaUrl: json['mediaUrl'] as String?,
-    reactionCount: (json['reactionCount'] as num?)?.toInt() ?? 0,
-    commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
-    shareCount: (json['shareCount'] as num?)?.toInt() ?? 0,
-    author: SocialAuthor.fromJson(
-      (json['author'] as Map?)?.cast<String, dynamic>() ?? const {},
-    ),
-    category: SocialCategory.fromJson(
-      (json['category'] as Map?)?.cast<String, dynamic>() ?? const {},
-    ),
-    myReaction: SocialReaction.fromWire(json['myReaction'] as String?),
-    createdAt:
-        DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
-        DateTime.now(),
-    updatedAt:
-        DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
-        DateTime.now(),
-    kind: SocialPostKind.fromWire(json['kind']),
-    milestone: (json['milestone'] as Map?) == null
-        ? null
-        : SocialMilestone.fromJson(
-            (json['milestone'] as Map).cast<String, dynamic>(),
-          ),
-  );
+  factory SocialPost.fromJson(Map<String, dynamic> json) {
+    final legacyUrl = json['mediaUrl'] as String?;
+    final rawMedia = json['media'];
+    final parsedMedia = rawMedia is List
+        ? rawMedia
+              .whereType<Map>()
+              .map(
+                (item) =>
+                    SocialPostMedia.fromJson(item.cast<String, dynamic>()),
+              )
+              .where((item) => item.url.trim().isNotEmpty)
+              .toList(growable: false)
+        : null;
+    return SocialPost(
+      id: json['id']?.toString() ?? '',
+      title: json['title'] as String? ?? '',
+      content: json['content'] as String? ?? '',
+      media: parsedMedia,
+      mediaUrl: legacyUrl,
+      reactionCount: (json['reactionCount'] as num?)?.toInt() ?? 0,
+      commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
+      shareCount: (json['shareCount'] as num?)?.toInt() ?? 0,
+      author: SocialAuthor.fromJson(
+        (json['author'] as Map?)?.cast<String, dynamic>() ?? const {},
+      ),
+      category: SocialCategory.fromJson(
+        (json['category'] as Map?)?.cast<String, dynamic>() ?? const {},
+      ),
+      myReaction: SocialReaction.fromWire(json['myReaction'] as String?),
+      createdAt:
+          DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
+          DateTime.now(),
+      kind: SocialPostKind.fromWire(json['kind']),
+      milestone: (json['milestone'] as Map?) == null
+          ? null
+          : SocialMilestone.fromJson(
+              (json['milestone'] as Map).cast<String, dynamic>(),
+            ),
+    );
+  }
 
   SocialPost copyWith({
     int? reactionCount,
     int? commentCount,
     int? shareCount,
+    List<SocialPostMedia>? media,
     SocialReaction? myReaction,
     bool clearReaction = false,
   }) => SocialPost(
     id: id,
     title: title,
     content: content,
-    mediaUrl: mediaUrl,
+    media: media ?? this.media,
     reactionCount: reactionCount ?? this.reactionCount,
     commentCount: commentCount ?? this.commentCount,
     shareCount: shareCount ?? this.shareCount,

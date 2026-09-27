@@ -22,8 +22,7 @@ import '../../auth/data/external_link_opener.dart';
 import 'widgets/social_owner_menu.dart';
 import 'widgets/social_palette.dart';
 import 'widgets/social_markdown_style.dart';
-import 'widgets/post_photo.dart';
-import 'widgets/photo_viewer.dart';
+import 'widgets/social_post_media_grid.dart';
 
 class SocialPostDetailScreen extends ConsumerStatefulWidget {
   const SocialPostDetailScreen({super.key, required this.postId});
@@ -527,62 +526,49 @@ class _PostBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final hasTitle = post.title.trim().isNotEmpty;
+    final fallbackTitle = post.plainTextPreview.split('\n').firstOrNull ?? '';
+    final displayedTitle = hasTitle ? post.title : fallbackTitle;
+    final body = !hasTitle && fallbackTitle.isNotEmpty
+        ? post.markdownContent.split('\n').skip(1).join('\n').trim()
+        : post.markdownContent;
     return Padding(
       key: const ValueKey('post-detail-body'),
       padding: const EdgeInsets.only(top: 8, bottom: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            post.title,
-            style: RiksaTypography.bodyStyleFor(
-              post.title,
-              theme.textTheme.headlineSmall?.copyWith(
-                color: context.riksa.ink,
-                fontWeight: FontWeight.w600,
-                height: 1.4,
+          if (displayedTitle.isNotEmpty)
+            Text(
+              displayedTitle,
+              style: RiksaTypography.bodyStyleFor(
+                displayedTitle,
+                theme.textTheme.headlineSmall?.copyWith(
+                  color: context.riksa.ink,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                ),
               ),
             ),
-          ),
-          if (post.content.trim().isNotEmpty) ...[
+          if (body.trim().isNotEmpty) ...[
             const SizedBox(height: 10),
             MarkdownBody(
               key: const ValueKey('social-post-markdown'),
-              data: post.markdownContent,
+              data: body,
               selectable: true,
               softLineBreak: true,
               onTapLink: (text, href, title) => onTapLink(href),
-              styleSheet: socialMarkdownStyleSheet(
-                context,
-                post.markdownContent,
-              ),
+              styleSheet: socialMarkdownStyleSheet(context, body),
             ),
           ],
           if (post.hasMedia) ...[
             const SizedBox(height: 16),
-            Semantics(
-              button: true,
-              label: AppLocalizations.of(context)!.postOpenPhoto,
-              child: InkWell(
-                key: const ValueKey('post-detail-photo'),
-                borderRadius: AppRadii.mediumBorder,
-                onTap: () => openPhotoViewer(
-                  context,
-                  urls: [post.mediaUrl!],
-                  initialIndex: 0,
-                  heroTag: postPhotoHeroTag(post.mediaUrl!, postId: post.id),
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.sizeOf(context).height * .7,
-                  ),
-                  child: PostPhoto(
-                    url: post.mediaUrl!,
-                    fit: BoxFit.contain,
-                    heroTag: postPhotoHeroTag(post.mediaUrl!, postId: post.id),
-                  ),
-                ),
-              ),
+            SocialPostMediaGrid(
+              postId: post.id,
+              media: post.media,
+              keyPrefix: 'post-detail-photo',
+              singlePhotoFit: BoxFit.contain,
+              singlePhotoMaxHeight: MediaQuery.sizeOf(context).height * .7,
             ),
           ],
           const SizedBox(height: 18),

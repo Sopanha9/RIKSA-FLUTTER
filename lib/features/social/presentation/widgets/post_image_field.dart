@@ -1,124 +1,266 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../data/social_models.dart';
 
-/// The image attached to a post being written, in one of three states:
-/// absent, uploading, or held as a URL the API returned.
-///
-/// The widget owns no upload logic — the composer does — so the same field can
-/// sit on any screen that needs a picture.
+/// One selected image and the state of its immediate upload.
+class PostImageDraft {
+  const PostImageDraft({
+    required this.id,
+    required this.path,
+    this.remote = false,
+    this.media,
+    this.progress,
+    this.error,
+  });
+
+  final String id;
+  final String path;
+  final bool remote;
+  final SocialPostMedia? media;
+  final double? progress;
+  final String? error;
+
+  bool get uploading => media == null && error == null;
+  bool get uploaded => media != null;
+}
+
+/// Ordered photo thumbnails with independent upload status and retry/remove
+/// actions. Upload work itself stays in the composer.
 class PostImageField extends StatelessWidget {
   const PostImageField({
     super.key,
-    required this.imageUrl,
-    required this.uploading,
-    required this.onPick,
+    required this.photos,
     required this.onRemove,
+    required this.onRetry,
+    required this.onReorder,
     this.enabled = true,
   });
 
-  /// The uploaded image's URL, or null when none is attached yet.
-  final String? imageUrl;
-  final bool uploading;
-  final VoidCallback onPick;
-  final VoidCallback onRemove;
+  final List<PostImageDraft> photos;
+  final ValueChanged<String> onRemove;
+  final ValueChanged<String> onRetry;
+  final void Function(int oldIndex, int newIndex) onReorder;
   final bool enabled;
-
-  bool get _hasImage => imageUrl != null && imageUrl!.trim().isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-
-    if (uploading) {
-      return _Frame(
-        key: const ValueKey('post-image-uploading'),
-        child: Row(
-          children: [
-            const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(width: 12),
-            Text(l10n.photoUploading, style: theme.textTheme.bodyMedium),
-          ],
-        ),
-      );
-    }
-
-    if (!_hasImage) {
-      return OutlinedButton.icon(
-        key: const ValueKey('post-image-add'),
-        onPressed: enabled ? onPick : null,
-        icon: const Icon(Icons.image_outlined),
-        label: Text(l10n.addPhoto),
-      );
-    }
+    final limitReached = photos.length >= 4;
 
     return Column(
-      key: const ValueKey('post-image-preview'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipRRect(
-          borderRadius: AppRadii.mediumBorder,
-          child: AspectRatio(
-            aspectRatio: 16 / 10,
-            child: Image.network(
-              imageUrl!,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stack) => ColoredBox(
-                color: theme.colorScheme.surfaceContainer,
-                child: Center(
-                  child: Icon(
-                    Icons.broken_image_outlined,
-                    color: context.riksa.inkMuted,
+        if (photos.isNotEmpty)
+          SizedBox(
+            height: 124,
+            child: ReorderableListView.builder(
+              key: const ValueKey('post-photos-reorder-list'),
+              scrollDirection: Axis.horizontal,
+              buildDefaultDragHandles: false,
+              // ignore: deprecated_member_use
+              onReorder: onReorder,
+              itemCount: photos.length,
+              itemBuilder: (context, index) {
+                final photo = photos[index];
+                return SizedBox(
+                  key: ValueKey('post-photo-item-${photo.id}'),
+                  width: 116,
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 8),
+                    child: _PhotoThumbnail(
+                      photo: photo,
+                      index: index,
+                      enabled: enabled,
+                      onRemove: () => onRemove(photo.id),
+                      onRetry: () => onRetry(photo.id),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            TextButton.icon(
-              key: const ValueKey('post-image-change'),
-              onPressed: enabled ? onPick : null,
-              icon: const Icon(Icons.swap_horiz_rounded, size: 18),
-              label: Text(l10n.changePhoto),
+        if (limitReached)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              l10n.postPhotosLimitReached,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: context.riksa.inkMuted),
             ),
-            const Spacer(),
-            TextButton.icon(
-              key: const ValueKey('post-image-remove'),
-              onPressed: enabled ? onRemove : null,
-              icon: const Icon(Icons.close_rounded, size: 18),
-              label: Text(l10n.removePhoto),
-              style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
-              ),
-            ),
-          ],
-        ),
+          ),
       ],
     );
   }
 }
 
-class _Frame extends StatelessWidget {
-  const _Frame({super.key, required this.child});
+class _PhotoThumbnail extends StatelessWidget {
+  const _PhotoThumbnail({
+    required this.photo,
+    required this.index,
+    required this.enabled,
+    required this.onRemove,
+    required this.onRetry,
+  });
 
-  final Widget child;
+  final PostImageDraft photo;
+  final int index;
+  final bool enabled;
+  final VoidCallback onRemove;
+  final VoidCallback onRetry;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    decoration: BoxDecoration(
-      borderRadius: AppRadii.mediumBorder,
-      border: Border.all(color: context.riksa.inkMuted.withValues(alpha: .3)),
-    ),
-    child: child,
-  );
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final palette = context.riksa;
+    final borderRadius = BorderRadius.circular(12);
+    return Column(
+      children: [
+        Expanded(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ClipRRect(
+                borderRadius: borderRadius,
+                child: _previewImage(
+                  photo.path,
+                  palette.surfaceRaised,
+                  remote: photo.remote,
+                ),
+              ),
+              if (photo.uploading)
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: Colors.black.withValues(alpha: .36),
+                    child: Center(
+                      child: SizedBox.square(
+                        dimension: 26,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          value: photo.progress,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (photo.error != null)
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: Colors.black.withValues(alpha: .68),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          photo.error ?? l10n.postPhotosUploadFailed,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
+                        ),
+                        TextButton(
+                          key: ValueKey('post-photo-retry-${photo.id}'),
+                          onPressed: enabled ? onRetry : null,
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(44, 28),
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(l10n.postPhotosRetry),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              PositionedDirectional(
+                top: 2,
+                end: 2,
+                child: IconButton.filledTonal(
+                  key: ValueKey('post-photo-remove-${photo.id}'),
+                  tooltip: l10n.postPhotosRemove,
+                  onPressed: enabled ? onRemove : null,
+                  visualDensity: VisualDensity.compact,
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(28, 28),
+                    padding: EdgeInsets.zero,
+                    backgroundColor: Colors.black.withValues(alpha: .58),
+                    foregroundColor: Colors.white,
+                  ),
+                  icon: const Icon(Icons.close_rounded, size: 17),
+                ),
+              ),
+              if (photo.uploaded)
+                const PositionedDirectional(
+                  top: 5,
+                  start: 5,
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 28,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ReorderableDelayedDragStartListener(
+                key: ValueKey('post-photo-reorder-${photo.id}'),
+                index: index,
+                // Not a Tooltip: its long-press would win over the delayed
+                // drag and the handle could never start a reorder.
+                child: Semantics(
+                  label: l10n.postPhotosReorder,
+                  child: const Icon(Icons.drag_indicator_rounded, size: 18),
+                ),
+              ),
+              if (photo.uploading)
+                Text(
+                  l10n.postPhotosUploading(
+                    ((photo.progress ?? 0) * 100).round(),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: palette.inkMuted),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _previewImage(String path, Color placeholder, {required bool remote}) {
+    if (remote || kIsWeb) {
+      return Image.network(
+        path,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => ColoredBox(color: placeholder),
+      );
+    }
+    return Image.file(
+      File(path),
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => ColoredBox(color: placeholder),
+    );
+  }
 }

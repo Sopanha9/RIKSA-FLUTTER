@@ -3180,6 +3180,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photoViewerClose => 'Close photo';
 
   @override
+  String get postPhotosAdd => 'Add photos';
+
+  @override
+  String get postPhotosRemove => 'Remove photo';
+
+  @override
+  String get postPhotosRetry => 'Retry';
+
+  @override
+  String get postPhotosReorder => 'Reorder photo';
+
+  @override
+  String get postPhotosUploadFailed => 'Upload failed';
+
+  @override
+  String postPhotosUploading(int progress) {
+    return 'Uploading $progress%';
+  }
+
+  @override
+  String get postPhotosLimitReached => 'You can add up to 4 photos.';
+
+  @override
+  String get postPhotosBodyRequired =>
+      'Add some details or attach a photo before publishing.';
+
+  @override
+  String postPhotosPageIndicator(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
   String get composerWrite => 'Write';
 
   @override

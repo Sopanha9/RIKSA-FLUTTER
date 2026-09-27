@@ -167,10 +167,7 @@ class SocialCreateOption extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: context.riksa.inkMuted,
-              ),
+              Icon(Icons.chevron_right_rounded, color: context.riksa.inkMuted),
             ],
           ),
         ),

@@ -22,7 +22,7 @@ class SocialApi {
   final DioClient _client;
 
   static const _postFields = r'''
-    id title content mediaUrl reactionCount commentCount shareCount myReaction
+    id title content mediaUrl media { url width height } reactionCount commentCount shareCount myReaction
     kind milestone { type title titleKm value }
     createdAt updatedAt
     author { id username displayName avatarUrl }
@@ -157,6 +157,21 @@ class SocialApi {
     required String content,
     required String categoryId,
     String? mediaUrl,
+  }) => createPostWithMedia(
+    title: title,
+    content: content,
+    categoryId: categoryId,
+    media: mediaUrl == null || mediaUrl.trim().isEmpty
+        ? const []
+        : [SocialPostMedia(url: mediaUrl)],
+  );
+
+  /// Creates a post with an ordered set of uploaded photos.
+  Future<SocialPost> createPostWithMedia({
+    required String title,
+    required String content,
+    required String categoryId,
+    List<SocialPostMedia> media = const [],
   }) async {
     final data = await _query(
       '''
@@ -169,7 +184,7 @@ class SocialApi {
           'title': title,
           'content': content,
           'categoryId': categoryId,
-          'mediaUrl': ?mediaUrl,
+          'media': [for (final item in media) _mediaInput(item)],
         },
       },
     );
@@ -188,6 +203,24 @@ class SocialApi {
     required String title,
     required String content,
     String? mediaUrl,
+  }) => updatePostWithMedia(
+    id: id,
+    title: title,
+    content: content,
+    media: mediaUrl == null
+        ? null
+        : mediaUrl.trim().isEmpty
+        ? const []
+        : [SocialPostMedia(url: mediaUrl)],
+  );
+
+  /// Updates a post. A null media list leaves photos unchanged; an empty
+  /// list clears them.
+  Future<SocialPost> updatePostWithMedia({
+    required String id,
+    required String title,
+    required String content,
+    List<SocialPostMedia>? media,
   }) async {
     final data = await _query(
       '''
@@ -200,8 +233,9 @@ class SocialApi {
           'id': id,
           'title': title,
           'content': content,
-          // Omitted leaves the image alone; an empty string clears it.
-          'mediaUrl': ?mediaUrl,
+          // Null leaves photos unchanged; an empty list clears them.
+          if (media != null)
+            'media': [for (final item in media) _mediaInput(item)],
         },
       },
     );
@@ -210,12 +244,16 @@ class SocialApi {
     );
   }
 
-  /// Uploads an image and returns the URL to store on a post.
+  /// Uploads an image and returns its URL and server-measured dimensions.
   ///
   /// The API keeps the bytes and hands back a link; nothing else in the app
   /// needs to know where they live. Throws [SocialApiException] with the
   /// server's reason when the file is rejected.
-  Future<String> uploadMedia(String filePath, {String? filename}) async {
+  Future<SocialPostMedia> uploadMedia(
+    String filePath, {
+    String? filename,
+    ProgressCallback? onSendProgress,
+  }) async {
     try {
       final form = FormData.fromMap({
         'file': await MultipartFile.fromFile(filePath, filename: filename),
@@ -224,16 +262,28 @@ class SocialApi {
         '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/media',
         data: form,
         options: Options(contentType: 'multipart/form-data'),
+        onSendProgress: onSendProgress,
       );
-      final url = jsonMap(response)['url'];
+      final result = jsonMap(response);
+      final url = result['url'];
       if (url is! String || url.isEmpty) {
         throw const SocialApiException('The image upload returned no link.');
       }
-      return url;
+      return SocialPostMedia(
+        url: url,
+        width: (result['width'] as num?)?.toInt(),
+        height: (result['height'] as num?)?.toInt(),
+      );
     } on DioException catch (error) {
       throw SocialApiException(dioErrorMessage(error));
     }
   }
+
+  Map<String, Object> _mediaInput(SocialPostMedia media) => {
+    'url': media.url,
+    if (media.width != null) 'width': media.width!,
+    if (media.height != null) 'height': media.height!,
+  };
 
   /// Removes a post the signed-in user owns (`deletePost`, owner only).
   Future<void> deletePost(String id) async {

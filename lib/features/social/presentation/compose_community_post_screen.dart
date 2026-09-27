@@ -30,6 +30,7 @@ class ComposeCommunityPostScreen extends ConsumerStatefulWidget {
     this.isQuestion = false,
     this.post,
     this.communityId,
+    this.imagePicker,
   });
 
   final bool isQuestion;
@@ -39,6 +40,9 @@ class ComposeCommunityPostScreen extends ConsumerStatefulWidget {
 
   /// The post being rewritten. Null starts a new one.
   final SocialPost? post;
+
+  /// Injectable to exercise gallery and camera flows in widget tests.
+  final ImagePicker? imagePicker;
 
   @override
   ConsumerState<ComposeCommunityPostScreen> createState() =>
@@ -54,9 +58,9 @@ class _ComposeCommunityPostScreenState
   bool _submitting = false;
   bool _previewing = false;
 
-  /// The uploaded image's URL. Null means the post carries no picture.
-  String? _mediaUrl;
-  bool _uploadingImage = false;
+  final List<PostImageDraft> _photos = [];
+  int _nextPhotoId = 0;
+  bool _showEmptyPostMessage = false;
 
   SocialPost? get _original => widget.post;
   bool get _isEditing => _original != null;
@@ -69,7 +73,17 @@ class _ComposeCommunityPostScreenState
       _titleController.text = post.title;
       _contentController.text = post.markdownContent;
       _categoryId = post.category.id;
-      _mediaUrl = post.mediaUrl;
+      for (var index = 0; index < post.media.length; index++) {
+        final media = post.media[index];
+        _photos.add(
+          PostImageDraft(
+            id: 'existing-$index',
+            path: media.url,
+            remote: true,
+            media: media,
+          ),
+        );
+      }
     } else {
       _categoryId = widget.communityId;
     }
@@ -90,61 +104,153 @@ class _ComposeCommunityPostScreenState
     final content = _contentController.text.trim();
     final post = _original;
     if (post == null) {
-      return title.isNotEmpty || content.isNotEmpty || _mediaUrl != null;
+      return title.isNotEmpty || content.isNotEmpty || _photos.isNotEmpty;
     }
     return title != post.title.trim() ||
         content != post.markdownContent.trim() ||
-        _mediaUrl != post.mediaUrl;
+        !_sameMedia(post.media, _photos);
   }
 
   bool _wasDirty = false;
 
   void _syncDirty() {
     final dirty = _isDirty;
-    if (dirty != _wasDirty) setState(() => _wasDirty = dirty);
+    final nowHasBodyOrPhotos =
+        _contentController.text.trim().isNotEmpty || _photos.isNotEmpty;
+    if (dirty != _wasDirty || (_showEmptyPostMessage && nowHasBodyOrPhotos)) {
+      setState(() {
+        _wasDirty = dirty;
+        if (nowHasBodyOrPhotos) _showEmptyPostMessage = false;
+      });
+    }
   }
 
-  /// Picks an image and uploads it straight away, so a failure surfaces while
-  /// the author is still writing rather than when they hit publish.
-  Future<void> _pickImage() async {
+  /// Picks up to the remaining four slots and uploads each image immediately.
+  Future<void> _pickImages() async {
+    if (_photos.length >= 4 || _submitting) return;
     if (!requireAccount(context, ref, reason: 'post')) return;
     final l10n = AppLocalizations.of(context)!;
     final source = await _askImageSource();
     if (source == null || !mounted) return;
 
-    final XFile? picked;
+    final List<XFile> picked;
+    final remaining = 4 - _photos.length;
     try {
-      picked = await ImagePicker().pickImage(
-        source: source,
-        // The API caps uploads at 2MB; downscaling here keeps a phone photo
-        // comfortably under that instead of failing after the round trip.
-        maxWidth: 1600,
-        maxHeight: 1600,
-        imageQuality: 85,
-      );
+      final picker = widget.imagePicker ?? ImagePicker();
+      if (source == ImageSource.gallery) {
+        picked = await picker.pickMultiImage(
+          limit: remaining,
+          maxWidth: 1600,
+          maxHeight: 1600,
+          imageQuality: 85,
+        );
+      } else {
+        final photo = await picker.pickImage(
+          source: source,
+          maxWidth: 1600,
+          maxHeight: 1600,
+          imageQuality: 85,
+        );
+        picked = photo == null ? const [] : [photo];
+      }
     } catch (_) {
-      if (mounted) _showMessage(l10n.photoFailed);
+      if (mounted) _showMessage(l10n.postPhotosUploadFailed);
       return;
     }
-    if (picked == null || !mounted) return;
-
-    setState(() => _uploadingImage = true);
-    try {
-      final url = await ref
-          .read(socialApiProvider)
-          .uploadMedia(picked.path, filename: picked.name);
-      if (!mounted) return;
-      setState(() {
-        _mediaUrl = url;
-        _uploadingImage = false;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _uploadingImage = false);
-      _showMessage(
-        error is SocialApiException ? error.message : l10n.photoFailed,
+    if (picked.isEmpty || !mounted) return;
+    final accepted = picked.take(remaining).toList(growable: false);
+    final additions = <PostImageDraft>[];
+    for (final photo in accepted) {
+      additions.add(
+        PostImageDraft(id: 'picked-${_nextPhotoId++}', path: photo.path),
       );
     }
+    setState(() => _photos.addAll(additions));
+    if (picked.length > remaining) _showMessage(l10n.postPhotosLimitReached);
+    for (var index = 0; index < accepted.length; index++) {
+      unawaited(_uploadPhoto(additions[index].id, accepted[index]));
+    }
+  }
+
+  Future<void> _uploadPhoto(String id, [XFile? source]) async {
+    final current = _photos.where((photo) => photo.id == id).firstOrNull;
+    if (current == null) return;
+    final file = source;
+    if (file == null) {
+      _showMessage(AppLocalizations.of(context)!.postPhotosUploadFailed);
+      return;
+    }
+    _updatePhoto(id, (photo) => PostImageDraft(id: photo.id, path: photo.path));
+    try {
+      final media = await ref
+          .read(socialApiProvider)
+          .uploadMedia(
+            file.path,
+            filename: file.name,
+            onSendProgress: (sent, total) {
+              if (total <= 0 || !mounted) return;
+              final progress = (sent / total).clamp(0.0, 1.0).toDouble();
+              _updatePhoto(
+                id,
+                (photo) => PostImageDraft(
+                  id: photo.id,
+                  path: photo.path,
+                  progress: progress,
+                ),
+              );
+            },
+          );
+      if (!mounted) return;
+      _updatePhoto(
+        id,
+        (photo) => PostImageDraft(id: photo.id, path: photo.path, media: media),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is SocialApiException
+          ? error.message
+          : AppLocalizations.of(context)!.postPhotosUploadFailed;
+      _updatePhoto(
+        id,
+        (photo) =>
+            PostImageDraft(id: photo.id, path: photo.path, error: message),
+      );
+    }
+  }
+
+  void _updatePhoto(String id, PostImageDraft Function(PostImageDraft) update) {
+    if (!mounted || !_photos.any((photo) => photo.id == id)) return;
+    setState(() {
+      final index = _photos.indexWhere((photo) => photo.id == id);
+      _photos[index] = update(_photos[index]);
+    });
+    _syncDirty();
+  }
+
+  void _removePhoto(String id) {
+    setState(() {
+      _photos.removeWhere((photo) => photo.id == id);
+      if (_photos.isNotEmpty || _contentController.text.trim().isNotEmpty) {
+        _showEmptyPostMessage = false;
+      }
+    });
+    _syncDirty();
+  }
+
+  void _retryPhoto(String id) {
+    final photo = _photos.where((item) => item.id == id).firstOrNull;
+    if (photo == null) return;
+    final source = XFile(photo.path);
+    unawaited(_uploadPhoto(id, source));
+  }
+
+  void _reorderPhotos(int oldIndex, int newIndex) {
+    if (newIndex > oldIndex) newIndex--;
+    setState(() {
+      final photo = _photos.removeAt(oldIndex);
+      _photos.insert(newIndex, photo);
+    });
+    _syncDirty();
   }
 
   Future<ImageSource?> _askImageSource() => showModalBottomSheet<ImageSource>(
@@ -183,7 +289,15 @@ class _ComposeCommunityPostScreenState
 
   Future<void> _submit() async {
     if (!requireAccount(context, ref, reason: 'post')) return;
-    if (!_formKey.currentState!.validate() || _categoryId == null) return;
+    if (_submitting ||
+        _photos.any((photo) => photo.uploading || photo.error != null)) {
+      return;
+    }
+    if (_contentController.text.trim().isEmpty && _photos.isEmpty) {
+      setState(() => _showEmptyPostMessage = true);
+      return;
+    }
+    if (_categoryId == null) return;
     setState(() => _submitting = true);
     final notifier = ref.read(socialFeedProvider.notifier);
     final title = _titleController.text.trim();
@@ -196,15 +310,18 @@ class _ComposeCommunityPostScreenState
         title: title,
         content: content,
         categoryId: _categoryId!,
-        mediaUrl: _mediaUrl,
+        media: [for (final photo in _photos) photo.media!],
       );
     } else {
+      final media = _sameMedia(editing.media, _photos)
+          ? null
+          : [for (final photo in _photos) photo.media!];
       failure = await notifier.updatePost(
         id: editing.id,
         title: title,
         content: content,
-        // Always explicit on edit: blank tells the API to drop the image.
-        mediaUrl: _mediaUrl ?? '',
+        // Null leaves photos unchanged; an empty list explicitly clears them.
+        media: media,
       );
     }
 
@@ -255,7 +372,9 @@ class _ComposeCommunityPostScreenState
     // Posting needs a loaded list with at least one joined community.
     final noCommunity = !_isEditing && (!loaded || categories.isEmpty);
     final communitiesFailed = !_isEditing && feed is SocialFeedFailure;
-    final busy = _submitting || _uploadingImage;
+    final uploadingPhotos = _photos.any((photo) => photo.uploading);
+    final failedPhotos = _photos.any((photo) => photo.error != null);
+    final busy = _submitting || uploadingPhotos;
     final title = _isEditing
         ? l10n.editPost
         : widget.isQuestion
@@ -312,7 +431,7 @@ class _ComposeCommunityPostScreenState
               padding: const EdgeInsets.only(right: 12),
               child: FilledButton(
                 key: const ValueKey('compose-submit'),
-                onPressed: busy || noCommunity ? null : _submit,
+                onPressed: busy || failedPhotos || noCommunity ? null : _submit,
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(72, 38),
                   padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -392,12 +511,6 @@ class _ComposeCommunityPostScreenState
                                 : l10n.postTitleLabel,
                             titleStyle,
                           ),
-                          validator: (value) =>
-                              value == null || value.trim().length < 4
-                              ? (widget.isQuestion
-                                    ? l10n.questionTitleLabel
-                                    : l10n.postTitleLabel)
-                              : null,
                         ),
                         const SizedBox(height: 16),
                         Visibility(
@@ -413,12 +526,21 @@ class _ComposeCommunityPostScreenState
                             keyboardType: TextInputType.multiline,
                             textCapitalization: TextCapitalization.sentences,
                             decoration: bare(l10n.detailsLabel, bodyStyle),
-                            validator: (value) =>
-                                value == null || value.trim().length < 10
-                                ? l10n.detailsLabel
-                                : null,
                           ),
                         ),
+                        if (_showEmptyPostMessage &&
+                            _contentController.text.trim().isEmpty &&
+                            _photos.isEmpty)
+                          Padding(
+                            key: const ValueKey('compose-empty-post-message'),
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              l10n.postPhotosBodyRequired,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.error,
+                              ),
+                            ),
+                          ),
                         if (_previewing)
                           Padding(
                             key: const ValueKey('compose-markdown-preview'),
@@ -434,14 +556,14 @@ class _ComposeCommunityPostScreenState
                               ),
                             ),
                           ),
-                        if (_mediaUrl != null || _uploadingImage) ...[
+                        if (_photos.isNotEmpty) ...[
                           const SizedBox(height: 16),
                           PostImageField(
-                            imageUrl: _mediaUrl,
-                            uploading: _uploadingImage,
+                            photos: _photos,
                             enabled: !_submitting,
-                            onPick: _pickImage,
-                            onRemove: () => setState(() => _mediaUrl = null),
+                            onRemove: _removePhoto,
+                            onRetry: _retryPhoto,
+                            onReorder: _reorderPhotos,
                           ),
                         ],
                       ],
@@ -480,10 +602,10 @@ class _ComposeCommunityPostScreenState
                             children: [
                               IconButton(
                                 key: const ValueKey('compose-add-photo'),
-                                onPressed: busy ? null : _pickImage,
-                                tooltip: _mediaUrl == null
-                                    ? l10n.addPhoto
-                                    : l10n.changePhoto,
+                                onPressed: _submitting || _photos.length >= 4
+                                    ? null
+                                    : _pickImages,
+                                tooltip: l10n.postPhotosAdd,
                                 style: IconButton.styleFrom(
                                   backgroundColor: Colors.transparent,
                                   foregroundColor: palette.brand,
@@ -491,9 +613,7 @@ class _ComposeCommunityPostScreenState
                                 icon: const Icon(Icons.image_outlined),
                               ),
                               Text(
-                                _mediaUrl == null
-                                    ? l10n.addPhoto
-                                    : l10n.changePhoto,
+                                l10n.postPhotosAdd,
                                 style: theme.textTheme.labelLarge?.copyWith(
                                   color: palette.inkMuted,
                                 ),
@@ -551,6 +671,20 @@ class _ComposeCommunityPostScreenState
       action,
     );
   }
+}
+
+bool _sameMedia(List<SocialPostMedia> original, List<PostImageDraft> edited) {
+  if (original.length != edited.length) return false;
+  for (var index = 0; index < original.length; index++) {
+    final current = edited[index].media;
+    if (current == null ||
+        current.url != original[index].url ||
+        current.width != original[index].width ||
+        current.height != original[index].height) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /// The "post to" selector at the top of the editor.

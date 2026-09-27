@@ -49,55 +49,80 @@ void main() {
     expect(updated.title, 'Edited title');
   });
 
-  test('createPost carries the attached image into the mutation', () async {
-    final adapter = _GraphqlAdapter({
-      'createPost': _postJson(title: 'With a photo'),
-    });
+  test(
+    'createPost carries ordered photos and sizes into the mutation',
+    () async {
+      final adapter = _GraphqlAdapter({
+        'createPost': _postJson(title: 'With a photo'),
+      });
 
-    await apiWith(adapter).createPost(
-      title: 'With a photo',
-      content: 'See the diagram below',
-      categoryId: 'category-1',
-      mediaUrl: 'https://riksa.test/api/v1/media/abc.png',
-    );
+      await apiWith(adapter).createPostWithMedia(
+        title: 'With a photo',
+        content: 'See the diagram below',
+        categoryId: 'category-1',
+        media: const [
+          SocialPostMedia(
+            url: 'https://riksa.test/api/v1/media/abc.png',
+            width: 1200,
+            height: 800,
+          ),
+        ],
+      );
 
-    expect(adapter.variables?['input'], {
-      'title': 'With a photo',
-      'content': 'See the diagram below',
-      'categoryId': 'category-1',
-      'mediaUrl': 'https://riksa.test/api/v1/media/abc.png',
-    });
-  });
+      expect(adapter.variables?['input'], {
+        'title': 'With a photo',
+        'content': 'See the diagram below',
+        'categoryId': 'category-1',
+        'media': [
+          {
+            'url': 'https://riksa.test/api/v1/media/abc.png',
+            'width': 1200,
+            'height': 800,
+          },
+        ],
+      });
+      expect(adapter.query, contains('media { url width height }'));
+    },
+  );
 
   test(
-    'createPost omits mediaUrl entirely when no image is attached',
+    'createPost sends an empty media list when no photos are attached',
     () async {
       final adapter = _GraphqlAdapter({
         'createPost': _postJson(title: 'Plain'),
       });
 
-      await apiWith(adapter).createPost(
+      await apiWith(adapter).createPostWithMedia(
         title: 'Plain',
         content: 'No picture on this one',
         categoryId: 'category-1',
       );
 
-      // Sending an explicit null would read as "clear it" on the server.
-      expect(
-        (adapter.variables?['input'] as Map).containsKey('mediaUrl'),
-        isFalse,
-      );
+      expect((adapter.variables?['input'] as Map)['media'], isEmpty);
     },
   );
 
-  test('updatePost clears the image with a blank mediaUrl', () async {
+  test('updatePost clears photos with an empty list', () async {
+    final adapter = _GraphqlAdapter({'updatePost': _postJson(title: 'Edited')});
+
+    await apiWith(adapter).updatePostWithMedia(
+      id: 'post-1',
+      title: 'Edited',
+      content: 'Body',
+      media: [],
+    );
+
+    expect((adapter.variables?['input'] as Map)['media'], isEmpty);
+  });
+
+  test('updatePost omits media when photos should stay unchanged', () async {
     final adapter = _GraphqlAdapter({'updatePost': _postJson(title: 'Edited')});
 
     await apiWith(
       adapter,
-    ).updatePost(id: 'post-1', title: 'Edited', content: 'Body', mediaUrl: '');
+    ).updatePostWithMedia(id: 'post-1', title: 'Edited', content: 'Body');
 
-    expect((adapter.variables?['input'] as Map)['mediaUrl'], '');
+    expect((adapter.variables?['input'] as Map).containsKey('media'), isFalse);
   });
 
   test('deletePost sends the id and accepts a true result', () async {

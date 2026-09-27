@@ -110,7 +110,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
       final url = await ref
           .read(socialApiProvider)
           .uploadMedia(picked.path, filename: picked.name);
-      if (mounted) setState(() => _iconUrl = url);
+      if (mounted) setState(() => _iconUrl = url.url);
     } catch (error) {
       _showMessage(
         error is SocialApiException ? error.message : l10n.photoFailed,

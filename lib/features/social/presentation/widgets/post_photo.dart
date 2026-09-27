@@ -23,12 +23,18 @@ class PostPhoto extends StatefulWidget {
     this.aspectRatio,
     this.fit = BoxFit.cover,
     this.heroTag,
+    this.fillBounds = false,
+    this.borderRadius = AppRadii.mediumBorder,
+    this.showBorder = true,
   });
 
   final String url;
   final double? aspectRatio;
   final BoxFit fit;
   final String? heroTag;
+  final bool fillBounds;
+  final BorderRadiusGeometry borderRadius;
+  final bool showBorder;
 
   @override
   State<PostPhoto> createState() => _PostPhotoState();
@@ -128,7 +134,9 @@ class _PostPhotoState extends State<PostPhoto> {
             ? constraints.maxWidth
             : MediaQuery.sizeOf(context).width;
         final width = math.max(1.0, availableWidth);
-        final height = width / ratio;
+        final height = widget.fillBounds && constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : width / ratio;
         final cacheWidth = math.max(1, (width * dpr).ceil());
         if (widget.aspectRatio == null &&
             _requestedCacheWidth != cacheWidth &&
@@ -173,8 +181,10 @@ class _PostPhotoState extends State<PostPhoto> {
           constraints: BoxConstraints(maxHeight: constraints.maxHeight),
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            borderRadius: AppRadii.mediumBorder,
-            border: Border.all(color: palette.outline),
+            borderRadius: widget.borderRadius,
+            border: widget.showBorder
+                ? Border.all(color: palette.outline)
+                : null,
           ),
           child: image,
         );

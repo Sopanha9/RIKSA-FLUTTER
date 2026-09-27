@@ -34,11 +34,11 @@ class _ControlledSocialApi extends SocialApi {
   }
 
   @override
-  Future<SocialPost> createPost({
+  Future<SocialPost> createPostWithMedia({
     required String title,
     required String content,
     required String categoryId,
-    String? mediaUrl,
+    List<SocialPostMedia> media = const [],
   }) => createPostRequest!.future;
 
   @override
