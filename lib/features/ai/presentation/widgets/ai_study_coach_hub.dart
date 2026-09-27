@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/gen/app_localizations.dart';
 
 class StudyCoachTopic {
   const StudyCoachTopic({
     required this.id,
-    required this.title,
-    required this.subtitle,
     required this.prompt,
     required this.context,
     required this.icon,
@@ -14,19 +13,33 @@ class StudyCoachTopic {
   });
 
   final String id;
-  final String title;
-  final String subtitle;
   final String prompt;
   final String context;
   final IconData icon;
   final Color accentColor;
+
+  String title(AppLocalizations l10n) => switch (id) {
+    'math' => l10n.aiCoachMathTitle,
+    'science' => l10n.aiCoachScienceTitle,
+    'khmer' => l10n.aiCoachKhmerTitle,
+    'english' => l10n.aiCoachEnglishTitle,
+    'bakii' => l10n.aiCoachBakiiTitle,
+    _ => throw ArgumentError.value(id, 'id', 'Unknown study coach topic'),
+  };
+
+  String subtitle(AppLocalizations l10n) => switch (id) {
+    'math' => l10n.aiCoachMathSubtitle,
+    'science' => l10n.aiCoachScienceSubtitle,
+    'khmer' => l10n.aiCoachKhmerSubtitle,
+    'english' => l10n.aiCoachEnglishSubtitle,
+    'bakii' => l10n.aiCoachBakiiSubtitle,
+    _ => throw ArgumentError.value(id, 'id', 'Unknown study coach topic'),
+  };
 }
 
 const studyCoachTopics = <StudyCoachTopic>[
   StudyCoachTopic(
     id: 'math',
-    title: 'Mathematics Coach',
-    subtitle: 'Step-by-step algebra, calculus & geometry problem solver',
     prompt: 'Can you help me solve a math problem step-by-step?',
     context:
         'Subject: Mathematics. You are a patient, expert math coach for Cambodian students. Guide the student step-by-step through solving equations, calculus, or geometry problems. Explain formulas clearly, teach reasoning, and ask checking questions.',
@@ -35,8 +48,6 @@ const studyCoachTopics = <StudyCoachTopic>[
   ),
   StudyCoachTopic(
     id: 'science',
-    title: 'Science Explainer',
-    subtitle: 'Physics laws, chemistry formulas & biology made simple',
     prompt:
         'Can you explain a scientific concept to me with an everyday example?',
     context:
@@ -46,8 +57,6 @@ const studyCoachTopics = <StudyCoachTopic>[
   ),
   StudyCoachTopic(
     id: 'khmer',
-    title: 'Khmer Language Coach',
-    subtitle: 'Spelling, grammar, respectful speech & classical essays',
     prompt:
         'ខ្ញុំចង់រៀនអំពីក្បួនវេយ្យាករណ៍ និងការប្រើប្រាស់ពាក្យខ្មែរឲ្យបានត្រឹមត្រូវ។',
     context:
@@ -57,8 +66,6 @@ const studyCoachTopics = <StudyCoachTopic>[
   ),
   StudyCoachTopic(
     id: 'english',
-    title: 'English Practice',
-    subtitle: 'Conversation partner with gentle grammar corrections',
     prompt:
         'Hi! Can we practice conversational English today? Please correct any mistakes I make.',
     context:
@@ -68,8 +75,6 @@ const studyCoachTopics = <StudyCoachTopic>[
   ),
   StudyCoachTopic(
     id: 'bakii',
-    title: 'Grade 12 BakII Prep',
-    subtitle: 'Typical national exam questions & revision strategies',
     prompt:
         'Can you quiz me on typical Grade 12 national exam questions and check my answers?',
     context:
@@ -87,6 +92,7 @@ class AiStudyCoachHub extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final riksa = context.riksa;
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -97,7 +103,7 @@ class AiStudyCoachHub extends StatelessWidget {
               const _CoachPixelIcon(topicId: 'section', size: 34),
               const SizedBox(width: RiksaSpacing.xs),
               Text(
-                'STUDY SUBJECT COACHES',
+                l10n.aiCoachSectionTitle,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: riksa.inkFaint,
                   fontWeight: FontWeight.w600,
@@ -138,6 +144,7 @@ class _StudyCoachCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final riksa = context.riksa;
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       width: 220,
       child: Material(
@@ -171,7 +178,7 @@ class _StudyCoachCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      topic.title,
+                      topic.title(l10n),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -180,7 +187,7 @@ class _StudyCoachCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      topic.subtitle,
+                      topic.subtitle(l10n),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(

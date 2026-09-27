@@ -782,6 +782,18 @@ abstract class AppLocalizations {
   /// **'Learn every day to keep your streak growing.'**
   String get streakSubtitle;
 
+  /// No description provided for @heatmapLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Less'**
+  String get heatmapLess;
+
+  /// No description provided for @heatmapMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get heatmapMore;
+
   /// No description provided for @bestStreak.
   ///
   /// In en, this message translates to:
@@ -1279,6 +1291,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Get started'**
   String get onboardingGetStarted;
+
+  /// No description provided for @onboardingPageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {count}'**
+  String onboardingPageLabel(int page, int count);
 
   /// No description provided for @selectProvinceTitle.
   ///
@@ -2798,6 +2816,12 @@ abstract class AppLocalizations {
   /// **'One more step through your syllabus. Take a break or continue when you are ready.'**
   String get lessonCompletedBody;
 
+  /// No description provided for @lessonRestoredProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed earlier - your progress was restored.'**
+  String get lessonRestoredProgress;
+
   /// No description provided for @lessonRevisitTitle.
   ///
   /// In en, this message translates to:
@@ -3157,6 +3181,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hi! I\'m your AI Study Coach. Ask me anything about your lessons, and I\'ll help you learn step by step!'**
   String get aiCoachGreeting;
+
+  /// No description provided for @aiCoachSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'STUDY SUBJECT COACHES'**
+  String get aiCoachSectionTitle;
+
+  /// No description provided for @aiCoachMathTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mathematics Coach'**
+  String get aiCoachMathTitle;
+
+  /// No description provided for @aiCoachMathSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Step-by-step algebra, calculus & geometry problem solver'**
+  String get aiCoachMathSubtitle;
+
+  /// No description provided for @aiCoachScienceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Science Explainer'**
+  String get aiCoachScienceTitle;
+
+  /// No description provided for @aiCoachScienceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Physics laws, chemistry formulas & biology made simple'**
+  String get aiCoachScienceSubtitle;
+
+  /// No description provided for @aiCoachKhmerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Khmer Language Coach'**
+  String get aiCoachKhmerTitle;
+
+  /// No description provided for @aiCoachKhmerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Spelling, grammar, respectful speech & classical essays'**
+  String get aiCoachKhmerSubtitle;
+
+  /// No description provided for @aiCoachEnglishTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'English Practice'**
+  String get aiCoachEnglishTitle;
+
+  /// No description provided for @aiCoachEnglishSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation partner with gentle grammar corrections'**
+  String get aiCoachEnglishSubtitle;
+
+  /// No description provided for @aiCoachBakiiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade 12 BakII Prep'**
+  String get aiCoachBakiiTitle;
+
+  /// No description provided for @aiCoachBakiiSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Typical national exam questions & revision strategies'**
+  String get aiCoachBakiiSubtitle;
 
   /// No description provided for @aiTryAskingAbout.
   ///

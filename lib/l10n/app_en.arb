@@ -233,6 +233,8 @@
   "@streakTitle": {},
   "streakSubtitle": "Learn every day to keep your streak growing.",
   "@streakSubtitle": {},
+  "heatmapLess": "Less",
+  "heatmapMore": "More",
   "bestStreak": "Best streak",
   "@bestStreak": {},
   "lastTracked": "Last tracked",
@@ -412,6 +414,13 @@
   "onboardingGetStarted": "Get started",
   "@onboardingGetStarted": {
     "description": "Primary action on the last onboarding page."
+  },
+  "onboardingPageLabel": "Page {page} of {count}",
+  "@onboardingPageLabel": {
+    "placeholders": {
+      "page": {"type": "int"},
+      "count": {"type": "int"}
+    }
   },
   "selectProvinceTitle": "Select your province",
   "@selectProvinceTitle": {},
@@ -921,6 +930,7 @@
   "guestSaveProgressLater": "Keep learning as a guest",
   "lessonSavedReflection": "Your reflection",
   "lessonCompletedBody": "One more step through your syllabus. Take a break or continue when you are ready.",
+  "lessonRestoredProgress": "Completed earlier - your progress was restored.",
   "lessonRevisitTitle": "Worth another look",
   "lessonRevisitBody": "You marked this lesson for another look. You can reopen it from your roadmap.",
   "lessonNextAction": "Start next lesson",
@@ -994,6 +1004,17 @@
   "feedFilterAll": "All",
   "aiCoachTitle": "AI Study Coach",
   "aiCoachGreeting": "Hi! I'm your AI Study Coach. Ask me anything about your lessons, and I'll help you learn step by step!",
+  "aiCoachSectionTitle": "STUDY SUBJECT COACHES",
+  "aiCoachMathTitle": "Mathematics Coach",
+  "aiCoachMathSubtitle": "Step-by-step algebra, calculus & geometry problem solver",
+  "aiCoachScienceTitle": "Science Explainer",
+  "aiCoachScienceSubtitle": "Physics laws, chemistry formulas & biology made simple",
+  "aiCoachKhmerTitle": "Khmer Language Coach",
+  "aiCoachKhmerSubtitle": "Spelling, grammar, respectful speech & classical essays",
+  "aiCoachEnglishTitle": "English Practice",
+  "aiCoachEnglishSubtitle": "Conversation partner with gentle grammar corrections",
+  "aiCoachBakiiTitle": "Grade 12 BakII Prep",
+  "aiCoachBakiiSubtitle": "Typical national exam questions & revision strategies",
   "aiTryAskingAbout": "Try asking about:",
   "menuMyProgress": "My Progress",
   "menuSavedLessons": "Saved Lessons",

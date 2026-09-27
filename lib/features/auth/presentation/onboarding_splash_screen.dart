@@ -682,7 +682,9 @@ class _PageIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.riksa;
     return Semantics(
-      label: 'Page ${currentPage + 1} of $count',
+      label: AppLocalizations.of(
+        context,
+      )!.onboardingPageLabel(currentPage + 1, count),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(

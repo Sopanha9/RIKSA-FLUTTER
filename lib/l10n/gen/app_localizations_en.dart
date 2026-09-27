@@ -395,6 +395,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get streakSubtitle => 'Learn every day to keep your streak growing.';
 
   @override
+  String get heatmapLess => 'Less';
+
+  @override
+  String get heatmapMore => 'More';
+
+  @override
   String get bestStreak => 'Best streak';
 
   @override
@@ -679,6 +685,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingGetStarted => 'Get started';
+
+  @override
+  String onboardingPageLabel(int page, int count) {
+    return 'Page $page of $count';
+  }
 
   @override
   String get selectProvinceTitle => 'Select your province';
@@ -1567,6 +1578,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'One more step through your syllabus. Take a break or continue when you are ready.';
 
   @override
+  String get lessonRestoredProgress =>
+      'Completed earlier - your progress was restored.';
+
+  @override
   String get lessonRevisitTitle => 'Worth another look';
 
   @override
@@ -1762,6 +1777,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiCoachGreeting =>
       'Hi! I\'m your AI Study Coach. Ask me anything about your lessons, and I\'ll help you learn step by step!';
+
+  @override
+  String get aiCoachSectionTitle => 'STUDY SUBJECT COACHES';
+
+  @override
+  String get aiCoachMathTitle => 'Mathematics Coach';
+
+  @override
+  String get aiCoachMathSubtitle =>
+      'Step-by-step algebra, calculus & geometry problem solver';
+
+  @override
+  String get aiCoachScienceTitle => 'Science Explainer';
+
+  @override
+  String get aiCoachScienceSubtitle =>
+      'Physics laws, chemistry formulas & biology made simple';
+
+  @override
+  String get aiCoachKhmerTitle => 'Khmer Language Coach';
+
+  @override
+  String get aiCoachKhmerSubtitle =>
+      'Spelling, grammar, respectful speech & classical essays';
+
+  @override
+  String get aiCoachEnglishTitle => 'English Practice';
+
+  @override
+  String get aiCoachEnglishSubtitle =>
+      'Conversation partner with gentle grammar corrections';
+
+  @override
+  String get aiCoachBakiiTitle => 'Grade 12 BakII Prep';
+
+  @override
+  String get aiCoachBakiiSubtitle =>
+      'Typical national exam questions & revision strategies';
 
   @override
   String get aiTryAskingAbout => 'Try asking about:';

@@ -389,6 +389,12 @@ class AppLocalizationsKm extends AppLocalizations {
       'រៀនរាល់ថ្ងៃ ដើម្បីបន្តការសិក្សារបស់អ្នកឱ្យកាន់តែប្រសើរ។';
 
   @override
+  String get heatmapLess => 'តិច';
+
+  @override
+  String get heatmapMore => 'ច្រើន';
+
+  @override
   String get bestStreak => 'ការសិក្សាបន្តល្អបំផុត';
 
   @override
@@ -660,6 +666,11 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get onboardingGetStarted => 'ចាប់ផ្តើម';
+
+  @override
+  String onboardingPageLabel(int page, int count) {
+    return 'ទំព័រ $page ក្នុងចំណោម $count ទំព័រ';
+  }
 
   @override
   String get selectProvinceTitle => 'ជ្រើសរើសខេត្តរបស់អ្នក';
@@ -1523,6 +1534,10 @@ class AppLocalizationsKm extends AppLocalizations {
       'អ្នកបានបោះជំហានមួយទៀតក្នុងកម្មវិធីសិក្សា។ សម្រាក ឬបន្តពេលអ្នករួចរាល់។';
 
   @override
+  String get lessonRestoredProgress =>
+      'មេរៀននេះបានបញ្ចប់ពីមុន — វឌ្ឍនភាពរបស់អ្នកត្រូវបានស្ដារឡើងវិញ។';
+
+  @override
   String get lessonRevisitTitle => 'ចំណុចដែលត្រូវរំលឹកឡើងវិញ';
 
   @override
@@ -1718,6 +1733,43 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get aiCoachGreeting =>
       'សួស្តី! ខ្ញុំជាគ្រូជំនួយ AI របស់អ្នក។ សួរខ្ញុំអំពីមេរៀនអ្វីក៏បាន ខ្ញុំនឹងជួយអ្នករៀនម្តងមួយជំហាន!';
+
+  @override
+  String get aiCoachSectionTitle => 'គ្រូជំនួយតាមមុខវិជ្ជា';
+
+  @override
+  String get aiCoachMathTitle => 'គ្រូគណិតវិទ្យា';
+
+  @override
+  String get aiCoachMathSubtitle =>
+      'ដោះស្រាយពិជគណិត កាល់គុល និងធរណីមាត្រម្តងមួយជំហាន';
+
+  @override
+  String get aiCoachScienceTitle => 'គ្រូពន្យល់វិទ្យាសាស្ត្រ';
+
+  @override
+  String get aiCoachScienceSubtitle =>
+      'ពន្យល់ច្បាប់រូបវិទ្យា រូបមន្តគីមី និងជីវវិទ្យាឱ្យងាយយល់';
+
+  @override
+  String get aiCoachKhmerTitle => 'គ្រូភាសាខ្មែរ';
+
+  @override
+  String get aiCoachKhmerSubtitle =>
+      'អក្ខរាវិរុទ្ធ វេយ្យាករណ៍ ភាសាគួរសម និងតែងសេចក្តីបុរាណ';
+
+  @override
+  String get aiCoachEnglishTitle => 'អនុវត្តភាសាអង់គ្លេស';
+
+  @override
+  String get aiCoachEnglishSubtitle =>
+      'ដៃគូសន្ទនា ជាមួយការកែវេយ្យាករណ៍យ៉ាងទន់ភ្លន់';
+
+  @override
+  String get aiCoachBakiiTitle => 'ត្រៀមប្រឡងបាក់ឌុបថ្នាក់ទី១២';
+
+  @override
+  String get aiCoachBakiiSubtitle => 'សំណួរប្រឡងជាតិ និងវិធីសាស្ត្ររំឭកមេរៀន';
 
   @override
   String get aiTryAskingAbout => 'សាកសួរអំពី៖';
@@ -2561,54 +2613,54 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String buddyCareTitle(String name) {
-    return 'TODO(km): Today with $name';
+    return 'ថ្ងៃនេះជាមួយ $name';
   }
 
   @override
-  String get buddyCareLesson => 'TODO(km): Finish a lesson';
+  String get buddyCareLesson => 'បញ្ចប់មេរៀនមួយ';
 
   @override
-  String get buddyCareRead => 'TODO(km): Read a story';
+  String get buddyCareRead => 'អានរឿងមួយ';
 
   @override
-  String get buddyCareShare => 'TODO(km): Share with the community';
+  String get buddyCareShare => 'ចែករំលែកជាមួយសហគមន៍';
 
   @override
-  String get buddyChooseAction => 'TODO(km): Choose a buddy';
+  String get buddyChooseAction => 'ជ្រើសរើសមិត្តតូចម្នាក់';
 
   @override
   String buddyCareProgress(int count) {
-    return 'TODO(km): $count of 1 complete';
+    return 'បានបញ្ចប់ $count ក្នុងចំណោម 1';
   }
 
   @override
   String buddyEnergyLively(String name) {
-    return 'TODO(km): $name is full of energy.';
+    return '$name មានថាមពលពេញលេញ។';
   }
 
   @override
   String buddyEnergySteady(String name) {
-    return 'TODO(km): One lesson keeps $name going.';
+    return 'មេរៀនមួយជួយឱ្យ $name បន្តមានថាមពល។';
   }
 
   @override
   String buddyEnergySleepy(String name) {
-    return 'TODO(km): $name is getting sleepy.';
+    return '$name កំពុងចាប់ផ្តើមងងុយគេង។';
   }
 
   @override
   String buddyEnergyNapping(String name) {
-    return 'TODO(km): $name is napping. A lesson wakes them up.';
+    return '$name កំពុងគេងថ្ងៃ។ មេរៀនមួយអាចជួយដាស់ $name។';
   }
 
   @override
   String buddyLessonEnergyLine(String name) {
-    return 'TODO(km): +35 energy · $name is full of energy';
+    return '+35 ថាមពល · $name មានថាមពលពេញលេញ';
   }
 
   @override
   String buddyReadEnjoyed(String name) {
-    return 'TODO(km): $name enjoyed that story';
+    return '$name រីករាយនឹងរឿងនោះ';
   }
 
   @override

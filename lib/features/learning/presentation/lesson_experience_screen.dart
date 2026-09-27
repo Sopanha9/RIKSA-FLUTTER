@@ -256,7 +256,7 @@ class _LessonExperienceScreenState
           exerciseId: exercise.id,
           correct: true,
           points: exercise.points,
-          message: 'Completed earlier - your progress was restored.',
+          message: l10n.lessonRestoredProgress,
         ),
       );
     }

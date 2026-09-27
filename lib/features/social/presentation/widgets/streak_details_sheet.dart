@@ -597,10 +597,11 @@ class _ContributionLegend extends StatelessWidget {
       color: context.riksa.inkMuted,
       fontWeight: FontWeight.w700,
     );
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Text('Less', style: style),
+        Text(l10n.heatmapLess, style: style),
         const SizedBox(width: 6),
         for (final color in [
           quietColor.withValues(alpha: .72),
@@ -619,7 +620,7 @@ class _ContributionLegend extends StatelessWidget {
             ),
           ),
         const SizedBox(width: 2),
-        Text('More', style: style),
+        Text(l10n.heatmapMore, style: style),
       ],
     );
   }

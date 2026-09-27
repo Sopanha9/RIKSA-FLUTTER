@@ -289,7 +289,7 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen>
                 title: AppLocalizations.of(context)!.blogOpenPostFailedTitle,
                 body: _error!,
                 icon: Icons.cloud_off_outlined,
-                actionLabel: 'Try again',
+                actionLabel: AppLocalizations.of(context)!.tryAgain,
                 onAction: _load,
               ),
             )
