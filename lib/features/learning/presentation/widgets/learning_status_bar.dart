@@ -1,17 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/riksa_back_button.dart';
 
 /// Leaves a pushed learning screen, or falls back to the subject list when
 /// the screen was opened directly and has nothing beneath it.
 void leaveLearningScreen(BuildContext context) {
-  final navigator = Navigator.of(context);
-  if (navigator.canPop()) {
-    navigator.maybePop();
-  } else {
-    context.go('/learn');
-  }
+  unawaited(RiksaBackButton.navigateBack(context, fallbackLocation: '/learn'));
 }
 
 /// A plain back bar for the moments a learning screen has no content of its
@@ -34,12 +31,14 @@ class LearningStatusBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: context.riksa.canvas,
       surfaceTintColor: Colors.transparent,
       automaticallyImplyLeading: false,
-      leading: IconButton(
-        key: const ValueKey('learning-status-back'),
-        onPressed: () => leaveLearningScreen(context),
-        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-        style: IconButton.styleFrom(backgroundColor: Colors.transparent),
-        icon: const Icon(Icons.arrow_back_rounded),
+      leading: const Center(
+        child: RiksaBackButton(
+          key: ValueKey('learning-status-back'),
+          fallbackLocation: '/learn',
+          style: ButtonStyle(
+            backgroundColor: WidgetStatePropertyAll(Colors.transparent),
+          ),
+        ),
       ),
       titleSpacing: 0,
       title: title == null

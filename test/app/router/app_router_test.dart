@@ -19,6 +19,7 @@ import 'package:riksa_app/features/learning/providers/learning_home_provider.dar
 import 'package:riksa_app/features/learning/providers/learning_roadmap_provider.dart';
 import 'package:riksa_app/features/userProfile/data/public_profile.dart';
 import 'package:riksa_app/features/userProfile/data/public_profile_api.dart';
+import 'package:riksa_app/features/userProfile/presentation/edit_profile_screen.dart';
 import 'package:riksa_app/features/userProfile/presentation/public_profile_screen.dart';
 import 'package:riksa_app/features/userProfile/presentation/profile_settings_screen.dart';
 import 'package:riksa_app/features/userProfile/presentation/user_profile_screen.dart';
@@ -201,6 +202,10 @@ void main() {
     expect(router.canPop(), isTrue);
     expect(find.byType(PublicProfileScreen), findsOneWidget);
     expect(find.byKey(const ValueKey('public-profile-back')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('persistent-bottom-navigation')),
+      findsNothing,
+    );
 
     appRef.invalidate(goRouterProvider);
     await tester.pump();
@@ -211,6 +216,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(ProfileSettingsScreen), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('persistent-bottom-navigation')),
+      findsNothing,
+    );
     expect(find.byType(PublicProfileScreen), findsNothing);
 
     router.go('/home');
@@ -222,6 +231,37 @@ void main() {
     expect(router.routerDelegate.currentConfiguration.uri.path, '/profile');
     expect(find.byType(UserProfileScreen), findsOneWidget);
     expect(find.byType(PublicProfileScreen), findsNothing);
+
+    router.go('/profile/settings');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(ProfileSettingsScreen), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('profile-settings-back')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/profile');
+    expect(
+      find.byKey(const ValueKey('persistent-bottom-navigation')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('profile-back')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/learn');
+
+    router.go('/profile/edit');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(EditProfileScreen), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('persistent-bottom-navigation')),
+      findsNothing,
+    );
+    await tester.tap(find.byKey(const ValueKey('edit-profile-back')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/profile');
   });
 
   testWidgets(

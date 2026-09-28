@@ -65,7 +65,9 @@ void main() {
     );
     addTearDown(service.dispose);
 
-    service..play(LearningSound.correct)..play(LearningSound.wrong);
+    service
+      ..play(LearningSound.correct)
+      ..play(LearningSound.wrong);
     await Future<void>.delayed(Duration.zero);
 
     expect(players.map((p) => p.played).toList(), [
@@ -85,7 +87,9 @@ void main() {
     );
     addTearDown(service.dispose);
 
-    service..play(LearningSound.correct)..play(LearningSound.correct);
+    service
+      ..play(LearningSound.correct)
+      ..play(LearningSound.correct);
     await Future<void>.delayed(Duration.zero);
 
     // Rapid answering must not stack a chorus of overlapping chimes.

@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/unsaved_changes_guard.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_models.dart';
@@ -82,11 +83,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return UnsavedChangesGuard(
       dirty: _isDirty(user),
       busy: _saving,
+      fallbackLocation: '/profile',
       child: Scaffold(
         backgroundColor: context.riksa.canvas,
         appBar: AppBar(
           backgroundColor: context.riksa.canvas,
           centerTitle: true,
+          leading: Center(
+            child: RiksaBackButton(
+              key: const ValueKey('edit-profile-back'),
+              fallbackLocation: '/profile',
+              confirmFallback: (context) async =>
+                  !_saving &&
+                  (!_isDirty(user) || await confirmDiscardChanges(context)),
+            ),
+          ),
           title: Text(
             l10n.editProfile,
             style: const TextStyle(fontWeight: FontWeight.w900),
@@ -385,10 +396,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 const SizedBox(height: 5),
                 Text(
                   l10n.humationAvatarSubtitle,
-                  style: TextStyle(
-                    color: context.riksa.inkMuted,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: context.riksa.inkMuted, fontSize: 13),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
@@ -515,10 +523,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 const SizedBox(height: 5),
                 Text(
                   l10n.profileCoverSubtitle,
-                  style: TextStyle(
-                    color: context.riksa.inkMuted,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: context.riksa.inkMuted, fontSize: 13),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(

@@ -27,10 +27,22 @@ class BuddyAnchor {
 }
 
 class BuddyAnchorSet {
-  const BuddyAnchorSet({required this.defaults, required this.frames});
+  const BuddyAnchorSet({
+    required this.defaults,
+    required this.frames,
+    this.hatClip = const [],
+  });
 
   final Map<BuddyItemSlot, BuddyAnchor> defaults;
   final Map<String, Map<BuddyItemSlot, Map<String, dynamic>>> frames;
+
+  /// The lower edge of headwear drawn into the face art itself, as points in
+  /// face fractions from left to right. The crocodile's art wears a safari
+  /// helmet whose brim reaches almost to its eyes, so no hat can cover it
+  /// without covering the eyes too. While a hat is equipped, the face is
+  /// clipped along this line and the hat's brim sits on it: the hat replaces
+  /// the helmet. Empty when the art has no headwear.
+  final List<Offset> hatClip;
 
   BuddyAnchor forFrame(BuddyItemSlot slot, String? frameKey) {
     final base = defaults[slot]!;
@@ -74,9 +86,24 @@ class BuddyAnchorSet {
         frames[frameEntry.key.toString()] = Map.unmodifiable(overrides);
       }
     }
+    final rawClip = face['hatClip'];
+    final hatClip = rawClip is List
+        ? [
+            for (final point in rawClip)
+              if (point is List &&
+                  point.length == 2 &&
+                  point[0] is num &&
+                  point[1] is num)
+                Offset(
+                  (point[0] as num).toDouble(),
+                  (point[1] as num).toDouble(),
+                ),
+          ]
+        : _fallback[species]!.hatClip;
     return BuddyAnchorSet(
       defaults: Map.unmodifiable(defaults),
       frames: Map.unmodifiable(frames),
+      hatClip: List.unmodifiable(hatClip),
     );
   }
 }
@@ -115,7 +142,14 @@ abstract final class BuddyAnchorLoader {
 const Map<MascotSpecies, BuddyAnchorSet> _fallback = {
   MascotSpecies.crocodile: BuddyAnchorSet(
     defaults: {
-      BuddyItemSlot.hat: BuddyAnchor(x: .52, y: .09, width: .60, rotation: -8),
+      // The anchor is the hat center; this places its lower brim on
+      // [_crocodileHelmetLine], tilted with the helmet's brim.
+      BuddyItemSlot.hat: BuddyAnchor(
+        x: .52,
+        y: .18,
+        width: .74,
+        rotation: -16,
+      ),
       BuddyItemSlot.eyewear: BuddyAnchor(
         x: .64,
         y: .49,
@@ -124,6 +158,7 @@ const Map<MascotSpecies, BuddyAnchorSet> _fallback = {
       ),
     },
     frames: {},
+    hatClip: _crocodileHelmetLine,
   ),
   MascotSpecies.capybara: BuddyAnchorSet(
     defaults: {
@@ -138,3 +173,20 @@ const Map<MascotSpecies, BuddyAnchorSet> _fallback = {
     frames: {},
   ),
 };
+
+/// The crocodile helmet's lower edge, measured from every face frame: the
+/// lowest helmet pixel per column plus the outline, with a small margin.
+/// It stays above both eyes in every frame.
+const _crocodileHelmetLine = [
+  Offset(0, .60),
+  Offset(.20, .56),
+  Offset(.29, .535),
+  Offset(.35, .495),
+  Offset(.41, .445),
+  Offset(.47, .405),
+  Offset(.53, .375),
+  Offset(.62, .345),
+  Offset(.71, .325),
+  Offset(.80, .34),
+  Offset(1, .34),
+];

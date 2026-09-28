@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -12,23 +11,22 @@ import '../../../core/sound/learning_sound.dart';
 import '../../../core/sound/sound_provider.dart';
 import '../../../core/notifications/streak_reminder_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/presentation/require_account.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../../mascot/domain/buddy_behavior.dart';
 import '../../mascot/domain/buddy_care.dart';
 import '../../mascot/domain/mascot.dart';
-import '../../mascot/presentation/widgets/buddy_companion.dart';
 import '../../mascot/presentation/widgets/mascot_scene.dart';
 import '../../mascot/presentation/widgets/mascot_face.dart';
 import '../../mascot/presentation/widgets/mascot_view.dart';
-import '../../mascot/providers/buddy_preferences_provider.dart';
 import '../../mascot/providers/buddy_care_provider.dart';
 import '../../mascot/providers/mascot_provider.dart';
 import '../../resources/presentation/lesson_resources_sheet.dart';
 import '../../resources/providers/lesson_resources_provider.dart';
 import '../data/guest_answer_check_counter.dart';
+import '../../quests/providers/today_quests_provider.dart';
 import '../../userProfile/providers/profile_provider.dart';
 import '../data/learning_models.dart';
 import '../providers/learning_home_provider.dart';
@@ -37,7 +35,9 @@ import '../providers/lesson_catalog_provider.dart';
 import '../providers/saved_lessons_provider.dart';
 import 'learning_design.dart';
 import 'widgets/learning_atoms.dart';
+import 'widgets/lesson/lesson_answer_feedback.dart';
 import 'widgets/learning_status_bar.dart';
+import '../../../core/widgets/markdown_math.dart';
 
 /// Where the learner is inside one lesson.
 ///
@@ -62,7 +62,6 @@ class _LessonFlow {
     required this.section,
     required this.phase,
     required this.exercise,
-    required this.exerciseNumber,
     required this.following,
     required this.progress,
   });
@@ -74,8 +73,6 @@ class _LessonFlow {
   /// The exercise being answered, when [phase] is [_LessonPhase.practising].
   final LessonExercise? exercise;
 
-  /// Its position across the whole lesson, not just this section.
-  final int exerciseNumber;
   final _LessonSection? following;
 
   /// Share of the lesson's exercises already answered correctly.
@@ -112,7 +109,6 @@ class _LessonExperienceScreenState
   final _comparedAnswers = <String>{};
   final _expandedWorking = <String>{};
   final _scroll = ScrollController();
-  final _feedbackAnchor = GlobalKey();
   String? _feedbackExerciseId;
   bool? _needsReview;
 
@@ -225,24 +221,30 @@ class _LessonExperienceScreenState
             (true, null, null) => _LessonPhase.reflecting,
           };
 
-    final total = detail.exercises.length;
-    final done = detail.exercises.where(_isCorrect).length;
+    final sectionIndex = sections.indexOf(section);
+    final sectionTotal = section.exercises.length;
+    final sectionDone = section.exercises.where(_isCorrect).length;
+    final sectionProgress = switch (phase) {
+      _LessonPhase.reading => .08,
+      _LessonPhase.practising =>
+        .32 + .42 * (sectionTotal == 0 ? 0 : sectionDone / sectionTotal),
+      _LessonPhase.answerChecked =>
+        .34 + .42 * (sectionTotal == 0 ? 0 : sectionDone / sectionTotal),
+      _LessonPhase.sectionPassed => .9,
+      _LessonPhase.reflecting => 1,
+    };
     return _LessonFlow(
       sections: sections,
       section: section,
       phase: phase,
       exercise: feedback ?? (phase == _LessonPhase.practising ? pending : null),
-      exerciseNumber: (feedback ?? pending) == null
-          ? 0
-          : detail.exercises.indexOf((feedback ?? pending)!) + 1,
       following: following,
-      // With no exercises to count, position in the section list is the only
-      // honest measure of progress left.
-      progress: total == 0
-          ? (phase == _LessonPhase.reflecting
-                ? 1
-                : sections.indexOf(section) / sections.length)
-          : done / total,
+      // Each section moves through Read → Respond → Reflect, with correct
+      // answers advancing the fill within Respond.
+      progress: ((sectionIndex + sectionProgress) / sections.length).clamp(
+        0.0,
+        1.0,
+      ).toDouble(),
     );
   }
 
@@ -271,13 +273,15 @@ class _LessonExperienceScreenState
         ? AppLocalizations.of(context)!.generalSubject
         : detail.categoryName;
     void onAskAi() => context.push(
-      '/ai/chat/new',
+      '/ai/chat/new'
+      '?lesson=${Uri.encodeQueryComponent(detail.title)}'
+      '&context=${Uri.encodeQueryComponent('$subject - ${flow.section.title}')}',
       extra:
           'Lesson: ${detail.title}\n'
           'Subject: ${detail.categoryName}\n'
           'Content: ${detail.description}',
     );
-    return CustomScrollView(
+    final content = CustomScrollView(
       controller: _scroll,
       slivers: [
         // Navigation and progress stay; the identity block does not. Reading is
@@ -286,91 +290,95 @@ class _LessonExperienceScreenState
         SliverPersistentHeader(
           pinned: true,
           delegate: _LessonBarDelegate(
-            lessonId: widget.lessonId,
             flow: flow,
             topInset: MediaQuery.paddingOf(context).top,
-            // Measured rather than derived from a multiplier: a sliver header
-            // must know its extent before it lays out, and a guess at the line
-            // height of whichever font the locale selected overflows.
-            controlsHeight: _textHeight(
-              _StepCounter.styleFor(context),
-              // The widest step label this lesson can show.
-              '${flow.sections.length} / ${flow.sections.length}',
-            ),
             palette: context.riksa,
-            backTooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            askAiTooltip: AppLocalizations.of(context)!.aiAskAboutLesson,
             onBack: () => _handleExit(flow),
-            onAskAi: onAskAi,
-            onSections: () => _showSections(flow),
-            onResources: () => showLessonResourcesSheet(
-              context,
-              lessonId: detail.id,
-              lessonTitle: detail.title,
+            onOptions: () => _showLessonOptions(
+              detail,
+              flow,
+              onAskAi: onAskAi,
             ),
           ),
         ),
         SliverToBoxAdapter(
-          child: _LessonIdentity(title: detail.title, subject: subject),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 640),
+              child: SizedBox(
+                width: double.infinity,
+                child: _LessonIdentity(title: detail.title, subject: subject),
+              ),
+            ),
+          ),
         ),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 170),
           sliver: SliverList.list(
             children: [
-              _JourneyStages(phase: flow.phase),
-              const SizedBox(height: RiksaSpacing.lg),
-              _LessonBuddyScene(subject: subject, phase: flow.phase),
-              const SizedBox(height: RiksaSpacing.lg),
-              RiksaContentReveal(
-                identity: (
-                  flow.section.index,
-                  flow.phase,
-                  flow.exercise?.id,
-                  _comparedAnswers.contains(flow.exercise?.id),
-                ),
-                child: switch (flow.phase) {
-                  _LessonPhase.reading => _contentView(flow),
-                  _LessonPhase.practising ||
-                  _LessonPhase.answerChecked => _practiceView(detail, flow),
-                  _LessonPhase.sectionPassed => _sectionPassedView(
-                    flow.following!,
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 640),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _JourneyStages(phase: flow.phase),
+                      if (flow.phase == _LessonPhase.reading) ...[
+                        const SizedBox(height: RiksaSpacing.md),
+                        _LessonBuddyScene(subject: subject),
+                      ],
+                      SizedBox(
+                        height: flow.phase == _LessonPhase.reading
+                            ? RiksaSpacing.lg
+                            : RiksaSpacing.md,
+                      ),
+                      RiksaContentReveal(
+                        identity: (
+                          flow.section.index,
+                          flow.phase,
+                          flow.exercise?.id,
+                          _comparedAnswers.contains(flow.exercise?.id),
+                        ),
+                        child: switch (flow.phase) {
+                          _LessonPhase.reading => _contentView(flow),
+                          _LessonPhase.practising ||
+                          _LessonPhase.answerChecked =>
+                            _practiceView(detail, flow),
+                          _LessonPhase.sectionPassed => _sectionPassedView(
+                            flow.following!,
+                          ),
+                          _LessonPhase.reflecting => _reflectionView(detail),
+                        },
+                      ),
+                    ],
                   ),
-                  _LessonPhase.reflecting => _reflectionView(detail),
-                },
+                ),
               ),
-              if (flow.phase == _LessonPhase.reading) ...[
-                const SizedBox(height: RiksaSpacing.lg),
-                _AskTutorButton(
-                  lessonTitle: detail.title,
-                  learningContext: '$subject - ${flow.section.title}',
-                ),
-              ],
-              if (flow.phase == _LessonPhase.reflecting) ...[
-                const SizedBox(height: RiksaSpacing.lg),
-                _LessonResourcesCallout(
-                  lessonId: detail.id,
-                  lessonTitle: detail.title,
-                  onOpen: () => showLessonResourcesSheet(
-                    context,
-                    lessonId: detail.id,
-                    lessonTitle: detail.title,
-                  ),
-                ),
-              ],
             ],
           ),
         ),
       ],
     );
+    final exercise = flow.exercise;
+    final result = flow.phase == _LessonPhase.answerChecked && exercise != null
+        ? _results[exercise.id]
+        : null;
+    return Stack(
+      children: [
+        content,
+        PositionedDirectional(
+          start: 0,
+          end: 0,
+          bottom: 0,
+          child: LessonAnswerFeedbackPanel(
+            key: const ValueKey('lesson-feedback-panel'),
+            exercise: exercise,
+            result: result,
+          ),
+        ),
+      ],
+    );
   }
-
-  /// Laid-out height of [text] in [style], at the current text scale.
-  double _textHeight(TextStyle? style, String text) => (TextPainter(
-    text: TextSpan(text: text, style: style),
-    textDirection: Directionality.of(context),
-    textScaler: MediaQuery.textScalerOf(context),
-    maxLines: 1,
-  )..layout()).height;
 
   void _showSections(_LessonFlow flow) {
     showModalBottomSheet<void>(
@@ -386,13 +394,24 @@ class _LessonExperienceScreenState
             children: [
               Text(
                 l10n.lessonSections,
-                style: Theme.of(context).textTheme.titleLarge,
+                style: RiksaTypography.titleStyleFor(
+                  l10n.lessonSections,
+                  Theme.of(context).textTheme.titleLarge,
+                  khmerHeight: 1.5,
+                ),
               ),
               const SizedBox(height: 16),
               for (final section in flow.sections)
                 ListTile(
                   key: ValueKey('lesson-step-${section.index}'),
-                  title: Text(section.title),
+                  title: Text(
+                    section.title,
+                    style: RiksaTypography.titleStyleFor(
+                      section.title,
+                      Theme.of(context).textTheme.titleMedium,
+                      khmerHeight: 1.5,
+                    ),
+                  ),
                   leading: Text('${flow.sections.indexOf(section) + 1}'),
                   selected: section.index == flow.section.index,
                   trailing:
@@ -416,11 +435,174 @@ class _LessonExperienceScreenState
     );
   }
 
+  Future<void> _showLessonOptions(
+    LessonDetail detail,
+    _LessonFlow flow, {
+    required VoidCallback onAskAi,
+  }) async {
+    final saved = ref.read(savedLessonsProvider).contains(detail.id);
+    final soundEnabled = ref.read(soundEnabledProvider);
+    final resourceCount =
+        ref.read(lessonResourcesProvider(detail.id)).value?.resources.length ??
+        0;
+    final exercise = flow.exercise;
+    Text optionLabel(String text) => Text(
+      text,
+      style: _lessonBodyStyle(text, Theme.of(context).textTheme.bodyLarge),
+    );
+
+    void openResources(BuildContext sheetContext) {
+      Navigator.pop(sheetContext);
+      showLessonResourcesSheet(
+        context,
+        lessonId: detail.id,
+        lessonTitle: detail.title,
+      );
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: Text(
+                l10n.lessonOptions,
+                style: RiksaTypography.titleStyleFor(
+                  l10n.lessonOptions,
+                  Theme.of(context).textTheme.titleMedium,
+                  khmerHeight: 1.5,
+                ),
+              ),
+            ),
+            ListTile(
+              key: const ValueKey('lesson-options-sections'),
+              leading: const Icon(Icons.menu_book_outlined),
+              title: optionLabel(l10n.lessonSections),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _showSections(flow);
+              },
+            ),
+            ListTile(
+              key: const ValueKey('lesson-ask-ai'),
+              leading: const Icon(Icons.auto_awesome_rounded),
+              title: optionLabel(
+                AppLocalizations.of(context)!.aiAskAboutLesson,
+              ),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                onAskAi();
+              },
+            ),
+            if (exercise != null &&
+                (flow.phase == _LessonPhase.practising ||
+                    flow.phase == _LessonPhase.answerChecked)) ...[
+              ListTile(
+                key: const ValueKey('lesson-ai-hint'),
+                leading: const Icon(Icons.lightbulb_outline_rounded),
+                title: optionLabel(l10n.lessonAiHint),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _askAiHint(context, exercise, detail.title);
+                },
+              ),
+              if (exercise.type != LessonExerciseType.text)
+                ListTile(
+                  key: ValueKey('lesson-options-working-${exercise.id}'),
+                  leading: const Icon(Icons.edit_outlined),
+                  title: optionLabel(l10n.lessonAddWorkingOptional),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    setState(() => _expandedWorking.add(exercise.id));
+                  },
+                ),
+              if (exercise.type != LessonExerciseType.text &&
+                  !_comparedAnswers.contains(exercise.id))
+                ListTile(
+                  key: ValueKey('lesson-worked-on-paper-${exercise.id}'),
+                  leading: const Icon(Icons.checklist_rounded),
+                  title: optionLabel(l10n.lessonWorkedOnPaper),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _changeStep(() => _comparedAnswers.add(exercise.id));
+                  },
+                ),
+              if (_results[exercise.id]?.correct == false)
+                ListTile(
+                  key: const ValueKey('lesson-explain-answer'),
+                  leading: const Icon(Icons.auto_awesome_rounded),
+                  title: optionLabel(l10n.lessonExplainAnswer),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _explainErrorWithAi(
+                      context,
+                      exercise,
+                      detail.title,
+                      _answers[exercise.id]?.text.trim() ?? '',
+                    );
+                  },
+                ),
+            ],
+            ListTile(
+              key: const ValueKey('lesson-resources-open'),
+              leading: const Icon(Icons.library_books_outlined),
+              title: optionLabel(l10n.resourceEntryCount(resourceCount)),
+              onTap: () => openResources(sheetContext),
+            ),
+            ListTile(
+              key: const ValueKey('lesson-report-resource'),
+              leading: const Icon(Icons.flag_outlined),
+              title: optionLabel(
+                AppLocalizations.of(context)!.resourceReportAction,
+              ),
+              onTap: () => openResources(sheetContext),
+            ),
+            ListTile(
+              key: const ValueKey('lesson-bookmark-toggle'),
+              leading: Icon(
+                saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+              ),
+              title: optionLabel(saved ? l10n.lessonUnsave : l10n.lessonSave),
+              onTap: () {
+                if (requireAccount(context, ref, reason: 'save_lesson')) {
+                  ref.read(savedLessonsProvider.notifier).toggle(detail.id);
+                }
+                Navigator.pop(sheetContext);
+              },
+            ),
+            ListTile(
+              key: const ValueKey('lesson-sound-toggle'),
+              leading: Icon(
+                soundEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+              ),
+              title: optionLabel(
+                soundEnabled ? l10n.lessonMute : l10n.lessonUnmute,
+              ),
+              onTap: () {
+                ref.read(soundEnabledProvider.notifier).toggle();
+                Navigator.pop(sheetContext);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _contentView(_LessonFlow flow) {
     final section = flow.section;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 620),
       child: MarkdownBody(
+        inlineSyntaxes: markdownMathSyntaxes,
+        builders: markdownMathBuilders,
         key: ValueKey(
           section.index == 1
               ? 'lesson-description-markdown'
@@ -440,28 +622,26 @@ class _LessonExperienceScreenState
   Widget _practiceView(LessonDetail detail, _LessonFlow flow) {
     final section = flow.section;
     final exercise = flow.exercise!;
+    final result = flow.phase == _LessonPhase.answerChecked
+        ? _results[exercise.id]
+        : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           section.title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: RiksaSpacing.xxs + 2),
-        Text(
-          l10n.lessonResponseProgress(
-            section.exercises.where(_isCorrect).length,
-            section.exercises.length,
+          style: RiksaTypography.bodyStyleFor(
+            section.title,
+            Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: context.riksa.inkMuted,
+              height: RiksaTypography.containsKhmer(section.title) ? 1.6 : null,
+            ),
           ),
-          style: TextStyle(color: context.riksa.inkMuted),
         ),
-        const SizedBox(height: RiksaSpacing.md),
+        const SizedBox(height: RiksaSpacing.xs),
         _ExerciseCard(
-          number: flow.exerciseNumber,
+          key: ValueKey('lesson-exercise-${exercise.id}'),
           exercise: exercise,
-          lessonTitle: detail.title,
           controller: _answers.putIfAbsent(
             exercise.id,
             TextEditingController.new,
@@ -471,11 +651,9 @@ class _LessonExperienceScreenState
           workingExpanded: _expandedWorking.contains(exercise.id),
           onExpandWorking: () =>
               setState(() => _expandedWorking.add(exercise.id)),
-          onCompare: () => _changeStep(() => _comparedAnswers.add(exercise.id)),
           onEditWorking: () =>
               _changeStep(() => _comparedAnswers.remove(exercise.id)),
-          feedbackKey: _feedbackAnchor,
-          result: _results[exercise.id],
+          result: result,
           submitting: _submitting.contains(exercise.id),
           // The answer lives in a controller the action bar reads, so every
           // keystroke and every tapped choice has to reach this state or the
@@ -483,6 +661,7 @@ class _LessonExperienceScreenState
           onAnswerChanged: () => setState(() {
             if (_results[exercise.id]?.correct == false) {
               _results.remove(exercise.id);
+              _feedbackExerciseId = null;
             }
           }),
         ),
@@ -497,14 +676,23 @@ class _LessonExperienceScreenState
       const SizedBox(height: RiksaSpacing.sm),
       Text(
         l10n.lessonSectionComplete,
-        style: Theme.of(
-          context,
-        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+        style: RiksaTypography.titleStyleFor(
+          l10n.lessonSectionComplete,
+          Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+          khmerHeight: 1.5,
+        ),
       ),
       const SizedBox(height: RiksaSpacing.xxs + 2),
       Text(
         '${l10n.lessonUpNext}: ${next.title}',
-        style: TextStyle(color: context.riksa.inkMuted),
+        style: _lessonBodyStyle(
+          '${l10n.lessonUpNext}: ${next.title}',
+          Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: context.riksa.inkMuted,
+          ),
+        ),
       ),
     ],
   );
@@ -516,10 +704,20 @@ class _LessonExperienceScreenState
         children: [
           Text(
             l10n.lessonCompletionReward,
-            style: Theme.of(context).textTheme.headlineSmall,
+            style: RiksaTypography.titleStyleFor(
+              l10n.lessonCompletionReward,
+              Theme.of(context).textTheme.headlineSmall,
+              khmerHeight: 1.5,
+            ),
           ),
           const SizedBox(height: 12),
-          Text(l10n.lessonCompletedBody),
+          Text(
+            l10n.lessonCompletedBody,
+            style: _lessonBodyStyle(
+              l10n.lessonCompletedBody,
+              Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
         ],
       );
     }
@@ -528,16 +726,35 @@ class _LessonExperienceScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(l10n.lessonReflectionTitle, style: theme.textTheme.headlineSmall),
+        Text(
+          l10n.lessonReflectionTitle,
+          style: RiksaTypography.titleStyleFor(
+            l10n.lessonReflectionTitle,
+            theme.textTheme.headlineSmall,
+            khmerHeight: 1.5,
+          ),
+        ),
         const SizedBox(height: RiksaSpacing.sm),
         Text(
           detail.reflectionPrompt.trim().isEmpty
               ? l10n.lessonReflectionBody
               : detail.reflectionPrompt,
-          style: theme.textTheme.bodyLarge?.copyWith(color: palette.inkMuted),
+          style: _lessonBodyStyle(
+            detail.reflectionPrompt.trim().isEmpty
+                ? l10n.lessonReflectionBody
+                : detail.reflectionPrompt,
+            theme.textTheme.bodyLarge?.copyWith(color: palette.inkMuted),
+          ),
         ),
         const SizedBox(height: RiksaSpacing.lg),
-        Text(l10n.lessonConfidencePrompt, style: theme.textTheme.titleMedium),
+        Text(
+          l10n.lessonConfidencePrompt,
+          style: RiksaTypography.titleStyleFor(
+            l10n.lessonConfidencePrompt,
+            theme.textTheme.titleMedium,
+            khmerHeight: 1.5,
+          ),
+        ),
         const SizedBox(height: RiksaSpacing.sm),
         Wrap(
           spacing: 8,
@@ -545,13 +762,25 @@ class _LessonExperienceScreenState
           children: [
             ChoiceChip(
               key: const ValueKey('lesson-reflection-confident'),
-              label: Text(l10n.lessonConfident),
+              label: Text(
+                l10n.lessonConfident,
+                style: _lessonBodyStyle(
+                  l10n.lessonConfident,
+                  theme.textTheme.labelLarge,
+                ),
+              ),
               selected: _needsReview == false,
               onSelected: (_) => setState(() => _needsReview = false),
             ),
             ChoiceChip(
               key: const ValueKey('lesson-reflection-review'),
-              label: Text(l10n.lessonNeedsReview),
+              label: Text(
+                l10n.lessonNeedsReview,
+                style: _lessonBodyStyle(
+                  l10n.lessonNeedsReview,
+                  theme.textTheme.labelLarge,
+                ),
+              ),
               selected: _needsReview == true,
               onSelected: (_) => setState(() => _needsReview = true),
             ),
@@ -560,9 +789,24 @@ class _LessonExperienceScreenState
         const SizedBox(height: RiksaSpacing.md),
         ExpansionTile(
           key: const ValueKey('lesson-reflection-toggle'),
+          expansionAnimationStyle: AnimationStyle(
+            duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+            reverseDuration: RiksaMotion.resolve(
+              context,
+              RiksaMotion.standard,
+            ),
+            curve: RiksaMotion.standardCurve,
+            reverseCurve: RiksaMotion.standardCurve,
+          ),
           tilePadding: EdgeInsets.zero,
           childrenPadding: EdgeInsets.zero,
-          title: Text(l10n.lessonReflectionAddOptional),
+          title: Text(
+            l10n.lessonReflectionAddOptional,
+            style: _lessonBodyStyle(
+              l10n.lessonReflectionAddOptional,
+              theme.textTheme.titleMedium,
+            ),
+          ),
           initiallyExpanded: _showReflectionInput,
           onExpansionChanged: (expanded) =>
               setState(() => _showReflectionInput = expanded),
@@ -579,7 +823,10 @@ class _LessonExperienceScreenState
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: l10n.lessonReflectionOptionalHint,
-                hintStyle: TextStyle(color: palette.inkMuted, fontSize: 13),
+                hintStyle: _lessonBodyStyle(
+                  l10n.lessonReflectionOptionalHint,
+                  TextStyle(color: palette.inkMuted, fontSize: 13),
+                ),
                 alignLabelWithHint: true,
                 filled: true,
                 fillColor: palette.surfaceRaised,
@@ -662,7 +909,15 @@ class _LessonExperienceScreenState
         primaryKey: const ValueKey('continue-after-answer'),
         primaryLabel: l10n.continueLabel,
         primaryIcon: Icons.arrow_forward_rounded,
-        onPrimary: () => _changeStep(() => _feedbackExerciseId = null),
+        onPrimary: () => _changeStep(() {
+          final checkedExercise = flow.exercise;
+          if (checkedExercise != null &&
+              _results[checkedExercise.id]?.correct == false) {
+            _results.remove(checkedExercise.id);
+            _answers[checkedExercise.id]?.clear();
+          }
+          _feedbackExerciseId = null;
+        }),
       ),
       _LessonPhase.sectionPassed => LearningActionBar(
         primaryKey: ValueKey('continue-to-section-${flow.following!.index}'),
@@ -681,11 +936,7 @@ class _LessonExperienceScreenState
         primaryIcon: isCompleted ? null : Icons.check_rounded,
         busy: _completing,
         onPrimary: isCompleted
-            ? () => context.go(
-                detail.categoryId == null
-                    ? '/learn'
-                    : '/learn/roadmap/${Uri.encodeComponent(detail.categoryId!)}',
-              )
+            ? () => _openCompletedRoadmap(detail.categoryId)
             : () => _complete(detail),
       ),
     };
@@ -702,14 +953,17 @@ class _LessonExperienceScreenState
   }
 
   void _safePop() {
-    final nav = Navigator.maybeOf(context);
-    if (nav != null && nav.canPop()) {
-      nav.pop();
-    } else {
-      try {
-        context.pop();
-      } catch (_) {}
+    unawaited(
+      RiksaBackButton.navigateBack(context, fallbackLocation: '/learn'),
+    );
+  }
+
+  void _openCompletedRoadmap(String? categoryId) {
+    if (categoryId == null) {
+      context.go('/learn');
+      return;
     }
+    context.push('/learn/roadmap/${Uri.encodeComponent(categoryId)}');
   }
 
   Future<void> _handleExit(_LessonFlow? flow) async {
@@ -754,8 +1008,12 @@ class _LessonExperienceScreenState
             Expanded(
               child: Text(
                 l10n.lessonExitTitle,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
+                style: RiksaTypography.titleStyleFor(
+                  l10n.lessonExitTitle,
+                  theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  khmerHeight: 1.5,
                 ),
               ),
             ),
@@ -763,7 +1021,10 @@ class _LessonExperienceScreenState
         ),
         content: Text(
           l10n.lessonExitBody,
-          style: theme.textTheme.bodyMedium?.copyWith(color: palette.inkMuted),
+          style: _lessonBodyStyle(
+            l10n.lessonExitBody,
+            theme.textTheme.bodyMedium?.copyWith(color: palette.inkMuted),
+          ),
         ),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
@@ -772,7 +1033,10 @@ class _LessonExperienceScreenState
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(
               l10n.lessonKeepLearning,
-              style: TextStyle(color: palette.ink, fontWeight: FontWeight.w600),
+              style: _lessonBodyStyle(
+                l10n.lessonKeepLearning,
+                TextStyle(color: palette.ink, fontWeight: FontWeight.w600),
+              ),
             ),
           ),
           FilledButton(
@@ -783,7 +1047,13 @@ class _LessonExperienceScreenState
               shape: const StadiumBorder(),
             ),
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.lessonLeaveAction),
+            child: Text(
+              l10n.lessonLeaveAction,
+              style: _lessonBodyStyle(
+                l10n.lessonLeaveAction,
+                Theme.of(dialogContext).textTheme.labelLarge,
+              ),
+            ),
           ),
         ],
       ),
@@ -823,6 +1093,9 @@ class _LessonExperienceScreenState
               exerciseId: exercise.id,
               answer: answer,
             );
+      if (authenticated && result.correct) {
+        ref.read(questProgressSyncProvider).nudge();
+      }
       final guestCheckCount = authenticated
           ? null
           : await ref.read(guestAnswerCheckCounterProvider).recordCheck();
@@ -833,19 +1106,9 @@ class _LessonExperienceScreenState
         setState(() {
           _activeSectionIndex = section.index;
           _results[exercise.id] = result;
-          if (result.correct) _feedbackExerciseId = exercise.id;
+          _feedbackExerciseId = exercise.id;
         });
         _soundForAnswer(result, section);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          final feedbackContext = _feedbackAnchor.currentContext;
-          if (!mounted || feedbackContext == null) return;
-          Scrollable.ensureVisible(
-            feedbackContext,
-            alignment: 0.3,
-            duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-            curve: RiksaMotion.standardCurve,
-          );
-        });
       }
       if (!authenticated && result.correct && guestCheckCount! >= 3) {
         await _showSaveProgressPrompt();
@@ -920,6 +1183,7 @@ class _LessonExperienceScreenState
       ref
         ..invalidate(profileDashboardProvider)
         ..invalidate(profileRankProvider);
+      ref.read(questProgressSyncProvider).nudge();
       await ref.read(lessonCatalogProvider.notifier).load();
       // The roadmap owns this lesson's completed state, and the home screen
       // derives its counts and its resume target from every roadmap. Both are
@@ -1020,19 +1284,29 @@ class _LessonExperienceScreenState
                 Text(
                   l10n.guestSaveProgressBuddyLine,
                   textAlign: TextAlign.center,
-                  style: Theme.of(sheetContext).textTheme.bodyMedium,
+                  style: _lessonBodyStyle(
+                    l10n.guestSaveProgressBuddyLine,
+                    Theme.of(sheetContext).textTheme.bodyMedium,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   l10n.guestSaveProgressTitle,
                   textAlign: TextAlign.center,
-                  style: Theme.of(sheetContext).textTheme.headlineSmall,
+                  style: RiksaTypography.titleStyleFor(
+                    l10n.guestSaveProgressTitle,
+                    Theme.of(sheetContext).textTheme.headlineSmall,
+                    khmerHeight: 1.5,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   l10n.guestSaveProgressBody,
                   textAlign: TextAlign.center,
-                  style: Theme.of(sheetContext).textTheme.bodyLarge,
+                  style: _lessonBodyStyle(
+                    l10n.guestSaveProgressBody,
+                    Theme.of(sheetContext).textTheme.bodyLarge,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
@@ -1048,13 +1322,25 @@ class _LessonExperienceScreenState
                       });
                     },
                     icon: const Icon(Icons.login_rounded),
-                    label: Text(l10n.guestSaveProgressSignIn),
+                    label: Text(
+                      l10n.guestSaveProgressSignIn,
+                      style: _lessonBodyStyle(
+                        l10n.guestSaveProgressSignIn,
+                        Theme.of(sheetContext).textTheme.labelLarge,
+                      ),
+                    ),
                   ),
                 ),
                 TextButton(
                   key: const ValueKey('guest-save-progress-later'),
                   onPressed: () => Navigator.of(sheetContext).pop(),
-                  child: Text(l10n.guestSaveProgressLater),
+                  child: Text(
+                    l10n.guestSaveProgressLater,
+                    style: _lessonBodyStyle(
+                      l10n.guestSaveProgressLater,
+                      Theme.of(sheetContext).textTheme.labelLarge,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1099,22 +1385,44 @@ class _LessonExperienceScreenState
             children: [
               Text(
                 strings.reminderPermissionTitle,
-                style: Theme.of(sheetContext).textTheme.titleLarge,
+                style: RiksaTypography.titleStyleFor(
+                  strings.reminderPermissionTitle,
+                  Theme.of(sheetContext).textTheme.titleLarge,
+                  khmerHeight: 1.5,
+                ),
               ),
               const SizedBox(height: 10),
-              Text(strings.reminderPermissionBody(buddyName)),
+              Text(
+                strings.reminderPermissionBody(buddyName),
+                style: _lessonBodyStyle(
+                  strings.reminderPermissionBody(buddyName),
+                  Theme.of(sheetContext).textTheme.bodyLarge,
+                ),
+              ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: () => Navigator.of(sheetContext).pop(true),
-                  child: Text(strings.reminderPermissionAllow),
+                  child: Text(
+                    strings.reminderPermissionAllow,
+                    style: _lessonBodyStyle(
+                      strings.reminderPermissionAllow,
+                      Theme.of(sheetContext).textTheme.labelLarge,
+                    ),
+                  ),
                 ),
               ),
               TextButton(
                 key: const ValueKey('reminder-permission-cancel'),
                 onPressed: () => Navigator.of(sheetContext).pop(false),
-                child: Text(strings.cancel),
+                child: Text(
+                  strings.cancel,
+                  style: _lessonBodyStyle(
+                    strings.cancel,
+                    Theme.of(sheetContext).textTheme.labelLarge,
+                  ),
+                ),
               ),
             ],
           ),
@@ -1207,9 +1515,20 @@ class _LessonExperienceScreenState
   bool _isCorrect(LessonExercise exercise) =>
       _results[exercise.id]?.correct == true;
 
-  void _showError(Object error) => ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(_friendlyLessonError(error))));
+  void _showError(Object error) {
+    final message = _friendlyLessonError(error);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: _lessonBodyStyle(
+            message,
+            Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _PixelAlertIcon extends StatelessWidget {
@@ -1292,205 +1611,74 @@ class _LessonSection {
   final List<LessonExercise> exercises;
 }
 
-class _LessonResourcesCallout extends ConsumerWidget {
-  const _LessonResourcesCallout({
-    required this.lessonId,
-    required this.lessonTitle,
-    required this.onOpen,
-  });
-
-  final String lessonId;
-  final String lessonTitle;
-  final VoidCallback onOpen;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final count =
-        ref.watch(lessonResourcesProvider(lessonId)).value?.resources.length ??
-        0;
-    return Card(
-      child: ListTile(
-        key: const ValueKey('lesson-resources-end-entry'),
-        leading: const Icon(Icons.library_books_outlined),
-        title: Text(l10n.resourceEntryCount(count)),
-        subtitle: Text(
-          lessonTitle,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: const Icon(Icons.chevron_right_rounded),
-        onTap: onOpen,
-      ),
-    );
-  }
-}
-
 class _LessonBarDelegate extends SliverPersistentHeaderDelegate {
   const _LessonBarDelegate({
-    required this.lessonId,
     required this.flow,
     required this.topInset,
-    required this.controlsHeight,
     required this.palette,
-    required this.backTooltip,
-    required this.askAiTooltip,
     required this.onBack,
-    required this.onAskAi,
-    required this.onSections,
-    required this.onResources,
+    required this.onOptions,
   });
-  final String lessonId, backTooltip, askAiTooltip;
   final _LessonFlow flow;
-  final double topInset, controlsHeight;
+  final double topInset;
   final RiksaPalette palette;
-  final VoidCallback onBack, onAskAi, onSections, onResources;
+  final VoidCallback onBack, onOptions;
 
-  double get _rowHeight => math.max(48, controlsHeight + 16);
   @override
-  double get maxExtent => topInset + _rowHeight + 20;
+  double get maxExtent => topInset + 56;
   @override
   double get minExtent => maxExtent;
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlaps) {
     final l10n = AppLocalizations.of(context)!;
-    final position = flow.sections.indexOf(flow.section) + 1;
     return ColoredBox(
       color: palette.canvas,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(20, topInset, 20, 8),
-        child: Column(
-          children: [
-            SizedBox(
-              height: _rowHeight,
-              child: Row(
-                children: [
-                  LearningCircleButton(
-                    icon: Icons.arrow_back_rounded,
-                    tooltip: backTooltip,
-                    onTap: onBack,
-                  ),
-                  Expanded(
-                    child: TextButton(
-                      key: const ValueKey('lesson-sections'),
-                      onPressed: onSections,
-                      child: Semantics(
-                        label: l10n.lessonSectionCounter(
-                          position,
-                          flow.sections.length,
-                        ),
-                        excludeSemantics: true,
-                        child: Text(
-                          '$position / ${flow.sections.length}',
-                          style: _StepCounter.styleFor(context),
-                        ),
-                      ),
-                    ),
-                  ),
-                  LearningCircleButton(
-                    key: const ValueKey('lesson-ask-ai'),
-                    icon: Icons.auto_awesome_rounded,
-                    tooltip: askAiTooltip,
-                    onTap: onAskAi,
-                  ),
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final saved = ref
-                          .watch(savedLessonsProvider)
-                          .contains(lessonId);
-                      final sound = ref.watch(soundEnabledProvider);
-                      final resourceCount =
-                          ref
-                              .watch(lessonResourcesProvider(lessonId))
-                              .value
-                              ?.resources
-                              .length ??
-                          0;
-                      return PopupMenuButton<String>(
-                        key: const ValueKey('lesson-options'),
-                        tooltip: l10n.lessonOptions,
-                        icon: const Icon(Icons.more_horiz_rounded),
-                        onSelected: (value) {
-                          if (value == 'save') {
-                            if (!requireAccount(
-                              context,
-                              ref,
-                              reason: 'save_lesson',
-                            )) {
-                              return;
-                            }
-                            ref
-                                .read(savedLessonsProvider.notifier)
-                                .toggle(lessonId);
-                          }
-                          if (value == 'sound') {
-                            ref.read(soundEnabledProvider.notifier).toggle();
-                          }
-                          if (value == 'resources') onResources();
-                        },
-                        itemBuilder: (_) => [
-                          PopupMenuItem(
-                            value: 'resources',
-                            key: const ValueKey('lesson-resources-open'),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: const Icon(Icons.library_books_outlined),
-                              title: Text(
-                                l10n.resourceEntryCount(resourceCount),
-                              ),
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'save',
-                            key: const ValueKey('lesson-bookmark-toggle'),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: Icon(
-                                saved
-                                    ? Icons.bookmark_rounded
-                                    : Icons.bookmark_border_rounded,
-                              ),
-                              title: Text(
-                                saved ? l10n.lessonUnsave : l10n.lessonSave,
-                              ),
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'sound',
-                            key: const ValueKey('lesson-sound-toggle'),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: Icon(
-                                sound
-                                    ? Icons.volume_up_rounded
-                                    : Icons.volume_off_rounded,
-                              ),
-                              title: Text(
-                                sound ? l10n.lessonMute : l10n.lessonUnmute,
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
+        padding: EdgeInsets.fromLTRB(20, topInset + 4, 20, 4),
+        child: SizedBox(
+          height: 48,
+          child: Row(
+            children: [
+              RiksaBackButton(
+                key: const ValueKey('lesson-back'),
+                fallbackLocation: '/learn',
+                onPressed: onBack,
+                constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: palette.ink,
+                  padding: EdgeInsets.zero,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Semantics(
-              label: l10n.lessonSectionCounter(position, flow.sections.length),
-              value: '${(flow.progress * 100).round()}%',
-              child: LearningTrack(
-                key: const ValueKey('lesson-progress-track'),
-                value: flow.progress,
-                color: AppColors.progressGreen,
-                background: palette.surfaceRaised,
-                height: 8,
+              const SizedBox(width: RiksaSpacing.sm),
+              Expanded(
+                child: Semantics(
+                  label: l10n.lessonSectionCounter(
+                    flow.sections.indexOf(flow.section) + 1,
+                    flow.sections.length,
+                  ),
+                  value: '${(flow.progress * 100).round()}%',
+                  child: LearningTrack(
+                    key: const ValueKey('lesson-progress-track'),
+                    value: flow.progress,
+                    color: palette.brand,
+                    background: palette.surfaceRaised,
+                    height: 3,
+                  ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: RiksaSpacing.sm),
+              IconButton(
+                key: const ValueKey('lesson-options'),
+                tooltip: l10n.lessonOptions,
+                onPressed: onOptions,
+                icon: const Icon(Icons.more_horiz_rounded),
+                constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                color: palette.inkMuted,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1515,7 +1703,10 @@ class _LessonIdentity extends StatelessWidget {
             subject,
             Theme.of(
               context,
-            ).textTheme.labelMedium?.copyWith(color: context.riksa.inkMuted),
+            ).textTheme.labelMedium?.copyWith(
+              color: context.riksa.inkMuted,
+              height: RiksaTypography.containsKhmer(subject) ? 1.6 : null,
+            ),
           ),
         ),
         const SizedBox(height: 4),
@@ -1526,6 +1717,7 @@ class _LessonIdentity extends StatelessWidget {
             Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+            khmerHeight: 1.5,
           ),
         ),
       ],
@@ -1533,41 +1725,20 @@ class _LessonIdentity extends StatelessWidget {
   );
 }
 
-/// The learner's buddy standing in its own scene at the head of every step,
-/// its mood following where they are in the lesson.
-///
-/// The scene is a band above the content, never behind it: the lesson text
-/// stays on the plain canvas so it reads at 9pm on a cheap phone. The buddy
-/// does not fidget or doze here ([MascotView.alive] is off), so it keeps the
-/// learner company without pulling their eye off the work.
+/// A small, quiet mascot scene shown only on the lesson's Read step.
 class _LessonBuddyScene extends ConsumerWidget {
-  const _LessonBuddyScene({required this.subject, required this.phase});
+  const _LessonBuddyScene({required this.subject});
   final String subject;
-  final _LessonPhase phase;
-
-  /// While answering, the scene shrinks to a strip so the exercise and its
-  /// feedback stay above the fold on a 360dp phone.
-  bool get _compact =>
-      phase == _LessonPhase.practising || phase == _LessonPhase.answerChecked;
-
-  MascotMood get _mood => switch (phase) {
-    _LessonPhase.reading => MascotMood.idle,
-    _LessonPhase.practising => MascotMood.thinking,
-    _LessonPhase.answerChecked => MascotMood.happy,
-    _LessonPhase.sectionPassed => MascotMood.celebrate,
-    _LessonPhase.reflecting => MascotMood.happy,
-  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final species =
         ref.watch(mascotProvider).profile?.species ?? MascotSpecies.crocodile;
-    final reactions = ref.watch(buddyReactionsEnabledProvider);
     final stem = stemSubjectFor(subject);
     return ExcludeSemantics(
       child: Container(
         key: const ValueKey('lesson-buddy-scene'),
-        height: _compact ? 92 : 168,
+        height: 116,
         decoration: const BoxDecoration(
           borderRadius: AppRadii.extraLargeBorder,
         ),
@@ -1588,15 +1759,15 @@ class _LessonBuddyScene extends ConsumerWidget {
             ),
             Positioned(
               left: RiksaSpacing.md,
-              top: RiksaSpacing.md,
-              child: StemSubjectTile(subject: stem, size: _compact ? 40 : 52),
+              top: RiksaSpacing.sm,
+              child: StemSubjectTile(subject: stem, size: 42),
             ),
             Align(
               alignment: const Alignment(0, 1.08),
               child: MascotView(
                 species: species,
-                mood: reactions ? _mood : MascotMood.idle,
-                size: _compact ? 76 : 128,
+                mood: MascotMood.idle,
+                size: 88,
                 alive: false,
               ),
             ),
@@ -1605,14 +1776,6 @@ class _LessonBuddyScene extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _StepCounter {
-  static TextStyle styleFor(BuildContext context) => TextStyle(
-    fontSize: 13,
-    fontWeight: FontWeight.w600,
-    color: context.riksa.ink,
-  );
 }
 
 class _JourneyStages extends StatelessWidget {
@@ -1628,81 +1791,41 @@ class _JourneyStages extends StatelessWidget {
     };
     final labels = [l10n.lessonRead, l10n.lessonRespond, l10n.lessonReflect];
     final palette = context.riksa;
-    // Numbered circles joined by a rail, as on the reference step indicator.
-    // Labels give way first when space runs out, so large text never pushes
-    // the row past the screen edge.
-    return Row(
-      children: [
-        for (var i = 0; i < labels.length; i++) ...[
-          if (i > 0)
-            Expanded(
-              child: Container(
-                height: 2,
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-                color: i <= active ? palette.brand : palette.outline,
+    return Semantics(
+      label: labels.join(', '),
+      child: Wrap(
+        alignment: WrapAlignment.start,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: RiksaSpacing.xs,
+        runSpacing: 2,
+        children: [
+          for (var i = 0; i < labels.length; i++) ...[
+            if (i > 0)
+              ExcludeSemantics(
+                child: Text('·', style: TextStyle(color: palette.inkFaint)),
               ),
-            ),
-          Flexible(
-            flex: 4,
-            child: Semantics(
+            Semantics(
               selected: i == active,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  MediaQuery.withNoTextScaling(
-                    child: Container(
-                      width: 26,
-                      height: 26,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: i <= active ? palette.brand : palette.surface,
-                        border: Border.all(
-                          color: i <= active ? palette.brand : palette.outline,
-                        ),
-                      ),
-                      child: i < active
-                          ? Icon(
-                              Icons.check_rounded,
-                              size: 15,
-                              color: palette.onBrand,
-                            )
-                          : Text(
-                              '${i + 1}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: i == active
-                                    ? palette.onBrand
-                                    : palette.inkMuted,
-                              ),
-                            ),
-                    ),
+              child: Text(
+                labels[i],
+                style: RiksaTypography.bodyStyleFor(
+                  labels[i],
+                  TextStyle(
+                    fontSize: 12,
+                    fontWeight: i == active
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                    color: i == active ? palette.brand : palette.inkFaint,
+                    height: RiksaTypography.containsKhmer(labels[i])
+                        ? 1.6
+                        : null,
                   ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      labels[i],
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: RiksaTypography.bodyStyleFor(
-                        labels[i],
-                        TextStyle(
-                          fontSize: 12,
-                          fontWeight: i == active
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: i == active ? palette.ink : palette.inkMuted,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -1718,9 +1841,8 @@ class _JourneyStages extends StatelessWidget {
 /// the action stays in the same place for every question in the lesson.
 class _ExerciseCard extends StatelessWidget {
   const _ExerciseCard({
-    required this.number,
+    super.key,
     required this.exercise,
-    this.lessonTitle,
     required this.controller,
     required this.result,
     required this.submitting,
@@ -1729,13 +1851,9 @@ class _ExerciseCard extends StatelessWidget {
     required this.showChoices,
     required this.workingExpanded,
     required this.onExpandWorking,
-    required this.onCompare,
     required this.onEditWorking,
-    required this.feedbackKey,
   });
-  final int number;
   final LessonExercise exercise;
-  final String? lessonTitle;
   final TextEditingController controller;
   final LessonAnswerResult? result;
   final bool submitting;
@@ -1744,478 +1862,198 @@ class _ExerciseCard extends StatelessWidget {
   final bool showChoices;
   final bool workingExpanded;
   final VoidCallback onExpandWorking;
-  final VoidCallback onCompare;
   final VoidCallback onEditWorking;
-  final Key feedbackKey;
 
-  void _askAiHint(BuildContext context) {
-    final optionsText = exercise.options.isNotEmpty
-        ? '\nOptions: ${exercise.options.join(", ")}'
-        : '';
-    final hintContext =
-        '''
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final children = <Widget>[
+      MarkdownBody(
+        key: ValueKey('lesson-question-${exercise.id}'),
+        inlineSyntaxes: markdownMathSyntaxes,
+        builders: markdownMathBuilders,
+        data: exercise.question,
+        styleSheet: _lessonMarkdownStyleSheet(
+          context,
+          hasKhmer: RiksaTypography.containsKhmer(exercise.question),
+          questionHero: true,
+        ),
+      ),
+      const SizedBox(height: RiksaSpacing.md),
+    ];
+
+    if (exercise.type == LessonExerciseType.text) {
+      children.add(
+        TextField(
+          key: ValueKey('lesson-answer-${exercise.id}'),
+          minLines: 2,
+          maxLines: 6,
+          controller: controller,
+          enabled: result == null && !submitting,
+          textInputAction: TextInputAction.done,
+          onChanged: (_) => onAnswerChanged(),
+          style: _lessonBodyStyle(
+            controller.text,
+            Theme.of(context).textTheme.bodyLarge,
+          ),
+          decoration: InputDecoration(
+            hintText: l10n.lessonAnswerHint,
+            hintStyle: _lessonBodyStyle(
+              l10n.lessonAnswerHint,
+              TextStyle(color: context.riksa.inkMuted),
+            ),
+            filled: true,
+            fillColor: context.riksa.surface,
+          ),
+        ),
+      );
+    } else if (showChoices) {
+      if (working.text.trim().isNotEmpty) {
+        children.add(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: RiksaSpacing.xs),
+                  child: Text(
+                    working.text,
+                    style: _lessonBodyStyle(
+                      working.text,
+                      Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.riksa.inkMuted,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (result == null)
+                IconButton(
+                  key: ValueKey('lesson-edit-working-${exercise.id}'),
+                  tooltip: l10n.lessonEditWorking,
+                  onPressed: onEditWorking,
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  constraints: const BoxConstraints.tightFor(
+                    width: 48,
+                    height: 48,
+                  ),
+                ),
+            ],
+          ),
+        );
+        children.add(const SizedBox(height: RiksaSpacing.xs));
+      }
+      children.add(
+        LessonChoiceAnswers(
+          exercise: exercise,
+          controller: controller,
+          enabled: result == null && !submitting,
+          result: result,
+          onChanged: onAnswerChanged,
+        ),
+      );
+    } else {
+      if (workingExpanded) {
+        children.add(
+          TextField(
+            key: ValueKey('lesson-working-${exercise.id}'),
+            controller: working,
+            style: _lessonBodyStyle(
+              l10n.lessonWorkHint,
+              Theme.of(context).textTheme.bodyLarge,
+            ),
+            minLines: 3,
+            maxLines: 6,
+            onChanged: (_) => onAnswerChanged(),
+            decoration: InputDecoration(
+              hintText: l10n.lessonWorkHint,
+              filled: true,
+              fillColor: context.riksa.surface,
+            ),
+          ),
+        );
+      } else {
+        children.add(
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              key: ValueKey('lesson-add-working-${exercise.id}'),
+              onPressed: onExpandWorking,
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: Text(
+                l10n.lessonWriteWorking,
+                style: _lessonBodyStyle(
+                  l10n.lessonWriteWorking,
+                  Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: context.riksa.inkMuted,
+                  ),
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                alignment: AlignmentDirectional.centerStart,
+                foregroundColor: context.riksa.inkMuted,
+                side: BorderSide(color: context.riksa.outline),
+                minimumSize: const Size.fromHeight(52),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: RiksaSpacing.md,
+                  vertical: RiksaSpacing.sm,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppRadii.mediumBorder,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    return Column(
+      key: key,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
+    );
+  }
+}
+
+void _askAiHint(
+  BuildContext context,
+  LessonExercise exercise,
+  String lessonTitle,
+) {
+  final optionsText = exercise.options.isNotEmpty
+      ? '\nOptions: ${exercise.options.join(", ")}'
+      : '';
+  final hintContext =
+      '''
 Exercise Hint Request:
-Lesson: ${lessonTitle ?? "STEM Lesson"}
+Lesson: $lessonTitle
 Question: ${exercise.question}
 Type: ${exercise.type.name}$optionsText
 
 Learner Goal: Provide a progressive Socratic hint in Khmer/English to help the student think through this question without giving away the direct answer.
 ''';
-    context.push('/ai/chat/new', extra: hintContext);
-  }
+  context.push('/ai/chat/new', extra: hintContext);
+}
 
-  void _explainErrorWithAi(BuildContext context) {
-    final userAnswer = controller.text.trim();
-    final explainContext =
-        '''
+void _explainErrorWithAi(
+  BuildContext context,
+  LessonExercise exercise,
+  String lessonTitle,
+  String userAnswer,
+) {
+  final selectedAnswer = userAnswer.isEmpty ? 'None selected' : userAnswer;
+  final explainContext =
+      '''
 Exercise Error Analysis:
-Lesson: ${lessonTitle ?? "STEM Lesson"}
+Lesson: $lessonTitle
 Question: ${exercise.question}
-Learner Selected Answer: ${userAnswer.isEmpty ? "None selected" : userAnswer}
+Learner Selected Answer: $selectedAnswer
 ${exercise.hint != null ? "Static Hint: ${exercise.hint}" : ""}
 
-Learner Goal: Explain why '${userAnswer.isEmpty ? "the selected answer" : userAnswer}' is incorrect, breakdown the core concept step-by-step in Khmer/English, and guide the student to the correct solution.
+Learner Goal: Explain why '$selectedAnswer' is incorrect, breakdown the core concept step-by-step in Khmer/English, and guide the student to the correct solution.
 ''';
-    context.push('/ai/chat/new', extra: explainContext);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.riksa;
-    final l10n = AppLocalizations.of(context)!;
-    final correct = result?.correct == true;
-    final incorrect = result != null && !correct;
-    final explanation = result?.explanation ?? exercise.explanation;
-    return Container(
-      key: ValueKey('lesson-exercise-${exercise.id}'),
-      padding: const EdgeInsets.all(RiksaSpacing.md + 2),
-      decoration: BoxDecoration(
-        color: palette.surface,
-        borderRadius: AppRadii.extraLargeBorder,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                l10n.lessonExerciseNumber(number),
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: palette.ink,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: RiksaSpacing.sm),
-          MarkdownBody(
-            data: exercise.question,
-            styleSheet: _lessonMarkdownStyleSheet(
-              context,
-              hasKhmer: RiksaTypography.containsKhmer(exercise.question),
-            ),
-          ),
-          const SizedBox(height: RiksaSpacing.md),
-          if (exercise.type != LessonExerciseType.text && !showChoices) ...[
-            Text(
-              l10n.lessonWorkFirst,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 8),
-            if (workingExpanded)
-              TextField(
-                key: ValueKey('lesson-working-${exercise.id}'),
-                controller: working,
-                style: RiksaTypography.bodyStyleFor(
-                  l10n.lessonWorkHint,
-                  Theme.of(context).textTheme.bodyLarge,
-                ),
-                minLines: 3,
-                maxLines: 6,
-                onChanged: (_) => onAnswerChanged(),
-                decoration: InputDecoration(
-                  hintText: l10n.lessonWorkHint,
-                  filled: true,
-                  fillColor: palette.surfaceRaised,
-                ),
-              )
-            else
-              InkWell(
-                key: ValueKey('lesson-add-working-${exercise.id}'),
-                onTap: onExpandWorking,
-                borderRadius: AppRadii.mediumBorder,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    color: palette.surfaceRaised,
-                    borderRadius: AppRadii.mediumBorder,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(child: Text(l10n.lessonAddWorkingOptional)),
-                      Icon(Icons.edit_outlined, color: palette.inkMuted),
-                    ],
-                  ),
-                ),
-              ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: OutlinedButton(
-                key: ValueKey('lesson-worked-on-paper-${exercise.id}'),
-                onPressed: onCompare,
-                child: Text(l10n.lessonWorkedOnPaper),
-              ),
-            ),
-          ] else if (exercise.type == LessonExerciseType.text)
-            TextField(
-              key: ValueKey('lesson-answer-${exercise.id}'),
-              minLines: 2,
-              maxLines: 6,
-              controller: controller,
-              enabled: !correct && !submitting,
-              textInputAction: TextInputAction.done,
-              onChanged: (_) => onAnswerChanged(),
-              decoration: InputDecoration(
-                hintText: l10n.lessonAnswerHint,
-                filled: true,
-                fillColor: palette.surfaceRaised,
-                border: OutlineInputBorder(
-                  borderRadius: AppRadii.largeBorder,
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: AppRadii.largeBorder,
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            )
-          else ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _Feedback(
-                    label: l10n.lessonYourWork,
-                    text: working.text,
-                  ),
-                ),
-                if (!correct)
-                  IconButton(
-                    key: ValueKey('lesson-edit-working-${exercise.id}'),
-                    tooltip: l10n.lessonEditWorking,
-                    onPressed: onEditWorking,
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (!correct)
-              Text(
-                l10n.lessonChooseAnswer,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            const SizedBox(height: 12),
-            _ChoiceAnswers(
-              exercise: exercise,
-              controller: controller,
-              enabled: !correct && !submitting,
-              result: result,
-              onChanged: onAnswerChanged,
-            ),
-          ],
-          if (!correct) ...[
-            const SizedBox(height: RiksaSpacing.sm),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                key: const ValueKey('lesson-ai-hint'),
-                onPressed: () => _askAiHint(context),
-                icon: const Icon(Icons.lightbulb_outline_rounded, size: 18),
-                label: Text(l10n.lessonAiHint),
-                style: TextButton.styleFrom(
-                  foregroundColor: palette.inkMuted,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: RiksaSpacing.sm,
-                  ),
-                  shape: const StadiumBorder(),
-                ),
-              ),
-            ),
-          ],
-          if (result != null) ...[
-            const SizedBox(height: RiksaSpacing.sm),
-            Semantics(
-              key: feedbackKey,
-              liveRegion: true,
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: correct ? palette.jadeSoft : palette.creamSoft,
-                  borderRadius: AppRadii.largeBorder,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    BuddyFaceReaction(
-                      key: ValueKey(
-                        correct ? 'lesson-buddy-correct' : 'lesson-buddy-retry',
-                      ),
-                      face: BuddyBehavior.resolve(
-                        correct
-                            ? BuddyEvent.answerCorrect
-                            : BuddyEvent.answerIncorrect,
-                      ).face,
-                      size: 36,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            correct
-                                ? l10n.lessonAnswerSuccess
-                                : l10n.lessonAnswerRetry,
-                            style: RiksaTypography.bodyStyleFor(
-                              correct
-                                  ? l10n.lessonAnswerSuccess
-                                  : l10n.lessonAnswerRetry,
-                              Theme.of(context).textTheme.titleSmall,
-                            ),
-                          ),
-                          if (result!.message.trim().isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              result!.message,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                          if (explanation?.trim().isNotEmpty == true) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              l10n.lessonWhy,
-                              style: Theme.of(context).textTheme.labelLarge,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              explanation!,
-                              style: RiksaTypography.bodyStyleFor(
-                                explanation,
-                                Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (incorrect) ...[
-              const SizedBox(height: RiksaSpacing.xs),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: FilledButton.tonalIcon(
-                  onPressed: () => _explainErrorWithAi(context),
-                  icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                  label: Text(l10n.lessonExplainAnswer),
-                  style: FilledButton.styleFrom(shape: const StadiumBorder()),
-                ),
-              ),
-            ],
-            if (incorrect &&
-                (result!.hint ?? exercise.hint)?.trim().isNotEmpty == true)
-              _Feedback(
-                label: l10n.lessonHint,
-                text: result!.hint ?? exercise.hint!,
-              ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _ChoiceAnswers extends StatefulWidget {
-  const _ChoiceAnswers({
-    required this.exercise,
-    required this.controller,
-    required this.enabled,
-    required this.onChanged,
-    this.result,
-  });
-  final LessonExercise exercise;
-  final TextEditingController controller;
-  final bool enabled;
-  final VoidCallback onChanged;
-  final LessonAnswerResult? result;
-  @override
-  State<_ChoiceAnswers> createState() => _ChoiceAnswersState();
-}
-
-class _ChoiceAnswersState extends State<_ChoiceAnswers> {
-  static const _labels = ['A', 'B', 'C', 'D', 'E', 'F'];
-
-  @override
-  Widget build(BuildContext context) {
-    final isTrueFalse = widget.exercise.type == LessonExerciseType.trueFalse;
-    final options = isTrueFalse
-        ? const ['True', 'False']
-        : widget.exercise.options;
-
-    final selectedAnswer = widget.controller.text;
-    final isAttempted = widget.result != null;
-    final isCorrect = widget.result?.correct == true;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (var i = 0; i < options.length; i++) ...[
-          if (i > 0) const SizedBox(height: RiksaSpacing.xs),
-          _buildOptionCard(
-            context: context,
-            index: i,
-            option: options[i],
-            isTrueFalse: isTrueFalse,
-            isSelected: selectedAnswer == options[i],
-            isAttempted: isAttempted,
-            isCorrect: isCorrect,
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildOptionCard({
-    required BuildContext context,
-    required int index,
-    required String option,
-    required bool isTrueFalse,
-    required bool isSelected,
-    required bool isAttempted,
-    required bool isCorrect,
-  }) {
-    final theme = Theme.of(context);
-    final palette = context.riksa;
-    final anchor = learningAnchor(context);
-    final badgeLabel = isTrueFalse
-        ? (index == 0 ? 'T' : 'F')
-        : (index < _labels.length ? _labels[index] : '${index + 1}');
-
-    // Unselected options are quiet fields. Only the chosen one takes colour,
-    // and only after a check does that colour mean right or wrong.
-    Color background = palette.surfaceRaised;
-    Color badgeBackground = palette.surface;
-    Color badgeInk = palette.inkMuted;
-    Color ink = palette.ink;
-    Widget? trailing;
-
-    if (isSelected) {
-      if (isAttempted && isCorrect) {
-        background = palette.jadeSoft;
-        badgeBackground = palette.jade;
-        badgeInk = palette.onJade;
-        trailing = Icon(Icons.check_rounded, color: palette.jade, size: 20);
-      } else if (isAttempted) {
-        background = theme.colorScheme.errorContainer;
-        badgeBackground = theme.colorScheme.error;
-        badgeInk = theme.colorScheme.onError;
-        ink = theme.colorScheme.onErrorContainer;
-        trailing = Icon(
-          Icons.close_rounded,
-          color: theme.colorScheme.error,
-          size: 20,
-        );
-      } else {
-        background = anchor;
-        badgeBackground = onLearningAnchor(context);
-        badgeInk = anchor;
-        ink = onLearningAnchor(context);
-      }
-    }
-
-    return RiksaTapFeedback(
-      enabled: widget.enabled,
-      child: Material(
-        color: background,
-        borderRadius: AppRadii.largeBorder,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          key: ValueKey('lesson-option-$index'),
-          onTap: widget.enabled
-              ? () {
-                  setState(() => widget.controller.text = option);
-                  widget.onChanged();
-                }
-              : null,
-          child: AnimatedPadding(
-            duration: RiksaMotion.resolve(context, RiksaMotion.fast),
-            padding: const EdgeInsets.symmetric(
-              horizontal: RiksaSpacing.md - 2,
-              vertical: RiksaSpacing.sm + 2,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: badgeBackground,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    badgeLabel,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: badgeInk,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: RiksaSpacing.sm),
-                Expanded(
-                  child: Text(
-                    option,
-                    style: RiksaTypography.bodyStyleFor(
-                      option,
-                      theme.textTheme.bodyMedium?.copyWith(
-                        color: ink,
-                        fontWeight: isSelected
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                ),
-                ?trailing,
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Feedback extends StatelessWidget {
-  const _Feedback({required this.label, required this.text});
-  final String label;
-  final String text;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: RiksaSpacing.xs),
-    child: Text(
-      '$label: $text',
-      style: TextStyle(color: context.riksa.inkMuted, fontSize: 13),
-    ),
-  );
+  context.push('/ai/chat/new', extra: explainContext);
 }
 
 class _NoExercises extends StatelessWidget {
@@ -2279,6 +2117,7 @@ extension<T> on Iterable<T> {
 MarkdownStyleSheet _lessonMarkdownStyleSheet(
   BuildContext context, {
   required bool hasKhmer,
+  bool questionHero = false,
 }) {
   final theme = Theme.of(context);
   final palette = context.riksa;
@@ -2295,8 +2134,11 @@ MarkdownStyleSheet _lessonMarkdownStyleSheet(
             RiksaTypography.khmerLegacyBodyFamily,
             RiksaTypography.khmerFamily,
             RiksaTypography.latinFamily,
-          ]
+        ]
         : RiksaTypography.fallback,
+    height: hasKhmer && (style?.height ?? 0) < 1.5
+        ? 1.6
+        : style?.height,
   );
   TextStyle heading(TextStyle? style) => (style ?? const TextStyle()).copyWith(
     fontFamily: titleFont,
@@ -2305,13 +2147,31 @@ MarkdownStyleSheet _lessonMarkdownStyleSheet(
         : RiksaTypography.fallback,
     fontWeight: hasKhmer ? FontWeight.w400 : style?.fontWeight,
   );
-  final paragraph = body(theme.textTheme.bodyLarge?.copyWith(height: 1.75));
+  final paragraph = body(
+    theme.textTheme.bodyLarge?.copyWith(
+      fontSize: questionHero ? 20 : null,
+      fontWeight: questionHero ? FontWeight.w600 : null,
+      height: questionHero ? (hasKhmer ? 1.7 : 1.4) : 1.75,
+    ),
+  );
   return MarkdownStyleSheet.fromTheme(theme).copyWith(
     p: paragraph,
     pPadding: const EdgeInsets.only(bottom: 4),
-    h1: heading(theme.textTheme.headlineLarge?.copyWith(height: 1.4)),
-    h2: heading(theme.textTheme.headlineMedium?.copyWith(height: 1.4)),
-    h3: heading(theme.textTheme.titleLarge?.copyWith(height: 1.5)),
+    h1: heading(
+      theme.textTheme.headlineLarge?.copyWith(
+        height: hasKhmer ? 1.6 : 1.4,
+        fontSize: questionHero ? 22 : null,
+      ),
+    ),
+    h2: heading(
+      theme.textTheme.headlineMedium?.copyWith(
+        height: hasKhmer ? 1.6 : 1.4,
+        fontSize: questionHero ? 21 : null,
+      ),
+    ),
+    h3: heading(
+      theme.textTheme.titleLarge?.copyWith(height: hasKhmer ? 1.6 : 1.5),
+    ),
     h1Padding: const EdgeInsets.only(top: 8, bottom: 6),
     h2Padding: const EdgeInsets.only(top: 8, bottom: 5),
     h3Padding: const EdgeInsets.only(top: 8, bottom: 4),
@@ -2328,33 +2188,9 @@ MarkdownStyleSheet _lessonMarkdownStyleSheet(
   );
 }
 
-/// Contextual way into the tutor: the student is stuck on this lesson, right
-/// now, and the tutor is told which lesson that is.
-class _AskTutorButton extends StatelessWidget {
-  const _AskTutorButton({
-    required this.lessonTitle,
-    required this.learningContext,
-  });
-
-  final String lessonTitle;
-  final String learningContext;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        key: const ValueKey('ask-tutor-about-lesson'),
-        onPressed: () => context.push(
-          '/ai/chat/new'
-          '?lesson=${Uri.encodeQueryComponent(lessonTitle)}'
-          '&context=${Uri.encodeQueryComponent(learningContext)}',
-        ),
-        icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-        label: Text(l10n.aiAskAboutLesson),
-        style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-      ),
-    );
-  }
+TextStyle? _lessonBodyStyle(String text, TextStyle? style) {
+  final resolved = RiksaTypography.bodyStyleFor(text, style);
+  if (!RiksaTypography.containsKhmer(text)) return resolved;
+  final height = resolved?.height;
+  return resolved?.copyWith(height: height == null || height < 1.5 ? 1.6 : height);
 }

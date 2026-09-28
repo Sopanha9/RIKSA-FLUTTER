@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/data/auth_api.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../quests/providers/today_quests_provider.dart';
 import '../../userProfile/providers/profile_provider.dart';
 import '../data/social_api.dart';
 import '../data/social_models.dart';
@@ -12,6 +13,9 @@ import '../data/social_models.dart';
 final socialApiProvider = Provider<SocialApi>((ref) {
   return SocialApi(ref.watch(dioClientProvider));
 });
+
+/// The XP ledger source the server's streak counts (see StreakService).
+const lessonCompletionSource = 'LESSON_COMPLETION';
 
 final communityStreakProvider = FutureProvider<CommunityStreak>((ref) async {
   watchCurrentUserId(ref);
@@ -23,10 +27,15 @@ final communityStreakProvider = FutureProvider<CommunityStreak>((ref) async {
 
   // The streak summary endpoint currently omits dates. Use real XP activity as
   // a non-blocking history fallback until the endpoint exposes them directly.
+  // Only lesson completions count: the server's streak grows on those alone,
+  // so a day with just a post or a quest must not be marked as kept.
   try {
     final activity = await ref.watch(profileApiProvider).xpActivity(limit: 50);
     return streak.withActivityDates(
-      activity.activities.map((item) => item.createdAt).whereType<DateTime>(),
+      activity.activities
+          .where((item) => item.sourceType == lessonCompletionSource)
+          .map((item) => item.createdAt)
+          .whereType<DateTime>(),
     );
   } on Object {
     return streak;
@@ -196,6 +205,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
       final updated = await ref
           .read(socialApiProvider)
           .react(postId: postId, reaction: reaction);
+      if (!removing) ref.read(questProgressSyncProvider).nudge();
       if (requestVersion != _requestVersion) return false;
       final latest = state;
       if (latest is! SocialFeedLoaded) return false;
@@ -337,6 +347,49 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
     } catch (_) {
       return false;
     }
+  }
+
+  /// Refetches one post the feed is showing, after the server says its
+  /// reactions or comments changed. A post the feed does not hold is ignored.
+  Future<void> refreshPost(String postId) async {
+    final current = state;
+    if (current is! SocialFeedLoaded ||
+        !current.posts.any((post) => post.id == postId)) {
+      return;
+    }
+    final requestVersion = _requestVersion;
+    try {
+      final post = await ref.read(socialApiProvider).post(postId);
+      if (requestVersion == _requestVersion) syncPost(post);
+    } catch (_) {
+      // Hidden or deleted since; the next load settles it.
+    }
+  }
+
+  /// Puts a post published elsewhere at the top of the feed, if it belongs in
+  /// the community being viewed and is not already there.
+  Future<void> addIncomingPost(String postId) async {
+    final current = state;
+    if (current is! SocialFeedLoaded ||
+        current.posts.any((post) => post.id == postId)) {
+      return;
+    }
+    final requestVersion = _requestVersion;
+    final SocialPost post;
+    try {
+      post = await ref.read(socialApiProvider).post(postId);
+    } catch (_) {
+      return;
+    }
+    final latest = state;
+    if (requestVersion != _requestVersion ||
+        latest is! SocialFeedLoaded ||
+        latest.posts.any((item) => item.id == post.id)) {
+      return;
+    }
+    final category = latest.selectedCategoryId;
+    if (category != null && post.category.id != category) return;
+    state = latest.copyWith(posts: [post, ...latest.posts]);
   }
 
   void syncPost(SocialPost post) {

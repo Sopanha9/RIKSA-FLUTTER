@@ -75,8 +75,13 @@ class _BuddyPanelContentState extends ConsumerState<BuddyPanelContent> {
         ref.watch(mascotProvider).profile?.name ??
         MascotProfile.defaultName(MascotSpecies.crocodile);
     final activeAsync = _tab == _PanelTab.today ? todayAsync : weekAsync;
-    final isLoading = !widget.isGuest && activeAsync?.isLoading == true;
-    final hasError = !widget.isGuest && activeAsync?.hasError == true;
+    // A background refetch keeps showing the rows it is replacing; only a
+    // first load, with nothing to show yet, gets the spinner or the error.
+    final hasRows = activeAsync?.hasValue == true;
+    final isLoading =
+        !widget.isGuest && activeAsync?.isLoading == true && !hasRows;
+    final hasError =
+        !widget.isGuest && activeAsync?.hasError == true && !hasRows;
     final isReducedMotion = MediaQuery.disableAnimationsOf(context);
     final rows = _tab == _PanelTab.today
         ? today.quests.map(_fromDaily).toList(growable: false)

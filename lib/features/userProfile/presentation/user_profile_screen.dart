@@ -9,6 +9,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_bottom_navigation_bar.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/riksa_rank_badge.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_api.dart';
@@ -64,18 +66,21 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         builder: (context) => Scaffold(
           key: const ValueKey('personal-profile-scaffold'),
           backgroundColor: context.riksa.canvas,
-          floatingActionButton: AnimatedSlide(
-            duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-            curve: RiksaMotion.standardCurve,
-            offset: _showSavedShortcut ? Offset.zero : const Offset(1.2, 0),
-            child: AnimatedOpacity(
+          floatingActionButton: AboveBottomNavigation(
+            context: context,
+            child: AnimatedSlide(
               duration: RiksaMotion.resolve(context, RiksaMotion.standard),
-              opacity: _showSavedShortcut ? 1 : 0,
-              child: IgnorePointer(
-                ignoring: !_showSavedShortcut,
-                child: _SavedLessonsSideShortcut(
-                  label: l10n.menuSavedLessons,
-                  onTap: () => context.push('/learn/saved'),
+              curve: RiksaMotion.standardCurve,
+              offset: _showSavedShortcut ? Offset.zero : const Offset(1.2, 0),
+              child: AnimatedOpacity(
+                duration: RiksaMotion.resolve(context, RiksaMotion.standard),
+                opacity: _showSavedShortcut ? 1 : 0,
+                child: IgnorePointer(
+                  ignoring: !_showSavedShortcut,
+                  child: _SavedLessonsSideShortcut(
+                    label: l10n.menuSavedLessons,
+                    onTap: () => context.push('/learn/saved'),
+                  ),
                 ),
               ),
             ),
@@ -326,6 +331,19 @@ class _ProfileTopBar extends StatelessWidget {
     height: 44,
     child: Row(
       children: [
+        RiksaBackButton(
+          key: const ValueKey('profile-back'),
+          fallbackLocation: '/learn',
+          iconSize: 19,
+          // Same round surface as the share and settings actions beside it.
+          style: IconButton.styleFrom(
+            minimumSize: const Size.square(44),
+            backgroundColor: ProfilePalette.editorialSurface(context),
+            foregroundColor: context.riksa.ink,
+            side: BorderSide(color: context.riksa.outline),
+          ),
+        ),
+        const SizedBox(width: 8),
         ProfileIconAction(
           key: const ValueKey('profile-share'),
           tooltip: shareLabel,

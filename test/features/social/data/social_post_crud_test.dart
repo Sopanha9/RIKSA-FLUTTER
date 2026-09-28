@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:riksa_app/core/network/moderation_error.dart';
 import 'package:riksa_app/core/network/dio_client.dart';
 import 'package:riksa_app/core/storage/session_store.dart';
 import 'package:riksa_app/features/social/data/social_api.dart';
@@ -101,6 +102,42 @@ void main() {
       expect((adapter.variables?['input'] as Map)['media'], isEmpty);
     },
   );
+
+  test('SocialApi keeps GraphQL moderation details on its exception', () async {
+    final adapter = _GraphqlAdapter(
+      {},
+      errors: [
+        {
+          'message': 'Blocked',
+          'extensions': {
+            'code': 'CONTENT_BLOCKED',
+            'reasons': ['PROFANITY'],
+          },
+        },
+      ],
+    );
+
+    await expectLater(
+      apiWith(adapter).createPostWithMedia(
+        title: 'Post',
+        content: 'Body',
+        categoryId: 'category-1',
+      ),
+      throwsA(
+        isA<SocialApiException>()
+            .having(
+              (error) => error.moderationRejection?.kind,
+              'moderation kind',
+              ModerationRejectionKind.blocked,
+            )
+            .having(
+              (error) => error.moderationRejection?.reasons,
+              'moderation reasons',
+              ['PROFANITY'],
+            ),
+      ),
+    );
+  });
 
   test('updatePost clears photos with an empty list', () async {
     final adapter = _GraphqlAdapter({'updatePost': _postJson(title: 'Edited')});
@@ -256,9 +293,10 @@ class _StubApi implements SocialApi {
 }
 
 class _GraphqlAdapter implements HttpClientAdapter {
-  _GraphqlAdapter(this.data);
+  _GraphqlAdapter(this.data, {this.errors});
 
   final Map<String, dynamic> data;
+  final List<Map<String, dynamic>>? errors;
   String? query;
   Map<String, dynamic>? variables;
 
@@ -272,7 +310,7 @@ class _GraphqlAdapter implements HttpClientAdapter {
     query = (body['query'] as String?)?.replaceAll(RegExp(r'\s+'), ' ').trim();
     variables = (body['variables'] as Map?)?.cast<String, dynamic>();
     return ResponseBody.fromString(
-      jsonEncode({'data': data}),
+      jsonEncode({'data': data, if (errors != null) 'errors': errors}),
       200,
       headers: {
         Headers.contentTypeHeader: [Headers.jsonContentType],

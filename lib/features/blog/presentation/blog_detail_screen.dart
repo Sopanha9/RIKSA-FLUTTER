@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../mascot/providers/buddy_care_provider.dart';
@@ -18,6 +19,7 @@ import '../data/blog_models.dart';
 import '../providers/blog_provider.dart';
 import 'widgets/blog_ui.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../../core/widgets/markdown_math.dart';
 
 /// Long-form reading view for a single post.
 ///
@@ -254,7 +256,7 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.blogPostDeleted)),
       );
-      context.pop();
+      await RiksaBackButton.navigateBack(context, fallbackLocation: '/blog');
     } on DioException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -332,7 +334,10 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen>
               child: _ChromeButton(
                 icon: Icons.arrow_back_rounded,
                 tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                onPressed: () => context.pop(),
+                onPressed: () => RiksaBackButton.navigateBack(
+                  context,
+                  fallbackLocation: '/blog',
+                ),
                 onImage: post.hasCover && !_collapsed,
               ),
             ),
@@ -446,6 +451,8 @@ class _BlogDetailScreenState extends ConsumerState<BlogDetailScreen>
                       const BlogDivider(),
                       const SizedBox(height: RiksaSpacing.md),
                       MarkdownBody(
+                        inlineSyntaxes: markdownMathSyntaxes,
+                        builders: markdownMathBuilders,
                         key: const ValueKey('blog-post-markdown'),
                         data: post.markdownContent,
                         softLineBreak: true,
@@ -485,7 +492,10 @@ class _ChromeScaffold extends StatelessWidget {
               _ChromeButton(
                 icon: Icons.arrow_back_rounded,
                 tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                onPressed: () => context.pop(),
+                onPressed: () => RiksaBackButton.navigateBack(
+                  context,
+                  fallbackLocation: '/blog',
+                ),
                 onImage: false,
               ),
             ],

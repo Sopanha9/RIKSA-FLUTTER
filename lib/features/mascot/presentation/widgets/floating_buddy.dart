@@ -349,7 +349,9 @@ class _FloatingBuddyState extends ConsumerState<FloatingBuddy> {
               Navigator.of(context, rootNavigator: true).pop();
             }
             if (mounted) setState(() => _panelOpen = false);
-            router.go(path);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) router.push(path);
+            });
           },
           onClose: _closePanel,
         ),

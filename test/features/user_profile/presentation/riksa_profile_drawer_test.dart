@@ -194,7 +194,7 @@ void main() {
     expect(find.byType(RiksaProfileDrawer), findsNothing);
   });
 
-  testWidgets('keeps community posts and blog articles separate', (
+  testWidgets('opens the profile from the identity and articles separately', (
     tester,
   ) async {
     final router = GoRouter(
@@ -222,9 +222,10 @@ void main() {
     await tester.pumpWidget(_app(signedIn: true, router: router));
     await tester.pumpAndSettle();
     await _openDrawer(tester);
-    await tester.tap(find.byKey(const ValueKey('drawer-my-posts')));
+    await tester.tap(find.byKey(const ValueKey('drawer-identity')));
     await tester.pumpAndSettle();
     expect(find.text('community posts'), findsOneWidget);
+    expect(find.byKey(const ValueKey('drawer-my-posts')), findsNothing);
 
     router.go('/home');
     await tester.pumpAndSettle();

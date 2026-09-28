@@ -77,7 +77,10 @@ class HomeStudyBanner extends ConsumerWidget {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () => hasLesson
-                ? context.push('/learn/resume')
+                ? context.push(
+                    '/learn/${Uri.encodeComponent(lesson.id)}',
+                    extra: lesson,
+                  )
                 : context.go('/learn'),
             child: Column(
               mainAxisSize: MainAxisSize.min,

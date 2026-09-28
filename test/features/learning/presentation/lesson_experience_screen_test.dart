@@ -131,6 +131,68 @@ class _FakeLearningApiWithExercises extends _FakeLearningApi {
   );
 }
 
+class _AnswerCheckingApi extends _FakeLearningApiWithExercises {
+  @override
+  Future<LessonAnswerResult> checkAnswer({
+    required String lessonId,
+    required String exerciseId,
+    required String answer,
+  }) async => LessonAnswerResult(
+    exerciseId: exerciseId,
+    correct: true,
+    points: 10,
+    message: 'Correct! Unit of life',
+    explanation: 'A cell is the basic unit of life.',
+  );
+}
+
+class _WrongAnswerCheckingApi extends _FakeLearningApiWithExercises {
+  _WrongAnswerCheckingApi({
+    this.explanation = 'The correct answer is Unit of life.',
+  });
+
+  final String explanation;
+
+  @override
+  Future<LessonAnswerResult> checkAnswer({
+    required String lessonId,
+    required String exerciseId,
+    required String answer,
+  }) async => LessonAnswerResult(
+    exerciseId: exerciseId,
+    correct: false,
+    points: 0,
+    message: 'Try again.',
+    explanation: explanation,
+  );
+}
+
+class _KhmerPracticeApi extends _FakeLearningApi {
+  @override
+  Future<LessonDetail> lesson(String lessonId) async => const LessonDetail(
+    id: 'biology-km',
+    title: 'ជីវវិទ្យា',
+    description: 'មេរៀនអំពីកោសិកា',
+    difficulty: LessonDifficulty.easy,
+    baseXp: 10,
+    categoryId: 'biology',
+    categoryName: 'ជីវវិទ្យា',
+    reflectionPrompt: '',
+    exercises: [
+      LessonExercise(
+        id: 'ex-km',
+        type: LessonExerciseType.multipleChoice,
+        question: 'តើកោសិកាជាអ្វី?',
+        options: ['ឯកតាមូលដ្ឋាននៃជីវិត', 'រថយន្ត'],
+        difficulty: LessonDifficulty.easy,
+        points: 10,
+        completed: false,
+        sectionIndex: 0,
+      ),
+    ],
+  );
+}
+
 class _CountingLearningApi extends _FakeLearningApiWithExercises {
   int answerChecks = 0;
 
@@ -169,27 +231,31 @@ Widget _stillBuddy(BuildContext context, Widget? child) => MediaQuery(
   child: child!,
 );
 
-Widget _lessonApp({TextScaler textScaler = TextScaler.noScaling}) =>
-    ProviderScope(
-      overrides: [learningApiProvider.overrideWithValue(_FakeLearningApi())],
-      child: MaterialApp(
-        theme: AppTheme.light,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [Locale('en'), Locale('km')],
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: textScaler, disableAnimations: true),
-          child: child!,
-        ),
-        home: const LessonExperienceScreen(lessonId: 'biology-1'),
-      ),
-    );
+Widget _lessonApp({
+  TextScaler textScaler = TextScaler.noScaling,
+  Locale locale = const Locale('en'),
+  LearningApi? api,
+}) => ProviderScope(
+  overrides: [learningApiProvider.overrideWithValue(api ?? _FakeLearningApi())],
+  child: MaterialApp(
+    locale: locale,
+    theme: AppTheme.light,
+    localizationsDelegates: const [
+      AppLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: const [Locale('en'), Locale('km')],
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: textScaler, disableAnimations: true),
+      child: child!,
+    ),
+    home: const LessonExperienceScreen(lessonId: 'biology-1'),
+  ),
+);
 
 void main() {
   setUpAll(() async {
@@ -314,6 +380,38 @@ void main() {
     expect(title, findsNothing);
   });
 
+  testWidgets('lesson back and options controls have 48dp hit areas', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(_lessonApp());
+    await tester.pumpAndSettle();
+
+    for (final key in ['lesson-back', 'lesson-options']) {
+      final size = tester.getSize(find.byKey(ValueKey(key)));
+      expect(size.width, greaterThanOrEqualTo(48), reason: key);
+      expect(size.height, greaterThanOrEqualTo(48), reason: key);
+    }
+  });
+
+  testWidgets('progress is filled during Read and Respond', (tester) async {
+    await tester.pumpWidget(_lessonApp(api: _FakeLearningApiWithExercises()));
+    await tester.pumpAndSettle();
+
+    final track = find.byKey(const ValueKey('lesson-progress-track'));
+    final readProgress = tester.widget<LearningTrack>(track).value;
+    expect(readProgress, greaterThan(0));
+
+    await tester.tap(find.byKey(const ValueKey('start-section-0')));
+    await tester.pumpAndSettle();
+    final respondProgress = tester.widget<LearningTrack>(track).value;
+    expect(respondProgress, greaterThan(readProgress));
+  });
+
   testWidgets('the buddy stands in its scene at the head of the lesson', (
     tester,
   ) async {
@@ -349,6 +447,205 @@ void main() {
     expect(find.byKey(const ValueKey('lesson-progress-track')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Check stays disabled until a choice is selected', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(_lessonApp(api: _AnswerCheckingApi()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('start-section-0')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('show-choices')));
+    await tester.pumpAndSettle();
+
+    final checkButton = tester.widget<LearningPrimaryButton>(
+      find.byKey(const ValueKey('check-answer')),
+    );
+    expect(checkButton.onPressed, isNull);
+
+    await tester.tap(find.byKey(const ValueKey('lesson-option-0')));
+    await tester.pumpAndSettle();
+
+    final selectedRow = tester.widget<AnimatedContainer>(
+      find.byKey(const ValueKey('lesson-option-row-0')),
+    );
+    final decoration = selectedRow.decoration! as BoxDecoration;
+    final border = decoration.border! as Border;
+    final palette = tester.element(find.byType(LessonExperienceScreen)).riksa;
+    expect(border.top.color, palette.brand);
+    expect(decoration.color, palette.brandSoft);
+    expect(decoration.color, isNot(Colors.black));
+    expect(
+      tester
+          .widget<LearningPrimaryButton>(
+            find.byKey(const ValueKey('check-answer')),
+          )
+          .onPressed,
+      isNotNull,
+    );
+  });
+
+  testWidgets('feedback has one result line and expands Why', (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    SharedPreferences.setMockInitialValues({});
+
+    await tester.pumpWidget(_lessonApp(api: _AnswerCheckingApi()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('start-section-0')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('show-choices')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('lesson-option-0')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('check-answer')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Correct! Unit of life'), findsOneWidget);
+    expect(find.text('Correct'), findsNothing);
+    expect(find.text('Explanation'), findsNothing);
+    expect(find.text('Why?'), findsOneWidget);
+    final questionTop = tester
+        .getTopLeft(find.byKey(const ValueKey('lesson-question-ex-1')))
+        .dy;
+    await tester.tap(find.text('Why?'));
+    await tester.pumpAndSettle();
+    // The explanation must be on screen, not just in the tree. It can carry
+    // more than one paragraph, so match on the sentence it starts with.
+    final explanation = find
+        .textContaining('A cell is the basic unit of life.')
+        .hitTestable();
+    expect(explanation, findsOneWidget);
+    expect(
+      tester.getRect(explanation).bottom,
+      lessThan(
+        tester.getRect(find.byKey(const ValueKey('continue-after-answer'))).top,
+      ),
+    );
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('lesson-question-ex-1'))).dy,
+      questionTop,
+    );
+  });
+
+  testWidgets('checked choices mark an explicitly named correct answer', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    SharedPreferences.setMockInitialValues({});
+
+    await tester.pumpWidget(_lessonApp(api: _WrongAnswerCheckingApi()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('start-section-0')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('show-choices')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('lesson-option-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('check-answer')));
+    await tester.pumpAndSettle();
+
+    BoxDecoration rowDecoration(int index) =>
+        tester
+                .widget<AnimatedContainer>(
+                  find.byKey(ValueKey('lesson-option-row-$index')),
+                )
+                .decoration!
+            as BoxDecoration;
+    final palette = tester.element(find.byType(LessonExperienceScreen)).riksa;
+    expect(rowDecoration(0).color, palette.semantic.successContainer);
+    expect(rowDecoration(1).color, palette.semantic.errorContainer);
+    expect(find.text('Not quite'), findsOneWidget);
+  });
+
+  testWidgets('ambiguous explanation does not guess the correct choice', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    SharedPreferences.setMockInitialValues({});
+
+    final api = _WrongAnswerCheckingApi(
+      explanation:
+          'Unit of life appears in this explanation, but no answer is identified.',
+    );
+    await tester.pumpWidget(_lessonApp(api: api));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('start-section-0')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('show-choices')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('lesson-option-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('check-answer')));
+    await tester.pumpAndSettle();
+
+    BoxDecoration rowDecoration(int index) =>
+        tester
+                .widget<AnimatedContainer>(
+                  find.byKey(ValueKey('lesson-option-row-$index')),
+                )
+                .decoration!
+            as BoxDecoration;
+    final palette = tester.element(find.byType(LessonExperienceScreen)).riksa;
+    expect(rowDecoration(0).color, palette.canvas);
+    expect(rowDecoration(1).color, palette.semantic.errorContainer);
+    expect(find.text('Not quite'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('practice step hides the reading banner', (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(_lessonApp(api: _FakeLearningApiWithExercises()));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('lesson-buddy-scene')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('start-section-0')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('lesson-buddy-scene')), findsNothing);
+  });
+
+  testWidgets(
+    'Khmer practice fits at a narrow phone width and 200 percent text',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        _lessonApp(
+          textScaler: const TextScaler.linear(2),
+          locale: const Locale('km'),
+          api: _KhmerPracticeApi(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('start-section-0')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('show-choices')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('តើកោសិកាជាអ្វី?'), findsOneWidget);
+      expect(find.text('ឯកតាមូលដ្ឋាននៃជីវិត'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('same-frame answer taps issue one API request', (tester) async {
     tester.view.physicalSize = const Size(393, 852);
@@ -467,9 +764,13 @@ void main() {
     },
   );
 
-  testWidgets('toggles audio sound enabled/muted from header button', (
+  testWidgets('toggles audio sound from the lesson options sheet', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     SharedPreferences.setMockInitialValues({});
     final container = ProviderContainer(
       overrides: [learningApiProvider.overrideWithValue(_FakeLearningApi())],

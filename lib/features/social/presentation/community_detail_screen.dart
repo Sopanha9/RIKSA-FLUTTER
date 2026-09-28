@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -402,7 +403,10 @@ class _BannerAppBar extends StatelessWidget {
       leading: roundButton(
         icon: Icons.arrow_back_rounded,
         tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-        onPressed: () => context.pop(),
+        onPressed: () => RiksaBackButton.navigateBack(
+          context,
+          fallbackLocation: '/communities',
+        ),
       ),
       actions: [
         if (onShare != null)

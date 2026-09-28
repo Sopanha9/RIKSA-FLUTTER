@@ -423,6 +423,20 @@ class SocialComment {
         DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
         DateTime.now(),
   );
+
+  SocialComment copyWith({
+    SocialReaction? myReaction,
+    bool clearReaction = false,
+  }) => SocialComment(
+    id: id,
+    content: content,
+    author: author,
+    postId: postId,
+    parentId: parentId,
+    myReaction: clearReaction ? null : myReaction ?? this.myReaction,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  );
 }
 
 class SocialCommentPage {

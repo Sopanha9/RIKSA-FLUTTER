@@ -6,6 +6,9 @@ import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/core/widgets/riksa_bottom_navigation_bar.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
+/// Branches with a tab. Profile (4) is a branch without one.
+const _destinations = [0, 1, 2, 3, 5];
+
 Widget _testApp({
   int currentIndex = 0,
   ValueChanged<int>? onSelected,
@@ -68,7 +71,7 @@ void main() {
       tester.getRect(find.byKey(const ValueKey('bottom-nav-item-2'))).left,
       greaterThan(tester.getRect(surface).right),
     );
-    for (var index = 0; index < 5; index++) {
+    for (final index in _destinations) {
       expect(
         find.byKey(ValueKey('bottom-nav-label-$index')),
         index == RiksaBottomNavigationBar.aiTutorIndex
@@ -90,7 +93,7 @@ void main() {
   testWidgets('every destination can be selected', (tester) async {
     int? selected;
     await tester.pumpWidget(_testApp(onSelected: (value) => selected = value));
-    for (var index = 0; index < 5; index++) {
+    for (final index in _destinations) {
       await tester.tap(find.byKey(ValueKey('bottom-nav-item-$index')));
       expect(selected, index);
     }
@@ -145,7 +148,7 @@ void main() {
           tester.view.physicalSize = const Size(360, 780);
           tester.view.devicePixelRatio = 1;
           addTearDown(tester.view.reset);
-          for (var index = 0; index < 5; index++) {
+          for (var index = 0; index < 6; index++) {
             await tester.pumpWidget(
               _testApp(
                 currentIndex: index,
@@ -155,13 +158,14 @@ void main() {
               ),
             );
             await tester.pumpAndSettle();
-            if (index != RiksaBottomNavigationBar.aiTutorIndex) {
+            if (index != RiksaBottomNavigationBar.aiTutorIndex &&
+                index != RiksaBottomNavigationBar.profileIndex) {
               final label = tester.renderObject<RenderParagraph>(
                 find.byKey(ValueKey('bottom-nav-label-$index')),
               );
               expect(label.didExceedMaxLines, isFalse);
             }
-            for (var tab = 0; tab < 5; tab++) {
+            for (final tab in _destinations) {
               final rect = tester.getRect(
                 find.byKey(ValueKey('bottom-nav-item-$tab')),
               );

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../core/widgets/riksa_glass.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -55,6 +56,9 @@ class ProgressHistoryScreen extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: context.riksa.rewardSoft,
+          leading: const Center(
+            child: RiksaBackButton(fallbackLocation: '/profile'),
+          ),
           title: Text(l10n.progressHistoryTitle),
           // His glass tab strip, driven by the same DefaultTabController.
           bottom: const PreferredSize(

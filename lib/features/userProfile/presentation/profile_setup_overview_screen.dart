@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 
 /// Entry screen for the four-step profile setup flow.
@@ -56,6 +57,14 @@ class ProfileSetupOverviewScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           SizedBox(height: math.max(28.0, 84.0 - topInset)),
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: RiksaBackButton(
+                              key: const ValueKey('profile-setup-back'),
+                              fallbackLocation: '/profile',
+                            ),
+                          ),
+                          const SizedBox(height: RiksaSpacing.md),
                           Text(
                             l10n.profileSetupTitle,
                             style: Theme.of(context).textTheme.headlineLarge,

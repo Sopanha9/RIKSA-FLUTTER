@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../core/widgets/riksa_search_bar.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -130,11 +131,11 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
       backgroundColor: palette.canvas,
       appBar: AppBar(
         backgroundColor: palette.canvas,
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          style: IconButton.styleFrom(backgroundColor: Colors.transparent),
-          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          icon: const Icon(Icons.arrow_back_rounded),
+        leading: Center(
+          child: RiksaBackButton(
+            fallbackLocation: '/home',
+            style: IconButton.styleFrom(backgroundColor: Colors.transparent),
+          ),
         ),
         titleSpacing: 0,
         title: Text(

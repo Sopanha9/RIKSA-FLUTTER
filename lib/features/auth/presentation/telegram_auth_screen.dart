@@ -442,40 +442,46 @@ class _TelegramAuthScreenState extends ConsumerState<TelegramAuthScreen>
       ),
     };
 
-    return AuthScaffold(
-      onBack: loading ? null : _back,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Center(child: TelegramLogo(size: 58)),
-          const SizedBox(height: 18),
-          AuthHeader(eyebrow: eyebrow, title: title, subtitle: subtitle),
-          const SizedBox(height: 24),
-          AuthPanel(
-            child: AnimatedSize(
-              duration: const Duration(milliseconds: 200),
-              alignment: Alignment.topCenter,
-              child: Column(
-                key: ValueKey(
-                  _phase == _Phase.starting ? _Phase.intro : _phase,
-                ),
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (error != null) ...[
-                    AuthErrorBanner(message: error),
-                    const SizedBox(height: 16),
+    return PopScope<Object?>(
+      canPop: _phase == _Phase.intro || loading,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && !loading) _back();
+      },
+      child: AuthScaffold(
+        onBack: loading ? null : _back,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Center(child: TelegramLogo(size: 58)),
+            const SizedBox(height: 18),
+            AuthHeader(eyebrow: eyebrow, title: title, subtitle: subtitle),
+            const SizedBox(height: 24),
+            AuthPanel(
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 200),
+                alignment: Alignment.topCenter,
+                child: Column(
+                  key: ValueKey(
+                    _phase == _Phase.starting ? _Phase.intro : _phase,
+                  ),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (error != null) ...[
+                      AuthErrorBanner(message: error),
+                      const SizedBox(height: 16),
+                    ],
+                    ...switch (_phase) {
+                      _Phase.intro || _Phase.starting => _buildIntro(strings),
+                      _Phase.waiting => _buildWaiting(strings, loading),
+                      _Phase.code => _buildCode(strings, bot, loading),
+                      _Phase.profile => _buildProfile(strings, loading),
+                    },
                   ],
-                  ...switch (_phase) {
-                    _Phase.intro || _Phase.starting => _buildIntro(strings),
-                    _Phase.waiting => _buildWaiting(strings, loading),
-                    _Phase.code => _buildCode(strings, bot, loading),
-                    _Phase.profile => _buildProfile(strings, loading),
-                  },
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../domain/mascot.dart';
 import '../providers/mascot_provider.dart';
@@ -253,6 +254,19 @@ class _MascotSelectScreenState extends ConsumerState<MascotSelectScreen> {
                       foregroundColor: palette.ink,
                     ),
                     icon: const Icon(Icons.arrow_back_rounded),
+                  ),
+                )
+              else
+                PositionedDirectional(
+                  start: 8,
+                  top: MediaQuery.viewPaddingOf(context).top + 4,
+                  child: RiksaBackButton(
+                    key: const ValueKey('mascot-select-back'),
+                    fallbackLocation: '/onboarding',
+                    style: IconButton.styleFrom(
+                      backgroundColor: palette.surface.withValues(alpha: .9),
+                      foregroundColor: palette.ink,
+                    ),
                   ),
                 ),
             ],

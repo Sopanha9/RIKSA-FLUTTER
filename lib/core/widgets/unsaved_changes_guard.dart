@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../l10n/gen/app_localizations.dart';
 
@@ -15,11 +16,13 @@ class UnsavedChangesGuard extends StatelessWidget {
     required this.dirty,
     this.busy = false,
     required this.child,
+    this.fallbackLocation,
   });
 
   final bool dirty;
   final bool busy;
   final Widget child;
+  final String? fallbackLocation;
 
   @override
   Widget build(BuildContext context) => PopScope<Object?>(
@@ -27,9 +30,12 @@ class UnsavedChangesGuard extends StatelessWidget {
     onPopInvokedWithResult: (didPop, result) async {
       if (didPop || busy) return;
       final navigator = Navigator.of(context);
-      if (await confirmDiscardChanges(context) && navigator.mounted) {
+      if (!await confirmDiscardChanges(context) || !context.mounted) return;
+      if (navigator.canPop()) {
         navigator.pop(result);
+        return;
       }
+      GoRouter.maybeOf(context)?.go(fallbackLocation ?? '/home');
     },
     child: child,
   );

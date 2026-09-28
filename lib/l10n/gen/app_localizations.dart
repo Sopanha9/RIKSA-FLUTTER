@@ -1093,6 +1093,24 @@ abstract class AppLocalizations {
   /// **'Activity calendar'**
   String get activityCalendar;
 
+  /// No description provided for @streakActiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 learning day} other{{count} learning days}}'**
+  String streakActiveDays(int count);
+
+  /// No description provided for @streakDayLearned.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson completed'**
+  String get streakDayLearned;
+
+  /// No description provided for @streakDaysToMilestone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day to {name}} other{{count} days to {name}}}'**
+  String streakDaysToMilestone(int count, String name);
+
   /// No description provided for @createCommunityContent.
   ///
   /// In en, this message translates to:
@@ -1476,6 +1494,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'We couldn’t add your comment. Please try again.'**
   String get commentFailed;
+
+  /// No description provided for @commentLike.
+  ///
+  /// In en, this message translates to:
+  /// **'Like'**
+  String get commentLike;
+
+  /// No description provided for @commentUnlike.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlike'**
+  String get commentUnlike;
+
+  /// No description provided for @commentAgeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get commentAgeNow;
+
+  /// No description provided for @commentAgeMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} minute ago} other{{count} minutes ago}}'**
+  String commentAgeMinutes(int count);
+
+  /// No description provided for @commentAgeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} hour ago} other{{count} hours ago}}'**
+  String commentAgeHours(int count);
+
+  /// No description provided for @commentAgeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} day ago} other{{count} days ago}}'**
+  String commentAgeDays(int count);
+
+  /// No description provided for @commentViewMoreReplies.
+  ///
+  /// In en, this message translates to:
+  /// **'View more replies'**
+  String get commentViewMoreReplies;
 
   /// No description provided for @noComments.
   ///
@@ -2401,6 +2461,24 @@ abstract class AppLocalizations {
   /// **'Edit Profile'**
   String get editProfile;
 
+  /// Bottom navigation tab and page title for the notifications inbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing new yet'**
+  String get notificationsEmptyTitle;
+
+  /// No description provided for @notificationsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Replies, reactions and article reviews will show up here.'**
+  String get notificationsEmptyBody;
+
   /// No description provided for @notificationPreferences.
   ///
   /// In en, this message translates to:
@@ -2947,47 +3025,23 @@ abstract class AppLocalizations {
   /// **'Add your working (optional)'**
   String get lessonAddWorkingOptional;
 
-  /// No description provided for @lessonWorkFirst.
-  ///
-  /// In en, this message translates to:
-  /// **'Work it out first'**
-  String get lessonWorkFirst;
-
   /// No description provided for @lessonWorkHint.
   ///
   /// In en, this message translates to:
   /// **'Write your answer and how you got there. Then compare it with the choices.'**
   String get lessonWorkHint;
 
+  /// No description provided for @lessonWriteWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your working'**
+  String get lessonWriteWorking;
+
   /// No description provided for @lessonAnswerHint.
   ///
   /// In en, this message translates to:
   /// **'Write your answer'**
   String get lessonAnswerHint;
-
-  /// No description provided for @lessonYourWork.
-  ///
-  /// In en, this message translates to:
-  /// **'Your working'**
-  String get lessonYourWork;
-
-  /// No description provided for @lessonChooseAnswer.
-  ///
-  /// In en, this message translates to:
-  /// **'Compare your working and choose an answer.'**
-  String get lessonChooseAnswer;
-
-  /// No description provided for @lessonExerciseNumber.
-  ///
-  /// In en, this message translates to:
-  /// **'Exercise {number}'**
-  String lessonExerciseNumber(int number);
-
-  /// No description provided for @lessonResponseProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'{done} of {total} responses checked'**
-  String lessonResponseProgress(int done, int total);
 
   /// No description provided for @lessonSectionComplete.
   ///
@@ -3226,14 +3280,8 @@ abstract class AppLocalizations {
   /// No description provided for @lessonWhy.
   ///
   /// In en, this message translates to:
-  /// **'Explanation'**
+  /// **'Why?'**
   String get lessonWhy;
-
-  /// No description provided for @lessonHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Hint'**
-  String get lessonHint;
 
   /// No description provided for @lessonEditWorking.
   ///
@@ -3250,13 +3298,13 @@ abstract class AppLocalizations {
   /// No description provided for @lessonAnswerSuccess.
   ///
   /// In en, this message translates to:
-  /// **'That’s it. Keep going when you’re ready.'**
+  /// **'Correct!'**
   String get lessonAnswerSuccess;
 
   /// No description provided for @lessonAnswerRetry.
   ///
   /// In en, this message translates to:
-  /// **'Not quite yet. Try another approach.'**
+  /// **'Not quite'**
   String get lessonAnswerRetry;
 
   /// No description provided for @learningLoadErrorBody.
@@ -3973,6 +4021,12 @@ abstract class AppLocalizations {
   /// **'We couldn’t load your communities. Your writing is safe.'**
   String get composeCommunitiesFailed;
 
+  /// No description provided for @blogChooseTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a topic'**
+  String get blogChooseTopic;
+
   /// No description provided for @blogChooseTopicRequired.
   ///
   /// In en, this message translates to:
@@ -4279,6 +4333,24 @@ abstract class AppLocalizations {
   /// **'Delete this comment'**
   String get socialDeleteComment;
 
+  /// No description provided for @commentDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this comment?'**
+  String get commentDeleteTitle;
+
+  /// No description provided for @commentDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this comment?'**
+  String get commentDeleteMessage;
+
+  /// No description provided for @commentDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment deleted'**
+  String get commentDeleted;
+
   /// No description provided for @socialCancelReply.
   ///
   /// In en, this message translates to:
@@ -4549,6 +4621,12 @@ abstract class AppLocalizations {
   /// **'My Articles'**
   String get blogYourPosts;
 
+  /// No description provided for @blogFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get blogFilterAll;
+
   /// No description provided for @blogFeedFailedTitle.
   ///
   /// In en, this message translates to:
@@ -4702,25 +4780,25 @@ abstract class AppLocalizations {
   /// No description provided for @blogReviewPendingTitle.
   ///
   /// In en, this message translates to:
-  /// **'In review'**
+  /// **'A quick review'**
   String get blogReviewPendingTitle;
 
   /// No description provided for @blogReviewBackTitle.
   ///
   /// In en, this message translates to:
-  /// **'Back in review'**
+  /// **'This edit needs a quick review'**
   String get blogReviewBackTitle;
 
   /// No description provided for @blogReviewBackBody.
   ///
   /// In en, this message translates to:
-  /// **'Your changes were saved. The post returns to the blog once a moderator approves this version.'**
+  /// **'Your changes were saved. A moderator will take a quick look at this version before it appears on the blog.'**
   String get blogReviewBackBody;
 
   /// No description provided for @blogReviewSubmittedBody.
   ///
   /// In en, this message translates to:
-  /// **'Your post was submitted. It appears in the blog once a moderator approves it, and you can follow its status under Your posts.'**
+  /// **'Most posts publish right away. A moderator will take a quick look at this one before it appears on the blog. You can check its status under Your posts.'**
   String get blogReviewSubmittedBody;
 
   /// No description provided for @blogDone.
@@ -4740,6 +4818,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Post'**
   String get blogPublish;
+
+  /// No description provided for @moderationProfanity.
+  ///
+  /// In en, this message translates to:
+  /// **'Please remove offensive words before posting.'**
+  String get moderationProfanity;
+
+  /// No description provided for @moderationLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'This looks like spam because of its links. Remove some links and try again.'**
+  String get moderationLinks;
+
+  /// No description provided for @moderationDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'You already posted this. Try adding something new.'**
+  String get moderationDuplicate;
+
+  /// No description provided for @moderationShouting.
+  ///
+  /// In en, this message translates to:
+  /// **'Please write in normal text (not all capitals or repeated characters).'**
+  String get moderationShouting;
+
+  /// No description provided for @moderationRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re posting very fast. Wait a few minutes and try again.'**
+  String get moderationRateLimited;
+
+  /// No description provided for @moderationFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'This post can\'t be published.'**
+  String get moderationFallback;
+
+  /// No description provided for @moderationPublishedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get moderationPublishedTitle;
+
+  /// No description provided for @moderationPublishedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your post is live on the blog and ready for readers.'**
+  String get moderationPublishedBody;
+
+  /// No description provided for @moderationPublishedOpenPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Open post'**
+  String get moderationPublishedOpenPost;
 
   /// No description provided for @blogNothingToPreview.
   ///

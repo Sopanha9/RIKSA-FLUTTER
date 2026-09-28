@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -46,22 +47,19 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
           appBar: AppBar(
             backgroundColor: context.riksa.canvas,
             foregroundColor: context.riksa.ink,
-            leading: IconButton(
-              key: const ValueKey('public-profile-back'),
-              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-              style: IconButton.styleFrom(
-                backgroundColor: context.riksa.surface,
-                foregroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? context.riksa.ink
-                    : ProfilePalette.aubergine(context),
-                side: BorderSide(color: context.riksa.outline),
+            leading: Center(
+              child: RiksaBackButton(
+                key: const ValueKey('public-profile-back'),
+                fallbackLocation: '/home',
+                style: IconButton.styleFrom(
+                  backgroundColor: context.riksa.surface,
+                  foregroundColor:
+                      Theme.of(context).brightness == Brightness.dark
+                      ? context.riksa.ink
+                      : ProfilePalette.aubergine(context),
+                  side: BorderSide(color: context.riksa.outline),
+                ),
               ),
-              icon: const Icon(Icons.arrow_back_rounded),
-              onPressed: () {
-                if (Navigator.of(context).canPop()) {
-                  Navigator.of(context).pop();
-                }
-              },
             ),
             title: Text(
               l10n.publicProfile,

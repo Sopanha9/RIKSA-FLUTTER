@@ -233,6 +233,12 @@ class DioClient {
   Future<void> _clearSession() => _sessionStore.clear();
 
   Future<String?> getAccessToken() => _sessionStore.readAccessToken();
+
+  /// Swaps an expired access token for a new one, sharing any refresh already
+  /// in flight. For connections the interceptor never sees, such as the
+  /// realtime socket. True when a new token was stored.
+  Future<bool> refreshAccessToken() async =>
+      await _refreshSingleFlight() == RefreshOutcome.refreshed;
   Future<String?> getRefreshToken() => _sessionStore.readRefreshToken();
 
   Future<bool> hasSession() async => await _sessionStore.readTokens() != null;

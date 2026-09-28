@@ -59,6 +59,8 @@ class RiksaProfileDrawer extends ConsumerWidget {
                     padding: const EdgeInsets.fromLTRB(24, 16, 16, 8),
                     child: _DrawerIdentity(user: user),
                   ),
+                  // The drawer is the profile's home now that the tab bar has
+                  // no Profile tab. No My Posts row: the profile opens on posts.
                   if (user != null)
                     _DrawerItem(
                       itemKey: const ValueKey('drawer-profile'),
@@ -71,12 +73,6 @@ class RiksaProfileDrawer extends ConsumerWidget {
                     icon: Icons.insights_rounded,
                     label: l10n.progressHistory,
                     onTap: () => _go(context, '/progress'),
-                  ),
-                  _DrawerItem(
-                    itemKey: const ValueKey('drawer-my-posts'),
-                    icon: Icons.chat_bubble_outline_rounded,
-                    label: l10n.myPosts,
-                    onTap: () => _openProfile(context),
                   ),
                   _DrawerItem(
                     itemKey: const ValueKey('drawer-my-articles'),
@@ -302,6 +298,7 @@ class _DrawerIdentity extends ConsumerWidget {
           ),
           const SizedBox(height: RiksaSpacing.sm),
           InkWell(
+            key: const ValueKey('drawer-identity'),
             onTap: openProfile,
             borderRadius: BorderRadius.circular(8),
             child: Column(

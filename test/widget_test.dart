@@ -156,7 +156,7 @@ void main() {
     expect(rootRoute.redirect, isNotNull);
   });
 
-  test('authenticated destinations live in one five-branch shell', () {
+  test('authenticated destinations live in one six-branch shell', () {
     final container = ProviderContainer(
       overrides: [authProvider.overrideWith(_AuthenticatedAuthNotifier.new)],
     );
@@ -167,7 +167,7 @@ void main() {
         .whereType<StatefulShellRoute>()
         .single;
 
-    expect(shell.branches, hasLength(5));
+    expect(shell.branches, hasLength(6));
   });
 
   testWidgets('login renders stable inline validation errors', (tester) async {

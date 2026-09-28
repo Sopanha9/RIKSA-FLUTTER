@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/providers/auth_provider.dart';
@@ -215,3 +217,35 @@ void _refreshQuestData(Ref ref, {bool today = true, bool week = true}) {
   if (week) ref.invalidate(weeklyQuestsProvider);
   ref.invalidate(profileDashboardProvider);
 }
+
+/// Refetches quests after something that moves them: a correct answer, a
+/// finished lesson, a reaction or a comment.
+///
+/// The server counts quest progress on a background thread once that request
+/// has already answered, so reading quests straight away can miss it. [nudge]
+/// waits for things to settle, and a burst of answers costs one request.
+class QuestProgressSync {
+  QuestProgressSync(this._ref);
+
+  static const settleDelay = Duration(milliseconds: 1500);
+
+  final Ref _ref;
+  Timer? _timer;
+
+  void nudge() {
+    _timer?.cancel();
+    _timer = Timer(settleDelay, () {
+      _ref
+        ..invalidate(todayQuestsProvider)
+        ..invalidate(weeklyQuestsProvider);
+    });
+  }
+
+  void _dispose() => _timer?.cancel();
+}
+
+final questProgressSyncProvider = Provider<QuestProgressSync>((ref) {
+  final sync = QuestProgressSync(ref);
+  ref.onDispose(sync._dispose);
+  return sync;
+});

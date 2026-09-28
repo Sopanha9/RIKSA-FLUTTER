@@ -20,12 +20,6 @@ class MyPostsScreen extends ConsumerStatefulWidget {
 
 class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
   static const int _pageSize = 20;
-  static const List<(String, BlogStatus?)> _filters = [
-    ('All', null),
-    ('In review', BlogStatus.pending),
-    ('Published', BlogStatus.approved),
-    ('Rejected', BlogStatus.rejected),
-  ];
 
   final _scrollCtrl = ScrollController();
   final List<BlogPost> _posts = [];
@@ -143,22 +137,29 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final filters = <(String, BlogStatus?)>[
+      (l10n.blogFilterAll, null),
+      (l10n.blogStatusPending, BlogStatus.pending),
+      (l10n.blogStatusApproved, BlogStatus.approved),
+      (l10n.blogStatusRejected, BlogStatus.rejected),
+    ];
     return Scaffold(
       backgroundColor: blogSheetColor(context),
       body: Column(
         children: [
           BlogTopBar(
             title: AppLocalizations.of(context)!.blogYourPosts,
-            onBack: () => context.pop(),
+            fallbackLocation: '/profile',
           ),
           SizedBox(
             height: 46,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: EdgeInsets.zero,
-              itemCount: _filters.length,
+              itemCount: filters.length,
               itemBuilder: (context, index) {
-                final (label, status) = _filters[index];
+                final (label, status) = filters[index];
                 return BlogTab(
                   label: label,
                   selected: _status == status,
@@ -389,17 +390,22 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.riksa;
+    final l10n = AppLocalizations.of(context)!;
     final (label, foreground, background) = switch (status) {
       // Ink on the soft amber keeps the label legible; the tint carries the
       // status signal on its own.
-      BlogStatus.pending => ('In review', palette.ink, palette.saffronSoft),
+      BlogStatus.pending => (
+        l10n.blogStatusPending,
+        palette.ink,
+        palette.saffronSoft,
+      ),
       BlogStatus.approved => (
-        'Published',
+        l10n.blogStatusApproved,
         palette.jadeStrong,
         palette.jadeSoft,
       ),
       BlogStatus.rejected => (
-        'Rejected',
+        l10n.blogStatusRejected,
         Theme.of(context).colorScheme.error,
         Theme.of(context).colorScheme.error.withValues(alpha: .1),
       ),

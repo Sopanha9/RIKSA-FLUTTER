@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/unsaved_changes_guard.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../data/social_api.dart';
@@ -65,6 +65,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
   String? _iconUrl;
   bool _uploadingIcon = false;
   bool _submitting = false;
+  bool _submitted = false;
   bool _dirty = false;
 
   @override
@@ -136,7 +137,15 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
       if (ref.exists(socialFeedProvider)) {
         ref.read(socialFeedProvider.notifier).syncCategory(created);
       }
-      if (mounted) context.pop(created);
+      if (mounted) {
+        setState(() => _submitted = true);
+        await RiksaBackButton.navigateBack(
+          context,
+          fallbackLocation: '/communities',
+          result: created,
+          saved: true,
+        );
+      }
     } catch (error) {
       _showMessage(
         error is SocialApiException ? error.message : l10n.actionFailed,
@@ -160,12 +169,24 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
     final busy = _submitting || _uploadingIcon;
 
     return UnsavedChangesGuard(
-      dirty: _dirty || _iconUrl != null,
-      busy: _submitting,
+      dirty: !_submitted && (_dirty || _iconUrl != null),
+      busy: busy,
+      fallbackLocation: '/communities',
       child: Scaffold(
         backgroundColor: palette.canvas,
         appBar: AppBar(
           backgroundColor: palette.canvas,
+          leading: Center(
+            child: RiksaBackButton(
+              key: const ValueKey('create-community-back'),
+              fallbackLocation: '/communities',
+              confirmFallback: (context) async =>
+                  !busy &&
+                  (_submitted ||
+                      !(_dirty || _iconUrl != null) ||
+                      await confirmDiscardChanges(context)),
+            ),
+          ),
           titleSpacing: 0,
           title: Text(
             l10n.communitiesCreate,

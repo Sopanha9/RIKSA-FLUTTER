@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../mascot/domain/mascot.dart';
 import '../../mascot/presentation/widgets/mascot_scene.dart';
@@ -89,7 +90,6 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
     final theme = Theme.of(context);
     final palette = context.riksa;
     final isDark = theme.brightness == Brightness.dark;
-    final canPop = GoRouter.maybeOf(context)?.canPop() ?? false;
     final title = strings.languageSelectTitle(name);
     final subtitle = strings.languageSelectSubtitle(name);
 
@@ -115,24 +115,20 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
                           ),
                         ),
                       ),
-                      if (canPop)
-                        Positioned(
-                          top: 8,
-                          left: 12,
-                          child: IconButton.filledTonal(
-                            onPressed: () => context.pop(),
-                            style: IconButton.styleFrom(
-                              backgroundColor: palette.surface.withValues(
-                                alpha: .92,
-                              ),
-                              foregroundColor: palette.ink,
+                      Positioned(
+                        top: 8,
+                        left: 12,
+                        child: RiksaBackButton(
+                          key: const ValueKey('language-select-back'),
+                          fallbackLocation: '/mascot-select',
+                          style: IconButton.styleFrom(
+                            backgroundColor: palette.surface.withValues(
+                              alpha: .92,
                             ),
-                            icon: const Icon(Icons.arrow_back_rounded),
-                            tooltip: MaterialLocalizations.of(
-                              context,
-                            ).backButtonTooltip,
+                            foregroundColor: palette.ink,
                           ),
                         ),
+                      ),
                     ],
                   ),
                 ),

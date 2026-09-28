@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,18 +10,31 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
+import '../../../core/widgets/moderation_message.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../userProfile/presentation/public_profile_navigation.dart';
 import '../data/social_api.dart';
 import '../data/social_models.dart';
 import '../providers/social_feed_provider.dart';
+import '../../../app/realtime_sync.dart';
+import '../../../core/realtime/realtime_client.dart';
 import '../../auth/data/external_link_opener.dart';
+import '../../quests/providers/today_quests_provider.dart';
 import 'widgets/social_owner_menu.dart';
 import 'widgets/social_palette.dart';
 import 'widgets/social_markdown_style.dart';
 import 'widgets/social_post_media_grid.dart';
+import '../../../core/widgets/markdown_math.dart';
+
+class _CommentReplyPageInfo {
+  const _CommentReplyPageInfo({required this.hasNextPage, this.endCursor});
+
+  final bool hasNextPage;
+  final String? endCursor;
+}
 
 class SocialPostDetailScreen extends ConsumerStatefulWidget {
   const SocialPostDetailScreen({super.key, required this.postId});
@@ -44,11 +56,15 @@ class _SocialPostDetailScreenState
   SocialPost? _post;
   List<SocialComment> _comments = const [];
   SocialComment? _replyingTo;
+  String? _replyingToId;
+  Map<String, _CommentReplyPageInfo> _replyPages = const {};
+  final Set<String> _loadingReplyIds = {};
   String? _endCursor;
   String? _error;
   bool _loading = true;
   bool _loadingMore = false;
   bool _submitting = false;
+  final Set<String> _reactingCommentIds = {};
 
   bool get _hasMore => _endCursor != null;
 
@@ -56,6 +72,17 @@ class _SocialPostDetailScreenState
   void initState() {
     super.initState();
     unawaited(_load());
+    // Someone else reacted or commented: refresh in place, without the
+    // loading state a full reload shows.
+    ref.listenManual(realtimeEventsProvider, (_, next) {
+      final event = next.value;
+      if (event == null) return;
+      if (event.type == RealtimeEvent.resync ||
+          (event.type == RealtimeTypes.postChanged &&
+              event.postId == widget.postId)) {
+        unawaited(_refreshQuietly());
+      }
+    });
   }
 
   @override
@@ -75,13 +102,14 @@ class _SocialPostDetailScreenState
       final api = ref.read(socialApiProvider);
       final results = await Future.wait<Object>([
         api.post(widget.postId),
-        api.comments(postId: widget.postId, limit: _pageSize),
+        api.commentThreads(postId: widget.postId, limit: _pageSize),
       ]);
       if (!mounted) return;
-      final page = results[1] as SocialCommentPage;
+      final page = results[1] as SocialCommentThreadPage;
       setState(() {
         _post = results[0] as SocialPost;
-        _comments = page.comments;
+        _comments = _flattenThreads(page.threads);
+        _replyPages = _replyPageInfoFor(page.threads);
         _endCursor = page.hasNextPage ? page.endCursor : null;
         _loading = false;
       });
@@ -94,6 +122,39 @@ class _SocialPostDetailScreenState
     }
   }
 
+  /// Refetches the post and the comments connection when it has no next page.
+  Future<void> _refreshQuietly() async {
+    if (_loading || _post == null) return;
+    try {
+      final api = ref.read(socialApiProvider);
+      final allLoaded = !_hasMore;
+      final results = await Future.wait<Object>([
+        api.post(widget.postId),
+        if (allLoaded)
+          api.commentThreads(
+            postId: widget.postId,
+            limit: math.max(
+              _pageSize,
+              _comments.where((comment) => comment.parentId == null).length +
+                  5,
+            ),
+          ),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _post = results[0] as SocialPost;
+        if (allLoaded) {
+          final page = results[1] as SocialCommentThreadPage;
+          _comments = _flattenThreads(page.threads);
+          _replyPages = _replyPageInfoFor(page.threads);
+          _endCursor = page.hasNextPage ? page.endCursor : null;
+        }
+      });
+    } catch (_) {
+      // Keep what is showing; the next change or a pull-to-refresh retries.
+    }
+  }
+
   Future<void> _loadMore() async {
     final cursor = _endCursor;
     if (cursor == null || _loadingMore) return;
@@ -101,10 +162,15 @@ class _SocialPostDetailScreenState
     try {
       final page = await ref
           .read(socialApiProvider)
-          .comments(postId: widget.postId, cursor: cursor, limit: _pageSize);
+          .commentThreads(
+            postId: widget.postId,
+            cursor: cursor,
+            limit: _pageSize,
+          );
       if (!mounted) return;
       setState(() {
-        _comments = [..._comments, ...page.comments];
+        _comments = [..._comments, ..._flattenThreads(page.threads)];
+        _replyPages = {..._replyPages, ..._replyPageInfoFor(page.threads)};
         _endCursor = page.hasNextPage ? page.endCursor : null;
         _loadingMore = false;
       });
@@ -127,6 +193,47 @@ class _SocialPostDetailScreenState
       ref.read(socialFeedProvider.notifier).syncPost(updated);
     } catch (_) {
       if (mounted) _showFailure();
+    }
+  }
+
+  Future<void> _reactToComment(SocialComment comment) async {
+    if (_reactingCommentIds.contains(comment.id)) return;
+    final clearReaction = comment.myReaction == SocialReaction.love;
+    final optimistic = comment.copyWith(
+      myReaction: clearReaction ? null : SocialReaction.love,
+      clearReaction: clearReaction,
+    );
+    setState(() {
+      _reactingCommentIds.add(comment.id);
+      _comments = [
+        for (final current in _comments)
+          if (current.id == comment.id) optimistic else current,
+      ];
+    });
+
+    var failed = false;
+    try {
+      await ref
+          .read(socialApiProvider)
+          .reactToComment(
+            commentId: comment.id,
+            reaction: clearReaction ? null : SocialReaction.love,
+          );
+    } catch (_) {
+      failed = true;
+      if (mounted) _showFailure();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _reactingCommentIds.remove(comment.id);
+          if (failed) {
+            _comments = [
+              for (final current in _comments)
+                if (current.id == comment.id) comment else current,
+            ];
+          }
+        });
+      }
     }
   }
 
@@ -154,27 +261,34 @@ class _SocialPostDetailScreenState
 
   void _startReply(SocialComment comment) {
     HapticFeedback.selectionClick();
-    setState(() => _replyingTo = comment);
+    setState(() {
+      _replyingTo = comment;
+      _replyingToId = comment.id;
+    });
     _commentFocus.requestFocus();
   }
 
   void _cancelReply() {
-    setState(() => _replyingTo = null);
+    setState(() {
+      _replyingTo = null;
+      _replyingToId = null;
+    });
   }
 
   Future<void> _submitComment() async {
     final content = _commentController.text.trim();
     if (content.isEmpty || _submitting) return;
+    final parentId = _replyingToId ?? _replyingTo?.id;
     setState(() => _submitting = true);
-    final targetParent = _replyingTo;
     try {
       final created = await ref
           .read(socialApiProvider)
           .createComment(
             postId: widget.postId,
             content: content,
-            parentId: targetParent?.id,
+            parentId: parentId,
           );
+      ref.read(questProgressSyncProvider).nudge();
       if (!mounted) return;
       final updatedPost = _post?.copyWith(
         commentCount: (_post?.commentCount ?? 0) + 1,
@@ -183,6 +297,7 @@ class _SocialPostDetailScreenState
         _comments = [..._comments, created];
         _post = updatedPost;
         _replyingTo = null;
+        _replyingToId = null;
         _submitting = false;
       });
       if (updatedPost != null) {
@@ -199,6 +314,16 @@ class _SocialPostDetailScreenState
           );
         }
       });
+    } on SocialApiException catch (error) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      final rejection = error.moderationRejection;
+      final message = rejection == null
+          ? AppLocalizations.of(context)!.commentFailed
+          : moderationMessage(context, rejection);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(message)));
     } catch (_) {
       if (!mounted) return;
       setState(() => _submitting = false);
@@ -210,30 +335,81 @@ class _SocialPostDetailScreenState
     }
   }
 
+  Future<void> _loadMoreReplies(String commentId) async {
+    final pageInfo = _replyPages[commentId];
+    final cursor = pageInfo?.endCursor;
+    if (pageInfo?.hasNextPage != true || cursor == null || cursor.isEmpty) {
+      return;
+    }
+    if (_loadingReplyIds.contains(commentId)) return;
+    setState(() => _loadingReplyIds.add(commentId));
+    try {
+      final page = await ref
+          .read(socialApiProvider)
+          .commentReplies(
+            postId: widget.postId,
+            commentId: commentId,
+            cursor: cursor,
+            limit: 10,
+          );
+      if (!mounted) return;
+      setState(() {
+        final knownIds = _comments.map((comment) => comment.id).toSet();
+        _comments = [
+          ..._comments,
+          for (final reply in page.replies)
+            if (!knownIds.contains(reply.id)) reply,
+        ];
+        _replyPages = {
+          ..._replyPages,
+          commentId: _CommentReplyPageInfo(
+            hasNextPage: page.hasNextPage,
+            endCursor: page.endCursor,
+          ),
+        };
+        _loadingReplyIds.remove(commentId);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingReplyIds.remove(commentId));
+      _showFailure();
+    }
+  }
+
+  List<SocialComment> _flattenThreads(List<SocialCommentThread> threads) => [
+    for (final thread in threads) thread.root,
+    for (final thread in threads) ...thread.replies,
+  ];
+
+  Map<String, _CommentReplyPageInfo> _replyPageInfoFor(
+    List<SocialCommentThread> threads,
+  ) => {
+    for (final thread in threads)
+      thread.root.id: _CommentReplyPageInfo(
+        hasNextPage: thread.repliesHaveNextPage,
+        endCursor: thread.repliesEndCursor,
+      ),
+  };
+
   Future<void> _deleteComment(SocialComment comment) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        final isKhmer =
-            Localizations.localeOf(dialogContext).languageCode == 'km';
+        final l10n = AppLocalizations.of(dialogContext)!;
         return AlertDialog(
-          title: Text(isKhmer ? 'លុបមតិ?' : 'Delete comment?'),
-          content: Text(
-            isKhmer
-                ? 'តើអ្នកប្រាកដថាចង់លុបមតិនេះទេ?'
-                : 'Are you sure you want to delete this comment?',
-          ),
+          title: Text(l10n.commentDeleteTitle),
+          content: Text(l10n.commentDeleteMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(isKhmer ? 'បោះបង់' : 'Cancel'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(dialogContext).colorScheme.error,
               ),
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(isKhmer ? 'លុប' : 'Delete'),
+              child: Text(l10n.delete),
             ),
           ],
         );
@@ -261,12 +437,11 @@ class _SocialPostDetailScreenState
       if (updatedPost != null) {
         ref.read(socialFeedProvider.notifier).syncPost(updatedPost);
       }
-      final isKhmer = Localizations.localeOf(context).languageCode == 'km';
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
-            content: Text(isKhmer ? 'បានលុបមតិដោយជោគជ័យ' : 'Comment deleted'),
+            content: Text(AppLocalizations.of(context)!.commentDeleted),
           ),
         );
     } catch (_) {
@@ -307,7 +482,9 @@ class _SocialPostDetailScreenState
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(failure ?? l10n.postDeleted)));
     // The post is gone, so the detail screen has nothing left to show.
-    if (failure == null) context.pop();
+    if (failure == null) {
+      await RiksaBackButton.navigateBack(context, fallbackLocation: '/home');
+    }
   }
 
   void _showFailure() {
@@ -374,6 +551,9 @@ class _SocialPostDetailScreenState
                         comment: thread.root,
                         onAuthorTap: _authorTap(thread.root.author),
                         onReply: () => _startReply(thread.root),
+                        onLike: _reactingCommentIds.contains(thread.root.id)
+                            ? null
+                            : () => _reactToComment(thread.root),
                         onDelete: canDeleteRoot
                             ? () => _deleteComment(thread.root)
                             : null,
@@ -401,6 +581,9 @@ class _SocialPostDetailScreenState
                             isReply: true,
                             onAuthorTap: _authorTap(reply.author),
                             onReply: () => _startReply(reply),
+                            onLike: _reactingCommentIds.contains(reply.id)
+                                ? null
+                                : () => _reactToComment(reply),
                             onDelete: canDeleteReply
                                 ? () => _deleteComment(reply)
                                 : null,
@@ -408,6 +591,31 @@ class _SocialPostDetailScreenState
                         }(),
                       ],
                     ],
+                    if (_replyPages[thread.root.id]?.hasNextPage == true)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 32, top: 2),
+                        child: TextButton(
+                          key: ValueKey(
+                            'comment-view-more-replies-${thread.root.id}',
+                          ),
+                          onPressed: _loadingReplyIds.contains(thread.root.id)
+                              ? null
+                              : () => _loadMoreReplies(thread.root.id),
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size(0, 36),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: _loadingReplyIds.contains(thread.root.id)
+                              ? const SizedBox.square(
+                                  dimension: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(l10n.commentViewMoreReplies),
+                        ),
+                      ),
                     const SizedBox(height: 10),
                   ],
                 if (_hasMore)
@@ -434,10 +642,13 @@ class _SocialPostDetailScreenState
         foregroundColor: context.riksa.brand,
         surfaceTintColor: Colors.transparent,
         leadingWidth: 44,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 22),
-          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          onPressed: () => Navigator.of(context).maybePop(),
+        leading: Center(
+          child: RiksaBackButton(
+            key: const ValueKey('social-post-detail-back'),
+            fallbackLocation: '/home',
+            icon: Icons.arrow_back_ios_new,
+            iconSize: 22,
+          ),
         ),
         titleSpacing: 0,
         title: _post == null
@@ -553,6 +764,8 @@ class _PostBody extends StatelessWidget {
           if (body.trim().isNotEmpty) ...[
             const SizedBox(height: 10),
             MarkdownBody(
+              inlineSyntaxes: markdownMathSyntaxes,
+              builders: markdownMathBuilders,
               key: const ValueKey('social-post-markdown'),
               data: body,
               selectable: true,
@@ -700,6 +913,7 @@ class _CommentCard extends StatelessWidget {
     this.replyingToUsername,
     this.onAuthorTap,
     this.onReply,
+    this.onLike,
     this.onDelete,
     this.isReply = false,
   });
@@ -708,13 +922,13 @@ class _CommentCard extends StatelessWidget {
   final String? replyingToUsername;
   final VoidCallback? onAuthorTap;
   final VoidCallback? onReply;
+  final VoidCallback? onLike;
   final VoidCallback? onDelete;
   final bool isReply;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isKhmer = Localizations.localeOf(context).languageCode == 'km';
     final name = comment.author.displayName.isEmpty
         ? comment.author.username
         : comment.author.displayName;
@@ -775,15 +989,16 @@ class _CommentCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text(
                     _relativeCommentAge(context, comment.createdAt),
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall?.copyWith(
                       color: context.riksa.inkMuted,
                       fontWeight: FontWeight.w500,
-                      fontSize: isReply ? 12 : 13,
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: isReply ? 8 : 10),
+              SizedBox(height: isReply ? 6 : 8),
               Text(
                 comment.content,
                 style: RiksaTypography.bodyStyleFor(
@@ -796,10 +1011,11 @@ class _CommentCard extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: isReply ? 8 : 10),
+              SizedBox(height: isReply ? 2 : 4),
               _CommentActionRow(
                 commentId: comment.id,
-                isKhmer: isKhmer,
+                isLiked: comment.myReaction == SocialReaction.love,
+                onLike: onLike,
                 onReply: onReply,
                 onDelete: onDelete,
               ),
@@ -811,18 +1027,36 @@ class _CommentCard extends StatelessWidget {
 
     return Container(
       key: ValueKey('comment-card-${comment.id}'),
-      padding: EdgeInsets.only(
-        top: isReply ? 12 : 18,
-        bottom: isReply ? 10 : 16,
-      ),
-      decoration: BoxDecoration(
-        color: context.riksa.surface,
-        border: isReply
-            ? null
-            : Border(top: BorderSide(color: context.riksa.outline)),
-      ),
+      margin: isReply
+          ? const EdgeInsets.only(left: 22, top: 2, bottom: 2)
+          : null,
+      padding: isReply
+          ? const EdgeInsets.fromLTRB(10, 6, 0, 6)
+          : const EdgeInsets.fromLTRB(14, 14, 14, 0),
+      decoration: isReply
+          ? null
+          : BoxDecoration(
+              color: context.riksa.surface,
+              borderRadius: AppRadii.mediumBorder,
+              border: Border.all(color: context.riksa.outline),
+            ),
       child: isReply
-          ? Padding(padding: const EdgeInsets.only(left: 42), child: content)
+          ? IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    width: 2,
+                    decoration: BoxDecoration(
+                      color: context.riksa.outline,
+                      borderRadius: AppRadii.fullBorder,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(child: content),
+                ],
+              ),
+            )
           : content,
     );
   }
@@ -831,85 +1065,132 @@ class _CommentCard extends StatelessWidget {
 class _CommentActionRow extends StatelessWidget {
   const _CommentActionRow({
     required this.commentId,
-    required this.isKhmer,
+    required this.isLiked,
+    this.onLike,
     this.onReply,
     this.onDelete,
   });
 
   final String commentId;
-  final bool isKhmer;
+  final bool isLiked;
+  final VoidCallback? onLike;
   final VoidCallback? onReply;
   final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final actionStyle = theme.textTheme.labelLarge?.copyWith(
-      color: context.riksa.inkMuted.withValues(alpha: 0.6),
+    final l10n = AppLocalizations.of(context)!;
+    final actionStyle = theme.textTheme.labelMedium?.copyWith(
+      color: context.riksa.inkMuted,
       fontWeight: FontWeight.w500,
       height: 1,
     );
-    return Row(
-      children: [
-        Text(isKhmer ? 'ចូលចិត្ត' : 'Like', style: actionStyle),
-        const SizedBox(width: 10),
-        if (onReply != null)
+    final likeColor = isLiked ? AppColors.socialLike : context.riksa.inkMuted;
+
+    return SizedBox(
+      key: ValueKey('comment-action-row-$commentId'),
+      height: 48,
+      child: Row(
+        children: [
           Semantics(
             button: true,
-            label: AppLocalizations.of(context)!.reply,
+            enabled: onLike != null,
+            selected: isLiked,
+            label: isLiked ? l10n.commentUnlike : l10n.commentLike,
             excludeSemantics: true,
             child: GestureDetector(
-              key: ValueKey('comment-reply-button-$commentId'),
+              key: ValueKey('comment-like-button-$commentId'),
               behavior: HitTestBehavior.opaque,
-              onTap: onReply,
+              onTap: onLike,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                child: Center(
-                  child: Text(
-                    AppLocalizations.of(context)!.reply,
-                    style: actionStyle,
-                  ),
+                constraints: const BoxConstraints(
+                  minWidth: 48,
+                  minHeight: 48,
                 ),
-              ),
-            ),
-          ),
-        if (onDelete != null) ...[
-          const SizedBox(width: 10),
-          Semantics(
-            button: true,
-            label: AppLocalizations.of(context)!.delete,
-            excludeSemantics: true,
-            child: GestureDetector(
-              key: ValueKey('comment-delete-button-$commentId'),
-              behavior: HitTestBehavior.opaque,
-              onTap: onDelete,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                child: Center(
-                  child: Text(
-                    AppLocalizations.of(context)!.delete,
-                    style: actionStyle?.copyWith(
-                      color: theme.colorScheme.error,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isLiked
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          size: 16,
+                          color: likeColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isLiked ? l10n.commentUnlike : l10n.commentLike,
+                          style: actionStyle?.copyWith(color: likeColor),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
           ),
+          if (onReply != null)
+            Semantics(
+              button: true,
+              label: l10n.reply,
+              excludeSemantics: true,
+              child: GestureDetector(
+                key: ValueKey('comment-reply-button-$commentId'),
+                behavior: HitTestBehavior.opaque,
+                onTap: onReply,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                  child: Center(child: Text(l10n.reply, style: actionStyle)),
+                ),
+              ),
+            ),
+          if (onDelete != null) ...[
+            const SizedBox(width: 2),
+            Semantics(
+              button: true,
+              label: l10n.delete,
+              excludeSemantics: true,
+              child: GestureDetector(
+                key: ValueKey('comment-delete-button-$commentId'),
+                behavior: HitTestBehavior.opaque,
+                onTap: onDelete,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                  child: Center(
+                    child: Text(
+                      l10n.delete,
+                      style: actionStyle?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
-        const Spacer(),
-        Text(isKhmer ? 'លាក់' : 'Hide', style: actionStyle),
-      ],
+      ),
     );
   }
 }
 
 String _relativeCommentAge(BuildContext context, DateTime createdAt) {
   final elapsed = DateTime.now().difference(createdAt.toLocal());
-  if (elapsed.inDays >= 1) return '${elapsed.inDays}d';
-  if (elapsed.inHours >= 1) return '${elapsed.inHours}h';
-  if (elapsed.inMinutes >= 1) return '${elapsed.inMinutes}m';
-  return Localizations.localeOf(context).languageCode == 'km' ? 'ឥឡូវ' : 'now';
+  final l10n = AppLocalizations.of(context)!;
+  if (elapsed.inDays >= 1) return l10n.commentAgeDays(elapsed.inDays);
+  if (elapsed.inHours >= 1) return l10n.commentAgeHours(elapsed.inHours);
+  if (elapsed.inMinutes >= 1) return l10n.commentAgeMinutes(elapsed.inMinutes);
+  return l10n.commentAgeNow;
 }
 
 class _Avatar extends StatelessWidget {
@@ -1092,27 +1373,7 @@ class _CommentComposer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final glassGradient = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        Colors.white.withValues(alpha: 0.3),
-        Colors.black.withValues(alpha: 0.1),
-      ],
-    );
-    final glassBorder = Colors.white.withValues(alpha: 0.3);
-    final sendOuterFill = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.white.withValues(alpha: 0.58);
-    final sendFill = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.white.withValues(alpha: 0.54);
-    final shadow = BoxShadow(
-      color: Colors.black.withValues(alpha: isDark ? .34 : .12),
-      blurRadius: 26,
-      offset: const Offset(0, 10),
-    );
+    final l10n = AppLocalizations.of(context)!;
     final replyingName = replyingTo != null
         ? (replyingTo!.author.displayName.isEmpty
               ? replyingTo!.author.username
@@ -1131,58 +1392,50 @@ class _CommentComposer extends StatelessWidget {
             if (replyingTo != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: ClipRRect(
-                  borderRadius: AppRadii.fullBorder,
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                    child: Container(
-                      key: const ValueKey('reply-indicator-bar'),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
+                child: Container(
+                  key: const ValueKey('reply-indicator-bar'),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.riksa.surface,
+                    borderRadius: AppRadii.fullBorder,
+                    border: Border.all(color: context.riksa.outline),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.reply_rounded,
+                        size: 16,
+                        color: context.riksa.brand,
                       ),
-                      decoration: ShapeDecoration(
-                        gradient: glassGradient,
-                        shape: StadiumBorder(
-                          side: BorderSide(color: glassBorder),
-                        ),
-                        shadows: [shadow],
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.reply_rounded,
-                            size: 16,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${l10n.replyingTo} @$replyingName',
+                          style: theme.textTheme.labelMedium?.copyWith(
                             color: context.riksa.brand,
+                            fontWeight: FontWeight.w700,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              '${AppLocalizations.of(context)!.replyingTo} @$replyingName',
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: context.riksa.brand,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          InkWell(
-                            key: const ValueKey('cancel-reply-button'),
-                            onTap: onCancelReply,
-                            borderRadius: AppRadii.smallBorder,
-                            child: Padding(
-                              padding: const EdgeInsets.all(4),
-                              child: Icon(
-                                Icons.close_rounded,
-                                size: 18,
-                                color: context.riksa.brand,
-                              ),
-                            ),
-                          ),
-                        ],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
+                      IconButton(
+                        key: const ValueKey('cancel-reply-button'),
+                        onPressed: onCancelReply,
+                        tooltip: l10n.cancel,
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                        color: context.riksa.brand,
+                        visualDensity: VisualDensity.compact,
+                        constraints: const BoxConstraints.tightFor(
+                          width: 40,
+                          height: 40,
+                        ),
+                        padding: EdgeInsets.zero,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -1190,116 +1443,97 @@ class _CommentComposer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
-                  child: ClipRRect(
-                    borderRadius: AppRadii.fullBorder,
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                      child: Container(
-                        decoration: ShapeDecoration(
-                          gradient: glassGradient,
-                          shape: StadiumBorder(
-                            side: BorderSide(color: glassBorder),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: context.riksa.surface,
+                      borderRadius: AppRadii.fullBorder,
+                      border: Border.all(color: context.riksa.outline),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(
+                            alpha: theme.brightness == Brightness.dark
+                                ? .12
+                                : .04,
                           ),
-                          shadows: [shadow],
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                        clipBehavior: Clip.antiAlias,
-                        child: TextField(
-                          key: const ValueKey('comment-composer'),
-                          controller: controller,
-                          focusNode: focusNode,
-                          minLines: 1,
-                          maxLines: 4,
-                          maxLength: 1000,
-                          textCapitalization: TextCapitalization.sentences,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: context.riksa.ink,
-                            height: 1.35,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: hint,
-                            hintStyle: TextStyle(color: context.riksa.inkMuted),
-                            counterText: '',
-                            filled: true,
-                            fillColor: Colors.white.withValues(
-                              alpha: isDark ? .08 : .16,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 14,
-                            ),
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                          ),
-                          onSubmitted: (_) => onSend(),
-                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: TextField(
+                      key: const ValueKey('comment-composer'),
+                      controller: controller,
+                      focusNode: focusNode,
+                      minLines: 1,
+                      maxLines: 4,
+                      maxLength: 1000,
+                      textCapitalization: TextCapitalization.sentences,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: context.riksa.ink,
+                        height: 1.35,
                       ),
+                      decoration: InputDecoration(
+                        hintText: hint,
+                        hintStyle: TextStyle(color: context.riksa.inkMuted),
+                        counterText: '',
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 13,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                      ),
+                      onSubmitted: (_) => onSend(),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
-                Semantics(
-                  button: true,
-                  label: sendLabel,
-                  child: SizedBox.square(
-                    dimension: 56,
-                    child: DecoratedBox(
-                      decoration: ShapeDecoration(
-                        color: sendOuterFill,
-                        shape: CircleBorder(
-                          side: BorderSide(color: glassBorder),
-                        ),
-                        shadows: [shadow],
-                      ),
-                      child: ClipOval(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                          child: Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: DecoratedBox(
-                              decoration: ShapeDecoration(
-                                color: sendFill,
-                                shape: CircleBorder(
-                                  side: BorderSide(color: glassBorder),
-                                ),
-                                shadows: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.06),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: IconButton(
-                                key: const ValueKey('send-comment-button'),
-                                onPressed: submitting ? null : onSend,
-                                tooltip: AppLocalizations.of(
-                                  context,
-                                )!.sendComment,
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  foregroundColor: context.riksa.brand,
-                                  disabledForegroundColor:
-                                      context.riksa.inkMuted,
-                                  fixedSize: const Size.square(48),
-                                  shape: const CircleBorder(),
-                                ),
-                                icon: submitting
-                                    ? SizedBox.square(
-                                        dimension: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: context.riksa.brand,
-                                        ),
-                                      )
-                                    : const Icon(Icons.send_rounded),
-                              ),
-                            ),
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: controller,
+                  builder: (context, value, _) {
+                    final enabled = value.text.trim().isNotEmpty && !submitting;
+                    return Semantics(
+                      button: true,
+                      enabled: enabled,
+                      label: sendLabel,
+                      child: IconButton(
+                        key: const ValueKey('send-comment-button'),
+                        onPressed: enabled ? onSend : null,
+                        tooltip: sendLabel,
+                        style: IconButton.styleFrom(
+                          backgroundColor: enabled
+                              ? context.riksa.brand
+                              : context.riksa.canvas,
+                          foregroundColor: enabled
+                              ? context.riksa.onBrand
+                              : context.riksa.inkMuted,
+                          disabledBackgroundColor: context.riksa.canvas,
+                          disabledForegroundColor: context.riksa.inkMuted,
+                          fixedSize: const Size.square(48),
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          side: BorderSide(
+                            color: enabled
+                                ? context.riksa.brand
+                                : context.riksa.outline,
                           ),
+                          shape: const CircleBorder(),
                         ),
+                        icon: submitting
+                            ? SizedBox.square(
+                                dimension: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: context.riksa.inkMuted,
+                                ),
+                              )
+                            : const Icon(Icons.send_rounded),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ],
             ),

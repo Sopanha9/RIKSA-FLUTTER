@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 
 import '../../../app/router/app_shell.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_bottom_navigation_bar.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/pixel_fire_icon.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../core/widgets/riksa_logo.dart';
@@ -113,18 +115,21 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
       backgroundColor: palette.canvas,
       // Always there, as on X: posting is the second most common thing done
       // here, and a button that hides until you scroll is one people miss.
-      floatingActionButton: FloatingActionButton(
-        key: const ValueKey('create-community-button'),
-        // Every tab stays mounted in the shell, so each button needs its own
-        // hero tag or switching tabs throws.
-        heroTag: 'timeline-compose',
-        tooltip: l10n.communityComposerPrompt,
-        onPressed: _showCreateMenu,
-        backgroundColor: isDark ? palette.brand : palette.brandStrong,
-        foregroundColor: palette.onBrand,
-        elevation: 3,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add_rounded, size: 30),
+      floatingActionButton: AboveBottomNavigation(
+        context: context,
+        child: FloatingActionButton(
+          key: const ValueKey('create-community-button'),
+          // Every tab stays mounted in the shell, so each button needs its own
+          // hero tag or switching tabs throws.
+          heroTag: 'timeline-compose',
+          tooltip: l10n.communityComposerPrompt,
+          onPressed: _showCreateMenu,
+          backgroundColor: isDark ? palette.brand : palette.brandStrong,
+          foregroundColor: palette.onBrand,
+          elevation: 3,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add_rounded, size: 30),
+        ),
       ),
       body: RefreshIndicator(
         color: palette.brand,
@@ -143,6 +148,7 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
           slivers: [
             _TimelineHeader(
               selected: _section,
+              showBackButton: widget.startInCommunities,
               onSelected: _selectSection,
               searchQuery: _searchQuery,
               onSearchChanged: _setSearchQuery,
@@ -650,6 +656,7 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
 class _TimelineHeader extends ConsumerWidget {
   const _TimelineHeader({
     required this.selected,
+    required this.showBackButton,
     required this.onSelected,
     required this.searchQuery,
     required this.onSearchChanged,
@@ -657,6 +664,7 @@ class _TimelineHeader extends ConsumerWidget {
   });
 
   final _SocialSection selected;
+  final bool showBackButton;
   final ValueChanged<_SocialSection> onSelected;
   final String searchQuery;
   final ValueChanged<String> onSearchChanged;
@@ -675,10 +683,19 @@ class _TimelineHeader extends ConsumerWidget {
       automaticallyImplyLeading: false,
       toolbarHeight: 56,
       leadingWidth: 60,
-      leading: const Padding(
-        padding: EdgeInsetsDirectional.only(start: 14),
-        child: Center(child: _HeaderAvatarButton()),
-      ),
+      leading: showBackButton
+          ? RiksaBackButton(
+              key: const ValueKey('community-screen-back'),
+              fallbackLocation: '/home',
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                foregroundColor: palette.ink,
+              ),
+            )
+          : const Padding(
+              padding: EdgeInsetsDirectional.only(start: 14),
+              child: Center(child: _HeaderAvatarButton()),
+            ),
       centerTitle: true,
       title: const RiksaLogo(fontSize: 22),
       actions: [
@@ -1213,11 +1230,11 @@ class _GlassBlogCard extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 9),
                                 Text(
-                                  post.content,
+                                  post.plainTextPreview,
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
                                   style: RiksaTypography.bodyStyleFor(
-                                    post.content,
+                                    post.plainTextPreview,
                                     theme.textTheme.bodyMedium?.copyWith(
                                       fontSize: 15,
                                       color: context.riksa.inkMuted,

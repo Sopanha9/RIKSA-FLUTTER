@@ -20,7 +20,10 @@ void main() {
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('discard-changes-dialog')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('discard-changes-dialog')),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const ValueKey('discard-changes-keep')));
     await tester.pumpAndSettle();
 

@@ -12,7 +12,11 @@ void main() {
     test('${sound.name} ships real audio in the bundle', () async {
       final data = await rootBundle.load('assets/audio/${sound.asset}');
 
-      expect(data.lengthInBytes, greaterThan(1000), reason: 'suspiciously tiny');
+      expect(
+        data.lengthInBytes,
+        greaterThan(1000),
+        reason: 'suspiciously tiny',
+      );
 
       // RIFF....WAVE — a real wave header, not a renamed placeholder.
       final bytes = data.buffer.asUint8List();

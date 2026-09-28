@@ -10,6 +10,8 @@ Future<void> showStreakDetailsSheet(
   CommunityStreak streak,
 ) => showModalBottomSheet<void>(
   context: context,
+  // Open above the shell so the bottom navigation bar can't cover the sheet.
+  useRootNavigator: true,
   isScrollControlled: true,
   useSafeArea: false,
   showDragHandle: true,
@@ -19,7 +21,8 @@ Future<void> showStreakDetailsSheet(
     width: double.infinity,
     child: DecoratedBox(
       decoration: BoxDecoration(
-        color: context.riksa.surface.withValues(alpha: .94),
+        // Opaque, so the feed underneath can't show through the text.
+        color: context.riksa.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border.all(color: Colors.white.withValues(alpha: .42)),
       ),
@@ -341,7 +344,10 @@ class _MilestoneCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              '${streak.daysToNext} • ${streak.nextMilestoneName}',
+              AppLocalizations.of(context)!.streakDaysToMilestone(
+                streak.daysToNext,
+                streak.nextMilestoneName!,
+              ),
               style: TextStyle(
                 color: context.riksa.ink,
                 fontWeight: FontWeight.w600,
@@ -370,6 +376,7 @@ class _ActivityCalendar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final material = MaterialLocalizations.of(context);
     final lastDayOfMonth = DateTime(month.year, month.month + 1, 0);
     final gridEnd = lastDayOfMonth.add(
@@ -397,24 +404,14 @@ class _ActivityCalendar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Activity history',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              Text(
-                '$activeInRange active',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: context.riksa.inkMuted,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
+          // The section heading above already names the calendar, so the
+          // card only adds the count.
+          Text(
+            l10n.streakActiveDays(activeInRange),
+            key: const ValueKey('streak-active-days'),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 14),
           Padding(
@@ -558,9 +555,10 @@ class _ContributionCell extends StatelessWidget {
         : colors.surfaceContainerHighest.withValues(alpha: .72);
 
     return Tooltip(
-      message:
-          '${MaterialLocalizations.of(context).formatShortDate(date)}'
-          '${isActive ? ' • active' : ''}',
+      message: isActive
+          ? '${MaterialLocalizations.of(context).formatShortDate(date)}'
+                ' • ${AppLocalizations.of(context)!.streakDayLearned}'
+          : MaterialLocalizations.of(context).formatShortDate(date),
       child: Container(
         width: size,
         height: size,

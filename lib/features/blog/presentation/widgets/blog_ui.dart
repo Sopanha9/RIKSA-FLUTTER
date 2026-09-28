@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/riksa_back_button.dart';
 import '../../../../core/widgets/riksa_avatar_image.dart';
 import '../../../../core/widgets/riksa_components.dart';
 import '../../../userProfile/data/public_profile.dart';
@@ -288,12 +289,14 @@ class BlogTopBar extends StatelessWidget {
   const BlogTopBar({
     super.key,
     required this.title,
-    required this.onBack,
+    required this.fallbackLocation,
+    this.result,
     this.trailing,
   });
 
   final String title;
-  final VoidCallback onBack;
+  final String fallbackLocation;
+  final Object? result;
   final Widget? trailing;
 
   @override
@@ -306,14 +309,14 @@ class BlogTopBar extends StatelessWidget {
         child: Row(
           children: [
             const SizedBox(width: RiksaSpacing.xs),
-            IconButton(
-              onPressed: onBack,
-              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            RiksaBackButton(
+              fallbackLocation: fallbackLocation,
+              result: result,
+              iconSize: 22,
               style: IconButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 foregroundColor: palette.ink,
               ),
-              icon: const Icon(Icons.arrow_back_rounded, size: 22),
             ),
             const SizedBox(width: RiksaSpacing.xxs),
             Expanded(

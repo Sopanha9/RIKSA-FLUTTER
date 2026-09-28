@@ -10,6 +10,7 @@ import '../../../app/router/app_router.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/language_toggle.dart';
 import '../../../core/widgets/riksa_brand.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -399,6 +400,7 @@ class _AuthSwitcherScreenState extends ConsumerState<AuthSwitcherScreen> {
       // AuthSwitcherScreen is also used outside a router in widget previews.
     }
     final strings = AppLocalizations.of(context)!;
+    final canPop = GoRouter.maybeOf(context)?.canPop() ?? false;
     final auth = ref.watch(authProvider);
     final loading = auth is AuthLoading;
     final error = auth is AuthError ? auth.message : null;
@@ -479,9 +481,47 @@ class _AuthSwitcherScreenState extends ConsumerState<AuthSwitcherScreen> {
                   bottom: false,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: const Align(
-                      alignment: AlignmentDirectional.centerEnd,
-                      child: LanguageToggle(),
+                    // The header keeps the language toggle's height, so a
+                    // back arrow never moves the form below it.
+                    child: Stack(
+                      alignment: AlignmentDirectional.centerStart,
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: LanguageToggle(),
+                        ),
+                        if (_pageState == PageState.register || canPop)
+                          // Positioned, so its 44px target doesn't set the
+                          // header's height.
+                          PositionedDirectional(
+                            start: 0,
+                            top: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: RiksaBackButton(
+                                key: ValueKey(
+                                  _pageState == PageState.register
+                                      ? 'auth-register-back'
+                                      : 'auth-login-back',
+                                ),
+                                fallbackLocation:
+                                    _pageState == PageState.register
+                                    ? '/auth/login'
+                                    : '/learn',
+                                constraints: const BoxConstraints.tightFor(
+                                  width: 44,
+                                  height: 44,
+                                ),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  foregroundColor: context.riksa.ink,
+                                  padding: EdgeInsets.zero,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),

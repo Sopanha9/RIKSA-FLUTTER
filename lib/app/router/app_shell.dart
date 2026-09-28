@@ -15,6 +15,17 @@ import '../../features/userProfile/presentation/widgets/riksa_profile_drawer.dar
 /// asking a [NavigatorState] would answer for the stack the pop animation has
 /// not finished unwinding yet.
 int branchStackDepth(RouteMatchList configuration) {
+  // A pushed route outside the shell (for example /market or another
+  // learner's profile) sits above the shell in the root Navigator. It is a
+  // full screen even though the selected tab's own branch still has depth 1.
+  final rootShells = configuration.matches.whereType<ShellRouteMatch>();
+  if (rootShells.isNotEmpty &&
+      configuration.matches.any(
+        (match) => match is! ShellRouteMatch && _buildsAScreen(match),
+      )) {
+    return 2;
+  }
+
   var matches = configuration.matches;
   // Descend past the shells to the branch holding the screens themselves.
   for (
@@ -24,7 +35,21 @@ int branchStackDepth(RouteMatchList configuration) {
   ) {
     matches = shells.last.matches;
   }
-  return matches.where(_buildsAScreen).length;
+  final depth = matches.where(_buildsAScreen).length;
+  // Branch 0 has flat sibling routes, and direct links to nested routes also
+  // arrive with a one-screen match list. Only actual destinations keep the
+  // tabs visible; a route that has its own page is a full-screen step.
+  const tabRoots = {
+    '/home',
+    '/learn',
+    '/ai',
+    '/leaderboard',
+    '/profile',
+    '/notifications',
+  };
+  return tabRoots.contains(configuration.uri.path)
+      ? depth
+      : (depth <= 1 ? 2 : depth);
 }
 
 /// A route that only groups or redirects contributes no screen to the stack.
@@ -81,7 +106,15 @@ class AppShellScope extends InheritedWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  bool _showNavBar = true;
+  // A notifier rather than a plain field, so tab screens can follow the bar
+  // through [BottomNavigationExpansion] without the shell rebuilding them.
+  final _showNavBar = ValueNotifier<bool>(true);
+
+  @override
+  void dispose() {
+    _showNavBar.dispose();
+    super.dispose();
+  }
 
   Widget _floatingBuddyOverlay() {
     try {
@@ -105,18 +138,21 @@ class _AppShellState extends State<AppShell> {
       body: NotificationListener<UserScrollNotification>(
         onNotification: (notification) {
           if (notification.direction == ScrollDirection.reverse) {
-            if (_showNavBar) setState(() => _showNavBar = false);
+            _showNavBar.value = false;
           } else if (notification.direction == ScrollDirection.forward) {
-            if (!_showNavBar) setState(() => _showNavBar = true);
+            _showNavBar.value = true;
           }
           return false;
         },
         child: Builder(
           builder: (context) => AppShellScope(
             openDrawer: Scaffold.of(context).openDrawer,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [widget.navigationShell, _floatingBuddyOverlay()],
+            child: BottomNavigationExpansion(
+              expanded: _showNavBar,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [widget.navigationShell, _floatingBuddyOverlay()],
+              ),
             ),
           ),
         ),
@@ -125,7 +161,7 @@ class _AppShellState extends State<AppShell> {
       // the delegate supplies the rebuild, and its configuration carries the
       // pushed route the shell has to answer for.
       bottomNavigationBar: ListenableBuilder(
-        listenable: router.routerDelegate,
+        listenable: Listenable.merge([router.routerDelegate, _showNavBar]),
         builder: (context, _) {
           final depth = branchStackDepth(
             router.routerDelegate.currentConfiguration,
@@ -134,8 +170,8 @@ class _AppShellState extends State<AppShell> {
           return RiksaBottomNavigationBar(
             key: const ValueKey('persistent-bottom-navigation'),
             currentIndex: widget.navigationShell.currentIndex,
-            isExpanded: _showNavBar,
-            onExpand: () => setState(() => _showNavBar = true),
+            isExpanded: _showNavBar.value,
+            onExpand: () => _showNavBar.value = true,
             onSelected: (index) {
               widget.navigationShell.goBranch(
                 index,

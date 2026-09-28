@@ -274,7 +274,13 @@ Widget journeyApp(
 
 Future<void> tapKey(WidgetTester tester, String key) async {
   await tester.pumpAndSettle();
-  final finder = find.byKey(ValueKey(key));
+  var finder = find.byKey(ValueKey(key));
+  if (key.startsWith('lesson-worked-on-paper-') &&
+      finder.evaluate().isEmpty) {
+    await tester.tap(find.byKey(const ValueKey('lesson-options')));
+    await tester.pumpAndSettle();
+    finder = find.byKey(ValueKey(key));
+  }
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
   await tester.tap(finder);
@@ -309,6 +315,7 @@ void main() {
       expect(find.textContaining('Keep units consistent.'), findsWidgets);
       await tapKey(tester, 'start-section-1');
       expect(find.byKey(const ValueKey('lesson-option-0')), findsNothing);
+      expect(find.text('Write your working'), findsOneWidget);
       await tapKey(tester, 'lesson-add-working-force-1');
       expect(
         find.byKey(const ValueKey('lesson-working-force-1')),
@@ -322,13 +329,15 @@ void main() {
       expect(find.byKey(const ValueKey('lesson-option-0')), findsOneWidget);
       await tapKey(tester, 'lesson-option-0');
       await tapKey(tester, 'check-answer');
-      expect(find.text('Try again.'), findsOneWidget);
+      expect(find.text('Not quite'), findsOneWidget);
+      await tapKey(tester, 'continue-after-answer');
       await tapKey(tester, 'lesson-edit-working-force-1');
       expect(find.text('2 × 3 = 6 N'), findsOneWidget);
       await tapKey(tester, 'compare-answers');
       await tapKey(tester, 'lesson-option-1');
       await tapKey(tester, 'check-answer');
-      expect(find.text('Correct.'), findsOneWidget);
+      expect(find.text('Correct!'), findsOneWidget);
+      await tapKey(tester, 'lesson-feedback-why');
       expect(
         find.textContaining('Multiply 2 kg by 3 m/s² to get 6 N.'),
         findsOneWidget,
@@ -375,7 +384,8 @@ void main() {
     await tapKey(tester, 'lesson-worked-on-paper-force-1');
     await tapKey(tester, 'lesson-option-0');
     await tapKey(tester, 'check-answer');
-    expect(find.text('Try again.'), findsOneWidget);
+    expect(find.text('Not quite'), findsOneWidget);
+    await tapKey(tester, 'continue-after-answer');
     await tapKey(tester, 'lesson-option-1');
     await tapKey(tester, 'check-answer');
     expect(find.text('Save your progress'), findsNothing);
@@ -395,7 +405,7 @@ void main() {
     await tapKey(tester, 'fake-login-success');
     await tester.pumpAndSettle();
     expect(api.submitted, ['6 N', '6 N']);
-    expect(find.text('Correct.'), findsOneWidget);
+    expect(find.text('Correct!'), findsOneWidget);
 
     await tapKey(tester, 'continue-after-answer');
     await tapKey(tester, 'show-choices');

@@ -1,5 +1,7 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../l10n/gen/app_localizations.dart';
@@ -10,8 +12,9 @@ import '../theme/app_theme.dart';
 /// to do. The selected tab sits in its own soft pill so where you are never
 /// depends on colour alone. Pushed screens hide the bar (see the app shell).
 ///
-/// Branch indices are unchanged: 0 Home, 1 Learn, 2 AI Tutor, 3 Ranks,
-/// 4 Profile. Index 2 is the round button rather than a pill item.
+/// Branch indices: 0 Home, 1 Learn, 2 AI Tutor, 3 Ranks, 4 Profile,
+/// 5 Notifications. Index 2 is the round button rather than a pill item, and
+/// Profile has no tab: it opens from the drawer, so no pill is lit there.
 class RiksaBottomNavigationBar extends StatelessWidget {
   const RiksaBottomNavigationBar({
     super.key,
@@ -19,7 +22,7 @@ class RiksaBottomNavigationBar extends StatelessWidget {
     required this.onSelected,
     this.isExpanded = true,
     this.onExpand,
-  }) : assert(currentIndex >= 0 && currentIndex < 5),
+  }) : assert(currentIndex >= 0 && currentIndex < 6),
        assert(isExpanded || onExpand != null);
 
   final int currentIndex;
@@ -28,7 +31,12 @@ class RiksaBottomNavigationBar extends StatelessWidget {
   final VoidCallback? onExpand;
 
   static const int aiTutorIndex = 2;
+  static const int profileIndex = 4;
   static const double _height = 60;
+
+  /// How long the bar takes to collapse or open again. Buttons that make room
+  /// for it (see [AboveBottomNavigation]) move in step.
+  static const Duration switchDuration = Duration(milliseconds: 250);
 
   @override
   Widget build(BuildContext context) {
@@ -60,11 +68,11 @@ class RiksaBottomNavigationBar extends StatelessWidget {
         ),
       ),
       (
-        4,
+        5,
         _RiksaNavigationItem(
-          label: l10n.profile,
-          icon: Icons.account_circle_outlined,
-          activeIcon: Icons.account_circle_rounded,
+          label: l10n.notificationsTitle,
+          icon: Icons.notifications_none_rounded,
+          activeIcon: Icons.notifications_rounded,
         ),
       ),
     ];
@@ -81,9 +89,11 @@ class RiksaBottomNavigationBar extends StatelessWidget {
       offset: const Offset(0, 8),
     );
 
-    final activeTabIcon = currentIndex == aiTutorIndex
-        ? Icons.auto_awesome_rounded
-        : tabs.firstWhere((t) => t.$1 == currentIndex).$2.activeIcon;
+    final activeTabIcon = switch (currentIndex) {
+      aiTutorIndex => Icons.auto_awesome_rounded,
+      profileIndex => Icons.account_circle_rounded,
+      _ => tabs.firstWhere((t) => t.$1 == currentIndex).$2.activeIcon,
+    };
 
     final fullBar = MediaQuery.withClampedTextScaling(
       maxScaleFactor: 1.3,
@@ -190,7 +200,7 @@ class RiksaBottomNavigationBar extends StatelessWidget {
     );
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 250),
+      duration: RiksaMotion.resolve(context, switchDuration),
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
@@ -213,6 +223,66 @@ class RiksaBottomNavigationBar extends StatelessWidget {
       child: isExpanded ? fullBar : collapsedFab,
     );
   }
+}
+
+/// Lifts a tab screen's floating action button above the floating tab bar.
+///
+/// The shell's Scaffold extends its body under the bar and reports the bar as
+/// bottom padding, but a tab's own Scaffold places its button from the device
+/// inset alone, which leaves it under the AI Tutor button. Where the bar is
+/// hidden the padding is only the device inset, and this adds nothing.
+///
+/// [context] must sit above the tab's Scaffold: the Scaffold strips all
+/// padding from its button slot, so reading it inside the button sees none.
+class AboveBottomNavigation extends StatelessWidget {
+  AboveBottomNavigation({
+    super.key,
+    required BuildContext context,
+    required this.child,
+  }) : lift = math.max(
+         0,
+         MediaQuery.paddingOf(context).bottom -
+             MediaQuery.viewPaddingOf(context).bottom,
+       );
+
+  final double lift;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    // While the bar is collapsed to its small button on the start side, the
+    // AI Tutor button is gone, so the action button drops into its place.
+    final expanded = BottomNavigationExpansion.maybeOf(context) ?? true;
+    return AnimatedPadding(
+      duration: RiksaMotion.resolve(
+        context,
+        RiksaBottomNavigationBar.switchDuration,
+      ),
+      curve: Curves.easeOutCubic,
+      padding: EdgeInsets.only(bottom: expanded ? lift : 0),
+      child: child,
+    );
+  }
+}
+
+/// Tells tab screens whether the floating bar is open or collapsed.
+///
+/// The shell provides it; [AboveBottomNavigation] reads it so a tab's action
+/// button sits above the open bar and takes the AI Tutor button's place when
+/// the bar collapses on scroll.
+class BottomNavigationExpansion
+    extends InheritedNotifier<ValueListenable<bool>> {
+  const BottomNavigationExpansion({
+    super.key,
+    required ValueListenable<bool> expanded,
+    required super.child,
+  }) : super(notifier: expanded);
+
+  /// Whether the bar is open, or null outside a shell.
+  static bool? maybeOf(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<BottomNavigationExpansion>()
+      ?.notifier
+      ?.value;
 }
 
 class _PillTabTrack extends StatelessWidget {

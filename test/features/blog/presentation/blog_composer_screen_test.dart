@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -8,6 +9,7 @@ import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/blog/data/blog_api.dart';
+import 'package:riksa_app/features/blog/data/blog_models.dart';
 import 'package:riksa_app/features/blog/presentation/blog_composer_screen.dart';
 import 'package:riksa_app/features/blog/providers/blog_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
@@ -85,6 +87,84 @@ void main() {
     expect(find.byType(MarkdownBody), findsNothing);
     expect(find.byKey(const ValueKey('blog-markdown-toolbar')), findsOneWidget);
   });
+
+  testWidgets('an approved post shows the published state', (tester) async {
+    final api = _FakeBlogApi(response: _blogPost(BlogStatus.approved));
+    await _pumpComposer(tester, api: api, categories: [_science]);
+    await _fillDraft(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Post'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Published'), findsOneWidget);
+    expect(find.text('Open post'), findsOneWidget);
+    expect(api.createdRequest?.title, 'Draft title');
+  });
+
+  testWidgets('an approved edit shows the published state', (tester) async {
+    final api = _FakeBlogApi(response: _blogPost(BlogStatus.approved));
+    await _pumpComposer(
+      tester,
+      api: api,
+      categories: [_science],
+      post: _blogPost(BlogStatus.pending),
+    );
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'Updated title');
+    await tester.enterText(fields.at(1), 'Updated body');
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Published'), findsOneWidget);
+    expect(find.text('Open post'), findsOneWidget);
+  });
+
+  testWidgets('a pending post shows the review state', (tester) async {
+    await _pumpComposer(
+      tester,
+      api: _FakeBlogApi(response: _blogPost(BlogStatus.pending)),
+      categories: [_science],
+    );
+    await _fillDraft(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Post'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('A quick review'), findsOneWidget);
+    expect(
+      find.textContaining('take a quick look at this one'),
+      findsOneWidget,
+    );
+  });
+
+  for (final (locale, expected) in [
+    (const Locale('en'), 'Please remove offensive words before posting.'),
+    (const Locale('km'), 'សូមលុបពាក្យមិនសមរម្យចេញ មុនពេលបង្ហោះ។'),
+  ]) {
+    testWidgets(
+      'a blocked post keeps its draft and shows the localized reason in ${locale.languageCode}',
+      (tester) async {
+        await _pumpComposer(
+          tester,
+          api: _FakeBlogApi(createError: _profanityError()),
+          categories: [_science],
+          locale: locale,
+        );
+        await _fillDraft(tester);
+        await tester.tap(
+          find.widgetWithText(
+            FilledButton,
+            locale.languageCode == 'en' ? 'Post' : 'បង្ហោះ',
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text(expected), findsOneWidget);
+        expect(find.byType(BlogComposerScreen), findsOneWidget);
+        final fields = tester.widgetList<TextField>(find.byType(TextField));
+        expect(fields.first.controller?.text, 'Draft title');
+        expect(fields.elementAt(1).controller?.text, 'Draft body');
+      },
+    );
+  }
 }
 
 const _bodyHint = 'Share what you learned. Markdown works here.';
@@ -103,7 +183,13 @@ void _select(
   );
 }
 
-Future<void> _pumpComposer(WidgetTester tester) async {
+Future<void> _pumpComposer(
+  WidgetTester tester, {
+  BlogApi? api,
+  List<BlogCategory> categories = const [],
+  Locale locale = const Locale('en'),
+  BlogPost? post,
+}) async {
   tester.view.physicalSize = const Size(430, 932);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -112,8 +198,9 @@ Future<void> _pumpComposer(WidgetTester tester) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        blogApiProvider.overrideWithValue(_MockBlogApi()),
-        blogCategoriesProvider.overrideWith((ref) async => const []),
+        blogApiProvider.overrideWithValue(api ?? _MockBlogApi()),
+        blogCategoriesProvider.overrideWith((ref) async => categories),
+        blogFeedProvider.overrideWith(_BlogFeedStub.new),
         currentUserIdProvider.overrideWithValue('me'),
         authProvider.overrideWith(_AuthStub.new),
       ],
@@ -126,7 +213,8 @@ Future<void> _pumpComposer(WidgetTester tester) async {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: const [Locale('en'), Locale('km')],
-        home: const BlogComposerScreen(),
+        locale: locale,
+        home: BlogComposerScreen(post: post),
       ),
     ),
   );
@@ -134,6 +222,81 @@ Future<void> _pumpComposer(WidgetTester tester) async {
 }
 
 class _MockBlogApi extends Mock implements BlogApi {}
+
+class _BlogFeedStub extends BlogFeedNotifier {
+  @override
+  BlogFeedState build() => const BlogFeedLoading();
+}
+
+final _science = BlogCategory(
+  id: 'science',
+  name: 'Science',
+  slug: 'science',
+  memberCount: 0,
+  joined: false,
+);
+
+class _FakeBlogApi implements BlogApi {
+  _FakeBlogApi({this.response, this.createError});
+
+  final BlogPost? response;
+  final DioException? createError;
+  BlogPostRequest? createdRequest;
+
+  @override
+  Future<BlogPost> createPost(BlogPostRequest request) async {
+    createdRequest = request;
+    final error = createError;
+    if (error != null) throw error;
+    return response!;
+  }
+
+  @override
+  Future<BlogPost> updatePost(String _, BlogPostRequest _) async => response!;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+BlogPost _blogPost(BlogStatus status) => BlogPost(
+  id: 'blog-1',
+  authorId: 'me',
+  title: 'Draft title',
+  content: 'Draft body',
+  status: status,
+  viewCount: 0,
+  likeCount: 0,
+  categoryId: _science.id,
+  liked: false,
+  createdAt: DateTime.utc(2026, 9, 1),
+  updatedAt: DateTime.utc(2026, 9, 1),
+);
+
+DioException _profanityError() {
+  final requestOptions = RequestOptions(path: '/blog');
+  return DioException(
+    requestOptions: requestOptions,
+    response: Response<Map<String, dynamic>>(
+      requestOptions: requestOptions,
+      statusCode: 422,
+      data: {
+        'code': 'CONTENT_BLOCKED',
+        'message': 'Blocked',
+        'reasons': ['PROFANITY'],
+      },
+    ),
+  );
+}
+
+Future<void> _fillDraft(WidgetTester tester) async {
+  final fields = find.byType(TextField);
+  await tester.enterText(fields.at(0), 'Draft title');
+  await tester.enterText(fields.at(1), 'Draft body');
+  await tester.tap(find.byType(ActionChip));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Science'));
+  await tester.pumpAndSettle();
+}
 
 class _AuthStub extends AuthNotifier {
   @override

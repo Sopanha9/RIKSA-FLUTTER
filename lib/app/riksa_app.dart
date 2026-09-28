@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/gen/app_localizations.dart';
 
+import 'realtime_sync.dart';
 import 'router/app_router.dart';
 import '../core/providers/locale_provider.dart';
 import '../core/providers/theme_mode_provider.dart';
@@ -17,6 +18,9 @@ class RiksaApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider).locale;
     final themeMode = ref.watch(themeModeProvider);
     final router = ref.watch(goRouterProvider);
+    // Keeps the live connection and its feed and quest updates running for
+    // the whole session.
+    ref.watch(realtimeSyncProvider);
 
     return MaterialApp.router(
       title: 'Riksa',

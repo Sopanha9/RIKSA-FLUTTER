@@ -42,6 +42,7 @@ import '../../features/userProfile/presentation/profile_setup_overview_screen.da
 import '../../features/userProfile/presentation/profile_settings_screen.dart';
 import '../../features/userProfile/presentation/edit_profile_screen.dart';
 import '../../features/leaderBoard/presentation/leaderboard_screen.dart';
+import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/userProfile/presentation/public_profile_screen.dart';
 import '../../features/userProfile/presentation/user_profile_screen.dart';
 import '../../features/userProfile/presentation/progress_history_screen.dart';
@@ -402,8 +403,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/profile/setup',
                 builder: (context, state) => ProfileSetupOverviewScreen(
-                  onSetUpProfile: () => context.go('/profile/edit'),
+                  onSetUpProfile: () => context.push('/profile/edit'),
                 ),
+              ),
+            ],
+          ),
+          // Branch 5. Profile (branch 4) keeps its branch but no tab: it opens
+          // from the drawer and the home avatar.
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/notifications',
+                builder: (context, state) => const NotificationsScreen(),
               ),
             ],
           ),

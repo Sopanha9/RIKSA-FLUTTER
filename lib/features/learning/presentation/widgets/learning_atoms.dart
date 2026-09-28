@@ -4,8 +4,6 @@
 /// that drift apart.
 library;
 
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -147,7 +145,11 @@ class LearningPrimaryButton extends StatelessWidget {
       textAlign: TextAlign.center,
       style: RiksaTypography.bodyStyleFor(
         displayLabel,
-        const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          height: RiksaTypography.containsKhmer(displayLabel) ? 1.5 : null,
+        ),
       ),
     );
     final style = FilledButton.styleFrom(
@@ -155,6 +157,8 @@ class LearningPrimaryButton extends StatelessWidget {
       foregroundColor: foreground,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       minimumSize: const Size.fromHeight(54),
+      elevation: 1,
+      shadowColor: context.riksa.ink.withValues(alpha: .14),
     );
     final callback = busy ? null : onPressed;
     return RiksaTapFeedback(
@@ -207,8 +211,8 @@ class LearningPrimaryButton extends StatelessWidget {
   }
 }
 
-/// A 44dp circular control for a drenched header, where a bordered icon button
-/// would fight the flat pastel it sits on.
+/// A compact circular control for a drenched header, where a bordered icon
+/// button would fight the flat pastel it sits on.
 class LearningCircleButton extends StatelessWidget {
   const LearningCircleButton({
     super.key,
@@ -228,15 +232,31 @@ class LearningCircleButton extends StatelessWidget {
     message: tooltip,
     child: RiksaTapFeedback(
       child: Material(
-        color: context.riksa.surface,
+        color: Colors.transparent,
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onTap,
           child: SizedBox(
-            width: 44,
-            height: 44,
-            child: Icon(icon, size: 20, color: foreground ?? context.riksa.ink),
+            width: 48,
+            height: 48,
+            child: Center(
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Ink(
+                  decoration: ShapeDecoration(
+                    color: context.riksa.surface,
+                    shape: const CircleBorder(),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: foreground ?? context.riksa.ink,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -259,6 +279,7 @@ class LearningActionBar extends StatelessWidget {
     this.primaryKey,
     this.primaryIcon,
     this.busy = false,
+    this.backKey,
     this.backLabel,
     this.onBack,
   });
@@ -268,12 +289,12 @@ class LearningActionBar extends StatelessWidget {
   final Key? primaryKey;
   final IconData? primaryIcon;
   final bool busy;
+  final Key? backKey;
   final String? backLabel;
   final VoidCallback? onBack;
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.riksa;
     final primary = LearningPrimaryButton(
       key: primaryKey,
       label: primaryLabel,
@@ -282,74 +303,42 @@ class LearningActionBar extends StatelessWidget {
       busy: busy,
     );
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fill = isDark
-        ? palette.surface.withValues(alpha: 0.58)
-        : Colors.white.withValues(alpha: 0.72);
-    final border = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.white.withValues(alpha: 0.72);
-
     return SafeArea(
       top: false,
-      minimum: const EdgeInsets.only(bottom: RiksaSpacing.md),
+      minimum: const EdgeInsets.only(bottom: RiksaSpacing.sm),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: AppRadii.fullBorder,
-            boxShadow: [
-              BoxShadow(
-                color: palette.ink.withValues(alpha: isDark ? 0.2 : 0.1),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: AppRadii.fullBorder,
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: fill,
-                  borderRadius: AppRadii.fullBorder,
-                  border: Border.all(color: border),
-                ),
-                child: Row(
-                  children: [
-                    if (onBack != null && backLabel != null) ...[
-                      Expanded(
-                        child: OutlinedButton(
-                          key: const ValueKey('learning-action-back'),
-                          onPressed: onBack,
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(54),
-                          ),
-                          child: Text(
-                            backLabel!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: RiksaTypography.bodyStyleFor(
-                              backLabel!,
-                              const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
+        child: Row(
+          children: [
+            if (onBack != null && backLabel != null) ...[
+              Expanded(
+                child: OutlinedButton(
+                  key: backKey ?? const ValueKey('learning-action-back'),
+                  onPressed: onBack,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(54),
+                  ),
+                  child: Text(
+                    backLabel!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: RiksaTypography.bodyStyleFor(
+                      backLabel!,
+                      TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        height: RiksaTypography.containsKhmer(backLabel!)
+                            ? 1.5
+                            : null,
                       ),
-                      const SizedBox(width: RiksaSpacing.sm),
-                    ],
-                    // The way on always gets the wider half of the bar.
-                    Expanded(flex: 2, child: primary),
-                  ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
+              const SizedBox(width: RiksaSpacing.sm),
+            ],
+            Expanded(flex: 2, child: primary),
+          ],
         ),
       ),
     );

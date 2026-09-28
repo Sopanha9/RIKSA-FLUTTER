@@ -128,7 +128,12 @@ class _InteractiveOnboardingScreenState
       return;
     }
     final router = GoRouter.maybeOf(context);
-    if (router != null && router.canPop()) router.pop();
+    if (router == null) return;
+    if (router.canPop()) {
+      router.pop();
+    } else {
+      router.go('/language-select');
+    }
   }
 
   /// Setup ends on the chosen subject's path, so the learner is not asked to
@@ -313,189 +318,205 @@ class _InteractiveOnboardingScreenState
     };
 
     final duration = RiksaMotion.resolve(context, RiksaMotion.standard);
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        backgroundColor: palette.canvas,
-        resizeToAvoidBottomInset: true,
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: MascotSceneBackdrop(
-                species: species,
-                party: isPayoffScreen,
+    return PopScope<Object?>(
+      canPop: _currentPage == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          unawaited(_back(hasSavedProvince: hasSavedProvince));
+        }
+      },
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Scaffold(
+          backgroundColor: palette.canvas,
+          resizeToAvoidBottomInset: true,
+          body: Stack(
+            children: [
+              Positioned.fill(
+                child: MascotSceneBackdrop(
+                  species: species,
+                  party: isPayoffScreen,
+                ),
               ),
-            ),
-            Column(
-              children: [
-                SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 16, 0),
-                    child: _OnboardingHeader(
-                      currentPage: progressPage,
-                      totalPages: pageCount,
-                      onBack: () => _back(hasSavedProvince: hasSavedProvince),
+              Column(
+                children: [
+                  SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 16, 0),
+                      child: _OnboardingHeader(
+                        currentPage: progressPage,
+                        totalPages: pageCount,
+                        onBack: () => _back(hasSavedProvince: hasSavedProvince),
+                      ),
                     ),
                   ),
-                ),
-                _BuddyStrip(
-                  species: species,
-                  controller: _buddy,
-                  line: _buddyLine(setup, lang, name),
-                  hero: isPayoffScreen,
-                ),
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: palette.canvas,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(28),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: .12),
-                          blurRadius: 24,
-                          offset: const Offset(0, -6),
+                  _BuddyStrip(
+                    species: species,
+                    controller: _buddy,
+                    line: _buddyLine(setup, lang, name),
+                    hero: isPayoffScreen,
+                  ),
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: palette.canvas,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(28),
                         ),
-                      ],
-                    ),
-                    child: SafeArea(
-                      top: false,
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 560),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(
-                                  child: AnimatedSwitcher(
-                                    duration: duration,
-                                    switchInCurve: RiksaMotion.standardCurve,
-                                    switchOutCurve: Curves.easeIn,
-                                    layoutBuilder: (current, previous) => Stack(
-                                      alignment: Alignment.topCenter,
-                                      // The step on its way out must not
-                                      // take a second tap meant for the next.
-                                      children: [
-                                        for (final child in previous)
-                                          IgnorePointer(child: child),
-                                        ?current,
-                                      ],
-                                    ),
-                                    transitionBuilder: (child, animation) {
-                                      final incoming =
-                                          child.key == ValueKey(_currentPage);
-                                      final from = (incoming == _forward)
-                                          ? .12
-                                          : -.12;
-                                      return FadeTransition(
-                                        opacity: animation,
-                                        child: SlideTransition(
-                                          position: Tween(
-                                            begin: Offset(from, 0),
-                                            end: Offset.zero,
-                                          ).animate(animation),
-                                          child: child,
-                                        ),
-                                      );
-                                    },
-                                    child: KeyedSubtree(
-                                      key: ValueKey(_currentPage),
-                                      child: step,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: .12),
+                            blurRadius: 24,
+                            offset: const Offset(0, -6),
+                          ),
+                        ],
+                      ),
+                      child: SafeArea(
+                        top: false,
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 560),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                20,
+                                20,
+                                20,
+                                16,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: AnimatedSwitcher(
+                                      duration: duration,
+                                      switchInCurve: RiksaMotion.standardCurve,
+                                      switchOutCurve: Curves.easeIn,
+                                      layoutBuilder: (current, previous) => Stack(
+                                        alignment: Alignment.topCenter,
+                                        // The step on its way out must not
+                                        // take a second tap meant for the next.
+                                        children: [
+                                          for (final child in previous)
+                                            IgnorePointer(child: child),
+                                          ?current,
+                                        ],
+                                      ),
+                                      transitionBuilder: (child, animation) {
+                                        final incoming =
+                                            child.key == ValueKey(_currentPage);
+                                        final from = (incoming == _forward)
+                                            ? .12
+                                            : -.12;
+                                        return FadeTransition(
+                                          opacity: animation,
+                                          child: SlideTransition(
+                                            position: Tween(
+                                              begin: Offset(from, 0),
+                                              end: Offset.zero,
+                                            ).animate(animation),
+                                            child: child,
+                                          ),
+                                        );
+                                      },
+                                      child: KeyedSubtree(
+                                        key: ValueKey(_currentPage),
+                                        child: step,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                if (!isPayoffScreen) ...[
-                                  const SizedBox(height: 14),
-                                  FilledButton(
-                                    key: const Key('onboarding_continue_btn'),
-                                    onPressed: canContinue && !_submitting
-                                        ? () => _next(
-                                            setup,
-                                            hasSavedProvince: hasSavedProvince,
-                                          )
-                                        : null,
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: isDark
-                                          ? palette.brand
-                                          : palette.brandStrong,
-                                      foregroundColor: palette.onBrand,
-                                      disabledBackgroundColor: palette.outline,
-                                      disabledForegroundColor: palette.inkFaint,
-                                      shadowColor: Colors.transparent,
-                                      elevation: 0,
-                                      side: BorderSide.none,
-                                      shape: const StadiumBorder(),
-                                      minimumSize: const Size.fromHeight(52),
-                                    ),
-                                    child: _submitting
-                                        ? SizedBox.square(
-                                            dimension: 22,
-                                            child: CircularProgressIndicator(
-                                              color: palette.onBrand,
-                                              strokeWidth: 2,
+                                  if (!isPayoffScreen) ...[
+                                    const SizedBox(height: 14),
+                                    FilledButton(
+                                      key: const Key('onboarding_continue_btn'),
+                                      onPressed: canContinue && !_submitting
+                                          ? () => _next(
+                                              setup,
+                                              hasSavedProvince:
+                                                  hasSavedProvince,
+                                            )
+                                          : null,
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: isDark
+                                            ? palette.brand
+                                            : palette.brandStrong,
+                                        foregroundColor: palette.onBrand,
+                                        disabledBackgroundColor:
+                                            palette.outline,
+                                        disabledForegroundColor:
+                                            palette.inkFaint,
+                                        shadowColor: Colors.transparent,
+                                        elevation: 0,
+                                        side: BorderSide.none,
+                                        shape: const StadiumBorder(),
+                                        minimumSize: const Size.fromHeight(52),
+                                      ),
+                                      child: _submitting
+                                          ? SizedBox.square(
+                                              dimension: 22,
+                                              child: CircularProgressIndicator(
+                                                color: palette.onBrand,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  _t(lang, 'Continue', 'បន្ត'),
+                                                  style:
+                                                      RiksaTypography.bodyStyleFor(
+                                                        _t(
+                                                          lang,
+                                                          'Continue',
+                                                          'បន្ត',
+                                                        ),
+                                                        const TextStyle(
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                const Icon(
+                                                  Icons.arrow_forward_rounded,
+                                                  size: 20,
+                                                ),
+                                              ],
                                             ),
-                                          )
-                                        : Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                _t(lang, 'Continue', 'បន្ត'),
-                                                style:
-                                                    RiksaTypography.bodyStyleFor(
-                                                      _t(
-                                                        lang,
-                                                        'Continue',
-                                                        'បន្ត',
-                                                      ),
-                                                      const TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              const Icon(
-                                                Icons.arrow_forward_rounded,
-                                                size: 20,
-                                              ),
-                                            ],
-                                          ),
-                                  ),
-                                ],
-                                if (_currentPage == 0) ...[
-                                  const SizedBox(height: 4),
-                                  TextButton(
-                                    key: const ValueKey(
-                                      'onboarding_returning_account',
                                     ),
-                                    onPressed: _submitting
-                                        ? null
-                                        : () => context.go(
-                                            '/auth/login?onboardingReturning=true',
-                                          ),
-                                    child: Text(
-                                      l10n.onboardingReturningAccount,
-                                      textAlign: TextAlign.center,
+                                  ],
+                                  if (_currentPage == 0) ...[
+                                    const SizedBox(height: 4),
+                                    TextButton(
+                                      key: const ValueKey(
+                                        'onboarding_returning_account',
+                                      ),
+                                      onPressed: _submitting
+                                          ? null
+                                          : () => context.go(
+                                              '/auth/login?onboardingReturning=true',
+                                            ),
+                                      child: Text(
+                                        l10n.onboardingReturningAccount,
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

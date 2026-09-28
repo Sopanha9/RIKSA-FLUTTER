@@ -8,6 +8,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/riksa_components.dart';
 import '../../../../core/widgets/riksa_brand.dart';
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../../core/widgets/markdown_math.dart';
 
 const _userRadius = BorderRadius.only(
   topLeft: Radius.circular(AppRadii.panel),
@@ -139,6 +140,8 @@ class AiTutorBubble extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       MarkdownBody(
+                        inlineSyntaxes: markdownMathSyntaxes,
+                        builders: markdownMathBuilders,
                         data: content,
                         styleSheet: MarkdownStyleSheet.fromTheme(theme)
                             .copyWith(
@@ -181,9 +184,7 @@ class AiTutorBubble extends StatelessWidget {
                                     ..hideCurrentSnackBar()
                                     ..showSnackBar(
                                       SnackBar(
-                                        content: Text(
-                                          l10n.aiCopiedClipboard,
-                                        ),
+                                        content: Text(l10n.aiCopiedClipboard),
                                         duration: const Duration(seconds: 2),
                                       ),
                                     );
@@ -236,11 +237,7 @@ class AiTutorBubble extends StatelessWidget {
 /// Kru AI's own violet mark. This intentionally does not use mascotProvider:
 /// the learner's chosen buddy and the tutor are different product roles.
 class AiCoachAvatar extends StatelessWidget {
-  const AiCoachAvatar({
-    super.key,
-    this.size = 34,
-    this.thinking = false,
-  });
+  const AiCoachAvatar({super.key, this.size = 34, this.thinking = false});
 
   final double size;
   final bool thinking;

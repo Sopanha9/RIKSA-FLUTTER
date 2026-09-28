@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_shell.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_bottom_navigation_bar.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../userProfile/data/public_profile.dart';
@@ -65,16 +66,19 @@ class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
 
     return Scaffold(
       backgroundColor: blogSheetColor(context),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _createPost,
-        tooltip: l10n.blogWritePost,
-        child: const Icon(Icons.edit_outlined),
+      floatingActionButton: AboveBottomNavigation(
+        context: context,
+        child: FloatingActionButton(
+          onPressed: _createPost,
+          tooltip: l10n.blogWritePost,
+          child: const Icon(Icons.edit_outlined),
+        ),
       ),
       body: Column(
         children: [
           BlogTopBar(
             title: l10n.blogTitle,
-            onBack: () => context.pop(),
+            fallbackLocation: '/home',
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

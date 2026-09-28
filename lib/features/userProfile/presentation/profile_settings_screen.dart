@@ -9,6 +9,7 @@ import '../../../core/providers/theme_mode_provider.dart';
 import '../../../core/sound/learning_sound.dart';
 import '../../../core/sound/sound_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_models.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -556,9 +557,6 @@ class _SettingsHero extends StatelessWidget {
         height: 1.4,
       ),
     );
-    final canPop =
-        GoRouter.maybeOf(context)?.canPop() ?? Navigator.of(context).canPop();
-
     return SizedBox(
       height: top + 56 + sceneHeight + _sheetRadius,
       child: Stack(
@@ -593,16 +591,14 @@ class _SettingsHero extends StatelessWidget {
             height: 48,
             child: Row(
               children: [
-                if (canPop)
-                  _FrostedIconButton(
-                    icon: Icons.arrow_back_rounded,
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).backButtonTooltip,
-                    onPressed: () => Navigator.of(context).maybePop(),
-                  )
-                else
-                  const SizedBox(width: 8),
+                RiksaBackButton(
+                  key: const ValueKey('profile-settings-back'),
+                  fallbackLocation: '/profile',
+                  style: IconButton.styleFrom(
+                    backgroundColor: palette.surface.withValues(alpha: .9),
+                    foregroundColor: palette.ink,
+                  ),
+                ),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
@@ -675,29 +671,6 @@ class _SettingsHero extends StatelessWidget {
       ),
     );
   }
-}
-
-class _FrostedIconButton extends StatelessWidget {
-  const _FrostedIconButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => Material(
-    color: Colors.white.withValues(alpha: .9),
-    shape: const CircleBorder(),
-    child: IconButton(
-      tooltip: tooltip,
-      icon: Icon(icon, color: AppColors.ink),
-      onPressed: onPressed,
-    ),
-  );
 }
 
 class _SectionLabel extends StatelessWidget {

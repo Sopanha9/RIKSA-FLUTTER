@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -6,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riksa_app/core/network/dio_client.dart';
+import 'package:riksa_app/core/network/moderation_error.dart';
 import 'package:riksa_app/core/storage/session_store.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
@@ -165,7 +168,7 @@ void main() {
           .widget<TextField>(find.byKey(const ValueKey('comment-composer')))
           .decoration
           ?.fillColor,
-      Colors.white.withValues(alpha: .16),
+      isNull,
     );
     expect(
       tester.widget<Text>(find.text(_post.title)).style?.fontFamily,
@@ -256,6 +259,8 @@ void main() {
       find.byKey(const ValueKey('comment-composer')),
       'Happy to help with math questions!',
     );
+    // The send button enables on the next frame, once it sees the text.
+    await tester.pump();
     await tester.tap(find.byKey(const ValueKey('send-comment-button')));
     await tester.pumpAndSettle();
 
@@ -358,10 +363,19 @@ void main() {
       await tester.tap(deleteButton);
       await tester.pumpAndSettle();
 
-      expect(find.text('Delete comment?'), findsOneWidget);
+      final l10n = AppLocalizations.of(tester.element(deleteButton))!;
+      expect(find.text(l10n.commentDeleteTitle), findsOneWidget);
+      expect(find.text(l10n.commentDeleteMessage), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text(l10n.cancel),
+        ),
+        findsOneWidget,
+      );
 
       // Confirm deletion
-      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+      await tester.tap(find.widgetWithText(FilledButton, l10n.delete));
       await tester.pumpAndSettle();
 
       expect(api.lastDeletedCommentId, 'comment-1');
@@ -644,6 +658,224 @@ void main() {
     expect(find.byKey(const ValueKey('comment-card-reply-1')), findsNothing);
     expect(find.byKey(const ValueKey('comment-card-reply-2')), findsNothing);
   });
+
+  testWidgets('comment likes update optimistically and roll back on failure', (
+    tester,
+  ) async {
+    final fixture = _newFakeApi();
+    addTearDown(fixture.client.dispose);
+    final pendingReaction = Completer<SocialPost>();
+    fixture.api.commentReactionCompleter = pendingReaction;
+    await _pumpDetailScreen(tester, fixture.api);
+
+    final likeButton = find.byKey(
+      const ValueKey('comment-like-button-comment-1'),
+    );
+    final outlineHeart = find.descendant(
+      of: likeButton,
+      matching: find.byIcon(Icons.favorite_border_rounded),
+    );
+    final filledHeart = find.descendant(
+      of: likeButton,
+      matching: find.byIcon(Icons.favorite_rounded),
+    );
+    expect(outlineHeart, findsOneWidget);
+    await tester.ensureVisible(likeButton);
+    await tester.tap(likeButton);
+    await tester.pump();
+
+    expect(fixture.api.lastReactedCommentId, 'comment-1');
+    expect(fixture.api.lastCommentReaction, SocialReaction.love);
+    expect(filledHeart, findsOneWidget);
+    expect(outlineHeart, findsNothing);
+
+    pendingReaction.completeError(const SocialApiException('reaction failed'));
+    await tester.pumpAndSettle();
+
+    expect(outlineHeart, findsOneWidget);
+    expect(filledHeart, findsNothing);
+  });
+
+  testWidgets('comment actions do not show a Hide control', (tester) async {
+    final fixture = _newFakeApi();
+    addTearDown(fixture.client.dispose);
+    await _pumpDetailScreen(tester, fixture.api);
+
+    expect(find.text('Hide'), findsNothing);
+    expect(find.text('Like'), findsOneWidget);
+  });
+
+  testWidgets('does not add synthetic visibility copy beside the count', (
+    tester,
+  ) async {
+    final fixture = _newFakeApi();
+    addTearDown(fixture.client.dispose);
+    fixture.api.postValue = _postWith(commentCount: 4);
+    await _pumpDetailScreen(tester, fixture.api);
+
+    expect(find.textContaining('Showing'), findsNothing);
+    expect(find.textContaining('not visible'), findsNothing);
+  });
+
+  testWidgets('renders inline replies and appends the next replies page', (
+    tester,
+  ) async {
+    final fixture = _newFakeApi();
+    addTearDown(fixture.client.dispose);
+    final firstReply = _reply('reply-1');
+    final nextReply = _reply('reply-2');
+    fixture.api
+      ..commentThreadsValue = SocialCommentThreadPage(
+        threads: [
+          SocialCommentThread(
+            root: _comment,
+            replies: [firstReply],
+            repliesHaveNextPage: true,
+            repliesEndCursor: 'reply-cursor',
+          ),
+        ],
+        hasNextPage: false,
+      )
+      ..moreRepliesValue = SocialCommentReplyPage(
+        replies: [nextReply],
+        hasNextPage: false,
+      );
+    await _pumpDetailScreen(tester, fixture.api);
+
+    expect(find.byKey(const ValueKey('comment-card-reply-1')), findsOneWidget);
+    final viewMore = find.byKey(
+      const ValueKey('comment-view-more-replies-comment-1'),
+    );
+    expect(viewMore, findsOneWidget);
+    await tester.ensureVisible(viewMore);
+    await tester.pumpAndSettle();
+    await tester.tap(viewMore);
+    await tester.pumpAndSettle();
+
+    expect(fixture.api.lastCommentRepliesCommentId, 'comment-1');
+    expect(fixture.api.lastCommentRepliesCursor, 'reply-cursor');
+    expect(fixture.api.lastCommentRepliesLimit, 10);
+    expect(find.byKey(const ValueKey('comment-card-reply-1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('comment-card-reply-2')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('comment-view-more-replies-comment-1')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('Khmer comment actions have no English labels', (tester) async {
+    final fixture = _newFakeApi();
+    addTearDown(fixture.client.dispose);
+    fixture.api.commentThreadsValue = SocialCommentThreadPage(
+      threads: [
+        SocialCommentThread(
+          root: _comment,
+          replies: const [],
+          repliesHaveNextPage: true,
+          repliesEndCursor: 'reply-cursor',
+        ),
+      ],
+      hasNextPage: false,
+    );
+    await _pumpDetailScreen(tester, fixture.api, locale: const Locale('km'));
+
+    final actionRow = find.byKey(
+      const ValueKey('comment-action-row-comment-1'),
+    );
+    final labels = find
+        .descendant(of: actionRow, matching: find.byType(Text))
+        .evaluate()
+        .map((element) => (element.widget as Text).data)
+        .whereType<String>()
+        .toList();
+    final l10n = AppLocalizations.of(tester.element(actionRow))!;
+    expect(labels, contains(l10n.commentLike));
+    expect(labels, contains(l10n.reply));
+    expect(labels, isNot(contains('Like')));
+    expect(labels, isNot(contains('Unlike')));
+    expect(labels, isNot(contains('Reply')));
+    expect(labels, isNot(contains('Delete')));
+    expect(labels, isNot(contains('Hide')));
+    expect(find.text(l10n.commentViewMoreReplies), findsOneWidget);
+    expect(find.text('View more replies'), findsNothing);
+  });
+
+  testWidgets('a moderation rejection keeps reply target and typed text', (
+    tester,
+  ) async {
+    final fixture = _newFakeApi();
+    addTearDown(fixture.client.dispose);
+    fixture.api.createCommentError = const SocialApiException(
+      'blocked',
+      moderationRejection: ModerationRejection(
+        kind: ModerationRejectionKind.blocked,
+        reasons: ['PROFANITY'],
+      ),
+    );
+    await _pumpDetailScreen(tester, fixture.api);
+
+    final replyButton = find.byKey(
+      const ValueKey('comment-reply-button-comment-1'),
+    );
+    await tester.ensureVisible(replyButton);
+    await tester.tap(replyButton);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('comment-composer')),
+      'This comment needs a rewrite',
+    );
+    // The send button enables on the next frame, once it sees the text.
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('send-comment-button')));
+    await tester.pumpAndSettle();
+
+    final field = tester.widget<TextField>(
+      find.byKey(const ValueKey('comment-composer')),
+    );
+    final replyIndicator = find.byKey(const ValueKey('reply-indicator-bar'));
+    final l10n = AppLocalizations.of(tester.element(replyIndicator))!;
+    expect(field.controller!.text, 'This comment needs a rewrite');
+    expect(fixture.api.lastCreatedParentId, 'comment-1');
+    // The reply target survives: the reply bar still names the author.
+    expect(
+      find.descendant(
+        of: replyIndicator,
+        matching: find.textContaining('@Bopha'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text(l10n.moderationProfanity), findsOneWidget);
+    expect(
+      tester
+          .widget<IconButton>(find.byKey(const ValueKey('send-comment-button')))
+          .onPressed,
+      isNotNull,
+    );
+  });
+
+  testWidgets('reply keeps a 48 pixel target without a trailing card gap', (
+    tester,
+  ) async {
+    final fixture = _newFakeApi();
+    addTearDown(fixture.client.dispose);
+    await _pumpDetailScreen(tester, fixture.api);
+
+    final replyButton = find.byKey(
+      const ValueKey('comment-reply-button-comment-1'),
+    );
+    final actionRow = find.byKey(
+      const ValueKey('comment-action-row-comment-1'),
+    );
+    final card = find.byKey(const ValueKey('comment-card-comment-1'));
+    final replySize = tester.getSize(replyButton);
+    final rowRect = tester.getRect(actionRow);
+    final cardRect = tester.getRect(card);
+
+    expect(replySize.width, greaterThanOrEqualTo(48));
+    expect(replySize.height, greaterThanOrEqualTo(48));
+    expect(rowRect.height, 48);
+    expect(cardRect.bottom - rowRect.bottom, lessThanOrEqualTo(1));
+  });
 }
 
 class _FakeSocialApi extends SocialApi {
@@ -651,8 +883,19 @@ class _FakeSocialApi extends SocialApi {
 
   SocialPost postValue = _post;
   List<SocialComment> commentsValue = [_comment];
+  SocialCommentThreadPage? commentThreadsValue;
+  bool commentReplyHasNextPage = false;
+  String? commentReplyEndCursor;
+  SocialCommentReplyPage? moreRepliesValue;
   String? lastCreatedParentId;
   String? lastDeletedCommentId;
+  String? lastReactedCommentId;
+  String? lastCommentRepliesCommentId;
+  String? lastCommentRepliesCursor;
+  int? lastCommentRepliesLimit;
+  SocialReaction? lastCommentReaction;
+  SocialApiException? createCommentError;
+  Completer<SocialPost>? commentReactionCompleter;
 
   @override
   Future<List<SocialCategory>> categories() async => [_post.category];
@@ -676,12 +919,53 @@ class _FakeSocialApi extends SocialApi {
   }) async => SocialCommentPage(comments: commentsValue, hasNextPage: false);
 
   @override
+  Future<SocialCommentThreadPage> commentThreads({
+    required String postId,
+    String? cursor,
+    int limit = 20,
+  }) async {
+    final threadPage = commentThreadsValue;
+    if (threadPage != null) return threadPage;
+    final roots = commentsValue.where((comment) => comment.parentId == null);
+    return SocialCommentThreadPage(
+      threads: [
+        for (final root in roots)
+          SocialCommentThread(
+            root: root,
+            replies: commentsValue
+                .where((comment) => comment.parentId == root.id)
+                .toList(),
+            repliesHaveNextPage: commentReplyHasNextPage,
+            repliesEndCursor: commentReplyEndCursor,
+          ),
+      ],
+      hasNextPage: false,
+    );
+  }
+
+  @override
+  Future<SocialCommentReplyPage> commentReplies({
+    required String postId,
+    required String commentId,
+    required String? cursor,
+    int limit = 10,
+  }) async {
+    lastCommentRepliesCommentId = commentId;
+    lastCommentRepliesCursor = cursor;
+    lastCommentRepliesLimit = limit;
+    return moreRepliesValue ??
+        const SocialCommentReplyPage(replies: [], hasNextPage: false);
+  }
+
+  @override
   Future<SocialComment> createComment({
     required String postId,
     required String content,
     String? parentId,
   }) async {
     lastCreatedParentId = parentId;
+    final error = createCommentError;
+    if (error != null) throw error;
     return SocialComment(
       id: 'comment-2',
       content: content,
@@ -691,6 +975,18 @@ class _FakeSocialApi extends SocialApi {
       createdAt: DateTime.utc(2026, 8, 3),
       updatedAt: DateTime.utc(2026, 8, 3),
     );
+  }
+
+  @override
+  Future<SocialPost> reactToComment({
+    required String commentId,
+    required SocialReaction? reaction,
+  }) async {
+    lastReactedCommentId = commentId;
+    lastCommentReaction = reaction;
+    final completer = commentReactionCompleter;
+    if (completer != null) return completer.future;
+    return _post;
   }
 
   @override
@@ -705,3 +1001,37 @@ Finder _detailPhoto() => find.byWidgetPredicate(
       widget.key is ValueKey<String> &&
       (widget.key! as ValueKey<String>).value.startsWith('post-detail-photo'),
 );
+
+({DioClient client, _FakeSocialApi api}) _newFakeApi() {
+  FlutterSecureStorage.setMockInitialValues({});
+  final client = DioClient(
+    SessionStore(const FlutterSecureStorage()),
+    baseUrl: 'http://riksa.test/api/v1',
+  );
+  return (client: client, api: _FakeSocialApi(client));
+}
+
+Future<void> _pumpDetailScreen(
+  WidgetTester tester,
+  _FakeSocialApi api, {
+  Locale locale = const Locale('en'),
+}) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [socialApiProvider.overrideWithValue(api)],
+      child: MaterialApp(
+        locale: locale,
+        theme: AppTheme.light,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('km')],
+        home: const SocialPostDetailScreen(postId: 'post-1'),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}

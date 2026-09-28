@@ -22,6 +22,8 @@ class MascotFaceView extends StatefulWidget {
     this.loops,
     this.semanticLabel,
     this.activeFrameKey,
+    this.overlay,
+    this.faceClipper,
   });
 
   final MascotSpecies species;
@@ -33,6 +35,14 @@ class MascotFaceView extends StatefulWidget {
   /// Receives the currently displayed source frame key, such as `happy_2`.
   /// BuddyLook uses it to apply frame-specific item anchors.
   final ValueNotifier<String>? activeFrameKey;
+
+  /// Drawn over the face inside the same pop, wobble and bob transforms, so
+  /// layers such as BuddyLook's hat and glasses move with the head.
+  final Widget? overlay;
+
+  /// Clips the face art (not [overlay]), inside the same transforms, so
+  /// BuddyLook can hide headwear drawn into the art under an equipped hat.
+  final CustomClipper<Path>? faceClipper;
 
   @override
   State<MascotFaceView> createState() => _MascotFaceViewState();
@@ -145,7 +155,7 @@ class _MascotFaceViewState extends State<MascotFaceView>
           child: SizedBox.square(
             dimension: widget.size,
             child: still
-                ? _frame(frames.first)
+                ? _withOverlay(_frame(frames.first))
                 : ValueListenableBuilder<Duration>(
                     valueListenable: _elapsed,
                     builder: (context, elapsed, _) {
@@ -172,11 +182,13 @@ class _MascotFaceViewState extends State<MascotFaceView>
                           child: Transform.scale(
                             scale: pop,
                             alignment: Alignment.bottomCenter,
-                            child: SpriteFrames(
-                              frames: frames,
-                              position: _position(local),
-                              frameBuilder: _frame,
-                              fade: .25,
+                            child: _withOverlay(
+                              SpriteFrames(
+                                frames: frames,
+                                position: _position(local),
+                                frameBuilder: _frame,
+                                fade: .25,
+                              ),
                             ),
                           ),
                         ),
@@ -186,6 +198,18 @@ class _MascotFaceViewState extends State<MascotFaceView>
           ),
         ),
       ),
+    );
+  }
+
+  Widget _withOverlay(Widget face) {
+    final clipper = widget.faceClipper;
+    if (clipper != null) face = ClipPath(clipper: clipper, child: face);
+    final overlay = widget.overlay;
+    if (overlay == null) return face;
+    return Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.none,
+      children: [face, overlay],
     );
   }
 

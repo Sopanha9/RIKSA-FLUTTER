@@ -55,6 +55,14 @@ void main() {
             ),
           );
           await tester.pumpAndSettle();
+          // Asset images decode off the fake clock; without this a test run
+          // on its own captures the items with no buddy under them.
+          await tester.runAsync(() async {
+            for (final element in find.byType(Image).evaluate()) {
+              await precacheImage((element.widget as Image).image, element);
+            }
+          });
+          await tester.pumpAndSettle();
 
           final itemCount = entry.value.length;
           expect(

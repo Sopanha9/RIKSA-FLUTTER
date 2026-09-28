@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/riksa_brand.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -184,7 +185,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           action: isAuth
               ? SnackBarAction(
                   label: AppLocalizations.of(context)!.login,
-                  onPressed: () => context.push('/auth/login'),
+                  onPressed: _requestLogin,
                 )
               : null,
         ),
@@ -210,6 +211,13 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     _focus.requestFocus();
   }
 
+  void _requestLogin() {
+    final current = GoRouterState.of(context).uri.toString();
+    context.push(
+      Uri(path: '/auth/login', queryParameters: {'from': current}).toString(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -222,15 +230,12 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
               child: Row(
                 children: [
-                  IconButton(
-                    onPressed: context.pop,
+                  RiksaBackButton(
+                    key: const ValueKey('ai-chat-back'),
+                    fallbackLocation: '/ai',
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.transparent,
                     ),
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).backButtonTooltip,
-                    icon: const Icon(Icons.arrow_back_rounded),
                   ),
                   const SizedBox(width: 2),
                   RiksaDoodle(
@@ -339,7 +344,10 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 padding: const EdgeInsets.only(bottom: RiksaSpacing.md),
                 child: TextButton.icon(
                   key: const ValueKey('ai-chat-history-back'),
-                  onPressed: context.pop,
+                  onPressed: () => RiksaBackButton.navigateBack(
+                    context,
+                    fallbackLocation: '/ai',
+                  ),
                   icon: const Icon(Icons.arrow_back_rounded),
                   label: Text(l10n.back),
                 ),

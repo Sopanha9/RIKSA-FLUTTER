@@ -579,6 +579,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityCalendar => 'Activity calendar';
 
   @override
+  String streakActiveDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count learning days',
+      one: '1 learning day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get streakDayLearned => 'Lesson completed';
+
+  @override
+  String streakDaysToMilestone(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days to $name',
+      one: '1 day to $name',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get createCommunityContent => 'Create in Community';
 
   @override
@@ -802,6 +827,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commentFailed => 'We couldn’t add your comment. Please try again.';
+
+  @override
+  String get commentLike => 'Like';
+
+  @override
+  String get commentUnlike => 'Unlike';
+
+  @override
+  String get commentAgeNow => 'now';
+
+  @override
+  String commentAgeMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes ago',
+      one: '$count minute ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String commentAgeHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours ago',
+      one: '$count hour ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String commentAgeDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: '$count day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentViewMoreReplies => 'View more replies';
 
   @override
   String get noComments => 'No comments yet. Start the conversation.';
@@ -1366,6 +1436,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editProfile => 'Edit Profile';
 
   @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsEmptyTitle => 'Nothing new yet';
+
+  @override
+  String get notificationsEmptyBody =>
+      'Replies, reactions and article reviews will show up here.';
+
+  @override
   String get notificationPreferences => 'Notification preferences';
 
   @override
@@ -1663,30 +1743,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonAddWorkingOptional => 'Add your working (optional)';
 
   @override
-  String get lessonWorkFirst => 'Work it out first';
-
-  @override
   String get lessonWorkHint =>
       'Write your answer and how you got there. Then compare it with the choices.';
 
   @override
+  String get lessonWriteWorking => 'Write your working';
+
+  @override
   String get lessonAnswerHint => 'Write your answer';
-
-  @override
-  String get lessonYourWork => 'Your working';
-
-  @override
-  String get lessonChooseAnswer => 'Compare your working and choose an answer.';
-
-  @override
-  String lessonExerciseNumber(int number) {
-    return 'Exercise $number';
-  }
-
-  @override
-  String lessonResponseProgress(int done, int total) {
-    return '$done of $total responses checked';
-  }
 
   @override
   String get lessonSectionComplete => 'Section complete';
@@ -1813,10 +1877,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonExplainAnswer => 'Explain with AI';
 
   @override
-  String get lessonWhy => 'Explanation';
-
-  @override
-  String get lessonHint => 'Hint';
+  String get lessonWhy => 'Why?';
 
   @override
   String get lessonEditWorking => 'Edit working';
@@ -1825,10 +1886,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonWorkingStatus => 'One moment…';
 
   @override
-  String get lessonAnswerSuccess => 'That’s it. Keep going when you’re ready.';
+  String get lessonAnswerSuccess => 'Correct!';
 
   @override
-  String get lessonAnswerRetry => 'Not quite yet. Try another approach.';
+  String get lessonAnswerRetry => 'Not quite';
 
   @override
   String get learningLoadErrorBody =>
@@ -2235,6 +2296,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'We couldn’t load your communities. Your writing is safe.';
 
   @override
+  String get blogChooseTopic => 'Choose a topic';
+
+  @override
   String get blogChooseTopicRequired => 'Choose a topic (required)';
 
   @override
@@ -2443,6 +2507,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialDeleteComment => 'Delete this comment';
 
   @override
+  String get commentDeleteTitle => 'Delete this comment?';
+
+  @override
+  String get commentDeleteMessage =>
+      'Are you sure you want to delete this comment?';
+
+  @override
+  String get commentDeleted => 'Comment deleted';
+
+  @override
   String get socialCancelReply => 'Cancel reply';
 
   @override
@@ -2596,6 +2670,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blogYourPosts => 'My Articles';
 
   @override
+  String get blogFilterAll => 'All';
+
+  @override
   String get blogFeedFailedTitle => 'Posts are taking a break';
 
   @override
@@ -2679,18 +2756,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blogPostGone => 'This post no longer exists';
 
   @override
-  String get blogReviewPendingTitle => 'In review';
+  String get blogReviewPendingTitle => 'A quick review';
 
   @override
-  String get blogReviewBackTitle => 'Back in review';
+  String get blogReviewBackTitle => 'This edit needs a quick review';
 
   @override
   String get blogReviewBackBody =>
-      'Your changes were saved. The post returns to the blog once a moderator approves this version.';
+      'Your changes were saved. A moderator will take a quick look at this version before it appears on the blog.';
 
   @override
   String get blogReviewSubmittedBody =>
-      'Your post was submitted. It appears in the blog once a moderator approves it, and you can follow its status under Your posts.';
+      'Most posts publish right away. A moderator will take a quick look at this one before it appears on the blog. You can check its status under Your posts.';
 
   @override
   String get blogDone => 'Done';
@@ -2700,6 +2777,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blogPublish => 'Post';
+
+  @override
+  String get moderationProfanity =>
+      'Please remove offensive words before posting.';
+
+  @override
+  String get moderationLinks =>
+      'This looks like spam because of its links. Remove some links and try again.';
+
+  @override
+  String get moderationDuplicate =>
+      'You already posted this. Try adding something new.';
+
+  @override
+  String get moderationShouting =>
+      'Please write in normal text (not all capitals or repeated characters).';
+
+  @override
+  String get moderationRateLimited =>
+      'You\'re posting very fast. Wait a few minutes and try again.';
+
+  @override
+  String get moderationFallback => 'This post can\'t be published.';
+
+  @override
+  String get moderationPublishedTitle => 'Published';
+
+  @override
+  String get moderationPublishedBody =>
+      'Your post is live on the blog and ready for readers.';
+
+  @override
+  String get moderationPublishedOpenPost => 'Open post';
 
   @override
   String get blogNothingToPreview => 'Nothing to preview yet.';

@@ -90,7 +90,7 @@ Widget completionApp({
 }
 
 void main() {
-  testWidgets('XP text uses readable dark ink on the reward card', (
+  testWidgets('XP text uses the lesson ink color on the calm result screen', (
     tester,
   ) async {
     await tester.pumpWidget(completionApp());
@@ -139,6 +139,47 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('lesson-completion-continue')));
     await tester.pumpAndSettle();
     expect(find.text('Roadmap opened'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('completion actions stack without truncation at 130 percent', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      completionApp(textScaler: const TextScaler.linear(1.3)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('lesson-completion-options')), findsNothing);
+    expect(find.text('Start next lesson'), findsOneWidget);
+    expect(find.text('Finish for now'), findsOneWidget);
+    final primary = tester.getRect(
+      find.byKey(const ValueKey('lesson-completion-continue')),
+    );
+    final secondary = tester.getRect(
+      find.byKey(const ValueKey('lesson-completion-secondary')),
+    );
+    expect(primary.top, lessThan(secondary.top));
+    expect(primary.width, secondary.width);
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('lesson-completion-next-title')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .getRect(find.byKey(const ValueKey('lesson-completion-next-title')))
+          .bottom,
+      lessThanOrEqualTo(
+        tester
+            .getRect(find.byKey(const ValueKey('lesson-completion-continue')))
+            .top,
+      ),
+    );
     expect(tester.takeException(), isNull);
   });
 

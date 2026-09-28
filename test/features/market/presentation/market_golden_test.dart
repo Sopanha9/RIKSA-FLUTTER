@@ -51,6 +51,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Straw hat').first);
       await tester.pumpAndSettle();
+      await _decodeImages(tester);
 
       await expectLater(
         find.byType(MarketScreen),
@@ -96,6 +97,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Straw hat').first);
     await tester.pumpAndSettle();
+    await _decodeImages(tester);
 
     await expectLater(
       find.byType(WardrobeScreen),
@@ -124,3 +126,14 @@ Widget _app(Widget home, FakeMarketApi api, {bool dark = false}) =>
         ),
       ),
     );
+
+/// Asset images decode off the fake clock, so a golden taken right away can
+/// miss the buddy's face and show only the hat. Decode every image first.
+Future<void> _decodeImages(WidgetTester tester) async {
+  await tester.runAsync(() async {
+    for (final element in find.byType(Image).evaluate()) {
+      await precacheImage((element.widget as Image).image, element);
+    }
+  });
+  await tester.pumpAndSettle();
+}

@@ -6,6 +6,7 @@ import '../../../app/router/app_router.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_components.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../data/auth_models.dart';
 import '../providers/auth_provider.dart';
@@ -78,7 +79,10 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
     await ref.read(localeProvider.notifier).completeOnboarding();
     if (!mounted) return;
     final authenticated = ref.read(authProvider) is Authenticated;
-    context.go(authenticated ? kLandingLocation : '/auth/login');
+    await RiksaBackButton.navigateBack(
+      context,
+      fallbackLocation: authenticated ? kLandingLocation : '/auth/login',
+    );
   }
 
   @override
@@ -97,21 +101,27 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: context.riksa.brandSoft,
-                    borderRadius: AppRadii.largeBorder,
+              Row(
+                children: [
+                  RiksaBackButton(
+                    key: const ValueKey('province-select-back'),
+                    fallbackLocation: '/leaderboard',
                   ),
-                  child: Icon(
-                    Icons.location_on_rounded,
-                    color: colors.onPrimaryContainer,
+                  const Spacer(),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: context.riksa.brandSoft,
+                      borderRadius: AppRadii.largeBorder,
+                    ),
+                    child: Icon(
+                      Icons.location_on_rounded,
+                      color: colors.onPrimaryContainer,
+                    ),
                   ),
-                ),
+                ],
               ),
               const SizedBox(height: 20),
               Text(

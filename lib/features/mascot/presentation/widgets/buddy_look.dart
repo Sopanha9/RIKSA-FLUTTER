@@ -8,8 +8,9 @@ import '../../domain/mascot.dart';
 import 'buddy_anchors.dart';
 import 'mascot_face_view.dart';
 
-/// A face with its head slots layered over the source image. The layout stays
-/// square at [size]; art and placeholders can paint beyond those bounds.
+/// A face with its head slots layered over the source image. The drawing
+/// canvas stays square at [size] even inside a rectangular parent; art and
+/// placeholders can paint beyond the parent's bounds.
 class BuddyLook extends StatefulWidget {
   const BuddyLook({
     super.key,
@@ -82,56 +83,64 @@ class _BuddyLookState extends State<BuddyLook> {
       child: ExcludeSemantics(
         child: SizedBox.square(
           dimension: size,
-          child: FutureBuilder<BuddyAnchorSet>(
-            future: BuddyAnchorLoader.load(species),
-            builder: (context, snapshot) {
-              final anchors =
-                  snapshot.data ?? BuddyAnchorLoader.fallbackFor(species);
-              final faceHeight = size * faceHeightFractions[species]!;
-              final faceTop = size - faceHeight;
-              return Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned.fill(
-                    child: MascotFaceView(
-                      species: species,
-                      face: face,
-                      size: size,
-                      loops: widget.loops,
-                      activeFrameKey: _activeFrameKey,
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: ValueListenableBuilder<String>(
-                      valueListenable: _activeFrameKey,
-                      builder: (context, activeFrame, _) => Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          for (final slot in const [
-                            BuddyItemSlot.eyewear,
-                            BuddyItemSlot.hat,
-                          ])
-                            if (equipped[slot]?.isNotEmpty == true)
-                              _PlacedItem(
-                                slot: slot,
-                                species: species,
-                                assetKey: equipped[slot]!,
-                                rarity: widget.rarity[slot],
-                                size: size,
-                                faceTop: faceTop,
-                                faceHeight: faceHeight,
-                                anchor: anchors.forFrame(
-                                  slot,
-                                  widget.frameKey ?? activeFrame,
-                                ),
+          // Keep the face and its anchor math on the same square canvas even
+          // when an ancestor imposes wider or shorter constraints.
+          child: OverflowBox(
+            alignment: Alignment.center,
+            minWidth: size,
+            maxWidth: size,
+            minHeight: size,
+            maxHeight: size,
+            child: FutureBuilder<BuddyAnchorSet>(
+              future: BuddyAnchorLoader.load(species),
+              builder: (context, snapshot) {
+                final anchors =
+                    snapshot.data ?? BuddyAnchorLoader.fallbackFor(species);
+                final faceHeight = size * faceHeightFractions[species]!;
+                final faceTop = size - faceHeight;
+                final wearsHat = equipped[BuddyItemSlot.hat]?.isNotEmpty == true;
+                return MascotFaceView(
+                  species: species,
+                  face: face,
+                  size: size,
+                  loops: widget.loops,
+                  activeFrameKey: _activeFrameKey,
+                  faceClipper: wearsHat && anchors.hatClip.isNotEmpty
+                      ? _BelowLineClipper(
+                          line: anchors.hatClip,
+                          faceTop: faceTop,
+                          faceHeight: faceHeight,
+                        )
+                      : null,
+                  overlay: ValueListenableBuilder<String>(
+                    valueListenable: _activeFrameKey,
+                    builder: (context, activeFrame, _) => Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        for (final slot in const [
+                          BuddyItemSlot.eyewear,
+                          BuddyItemSlot.hat,
+                        ])
+                          if (equipped[slot]?.isNotEmpty == true)
+                            _PlacedItem(
+                              slot: slot,
+                              species: species,
+                              assetKey: equipped[slot]!,
+                              rarity: widget.rarity[slot],
+                              size: size,
+                              faceTop: faceTop,
+                              faceHeight: faceHeight,
+                              anchor: anchors.forFrame(
+                                slot,
+                                widget.frameKey ?? activeFrame,
                               ),
-                        ],
-                      ),
+                            ),
+                      ],
                     ),
                   ),
-                ],
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -151,6 +160,46 @@ class _BuddyLookState extends State<BuddyLook> {
         BuddyItemSlot.hat => strings?.buddyLookHat ?? 'hat',
         BuddyItemSlot.eyewear => strings?.buddyLookEyewear ?? 'glasses',
       };
+}
+
+/// Keeps the face below [line] (face fractions), dropping the art's own
+/// headwear so an equipped hat replaces it.
+class _BelowLineClipper extends CustomClipper<Path> {
+  const _BelowLineClipper({
+    required this.line,
+    required this.faceTop,
+    required this.faceHeight,
+  });
+
+  final List<Offset> line;
+  final double faceTop;
+  final double faceHeight;
+
+  @override
+  Path getClip(Size size) {
+    Offset toPixels(Offset point) =>
+        Offset(point.dx * size.width, faceTop + point.dy * faceHeight);
+    final first = toPixels(line.first);
+    final last = toPixels(line.last);
+    // Reach past the square on both sides and below, so pop and wobble
+    // transforms never expose a clipped edge.
+    final path = Path()..moveTo(-size.width, first.dy);
+    for (final point in line) {
+      final pixel = toPixels(point);
+      path.lineTo(pixel.dx, pixel.dy);
+    }
+    return path
+      ..lineTo(size.width * 2, last.dy)
+      ..lineTo(size.width * 2, size.height * 2)
+      ..lineTo(-size.width, size.height * 2)
+      ..close();
+  }
+
+  @override
+  bool shouldReclip(_BelowLineClipper oldClipper) =>
+      oldClipper.faceTop != faceTop ||
+      oldClipper.faceHeight != faceHeight ||
+      oldClipper.line != line;
 }
 
 class _PlacedItem extends StatelessWidget {

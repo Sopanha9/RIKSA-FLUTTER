@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../mascot/domain/mascot.dart';
@@ -15,7 +16,6 @@ import '../providers/learning_home_provider.dart';
 import '../providers/lesson_catalog_provider.dart';
 import '../providers/saved_lessons_provider.dart';
 import 'learning_design.dart';
-import 'widgets/learning_status_bar.dart';
 
 /// Lessons the learner bookmarked, filterable by subject.
 class SavedLessonsScreen extends ConsumerStatefulWidget {
@@ -88,11 +88,13 @@ class _SavedLessonsScreenState extends ConsumerState<SavedLessonsScreen> {
       backgroundColor: palette.canvas,
       appBar: AppBar(
         backgroundColor: palette.canvas,
-        leading: IconButton(
-          onPressed: () => leaveLearningScreen(context),
-          style: IconButton.styleFrom(backgroundColor: Colors.transparent),
-          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          icon: const Icon(Icons.arrow_back_rounded),
+        leading: const Center(
+          child: RiksaBackButton(
+            fallbackLocation: '/learn',
+            style: ButtonStyle(
+              backgroundColor: WidgetStatePropertyAll(Colors.transparent),
+            ),
+          ),
         ),
         titleSpacing: 0,
         title: Text(

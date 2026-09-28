@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/providers/current_user_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../features/auth/presentation/require_account.dart';
 import '../../../features/mascot/data/buddy_api.dart';
 import '../../../features/mascot/domain/mascot.dart';
@@ -50,6 +51,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       appBar: AppBar(
         title: Text(l10n.marketTitle),
         backgroundColor: context.riksa.canvas,
+        leading: const Center(
+          child: RiksaBackButton(fallbackLocation: '/learn'),
+        ),
         actions: [
           IconButton(
             tooltip: l10n.wardrobeTitle,

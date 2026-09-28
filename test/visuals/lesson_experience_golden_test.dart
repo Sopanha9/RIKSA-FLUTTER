@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:riksa_app/core/sound/sound_player.dart';
+import 'package:riksa_app/core/sound/sound_provider.dart';
+import 'package:riksa_app/core/sound/sound_service.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/core/widgets/riksa_components.dart';
 import 'package:riksa_app/features/learning/presentation/widgets/learning_atoms.dart';
@@ -231,6 +234,11 @@ Widget _previewApp({
   TextScaler scaler = TextScaler.noScaling,
 }) => ProviderScope(
   overrides: [
+    // Tests have no audio plugin. Sound preferences load asynchronously, so a
+    // fast answer can play a cue before "sound off" is read back.
+    soundServiceProvider.overrideWithValue(
+      SoundService(createPlayer: _SilentPlayer.new, enableHaptics: false),
+    ),
     learningApiProvider.overrideWithValue(_PreviewLearningApi()),
     resourcesRepositoryProvider.overrideWithValue(
       _PreviewResourcesRepository(),
@@ -319,7 +327,7 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('check-answer')));
     await tester.pumpAndSettle();
-    expect(find.text('Correct.').hitTestable(), findsOneWidget);
+    expect(find.text('Correct!').hitTestable(), findsOneWidget);
     await _precacheImages(tester);
     await expectLater(
       find.byType(LessonExperienceScreen),
@@ -334,6 +342,8 @@ void main() {
     final paperButton = find.byKey(
       const ValueKey('lesson-worked-on-paper-ex-2'),
     );
+    await tester.tap(find.byKey(const ValueKey('lesson-options')));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(paperButton);
     await tester.tap(paperButton);
     await tester.pumpAndSettle();
@@ -342,7 +352,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('check-answer')));
     await tester.pumpAndSettle();
-    expect(find.text('Correct.').hitTestable(), findsOneWidget);
+    expect(find.text('Correct!').hitTestable(), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('continue-after-answer')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('lesson-reflection-toggle')));
@@ -431,6 +441,47 @@ void main() {
       matchesGoldenFile('goldens/lesson_completion_en_light.png'),
     );
   });
+
+  testWidgets('completion in Khmer dark keeps the reward together', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      _previewApp(
+        theme: AppTheme.dark,
+        locale: const Locale('km'),
+        home: const LessonCompletionScreen(
+          xpEarned: 40,
+          lessonTitle: 'Forces and Motion',
+          roadmapCategoryId: 'physics',
+          lessonId: 'physics-2',
+          reflection:
+              'Force depends on both mass and acceleration. I want to practise rearranging the formula.',
+          needsReview: true,
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    final mascotImages = find.descendant(
+      of: find.byType(MascotView, skipOffstage: false),
+      matching: find.byType(Image, skipOffstage: false),
+    );
+    await tester.runAsync(
+      () => Future.wait([
+        for (final element in mascotImages.evaluate())
+          precacheImage((element.widget as Image).image, element),
+      ]),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await expectLater(
+      find.byType(LessonCompletionScreen),
+      matchesGoldenFile('goldens/lesson_completion_km_dark.png'),
+    );
+  });
   for (final locale in ['en', 'km']) {
     testWidgets('friendly empty state in $locale', (tester) async {
       tester.view.physicalSize = const Size(360, 800);
@@ -496,4 +547,15 @@ void main() {
       matchesGoldenFile('goldens/learning_busy_en_light.png'),
     );
   });
+}
+
+class _SilentPlayer implements SoundPlayer {
+  @override
+  Future<void> play(String asset) async {}
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> dispose() async {}
 }

@@ -9,6 +9,7 @@ import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/features/blog/data/blog_api.dart';
 import 'package:riksa_app/features/blog/data/blog_models.dart';
+import 'package:riksa_app/features/blog/presentation/blog_composer_screen.dart';
 import 'package:riksa_app/features/blog/presentation/blog_feed_screen.dart';
 import 'package:riksa_app/features/blog/providers/blog_provider.dart';
 import 'package:riksa_app/features/userProfile/data/public_profile.dart';
@@ -55,6 +56,18 @@ void main() {
     );
 
     expect(find.byTooltip('Post options'), findsNothing);
+  });
+
+  testWidgets('only the author can open the blog edit composer', (
+    tester,
+  ) async {
+    await _pumpEditScreen(tester, post: mine, userId: 'me');
+    expect(find.byType(BlogComposerScreen), findsOneWidget);
+
+    await _pumpEditScreen(tester, post: mine, userId: 'another-reader');
+    expect(find.byType(BlogComposerScreen), findsNothing);
+    expect(find.text('You can only edit your own posts'), findsOneWidget);
+    expect(find.byTooltip('Back'), findsOneWidget);
   });
 
   testWidgets('delete asks first, then removes the post', (tester) async {
@@ -142,6 +155,41 @@ Future<void> _pumpFeed(
                 openDrawer: onOpenDrawer,
                 child: const BlogFeedScreen(),
               ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pumpEditScreen(
+  WidgetTester tester, {
+  required BlogPost post,
+  required String? userId,
+}) async {
+  tester.view.physicalSize = const Size(430, 932);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        blogApiProvider.overrideWithValue(_MockBlogApi()),
+        blogCategoriesProvider.overrideWith((ref) async => const []),
+        blogFeedProvider.overrideWith(() => _FeedNotifier(const [])),
+        currentUserIdProvider.overrideWithValue(userId),
+        authProvider.overrideWith(_AuthStub.new),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.light,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('km')],
+        home: BlogPostEditScreen(id: post.id, post: post),
       ),
     ),
   );

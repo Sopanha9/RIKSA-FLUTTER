@@ -18,8 +18,10 @@ import 'sound_player.dart';
 ///   which on a school device is most of the time — so muting silences the
 ///   audio and keeps the buzz.
 class SoundService {
-  SoundService({SoundPlayer Function()? createPlayer, this.enableHaptics = true})
-    : _createPlayer = createPlayer ?? AudioPlayersSoundPlayer.new;
+  SoundService({
+    SoundPlayer Function()? createPlayer,
+    this.enableHaptics = true,
+  }) : _createPlayer = createPlayer ?? AudioPlayersSoundPlayer.new;
 
   final SoundPlayer Function() _createPlayer;
   final bool enableHaptics;
@@ -75,10 +77,8 @@ class SoundService {
   /// Audio is decoration; a failure must never reach the learner.
   void _swallow(Future<void> future) => _swallowed(future);
 
-  Future<void> _swallowed(Future<void> future) => future.catchError((
-    Object error,
-    StackTrace stack,
-  ) {
-    if (kDebugMode) debugPrint('Sound failed: $error');
-  });
+  Future<void> _swallowed(Future<void> future) =>
+      future.catchError((Object error, StackTrace stack) {
+        if (kDebugMode) debugPrint('Sound failed: $error');
+      });
 }

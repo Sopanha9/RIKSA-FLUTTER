@@ -574,6 +574,29 @@ class AppLocalizationsKm extends AppLocalizations {
   String get activityCalendar => 'ប្រតិទិនសកម្មភាព';
 
   @override
+  String streakActiveDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ថ្ងៃរៀន',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get streakDayLearned => 'បានរៀនចប់មេរៀន';
+
+  @override
+  String streakDaysToMilestone(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ថ្ងៃទៀតដល់ $name',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get createCommunityContent => 'បង្កើតក្នុងសហគមន៍';
 
   @override
@@ -784,6 +807,51 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get commentFailed =>
       'យើងមិនអាចបន្ថែមមតិយោបល់របស់អ្នកបានទេ។ សូមព្យាយាមម្ដងទៀត។';
+
+  @override
+  String get commentLike => 'ចូលចិត្ត';
+
+  @override
+  String get commentUnlike => 'ឈប់ចូលចិត្ត';
+
+  @override
+  String get commentAgeNow => 'ឥឡូវនេះ';
+
+  @override
+  String commentAgeMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count នាទីមុន',
+      one: '$count នាទីមុន',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String commentAgeHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ម៉ោងមុន',
+      one: '$count ម៉ោងមុន',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String commentAgeDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ថ្ងៃមុន',
+      one: '$count ថ្ងៃមុន',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentViewMoreReplies => 'មើលការឆ្លើយតបបន្ថែម';
 
   @override
   String get noComments => 'មិនទាន់មានមតិយោបល់ទេ។ ចាប់ផ្ដើមការសន្ទនា។';
@@ -1319,6 +1387,16 @@ class AppLocalizationsKm extends AppLocalizations {
   String get editProfile => 'កែប្រែប្រវត្តិរូប';
 
   @override
+  String get notificationsTitle => 'ការជូនដំណឹង';
+
+  @override
+  String get notificationsEmptyTitle => 'មិនទាន់មានអ្វីថ្មីទេ';
+
+  @override
+  String get notificationsEmptyBody =>
+      'ការឆ្លើយតប ប្រតិកម្ម និងការពិនិត្យអត្ថបទ នឹងបង្ហាញនៅទីនេះ។';
+
+  @override
   String get notificationPreferences => 'ការជូនដំណឹង';
 
   @override
@@ -1617,31 +1695,14 @@ class AppLocalizationsKm extends AppLocalizations {
   String get lessonAddWorkingOptional => 'បន្ថែមវិធីដោះស្រាយ (មិនចាំបាច់)';
 
   @override
-  String get lessonWorkFirst => 'សាកល្បងដោះស្រាយជាមុន';
-
-  @override
   String get lessonWorkHint =>
       'សរសេរចម្លើយ និងរបៀបដែលអ្នករកបាន។ បន្ទាប់មកប្រៀបធៀបជាមួយជម្រើស។';
 
   @override
+  String get lessonWriteWorking => 'សរសេរវិធីដោះស្រាយរបស់អ្នក';
+
+  @override
   String get lessonAnswerHint => 'សរសេរចម្លើយរបស់អ្នក';
-
-  @override
-  String get lessonYourWork => 'វិធីដោះស្រាយរបស់អ្នក';
-
-  @override
-  String get lessonChooseAnswer =>
-      'ប្រៀបធៀបវិធីដោះស្រាយរបស់អ្នក ហើយជ្រើសរើសចម្លើយ។';
-
-  @override
-  String lessonExerciseNumber(int number) {
-    return 'លំហាត់ទី $number';
-  }
-
-  @override
-  String lessonResponseProgress(int done, int total) {
-    return 'បានពិនិត្យចម្លើយ $done ក្នុងចំណោម $total';
-  }
 
   @override
   String get lessonSectionComplete => 'បានបញ្ចប់ផ្នែកនេះ';
@@ -1770,10 +1831,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get lessonExplainAnswer => 'ពន្យល់ជាមួយ AI';
 
   @override
-  String get lessonWhy => 'សេចក្តីពន្យល់';
-
-  @override
-  String get lessonHint => 'តម្រុយ';
+  String get lessonWhy => 'ហេតុអ្វី?';
 
   @override
   String get lessonEditWorking => 'កែសម្រួលវិធីដោះស្រាយ';
@@ -1782,10 +1840,10 @@ class AppLocalizationsKm extends AppLocalizations {
   String get lessonWorkingStatus => 'សូមរង់ចាំបន្តិច…';
 
   @override
-  String get lessonAnswerSuccess => 'ត្រឹមត្រូវហើយ។ បន្តពេលអ្នករួចរាល់។';
+  String get lessonAnswerSuccess => 'ត្រឹមត្រូវ!';
 
   @override
-  String get lessonAnswerRetry => 'មិនទាន់ត្រឹមត្រូវទេ។ សាកល្បងវិធីផ្សេងទៀត។';
+  String get lessonAnswerRetry => 'មិនទាន់ត្រឹមត្រូវទេ';
 
   @override
   String get learningLoadErrorBody =>
@@ -2190,6 +2248,9 @@ class AppLocalizationsKm extends AppLocalizations {
       'យើងមិនអាចផ្ទុកសហគមន៍របស់អ្នកបានទេ។ អត្ថបទរបស់អ្នកនៅដដែល។';
 
   @override
+  String get blogChooseTopic => 'ជ្រើសរើសប្រធានបទ';
+
+  @override
   String get blogChooseTopicRequired => 'ជ្រើសរើសប្រធានបទ (ចាំបាច់)';
 
   @override
@@ -2396,6 +2457,15 @@ class AppLocalizationsKm extends AppLocalizations {
   String get socialDeleteComment => 'លុបមតិនេះ';
 
   @override
+  String get commentDeleteTitle => 'លុបមតិយោបល់នេះមែនទេ?';
+
+  @override
+  String get commentDeleteMessage => 'តើអ្នកប្រាកដថាចង់លុបមតិយោបល់នេះមែនទេ?';
+
+  @override
+  String get commentDeleted => 'បានលុបមតិយោបល់';
+
+  @override
   String get socialCancelReply => 'បោះបង់ការឆ្លើយតប';
 
   @override
@@ -2552,6 +2622,9 @@ class AppLocalizationsKm extends AppLocalizations {
   String get blogYourPosts => 'អត្ថបទរបស់ខ្ញុំ';
 
   @override
+  String get blogFilterAll => 'ទាំងអស់';
+
+  @override
   String get blogFeedFailedTitle => 'អត្ថបទកំពុងសម្រាក';
 
   @override
@@ -2634,18 +2707,18 @@ class AppLocalizationsKm extends AppLocalizations {
   String get blogPostGone => 'អត្ថបទនេះលែងមានទៀតហើយ';
 
   @override
-  String get blogReviewPendingTitle => 'កំពុងត្រួតពិនិត្យ';
+  String get blogReviewPendingTitle => 'ត្រូវពិនិត្យបន្តិចសិន';
 
   @override
-  String get blogReviewBackTitle => 'ត្រឡប់ទៅត្រួតពិនិត្យវិញ';
+  String get blogReviewBackTitle => 'ការកែប្រែនេះត្រូវពិនិត្យបន្តិចសិន';
 
   @override
   String get blogReviewBackBody =>
-      'ការកែប្រែរបស់អ្នកបានរក្សាទុក។ អត្ថបទនឹងត្រឡប់ទៅប្លុកវិញ នៅពេលអ្នកត្រួតពិនិត្យអនុម័តកំណែនេះ។';
+      'ការកែប្រែរបស់អ្នកបានរក្សាទុក។ អ្នកសម្របសម្រួលនឹងពិនិត្យកំណែនេះបន្តិចសិន មុនពេលវាបង្ហាញនៅលើប្លុក។';
 
   @override
   String get blogReviewSubmittedBody =>
-      'អត្ថបទរបស់អ្នកបានដាក់ស្នើ។ វានឹងបង្ហាញក្នុងប្លុក នៅពេលអ្នកត្រួតពិនិត្យអនុម័ត ហើយអ្នកអាចតាមដានស្ថានភាពនៅក្នុង អត្ថបទរបស់អ្នក។';
+      'អត្ថបទភាគច្រើនត្រូវបានផ្សាយភ្លាមៗ។ អ្នកសម្របសម្រួលនឹងពិនិត្យអត្ថបទនេះបន្តិចសិន មុនពេលវាបង្ហាញនៅលើប្លុក។ អ្នកអាចមើលស្ថានភាពនៅក្នុង អត្ថបទរបស់ខ្ញុំ។';
 
   @override
   String get blogDone => 'រួចរាល់';
@@ -2655,6 +2728,38 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get blogPublish => 'បង្ហោះ';
+
+  @override
+  String get moderationProfanity => 'សូមលុបពាក្យមិនសមរម្យចេញ មុនពេលបង្ហោះ។';
+
+  @override
+  String get moderationLinks =>
+      'មាតិកានេះមើលទៅដូចជាសារឥតបានការ ដោយសារតែមានតំណភ្ជាប់។ សូមដកតំណភ្ជាប់ខ្លះចេញ ហើយសាកល្បងម្ដងទៀត។';
+
+  @override
+  String get moderationDuplicate =>
+      'អ្នកបានបង្ហោះមាតិកានេះរួចហើយ។ សូមបន្ថែមអ្វីថ្មី ហើយសាកល្បងម្ដងទៀត។';
+
+  @override
+  String get moderationShouting =>
+      'សូមសរសេរជាអក្សរធម្មតា កុំប្រើអក្សរធំទាំងអស់ ឬតួអក្សរដដែលៗច្រើនដង។';
+
+  @override
+  String get moderationRateLimited =>
+      'អ្នកកំពុងបង្ហោះញឹកញាប់ពេក។ សូមរង់ចាំពីរបីនាទី ហើយសាកល្បងម្ដងទៀត។';
+
+  @override
+  String get moderationFallback => 'មិនអាចបង្ហោះមាតិកានេះបានទេ។';
+
+  @override
+  String get moderationPublishedTitle => 'អត្ថបទត្រូវបានផ្សាយ';
+
+  @override
+  String get moderationPublishedBody =>
+      'អត្ថបទរបស់អ្នកបានផ្សាយនៅលើប្លុក ហើយអ្នកអានអាចមើលឃើញឥឡូវនេះ។';
+
+  @override
+  String get moderationPublishedOpenPost => 'មើលអត្ថបទ';
 
   @override
   String get blogNothingToPreview => 'មិនទាន់មានអ្វីសម្រាប់មើលជាមុនទេ។';

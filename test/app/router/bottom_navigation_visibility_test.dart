@@ -217,7 +217,7 @@ void main() {
     expect(find.text('/profile/someone-else'), findsOneWidget);
   });
 
-  testWidgets('the drawer profile item lands on the profile tab with tabs', (
+  testWidgets('the drawer identity lands on the profile tab with tabs', (
     tester,
   ) async {
     await _pumpShell(tester, '/home');
@@ -227,7 +227,7 @@ void main() {
     );
     shell.openDrawer();
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('drawer-profile')));
+    await tester.tap(find.byKey(const ValueKey('drawer-identity')));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);

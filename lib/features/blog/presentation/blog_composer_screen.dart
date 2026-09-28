@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/network/moderation_error.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
+import '../../../core/widgets/riksa_back_button.dart';
+import '../../../core/widgets/moderation_message.dart';
 import '../../../core/widgets/unsaved_changes_guard.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_api.dart';
@@ -44,6 +49,8 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
   bool _showCoverField = false;
   bool _submitting = false;
   bool _submitted = false;
+  BlogStatus? _submittedStatus;
+  String? _submittedPostId;
   bool _previewing = false;
 
   BlogPost? get _original => widget.post;
@@ -124,28 +131,31 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
           ? await api.createPost(request)
           : await api.updatePost(editing.id, request);
       if (!mounted) return;
-      // The server decides whether an edit goes back through moderation.
       if (editing != null) {
         ref.read(blogFeedProvider.notifier).applyUpdate(saved);
-        if (saved.status == BlogStatus.approved) {
-          context.pop(true);
-          return;
-        }
       }
       setState(() {
         _submitting = false;
         _submitted = true;
+        _submittedStatus = saved.status;
+        _submittedPostId = saved.id;
       });
     } on DioException catch (e) {
-      _showError(
-        editing == null
-            ? dioErrorMessage(e)
-            : blogOwnerActionError(
-                e,
-                BlogOwnerAction.edit,
-                l10n: AppLocalizations.of(context)!,
-              ),
-      );
+      if (!mounted) return;
+      final rejection = fromDio(e);
+      if (rejection != null) {
+        _showError(moderationMessage(context, rejection));
+      } else if (editing == null) {
+        _showError(dioErrorMessage(e));
+      } else {
+        _showError(
+          blogOwnerActionError(
+            e,
+            BlogOwnerAction.edit,
+            l10n: AppLocalizations.of(context)!,
+          ),
+        );
+      }
     } catch (_) {
       _showError(AppLocalizations.of(context)!.blogSomethingWentWrong);
     }
@@ -206,11 +216,37 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
     return UnsavedChangesGuard(
       dirty: !_submitted && _isDirty,
       busy: _submitting,
+      fallbackLocation: _isEditing
+          ? '/blog/${Uri.encodeComponent(_original!.id)}'
+          : '/blog',
       child: Scaffold(
         backgroundColor: blogSheetColor(context),
         body: SafeArea(
-          child: _submitted ? _buildPendingReview() : _buildComposer(),
+          child: _submitted
+              ? _submittedStatus == BlogStatus.approved
+                    ? _buildPublished()
+                    : _buildPendingReview()
+              : _buildComposer(),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPublished() {
+    final l10n = AppLocalizations.of(context)!;
+    return BlogNotice(
+      title: l10n.moderationPublishedTitle,
+      body: l10n.moderationPublishedBody,
+      icon: Icons.check_circle_outline_rounded,
+      actionLabel: l10n.moderationPublishedOpenPost,
+      onAction: () =>
+          context.push('/blog/${Uri.encodeComponent(_submittedPostId ?? '')}'),
+      secondaryLabel: l10n.blogDone,
+      onSecondary: () => RiksaBackButton.navigateBack(
+        context,
+        fallbackLocation: '/blog',
+        result: true,
+        saved: true,
       ),
     );
   }
@@ -224,12 +260,22 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
       body: _isEditing ? l10n.blogReviewBackBody : l10n.blogReviewSubmittedBody,
       icon: Icons.hourglass_top_rounded,
       actionLabel: l10n.blogDone,
-      onAction: () => context.pop(true),
+      onAction: () => RiksaBackButton.navigateBack(
+        context,
+        fallbackLocation: '/blog',
+        result: true,
+      ),
       // The copy above points at Your posts, so give it somewhere to point.
       secondaryLabel: l10n.blogYourPosts,
       onSecondary: () {
-        context.pop(true);
-        context.push('/blog/my-posts');
+        final hasPreviousPage =
+            Navigator.of(context).canPop() ||
+            (GoRouter.maybeOf(context)?.canPop() ?? false);
+        if (hasPreviousPage) {
+          context.pushReplacement('/blog/my-posts');
+        } else {
+          context.go('/blog/my-posts');
+        }
       },
     );
   }
@@ -237,7 +283,17 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
   /// Close goes through the same guard as the system back gesture.
   void _cancel() {
     if (_submitting) return;
-    Navigator.maybePop(context, false);
+    unawaited(
+      RiksaBackButton.navigateBack(
+        context,
+        fallbackLocation: _isEditing
+            ? '/blog/${Uri.encodeComponent(_original!.id)}'
+            : '/blog',
+        result: false,
+        confirmFallback: (context) async =>
+            !_isDirty || await confirmDiscardChanges(context),
+      ),
+    );
   }
 
   Widget _buildComposer() {
@@ -689,7 +745,7 @@ class _TopicSheet extends StatelessWidget {
               RiksaSpacing.xs,
             ),
             child: Text(
-              'Choose a topic',
+              AppLocalizations.of(context)!.blogChooseTopic,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -787,7 +843,43 @@ class _BlogPostEditScreenState extends ConsumerState<BlogPostEditScreen> {
   @override
   Widget build(BuildContext context) {
     final post = _post;
-    if (post != null) return BlogComposerScreen(post: post);
+    if (post != null) {
+      if (ref.watch(currentUserIdProvider) != post.authorId) {
+        final l10n = AppLocalizations.of(context)!;
+        return Scaffold(
+          backgroundColor: blogSheetColor(context),
+          body: SafeArea(
+            child: Column(
+              children: [
+                BlogTopBar(
+                  title: l10n.blogEditPost,
+                  fallbackLocation: '/blog/${Uri.encodeComponent(widget.id)}',
+                  result: false,
+                ),
+                Expanded(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 360),
+                      child: Padding(
+                        padding: const EdgeInsets.all(RiksaSpacing.lg),
+                        child: Text(
+                          l10n.blogOwnerEditFailed,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: context.riksa.inkMuted,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      return BlogComposerScreen(post: post);
+    }
     return Scaffold(
       backgroundColor: blogSheetColor(context),
       body: SafeArea(
@@ -795,7 +887,8 @@ class _BlogPostEditScreenState extends ConsumerState<BlogPostEditScreen> {
           children: [
             BlogTopBar(
               title: AppLocalizations.of(context)!.blogEditPost,
-              onBack: () => context.pop(false),
+              fallbackLocation: '/blog/${Uri.encodeComponent(widget.id)}',
+              result: false,
             ),
             Expanded(
               child: _loading

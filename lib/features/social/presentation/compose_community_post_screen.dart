@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,8 +9,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/moderation_message.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/unsaved_changes_guard.dart';
 import '../../blog/presentation/widgets/markdown_toolbar.dart';
+import '../../auth/data/auth_api.dart';
 import '../../auth/presentation/require_account.dart';
 import '../../mascot/providers/buddy_care_provider.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -56,6 +60,7 @@ class _ComposeCommunityPostScreenState
   final _contentController = TextEditingController();
   String? _categoryId;
   bool _submitting = false;
+  bool _saved = false;
   bool _previewing = false;
 
   final List<PostImageDraft> _photos = [];
@@ -64,6 +69,17 @@ class _ComposeCommunityPostScreenState
 
   SocialPost? get _original => widget.post;
   bool get _isEditing => _original != null;
+
+  String get _fallbackLocation {
+    final post = _original;
+    if (post != null) {
+      return '/community/posts/${Uri.encodeComponent(post.id)}';
+    }
+    final communityId = _categoryId ?? widget.communityId;
+    return communityId == null
+        ? '/home'
+        : '/communities/${Uri.encodeComponent(communityId)}';
+  }
 
   @override
   void initState() {
@@ -304,34 +320,64 @@ class _ComposeCommunityPostScreenState
     final content = _contentController.text.trim();
     final editing = _original;
 
-    final String? failure;
-    if (editing == null) {
-      failure = await notifier.createPost(
-        title: title,
-        content: content,
-        categoryId: _categoryId!,
-        media: [for (final photo in _photos) photo.media!],
-      );
-    } else {
-      final media = _sameMedia(editing.media, _photos)
-          ? null
-          : [for (final photo in _photos) photo.media!];
-      failure = await notifier.updatePost(
-        id: editing.id,
-        title: title,
-        content: content,
-        // Null leaves photos unchanged; an empty list explicitly clears them.
-        media: media,
-      );
+    String? failure;
+    try {
+      final api = ref.read(socialApiProvider);
+      if (editing == null) {
+        await api.createPostWithMedia(
+          title: title,
+          content: content,
+          categoryId: _categoryId!,
+          media: [for (final photo in _photos) photo.media!],
+        );
+        final feed = ref.read(socialFeedProvider);
+        unawaited(
+          notifier.load(
+            categoryId: feed is SocialFeedLoaded
+                ? feed.selectedCategoryId
+                : null,
+          ),
+        );
+      } else {
+        final media = _sameMedia(editing.media, _photos)
+            ? null
+            : [for (final photo in _photos) photo.media!];
+        final saved = await api.updatePostWithMedia(
+          id: editing.id,
+          title: title,
+          content: content,
+          // Null leaves photos unchanged; an empty list explicitly clears them.
+          media: media,
+        );
+        notifier.syncPost(saved);
+        ref.invalidate(userPostsProvider);
+      }
+    } on SocialApiException catch (error) {
+      if (!mounted) return;
+      final rejection = error.moderationRejection;
+      failure = rejection == null
+          ? error.message
+          : moderationMessage(context, rejection);
+    } on DioException catch (error) {
+      failure = dioErrorMessage(error);
+    } catch (_) {
+      if (!mounted) return;
+      failure = AppLocalizations.of(context)!.publishFailed;
     }
 
     if (!mounted) return;
     setState(() => _submitting = false);
     if (failure == null) {
+      setState(() => _saved = true);
       if (editing == null) {
         unawaited(ref.read(buddyCareProvider.notifier).refresh());
       }
-      Navigator.of(context).pop(true);
+      await RiksaBackButton.navigateBack(
+        context,
+        fallbackLocation: _fallbackLocation,
+        result: true,
+        saved: true,
+      );
       return;
     }
     ScaffoldMessenger.of(context)
@@ -402,19 +448,24 @@ class _ComposeCommunityPostScreenState
     final bodyStyle = theme.textTheme.bodyLarge?.copyWith(height: 1.5);
 
     return UnsavedChangesGuard(
-      dirty: _isDirty,
-      busy: _submitting,
+      dirty: !_saved && _isDirty,
+      busy: busy,
+      fallbackLocation: _fallbackLocation,
       child: Scaffold(
         backgroundColor: palette.canvas,
         appBar: AppBar(
           backgroundColor: palette.canvas,
           surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            key: const ValueKey('compose-close'),
-            onPressed: () => Navigator.maybePop(context),
-            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-            style: IconButton.styleFrom(backgroundColor: Colors.transparent),
-            icon: const Icon(Icons.close_rounded),
+          leading: Center(
+            child: RiksaBackButton(
+              key: const ValueKey('compose-close'),
+              fallbackLocation: _fallbackLocation,
+              confirmFallback: (context) async =>
+                  !busy &&
+                  (_saved || !_isDirty || await confirmDiscardChanges(context)),
+              style: IconButton.styleFrom(backgroundColor: Colors.transparent),
+              icon: Icons.close_rounded,
+            ),
           ),
           titleSpacing: 0,
           title: Text(
@@ -938,6 +989,13 @@ class _SocialPostEditScreenState extends ConsumerState<SocialPostEditScreen> {
         backgroundColor: context.riksa.canvas,
         foregroundColor: context.riksa.brand,
         surfaceTintColor: Colors.transparent,
+        leading: Center(
+          child: RiksaBackButton(
+            key: const ValueKey('social-post-edit-back'),
+            fallbackLocation:
+                '/community/posts/${Uri.encodeComponent(widget.id)}',
+          ),
+        ),
         title: Text(
           l10n.editPost,
           style: const TextStyle(fontWeight: FontWeight.w800),

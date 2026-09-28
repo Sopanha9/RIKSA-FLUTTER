@@ -3,16 +3,61 @@ import 'package:dio/dio.dart';
 import '../../../core/network/api_config.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/network/json_response.dart';
+import '../../../core/network/moderation_error.dart';
 import '../../auth/data/auth_api.dart';
 import 'social_models.dart';
 
 class SocialApiException implements Exception {
-  const SocialApiException(this.message);
+  const SocialApiException(this.message, {this.moderationRejection});
 
   final String message;
 
+  /// Structured moderation details when the server rejected content.
+  ///
+  /// Kept separate from [message] so composers can localize it. Comment
+  /// composers can use the same field in Wave 2.
+  final ModerationRejection? moderationRejection;
+
   @override
   String toString() => message;
+}
+
+class SocialCommentThread {
+  const SocialCommentThread({
+    required this.root,
+    required this.replies,
+    required this.repliesHaveNextPage,
+    this.repliesEndCursor,
+  });
+
+  final SocialComment root;
+  final List<SocialComment> replies;
+  final bool repliesHaveNextPage;
+  final String? repliesEndCursor;
+}
+
+class SocialCommentThreadPage {
+  const SocialCommentThreadPage({
+    required this.threads,
+    required this.hasNextPage,
+    this.endCursor,
+  });
+
+  final List<SocialCommentThread> threads;
+  final bool hasNextPage;
+  final String? endCursor;
+}
+
+class SocialCommentReplyPage {
+  const SocialCommentReplyPage({
+    required this.replies,
+    required this.hasNextPage,
+    this.endCursor,
+  });
+
+  final List<SocialComment> replies;
+  final bool hasNextPage;
+  final String? endCursor;
 }
 
 /// Typed access to the social module's GraphQL contract.
@@ -20,6 +65,7 @@ class SocialApi {
   SocialApi(this._client);
 
   final DioClient _client;
+  final Map<String, SocialCommentThreadPage> _threadPageCache = {};
 
   static const _postFields = r'''
     id title content mediaUrl media { url width height } reactionCount commentCount shareCount myReaction
@@ -101,19 +147,32 @@ class SocialApi {
     String? cursor,
     int limit = 20,
   }) async {
+    final cacheKey = _commentPageKey(postId, cursor, limit);
     final data = await _query(
       '''
       query Comments(\$postId: UUID!, \$cursor: UUID, \$limit: Int!) {
         comments(postId: \$postId, cursor: \$cursor, limit: \$limit) {
-          edges { $_commentFields }
+          edges {
+            $_commentFields
+            replies(limit: 5) {
+              edges { $_commentFields }
+              pageInfo { hasNextPage endCursor }
+            }
+          }
           pageInfo { hasNextPage endCursor }
         }
       }
       ''',
       variables: {'postId': postId, 'cursor': cursor, 'limit': limit},
     );
-    return SocialCommentPage.fromJson(
+    final threadPage = _threadPageFromJson(
       (data['comments'] as Map).cast<String, dynamic>(),
+    );
+    _threadPageCache[cacheKey] = threadPage;
+    return SocialCommentPage(
+      comments: [for (final thread in threadPage.threads) thread.root],
+      hasNextPage: threadPage.hasNextPage,
+      endCursor: threadPage.endCursor,
     );
   }
 
@@ -148,6 +207,168 @@ class SocialApi {
       }
       ''',
       variables: {'postId': postId, 'type': reaction.wire},
+    );
+    return SocialPost.fromJson((data['react'] as Map).cast<String, dynamic>());
+  }
+
+  /// Fetches root comments and each root's first five replies together.
+  Future<SocialCommentThreadPage> commentThreads({
+    required String postId,
+    String? cursor,
+    int limit = 20,
+  }) async {
+    final cacheKey = _commentPageKey(postId, cursor, limit);
+    final page = await comments(
+      postId: postId,
+      cursor: cursor,
+      limit: limit,
+    );
+    return _threadPageCache.remove(cacheKey) ?? _threadPageFromFlatPage(page);
+  }
+
+  /// Loads the next replies page for one root by scanning the post's root
+  /// comment connection until that root is found. The schema has no
+  /// `comment(id:)` query, so replies can only be selected from a root edge.
+  Future<SocialCommentReplyPage> commentReplies({
+    required String postId,
+    required String commentId,
+    required String? cursor,
+    int limit = 10,
+  }) async {
+    String? rootCursor;
+    final seenRootCursors = <String>{};
+    while (true) {
+      final data = await _query(
+        '''
+        query CommentReplies(\$postId: UUID!, \$rootCursor: UUID, \$rootLimit: Int!, \$replyCursor: UUID, \$replyLimit: Int!) {
+          comments(postId: \$postId, cursor: \$rootCursor, limit: \$rootLimit) {
+            edges {
+              id
+              replies(cursor: \$replyCursor, limit: \$replyLimit) {
+                edges { $_commentFields }
+                pageInfo { hasNextPage endCursor }
+              }
+            }
+            pageInfo { hasNextPage endCursor }
+          }
+        }
+        ''',
+        variables: {
+          'postId': postId,
+          'rootCursor': rootCursor,
+          'rootLimit': 20,
+          'replyCursor': cursor,
+          'replyLimit': limit,
+        },
+      );
+      final connection = (data['comments'] as Map).cast<String, dynamic>();
+      final roots = (connection['edges'] as List?) ?? const [];
+      for (final rootValue in roots) {
+        final root = (rootValue as Map).cast<String, dynamic>();
+        if (root['id']?.toString() == commentId) {
+          return _replyPageFromJson(
+            (root['replies'] as Map).cast<String, dynamic>(),
+          );
+        }
+      }
+      final pageInfo =
+          (connection['pageInfo'] as Map?)?.cast<String, dynamic>() ?? const {};
+      if (pageInfo['hasNextPage'] != true) {
+        throw const SocialApiException('This comment is no longer available.');
+      }
+      rootCursor = pageInfo['endCursor']?.toString();
+      if (rootCursor == null ||
+          rootCursor.isEmpty ||
+          !seenRootCursors.add(rootCursor)) {
+        throw const SocialApiException('This comment is no longer available.');
+      }
+    }
+  }
+
+  SocialCommentThread _threadFromJson(Map<String, dynamic> json) {
+    final repliesConnection =
+        (json['replies'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final repliesPage = _replyPageFromJson(repliesConnection);
+    return SocialCommentThread(
+      root: SocialComment.fromJson(json),
+      replies: repliesPage.replies,
+      repliesHaveNextPage: repliesPage.hasNextPage,
+      repliesEndCursor: repliesPage.endCursor,
+    );
+  }
+
+  SocialCommentThreadPage _threadPageFromJson(Map<String, dynamic> json) {
+    final pageInfo =
+        (json['pageInfo'] as Map?)?.cast<String, dynamic>() ?? const {};
+    return SocialCommentThreadPage(
+      threads: [
+        for (final edge in (json['edges'] as List?) ?? const [])
+          _threadFromJson((edge as Map).cast<String, dynamic>()),
+      ],
+      hasNextPage: pageInfo['hasNextPage'] as bool? ?? false,
+      endCursor: pageInfo['endCursor']?.toString(),
+    );
+  }
+
+  SocialCommentThreadPage _threadPageFromFlatPage(SocialCommentPage page) {
+    final byId = {for (final comment in page.comments) comment.id: comment};
+    final roots = page.comments.where(
+      (comment) =>
+          comment.parentId == null || !byId.containsKey(comment.parentId),
+    );
+    return SocialCommentThreadPage(
+      threads: [
+        for (final root in roots)
+          SocialCommentThread(
+            root: root,
+            replies: page.comments
+                .where((comment) => comment.parentId == root.id)
+                .toList(),
+            repliesHaveNextPage: false,
+          ),
+      ],
+      hasNextPage: page.hasNextPage,
+      endCursor: page.endCursor,
+    );
+  }
+
+  String _commentPageKey(String postId, String? cursor, int limit) =>
+      '$postId|${cursor ?? ''}|$limit';
+
+  SocialCommentReplyPage _replyPageFromJson(Map<String, dynamic> json) {
+    final pageInfo =
+        (json['pageInfo'] as Map?)?.cast<String, dynamic>() ?? const {};
+    return SocialCommentReplyPage(
+      replies: ((json['edges'] as List?) ?? const [])
+          .map(
+            (edge) =>
+                SocialComment.fromJson((edge as Map).cast<String, dynamic>()),
+          )
+          .toList(),
+      hasNextPage: pageInfo['hasNextPage'] as bool? ?? false,
+      endCursor: pageInfo['endCursor']?.toString(),
+    );
+  }
+
+  /// Toggles a comment reaction through the shared `react` mutation.
+  ///
+  /// The API removes a reaction by receiving the same type again, so a null
+  /// desired reaction still sends LOVE. This is used when toggling a liked
+  /// comment off.
+  Future<SocialPost> reactToComment({
+    required String commentId,
+    required SocialReaction? reaction,
+  }) async {
+    final data = await _query(
+      '''
+      mutation ReactToComment(\$commentId: UUID!, \$type: ReactionType!) {
+        react(input: { commentId: \$commentId, type: \$type }) { $_postFields }
+      }
+      ''',
+      variables: {
+        'commentId': commentId,
+        'type': (reaction ?? SocialReaction.love).wire,
+      },
     );
     return SocialPost.fromJson((data['react'] as Map).cast<String, dynamic>());
   }
@@ -391,6 +612,7 @@ class SocialApi {
       final first = (errors.first as Map).cast<String, dynamic>();
       throw SocialApiException(
         first['message'] as String? ?? 'The community feed could not load.',
+        moderationRejection: fromGraphQlErrors(errors.cast<Object?>()),
       );
     }
     return (payload['data'] as Map?)?.cast<String, dynamic>() ?? const {};

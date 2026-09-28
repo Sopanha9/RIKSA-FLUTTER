@@ -2,7 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/providers/auth_provider.dart';
 
-String? _userIdOf(AuthState auth) => auth is Authenticated ? auth.user.id : null;
+String? _userIdOf(AuthState auth) =>
+    auth is Authenticated ? auth.user.id : null;
 
 /// The signed-in account id, or null while signed out.
 ///
@@ -19,4 +20,5 @@ final currentUserIdProvider = Provider<String?>((ref) {
 /// its fan-out to every account-scoped provider would then schedule refreshes
 /// mid-build. Selecting on [authProvider] directly is evaluated when the auth
 /// state is set, outside any build.
-String? watchCurrentUserId(Ref ref) => ref.watch(authProvider.select(_userIdOf));
+String? watchCurrentUserId(Ref ref) =>
+    ref.watch(authProvider.select(_userIdOf));

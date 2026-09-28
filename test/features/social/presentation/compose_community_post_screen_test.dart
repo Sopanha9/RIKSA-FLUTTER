@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
 import 'package:riksa_app/features/auth/providers/auth_provider.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
+import 'package:riksa_app/core/network/moderation_error.dart';
 import 'package:riksa_app/features/social/data/social_api.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 import 'package:riksa_app/features/social/presentation/compose_community_post_screen.dart';
@@ -298,6 +299,38 @@ void main() {
     );
   });
 
+  testWidgets('a moderation rejection keeps the community post draft', (
+    tester,
+  ) async {
+    final api = _ComposerApi()
+      ..createFailure = const SocialApiException(
+        'Blocked',
+        moderationRejection: ModerationRejection(
+          kind: ModerationRejectionKind.blocked,
+          reasons: ['PROFANITY'],
+        ),
+      );
+    await _pump(tester, _loadedFeed(), api: api);
+    const draft = 'My text stays in the editor.';
+    await tester.enterText(find.byKey(const ValueKey('compose-body')), draft);
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('compose-submit')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Please remove offensive words before posting.'),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const ValueKey('compose-body')))
+          .controller!
+          .text,
+      draft,
+    );
+  });
+
   testWidgets('editing with every photo removed sends an empty media list', (
     tester,
   ) async {
@@ -471,6 +504,7 @@ class _ComposerApi implements SocialApi {
   String? createdContent;
   List<SocialPostMedia>? createdMedia;
   List<SocialPostMedia>? updatedMedia;
+  SocialApiException? createFailure;
 
   @override
   Future<SocialPostMedia> uploadMedia(
@@ -501,6 +535,8 @@ class _ComposerApi implements SocialApi {
     createdTitle = title;
     createdContent = content;
     createdMedia = media;
+    final failure = createFailure;
+    if (failure != null) throw failure;
     return _createdPostWithMedia(media);
   }
 
