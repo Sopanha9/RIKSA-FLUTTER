@@ -18,6 +18,8 @@ import '../../providers/profile_cover_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../public_profile_navigation.dart';
 import 'profile_ui.dart';
+import '../../../../core/network/support_documents.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// The account menu, on the X drawer layout.
 ///
@@ -143,8 +145,7 @@ class RiksaProfileDrawer extends ConsumerWidget {
     openOwnProfile(context);
   }
 
-  /// FAQ and the legal documents in one sheet. None is published yet, so each
-  /// says so up front instead of pretending to be a link.
+  /// FAQ and the legal documents in one sheet. Each opens in the browser.
   Future<void> _showHelp(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
     final palette = context.riksa;
@@ -166,24 +167,45 @@ class RiksaProfileDrawer extends ConsumerWidget {
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
             ),
-            for (final (icon, label) in [
-              (Icons.help_outline_rounded, l10n.faq),
-              (Icons.description_outlined, l10n.termsOfService),
-              (Icons.privacy_tip_outlined, l10n.privacyPolicy),
-              (Icons.check_circle_outline_rounded, l10n.drawerUserAgreement),
+            for (final (icon, label, url) in [
+              (Icons.help_outline_rounded, l10n.faq, SupportDocuments.faq),
+              (
+                Icons.description_outlined,
+                l10n.termsOfService,
+                SupportDocuments.termsOfService,
+              ),
+              (
+                Icons.privacy_tip_outlined,
+                l10n.privacyPolicy,
+                SupportDocuments.privacyPolicy,
+              ),
+              (
+                Icons.check_circle_outline_rounded,
+                l10n.drawerUserAgreement,
+                SupportDocuments.communityAgreement,
+              ),
             ])
               ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-                enabled: false,
                 leading: Icon(icon),
                 title: Text(label),
-                trailing: Text(
-                  l10n.supportDocumentComingSoon,
-                  style: TextStyle(
-                    color: palette.inkFaint,
-                    fontWeight: FontWeight.w600,
-                  ),
+                trailing: Icon(
+                  Icons.open_in_new_rounded,
+                  size: 18,
+                  color: palette.inkFaint,
                 ),
+                onTap: () async {
+                  final messenger = ScaffoldMessenger.of(sheetContext);
+                  final opened = await launchUrl(
+                    Uri.parse(url),
+                    mode: LaunchMode.externalApplication,
+                  );
+                  if (!opened) {
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(l10n.supportDocumentUnavailable)),
+                    );
+                  }
+                },
               ),
             const SizedBox(height: RiksaSpacing.sm),
           ],

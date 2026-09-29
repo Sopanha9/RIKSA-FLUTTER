@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/realtime/realtime_client.dart';
 import '../features/auth/providers/auth_provider.dart';
+import '../features/notifications/providers/notifications_provider.dart';
 import '../features/quests/providers/today_quests_provider.dart';
 import '../features/social/providers/social_feed_provider.dart';
 
@@ -49,6 +50,7 @@ void _apply(Ref ref, RealtimeEvent event) {
         ..invalidate(todayQuestsProvider)
         ..invalidate(weeklyQuestsProvider);
   }
+  _applyNotifications(ref, event);
 
   // Only a feed that is already loaded is updated; asking for its notifier
   // otherwise would start a feed load nobody is looking at.
@@ -62,5 +64,22 @@ void _apply(Ref ref, RealtimeEvent event) {
       unawaited(feed.addIncomingPost(postId));
     case RealtimeTypes.postDeleted when postId != null:
       feed.removePost(postId);
+  }
+}
+
+/// The badge follows every push; an inbox that is already open reloads so the
+/// new row appears at the top.
+void _applyNotifications(Ref ref, RealtimeEvent event) {
+  switch (event.type) {
+    case RealtimeTypes.notificationCreated:
+      final unread = event.data['unreadCount'];
+      if (unread is num) {
+        ref.read(unreadNotificationCountProvider.notifier).set(unread.toInt());
+      }
+      if (ref.exists(notificationInboxProvider)) {
+        unawaited(ref.read(notificationInboxProvider.notifier).refresh());
+      }
+    case RealtimeEvent.resync:
+      unawaited(ref.read(unreadNotificationCountProvider.notifier).reload());
   }
 }

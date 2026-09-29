@@ -30,6 +30,7 @@ abstract final class RealtimeTypes {
   static const postCreated = 'post.created';
   static const postDeleted = 'post.deleted';
   static const questsChanged = 'quests.changed';
+  static const notificationCreated = 'notification.created';
 }
 
 /// One WebSocket to the API for the signed-in learner.

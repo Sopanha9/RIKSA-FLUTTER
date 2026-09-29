@@ -23,6 +23,7 @@ import '../../mascot/providers/buddy_preferences_provider.dart';
 import '../providers/profile_cover_provider.dart';
 import '../providers/profile_provider.dart';
 import 'widgets/profile_ui.dart';
+import '../../../core/network/support_documents.dart';
 
 String _t(String lang, String en, String km) => lang == 'km' ? km : en;
 
@@ -515,7 +516,11 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
 /// as not yet available instead of pretending to be a link: tapping one only
 /// to be told the document does not exist is worse than seeing that up front.
 /// Fill these in and the rows become ordinary links.
-const _supportDocuments = (faq: null, terms: null, privacy: null);
+final _supportDocuments = (
+  faq: SupportDocuments.faq,
+  terms: SupportDocuments.termsOfService,
+  privacy: SupportDocuments.privacyPolicy,
+);
 
 /// The scene with the buddy and its speech bubble, a back button and the
 /// title. Its bottom edge is the top of the rounded content sheet.

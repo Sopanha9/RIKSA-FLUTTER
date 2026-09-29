@@ -22,6 +22,7 @@ class RiksaBottomNavigationBar extends StatelessWidget {
     required this.onSelected,
     this.isExpanded = true,
     this.onExpand,
+    this.notificationCount = 0,
   }) : assert(currentIndex >= 0 && currentIndex < 6),
        assert(isExpanded || onExpand != null);
 
@@ -29,6 +30,9 @@ class RiksaBottomNavigationBar extends StatelessWidget {
   final ValueChanged<int> onSelected;
   final bool isExpanded;
   final VoidCallback? onExpand;
+
+  /// Unread notifications, shown as a badge on the bell. Zero hides it.
+  final int notificationCount;
 
   static const int aiTutorIndex = 2;
   static const int profileIndex = 4;
@@ -73,6 +77,10 @@ class RiksaBottomNavigationBar extends StatelessWidget {
           label: l10n.notificationsTitle,
           icon: Icons.notifications_none_rounded,
           activeIcon: Icons.notifications_rounded,
+          badgeCount: notificationCount,
+          badgeLabel: notificationCount > 0
+              ? l10n.notificationsUnreadBadge(notificationCount)
+              : null,
         ),
       ),
     ];
@@ -386,9 +394,10 @@ class _PillTab extends StatelessWidget {
     final color = selected
         ? palette.brand
         : palette.inkMuted.withValues(alpha: 0.82);
+    final badgeLabel = item.badgeLabel;
     return Semantics(
       key: ValueKey('bottom-nav-destination-$index'),
-      label: item.label,
+      label: badgeLabel == null ? item.label : '${item.label}, $badgeLabel',
       selected: selected,
       button: true,
       onTap: onTap,
@@ -426,11 +435,19 @@ class _PillTab extends StatelessWidget {
                         opacity: animation,
                         child: ScaleTransition(scale: animation, child: child),
                       ),
-                      child: Icon(
-                        selected ? item.activeIcon : item.icon,
+                      child: Badge(
                         key: ValueKey('bottom-nav-icon-$index-$selected'),
-                        color: color,
-                        size: 22,
+                        isLabelVisible: item.badgeCount > 0,
+                        label: Text(
+                          item.badgeCount > 99 ? '99+' : '${item.badgeCount}',
+                          key: ValueKey('bottom-nav-badge-$index'),
+                        ),
+                        backgroundColor: palette.saffron,
+                        child: Icon(
+                          selected ? item.activeIcon : item.icon,
+                          color: color,
+                          size: 22,
+                        ),
                       ),
                     ),
                   ),
@@ -572,8 +589,14 @@ class _RiksaNavigationItem {
     required this.label,
     required this.icon,
     required this.activeIcon,
+    this.badgeCount = 0,
+    this.badgeLabel,
   });
   final String label;
   final IconData icon;
   final IconData activeIcon;
+  final int badgeCount;
+
+  /// Read out by screen readers after the label, e.g. "3 unread".
+  final String? badgeLabel;
 }

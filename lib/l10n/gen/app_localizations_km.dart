@@ -1674,6 +1674,52 @@ class AppLocalizationsKm extends AppLocalizations {
   }
 
   @override
+  String notificationPostReaction(String name) {
+    return '$name បានបញ្ចេញអារម្មណ៍លើការបង្ហោះរបស់អ្នក';
+  }
+
+  @override
+  String notificationCommentReaction(String name) {
+    return '$name បានបញ្ចេញអារម្មណ៍លើមតិរបស់អ្នក';
+  }
+
+  @override
+  String notificationPostComment(String name) {
+    return '$name បានផ្ដល់មតិលើការបង្ហោះរបស់អ្នក';
+  }
+
+  @override
+  String notificationCommentReply(String name) {
+    return '$name បានឆ្លើយតបមតិរបស់អ្នក';
+  }
+
+  @override
+  String notificationBlogLike(String name) {
+    return '$name ចូលចិត្តអត្ថបទរបស់អ្នក';
+  }
+
+  @override
+  String get notificationBlogApproved => 'អត្ថបទរបស់អ្នកត្រូវបានផ្សព្វផ្សាយ';
+
+  @override
+  String get notificationBlogRejected =>
+      'អត្ថបទរបស់អ្នកមិនត្រូវបានផ្សព្វផ្សាយទេ';
+
+  @override
+  String get notificationSomeone => 'នរណាម្នាក់';
+
+  @override
+  String get notificationsMarkAllRead => 'សម្គាល់ថាបានអានទាំងអស់';
+
+  @override
+  String get notificationsLoadFailed => 'មិនអាចផ្ទុកការជូនដំណឹងបានទេ';
+
+  @override
+  String notificationsUnreadBadge(int count) {
+    return 'មិនទាន់អាន $count';
+  }
+
+  @override
   String get lessonTrySection => 'សាកល្បងដោយខ្លួនឯង';
 
   @override

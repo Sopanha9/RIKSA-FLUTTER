@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/riksa_bottom_navigation_bar.dart';
+import '../../features/notifications/providers/notifications_provider.dart';
 import '../../features/mascot/presentation/widgets/floating_buddy.dart';
 import '../../features/userProfile/presentation/widgets/riksa_profile_drawer.dart';
 
@@ -116,15 +117,18 @@ class _AppShellState extends State<AppShell> {
     super.dispose();
   }
 
-  Widget _floatingBuddyOverlay() {
+  /// AppShell is also used alone in router tests, outside the app's scope.
+  bool _hasProviderScope() {
     try {
       ProviderScope.containerOf(context, listen: false);
-      return const FloatingBuddy();
+      return true;
     } on StateError {
-      // AppShell is also used alone in router tests, outside the app's scope.
-      return const SizedBox.shrink();
+      return false;
     }
   }
+
+  Widget _floatingBuddyOverlay() =>
+      _hasProviderScope() ? const FloatingBuddy() : const SizedBox.shrink();
 
   @override
   Widget build(BuildContext context) {
@@ -167,9 +171,10 @@ class _AppShellState extends State<AppShell> {
             router.routerDelegate.currentConfiguration,
           );
           if (!showsBottomNavigation(depth)) return const SizedBox.shrink();
-          return RiksaBottomNavigationBar(
+          Widget bar(int unread) => RiksaBottomNavigationBar(
             key: const ValueKey('persistent-bottom-navigation'),
             currentIndex: widget.navigationShell.currentIndex,
+            notificationCount: unread,
             isExpanded: _showNavBar.value,
             onExpand: () => _showNavBar.value = true,
             onSelected: (index) {
@@ -178,6 +183,11 @@ class _AppShellState extends State<AppShell> {
                 initialLocation: index == widget.navigationShell.currentIndex,
               );
             },
+          );
+          if (!_hasProviderScope()) return bar(0);
+          return Consumer(
+            builder: (context, ref, _) =>
+                bar(ref.watch(unreadNotificationCountProvider)),
           );
         },
       ),

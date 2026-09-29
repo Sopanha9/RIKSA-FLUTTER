@@ -2983,6 +2983,72 @@ abstract class AppLocalizations {
   /// **'Section {current} of {total}'**
   String lessonSectionCounter(int current, int total);
 
+  /// Inbox row: someone reacted to the learner's community post.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} reacted to your post'**
+  String notificationPostReaction(String name);
+
+  /// Inbox row: someone reacted to the learner's comment.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} reacted to your comment'**
+  String notificationCommentReaction(String name);
+
+  /// Inbox row: someone commented on the learner's community post.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} commented on your post'**
+  String notificationPostComment(String name);
+
+  /// Inbox row: someone replied to the learner's comment.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} replied to your comment'**
+  String notificationCommentReply(String name);
+
+  /// Inbox row: someone liked the learner's blog article.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} liked your article'**
+  String notificationBlogLike(String name);
+
+  /// Inbox row: a moderator published the learner's held article.
+  ///
+  /// In en, this message translates to:
+  /// **'Your article was published'**
+  String get notificationBlogApproved;
+
+  /// Inbox row: a moderator turned down the learner's article; the reason shows below.
+  ///
+  /// In en, this message translates to:
+  /// **'Your article wasn\'t published'**
+  String get notificationBlogRejected;
+
+  /// Stands in for a person whose account no longer exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone'**
+  String get notificationSomeone;
+
+  /// Button on the notifications page.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get notificationsMarkAllRead;
+
+  /// Error title on the notifications page.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load notifications'**
+  String get notificationsLoadFailed;
+
+  /// Screen reader label for the badge on the notifications tab.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unread'**
+  String notificationsUnreadBadge(int count);
+
   /// No description provided for @lessonTrySection.
   ///
   /// In en, this message translates to:

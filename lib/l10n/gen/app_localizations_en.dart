@@ -1722,6 +1722,51 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String notificationPostReaction(String name) {
+    return '$name reacted to your post';
+  }
+
+  @override
+  String notificationCommentReaction(String name) {
+    return '$name reacted to your comment';
+  }
+
+  @override
+  String notificationPostComment(String name) {
+    return '$name commented on your post';
+  }
+
+  @override
+  String notificationCommentReply(String name) {
+    return '$name replied to your comment';
+  }
+
+  @override
+  String notificationBlogLike(String name) {
+    return '$name liked your article';
+  }
+
+  @override
+  String get notificationBlogApproved => 'Your article was published';
+
+  @override
+  String get notificationBlogRejected => 'Your article wasn\'t published';
+
+  @override
+  String get notificationSomeone => 'Someone';
+
+  @override
+  String get notificationsMarkAllRead => 'Mark all as read';
+
+  @override
+  String get notificationsLoadFailed => 'Couldn\'t load notifications';
+
+  @override
+  String notificationsUnreadBadge(int count) {
+    return '$count unread';
+  }
+
+  @override
   String get lessonTrySection => 'Try it yourself';
 
   @override
