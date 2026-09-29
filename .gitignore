@@ -66,3 +66,11 @@ ui_map.json
 *.keystore
 *.b64
 key.properties
+
+# AI assistant tooling (kept locally, not part of the product)
+.agents/
+.claude/
+CLAUDE.md
+skills-lock.json
+.mcp.json
+.art_incoming/

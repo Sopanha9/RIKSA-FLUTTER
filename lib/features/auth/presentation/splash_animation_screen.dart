@@ -13,7 +13,7 @@ import '../providers/auth_provider.dart';
 ///
 /// A returning learner sees the wordmark while the session restores and is
 /// sent on automatically. On first run the screen becomes the welcome, and
-/// Get Started leads to the buddy picker, then language selection, then setup.
+/// Get Started opens the onboarding intro before buddy, language, and setup.
 class SplashAnimationScreen extends ConsumerStatefulWidget {
   const SplashAnimationScreen({super.key});
 
@@ -72,9 +72,12 @@ class _SplashAnimationScreenState extends ConsumerState<SplashAnimationScreen>
     });
   }
 
-  /// The buddy comes first, so the language page is already the learner's
-  /// own buddy asking which language to speak, never a placeholder one.
-  void _getStarted() => context.go('/mascot-select');
+  /// Show the intro once, then continue setup with the buddy picker. If the
+  /// learner leaves setup after the intro, don't make them watch it again.
+  void _getStarted() {
+    final hasViewedOnboarding = ref.read(localeProvider).hasViewedOnboarding;
+    context.go(hasViewedOnboarding ? '/mascot-select' : '/onboarding');
+  }
 
   @override
   void dispose() {
