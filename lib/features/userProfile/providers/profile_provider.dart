@@ -32,12 +32,17 @@ final profileRankProvider = FutureProvider<LeaderboardRank>((ref) {
   return ref.watch(profileApiProvider).leaderboardRank(provinceId: provinceId);
 });
 
-final rankHistoryProvider = FutureProvider<List<RankHistoryEntry>>(
-  (ref) {
-    watchCurrentUserId(ref);
-    return ref.watch(profileApiProvider).rankHistory();
-  },
-);
+/// The learner's recent XP grants for the progress history (one page of 50).
+final xpHistoryProvider = FutureProvider<List<XpActivity>>((ref) async {
+  watchCurrentUserId(ref);
+  final page = await ref.watch(profileApiProvider).xpActivity(limit: 50);
+  return page.activities;
+});
+
+final rankHistoryProvider = FutureProvider<List<RankHistoryEntry>>((ref) {
+  watchCurrentUserId(ref);
+  return ref.watch(profileApiProvider).rankHistory();
+});
 
 /// Ranked board rows for a scope, sourced from `GET /leaderboard`.
 ///

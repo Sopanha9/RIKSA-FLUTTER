@@ -70,6 +70,11 @@ class AuthUser {
   final String? gender;
   final String? phoneNumber;
   final bool phoneVerified;
+
+  /// A real number was shared through Telegram. Older Telegram sign-ins set
+  /// [phoneVerified] without ever storing a number, so both are checked.
+  bool get hasVerifiedPhone =>
+      phoneVerified && (phoneNumber?.trim().isNotEmpty ?? false);
   final String role;
   final String? countryId;
   final String? provinceId;

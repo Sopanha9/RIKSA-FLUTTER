@@ -275,8 +275,7 @@ Widget journeyApp(
 Future<void> tapKey(WidgetTester tester, String key) async {
   await tester.pumpAndSettle();
   var finder = find.byKey(ValueKey(key));
-  if (key.startsWith('lesson-worked-on-paper-') &&
-      finder.evaluate().isEmpty) {
+  if (key.startsWith('lesson-worked-on-paper-') && finder.evaluate().isEmpty) {
     await tester.tap(find.byKey(const ValueKey('lesson-options')));
     await tester.pumpAndSettle();
     finder = find.byKey(ValueKey(key));

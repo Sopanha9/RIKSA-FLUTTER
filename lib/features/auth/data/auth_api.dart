@@ -90,6 +90,18 @@ class AuthApi {
     );
   }
 
+  /// Starts phone verification through the Telegram bot; returns its links.
+  Future<({Uri botUrl, Uri? botAppUrl})> startPhoneVerification() async {
+    return _guard(() async {
+      final res = await _client.dio.post('/auth/phone/verify/start');
+      final json = jsonMap(res);
+      return (
+        botUrl: Uri.parse(json['botUrl'] as String),
+        botAppUrl: Uri.tryParse(json['botAppUrl'] as String? ?? ''),
+      );
+    });
+  }
+
   /// Fetch current user profile. Requires bearer token.
   Future<AuthUser> getProfile() async {
     return _guard(() async {

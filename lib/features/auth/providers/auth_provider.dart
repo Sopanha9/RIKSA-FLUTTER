@@ -305,6 +305,20 @@ class AuthNotifier extends Notifier<AuthState> {
     return true;
   }
 
+  /// Re-reads the signed-in profile, e.g. after verifying in Telegram.
+  Future<AuthUser?> refreshProfile() async {
+    if (state is! Authenticated) return null;
+    try {
+      final user = await ref.read(authApiProvider).getProfile();
+      _requireProfile(user);
+      if (state is Authenticated) state = Authenticated(user);
+      return user;
+    } catch (error) {
+      if (kDebugMode) debugPrint('Profile refresh failed: $error');
+      return null;
+    }
+  }
+
   Future<bool> updateProfile(UpdateProfileRequest request) async {
     final current = state;
     if (current is! Authenticated) return false;

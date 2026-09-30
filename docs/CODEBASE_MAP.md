@@ -59,6 +59,7 @@ Source of truth: `lib/app/router/app_router.dart` (`goRouterProvider`). Paths be
 | 0 | `/communities` | `CommunitiesScreen` | `social/presentation/communities_screen.dart` |
 | 0 | `/communities/create` | `CreateCommunityScreen` | `social/presentation/create_community_screen.dart` |
 | 0 | `/communities/:id` | `CommunityDetailScreen` | `social/presentation/community_detail_screen.dart` |
+| 0 | `/communities/:id/manage` | `ManageCommunityScreen` (owner: settings, rules, members, bans; moderators: members, bans) | `social/presentation/manage_community_screen.dart` |
 | 0 | `/progress` | `ProgressHistoryScreen` | `userProfile/presentation/progress_history_screen.dart` |
 | 0 | `/community/create` | `ComposeCommunityPostScreen` | `social/presentation/compose_community_post_screen.dart` |
 | 0 | `/community/posts/:id/edit` | `SocialPostEditScreen` | `social/presentation/compose_community_post_screen.dart` |
@@ -106,7 +107,7 @@ Source of truth: `lib/app/router/app_router.dart` (`goRouterProvider`). Paths be
 - **Learning**: `LessonCatalogScreen`, `LessonExperienceScreen` | `learning_home_provider`, `lesson_catalog_provider` | `LearningApi` (Fetching catalogs, checking answers).
 - **Market**: `MarketScreen`, `WardrobeScreen` | `market_provider` | `MarketApi` (Item purchases via `/market/items`).
 - **Mascot**: `FloatingBuddy`, `BuddyLook` | `mascot_provider` (Buddy state), `buddy_care_provider` | `BuddyApi` (`/buddy/me` updates and equips).
-- **Social**: `SocialFeedScreen`, `SocialPostDetailScreen` | `social_feed_provider` | `SocialApi` (GraphQL queries/mutations for posts, comments).
+- **Social**: `SocialFeedScreen`, `SocialPostDetailScreen` | `social_feed_provider` | `SocialApi` (GraphQL queries/mutations for posts, comments; community management: `community`, `communityMembers`, `communityBans`, `updateCommunity`, `setCommunityMemberRole`, `removeCommunityMember`, `unbanCommunityMember`, `pinCommunityPost`). Roles are OWNER/MODERATOR/MEMBER on `SocialCategory.myRole`; the backend side is `CommunityModerationService` in RIKSA.
 - **UserProfile**: `UserProfileScreen`, `PublicProfileScreen` | `profile_provider` | `ProfileApi` (Gamification, XP activity).
 
 ## Core

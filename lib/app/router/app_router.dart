@@ -33,6 +33,7 @@ import '../../features/learning/presentation/saved_lessons_screen.dart';
 import '../../features/learning/data/learning_models.dart';
 import '../../features/social/presentation/social_feed_screen.dart';
 import '../../features/social/presentation/communities_screen.dart';
+import '../../features/social/presentation/manage_community_screen.dart';
 import '../../features/social/presentation/community_detail_screen.dart';
 import '../../features/social/presentation/create_community_screen.dart';
 import '../../features/social/data/social_models.dart';
@@ -218,6 +219,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => CommunityDetailScreen(
                   communityId: state.pathParameters['id']!,
                   community: state.extra as SocialCategory?,
+                ),
+              ),
+              GoRoute(
+                path: '/communities/:id/manage',
+                builder: (context, state) => ManageCommunityScreen(
+                  communityId: state.pathParameters['id']!,
+                  community: state.extra as SocialCategory?,
+                  initialTab: state.uri.queryParameters['tab'],
                 ),
               ),
               GoRoute(

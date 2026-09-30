@@ -729,11 +729,11 @@ void main() {
     await mountAuth(tester, server);
     await openCodeStep(tester);
 
+    // A full code submits itself.
     await tester.enterText(
       find.byKey(const Key('telegram_code_input')),
       'VE9BLZ8J',
     );
-    await tapKey(tester, 'telegram_code_submit');
     await tester.pumpAndSettle();
     expect(find.text('Set up your Riksa profile'), findsOneWidget);
 

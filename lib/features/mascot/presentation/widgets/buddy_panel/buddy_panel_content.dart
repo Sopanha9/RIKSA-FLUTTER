@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../features/quests/data/quest_models.dart';
+import '../../../../../features/quests/providers/setup_quests_provider.dart';
 import '../../../../../features/quests/providers/today_quests_provider.dart';
 import '../../../../../features/userProfile/providers/profile_provider.dart';
 import '../../../../../l10n/gen/app_localizations.dart';
@@ -95,6 +96,11 @@ class _BuddyPanelContentState extends ConsumerState<BuddyPanelContent> {
     final countdownAt = _tab == _PanelTab.today
         ? today.resetsAt
         : week.resetsAt;
+    final setupTasks = widget.isGuest
+        ? const <SetupTask>[]
+        : ref.watch(setupQuestsProvider).value ?? const <SetupTask>[];
+    // Shown until every get-started reward is collected.
+    final showSetup = setupTasks.any((task) => !task.claimed);
 
     return SizedBox(
       height: widget.maxHeight,
@@ -159,6 +165,30 @@ class _BuddyPanelContentState extends ConsumerState<BuddyPanelContent> {
                     ),
                   ],
                 ),
+                if (showSetup) ...[
+                  const SizedBox(height: 14),
+                  _SetupHeader(
+                    done: setupTasks.where((task) => task.done).length,
+                    total: setupTasks.length,
+                  ),
+                  const SizedBox(height: 8),
+                  for (final task in setupTasks)
+                    Builder(
+                      builder: (context) {
+                        final row = _fromSetup(task, locale);
+                        return _QuestRow(
+                          key: ValueKey('buddy-setup-${task.key}'),
+                          quest: row,
+                          isGuest: false,
+                          isClaiming: _claimingId == row.id,
+                          animateXp: _justClaimedId == row.id,
+                          onClaim: () => _claim(row),
+                          onGo: () => widget.onNavigate(row.destination),
+                          onRequireAccount: widget.requireAccountAction,
+                        );
+                      },
+                    ),
+                ],
                 const SizedBox(height: 14),
                 _Tabs(
                   selected: _tab,
@@ -377,11 +407,32 @@ class _BuddyPanelContentState extends ConsumerState<BuddyPanelContent> {
         DailyQuestType.socialAction => Icons.favorite_border_rounded,
       },
       destination: quest.type == DailyQuestType.socialAction
-          ? '/social'
+          ? '/home'
           : '/learn',
       weekly: false,
     );
   }
+
+  _QuestRowData _fromSetup(SetupTask task, String locale) => _QuestRowData(
+    id: 'setup-${task.key}',
+    title: task.titleFor(locale),
+    progress: task.done ? 1 : 0,
+    target: 1,
+    xp: task.xpReward,
+    claimed: task.claimed,
+    claimable: task.claimable,
+    icon: switch (task.key) {
+      'VERIFY_PHONE' => Icons.verified_user_rounded,
+      'WRITE_BIO' => Icons.edit_note_rounded,
+      'CHOOSE_PROVINCE' => Icons.location_on_rounded,
+      'JOIN_COMMUNITY' => Icons.groups_rounded,
+      'FIRST_POST' => Icons.forum_rounded,
+      _ => Icons.rocket_launch_rounded,
+    },
+    destination: task.destination,
+    weekly: false,
+    setupKey: task.key,
+  );
 
   _QuestRowData _fromWeekly(WeeklyQuest quest) {
     final l10n = AppLocalizations.of(context)!;
@@ -411,7 +462,7 @@ class _BuddyPanelContentState extends ConsumerState<BuddyPanelContent> {
         WeeklyQuestType.activeDays => Icons.calendar_month_rounded,
         WeeklyQuestType.social => Icons.people_alt_outlined,
       },
-      destination: quest.type == WeeklyQuestType.social ? '/social' : '/learn',
+      destination: quest.type == WeeklyQuestType.social ? '/home' : '/learn',
       weekly: true,
     );
   }
@@ -424,7 +475,9 @@ class _BuddyPanelContentState extends ConsumerState<BuddyPanelContent> {
     if (row.id.isEmpty || _claimingId != null) return;
     setState(() => _claimingId = row.id);
     try {
-      if (row.weekly) {
+      if (row.setupKey case final String key) {
+        await ref.read(setupQuestsProvider.notifier).claim(key);
+      } else if (row.weekly) {
         await ref.read(weeklyQuestsProvider.notifier).claim(row.id);
       } else {
         await ref.read(todayQuestsProvider.notifier).claim(row.id);
@@ -1044,8 +1097,11 @@ class _QuestRowData {
     required this.icon,
     required this.destination,
     required this.weekly,
+    this.setupKey,
   });
 
+  /// Set for a one-time get-started quest, claimed through its own API.
+  final String? setupKey;
   final String id;
   final String title;
   final int progress;
@@ -1056,4 +1112,56 @@ class _QuestRowData {
   final IconData icon;
   final String destination;
   final bool weekly;
+}
+
+/// "Get started" with a progress bar, above the one-time setup quests.
+class _SetupHeader extends StatelessWidget {
+  const _SetupHeader({required this.done, required this.total});
+
+  final int done;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final palette = context.riksa;
+    return Column(
+      key: const ValueKey('buddy-setup-header'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.rocket_launch_rounded, size: 18, color: palette.brand),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                l10n.setupQuestsTitle,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            Text(
+              '$done/$total',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: palette.brand,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: total == 0 ? 0 : done / total,
+            minHeight: 6,
+            color: palette.brand,
+            backgroundColor: palette.brand.withValues(alpha: .14),
+          ),
+        ),
+      ],
+    );
+  }
 }

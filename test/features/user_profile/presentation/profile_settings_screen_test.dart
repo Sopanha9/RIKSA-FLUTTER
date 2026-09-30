@@ -195,4 +195,27 @@ void main() {
     expect(find.text('Continue'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('an unverified phone opens the Telegram verification sheet', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(_app(const EditProfileScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Not verified'), findsOneWidget);
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('profile-phone-verify')),
+    );
+    await tester.tap(find.byKey(const ValueKey('profile-phone-verify')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Verify your phone'), findsOneWidget);
+    expect(find.byKey(const ValueKey('phone-verify-open')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

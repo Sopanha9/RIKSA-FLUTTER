@@ -22,6 +22,7 @@ class SocialPostCard extends StatelessWidget {
     this.onAuthorTap,
     this.onEdit,
     this.onDelete,
+    this.menu,
     this.highlightOfficial = true,
   });
 
@@ -34,6 +35,9 @@ class SocialPostCard extends StatelessWidget {
   /// Set only for the reader's own posts; both together show the owner menu.
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+
+  /// Replaces the owner's edit/delete menu, e.g. with moderator actions.
+  final Widget? menu;
 
   /// Whether an official Riksa post shows its verified mark.
   ///
@@ -105,6 +109,7 @@ class SocialPostCard extends StatelessWidget {
                           onDelete: post.kind == SocialPostKind.user
                               ? onDelete
                               : null,
+                          menu: menu,
                         ),
                         _CommunityLine(category: post.category),
                         const SizedBox(height: 6),
@@ -243,6 +248,7 @@ class _PostMetadata extends StatelessWidget {
     this.onAuthorTap,
     this.onEdit,
     this.onDelete,
+    this.menu,
   });
 
   final SocialPost post;
@@ -250,6 +256,7 @@ class _PostMetadata extends StatelessWidget {
   final VoidCallback? onAuthorTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final Widget? menu;
 
   @override
   Widget build(BuildContext context) {
@@ -317,7 +324,9 @@ class _PostMetadata extends StatelessWidget {
             ],
           ),
         ),
-        if (onEdit != null && onDelete != null)
+        if (menu != null)
+          menu!
+        else if (onEdit != null && onDelete != null)
           SocialOwnerMenu(
             postId: post.id,
             onEdit: onEdit!,

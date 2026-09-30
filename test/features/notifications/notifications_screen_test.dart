@@ -18,7 +18,8 @@ class _FakeNotifications implements NotificationsRepository {
   final marked = <String>[];
   var markedAll = false;
 
-  int get _unread => items.where((i) => !i.read && !marked.contains(i.id)).length;
+  int get _unread =>
+      items.where((i) => !i.read && !marked.contains(i.id)).length;
 
   @override
   Future<NotificationPage> list({String? cursor, int limit = 20}) async {

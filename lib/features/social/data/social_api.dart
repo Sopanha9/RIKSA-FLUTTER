@@ -218,11 +218,7 @@ class SocialApi {
     int limit = 20,
   }) async {
     final cacheKey = _commentPageKey(postId, cursor, limit);
-    final page = await comments(
-      postId: postId,
-      cursor: cursor,
-      limit: limit,
-    );
+    final page = await comments(postId: postId, cursor: cursor, limit: limit);
     return _threadPageCache.remove(cacheKey) ?? _threadPageFromFlatPage(page);
   }
 
@@ -595,6 +591,176 @@ class SocialApi {
     );
     return SocialCategory.fromJson(
       (data['createCommunity'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  static const _communityFields = '''
+    id name slug description iconUrl memberCount joined
+    myRole postPermission pinnedPostId bannerUrl bannerColor
+    rules { title body }
+  ''';
+
+  /// One community with the viewer's role, its rules and settings.
+  Future<SocialCategory?> community(String id) async {
+    final data = await _query(
+      '''
+      query Community(\$id: UUID!) {
+        community(id: \$id) { $_communityFields }
+      }
+      ''',
+      variables: {'id': id},
+    );
+    final json = data['community'];
+    return json is Map
+        ? SocialCategory.fromJson(json.cast<String, dynamic>())
+        : null;
+  }
+
+  /// Owner only. Null leaves a field unchanged; [rules] replaces every rule.
+  Future<SocialCategory> updateCommunity({
+    required String id,
+    String? name,
+    String? description,
+    CommunityPostPermission? postPermission,
+    List<CommunityRule>? rules,
+    String? iconUrl,
+    bool clearIcon = false,
+    String? bannerUrl,
+    bool clearBanner = false,
+    String? bannerColor,
+  }) async {
+    final data = await _query(
+      '''
+      mutation UpdateCommunity(\$input: UpdateCommunityInput!) {
+        updateCommunity(input: \$input) { $_communityFields }
+      }
+      ''',
+      variables: {
+        'input': {
+          'id': id,
+          'name': ?name,
+          'description': ?description,
+          'postPermission': ?postPermission?.wire,
+          'iconUrl': ?iconUrl,
+          if (clearIcon) 'clearIcon': true,
+          'bannerUrl': ?bannerUrl,
+          if (clearBanner) 'clearBanner': true,
+          'bannerColor': ?bannerColor,
+          if (rules != null) 'rules': [for (final rule in rules) rule.toJson()],
+        },
+      },
+    );
+    return SocialCategory.fromJson(
+      (data['updateCommunity'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<List<CommunityMember>> communityMembers(
+    String categoryId, {
+    String? query,
+  }) async {
+    final data = await _query(
+      r'''
+      query CommunityMembers($categoryId: UUID!, $query: String) {
+        communityMembers(categoryId: $categoryId, query: $query, limit: 100) {
+          role joinedAt
+          user { id username displayName avatarUrl }
+        }
+      }
+      ''',
+      variables: {'categoryId': categoryId, 'query': ?query},
+    );
+    return [
+      for (final item in (data['communityMembers'] as List?) ?? const [])
+        CommunityMember.fromJson((item as Map).cast<String, dynamic>()),
+    ];
+  }
+
+  Future<List<CommunityBanEntry>> communityBans(String categoryId) async {
+    final data = await _query(
+      r'''
+      query CommunityBans($categoryId: UUID!) {
+        communityBans(categoryId: $categoryId) {
+          reason createdAt
+          user { id username displayName avatarUrl }
+        }
+      }
+      ''',
+      variables: {'categoryId': categoryId},
+    );
+    return [
+      for (final item in (data['communityBans'] as List?) ?? const [])
+        CommunityBanEntry.fromJson((item as Map).cast<String, dynamic>()),
+    ];
+  }
+
+  Future<void> setCommunityMemberRole(
+    String categoryId,
+    String userId,
+    CommunityRole role,
+  ) async {
+    await _query(
+      r'''
+      mutation SetRole($categoryId: UUID!, $userId: UUID!, $role: CommunityRole!) {
+        setCommunityMemberRole(categoryId: $categoryId, userId: $userId, role: $role) { role }
+      }
+      ''',
+      variables: {
+        'categoryId': categoryId,
+        'userId': userId,
+        'role': role.wire,
+      },
+    );
+  }
+
+  /// Removes a member; with [ban] they can't join again until unbanned.
+  Future<void> removeCommunityMember(
+    String categoryId,
+    String userId, {
+    bool ban = false,
+    String? reason,
+  }) async {
+    await _query(
+      r'''
+      mutation RemoveMember($categoryId: UUID!, $userId: UUID!, $ban: Boolean, $reason: String) {
+        removeCommunityMember(categoryId: $categoryId, userId: $userId, ban: $ban, reason: $reason)
+      }
+      ''',
+      variables: {
+        'categoryId': categoryId,
+        'userId': userId,
+        'ban': ban,
+        'reason': ?reason,
+      },
+    );
+  }
+
+  Future<void> unbanCommunityMember(String categoryId, String userId) async {
+    await _query(
+      r'''
+      mutation Unban($categoryId: UUID!, $userId: UUID!) {
+        unbanCommunityMember(categoryId: $categoryId, userId: $userId)
+      }
+      ''',
+      variables: {'categoryId': categoryId, 'userId': userId},
+    );
+  }
+
+  /// Pins [postId] to the top of the community; null unpins.
+  Future<SocialCategory> pinCommunityPost(
+    String categoryId,
+    String? postId,
+  ) async {
+    final data = await _query(
+      '''
+      mutation Pin(\$categoryId: UUID!, \$postId: UUID) {
+        pinCommunityPost(categoryId: \$categoryId, postId: \$postId) { $_communityFields }
+      }
+      ''',
+      variables: {'categoryId': categoryId, 'postId': postId},
+    );
+    return SocialCategory.fromJson(
+      (data['pinCommunityPost'] as Map).cast<String, dynamic>(),
     );
   }
 

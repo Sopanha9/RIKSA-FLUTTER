@@ -278,7 +278,10 @@ void main() {
     final submit = find.byKey(const ValueKey('create-community-submit'));
     for (final (value, message) in [
       ('ab', 'Use 3 to 50 characters.'),
-      ('Robotics <b>', "Use only letters, numbers, spaces and & ' . , ( ) + # -"),
+      (
+        'Robotics <b>',
+        "Use only letters, numbers, spaces and & ' . , ( ) + # -",
+      ),
       ('2026', 'The name needs at least one letter.'),
       ('Riksa Official', 'This name is reserved. Try another one.'),
       ('M o d s', 'This name is reserved. Try another one.'),
@@ -292,9 +295,7 @@ void main() {
     expect(api.createdNames, isEmpty);
   });
 
-  testWidgets('shows the server refusal and stays on the form', (
-    tester,
-  ) async {
+  testWidgets('shows the server refusal and stays on the form', (tester) async {
     final api = await _pump(tester);
     api.createError = 'You can create at most 3 communities a day.';
     await tester.tap(find.byKey(const ValueKey('communities-create')));

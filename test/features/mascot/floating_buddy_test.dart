@@ -247,7 +247,7 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(router.routeInformationProvider.value.uri.path, '/social');
+    expect(router.routeInformationProvider.value.uri.path, '/home');
     expect(find.byKey(const ValueKey('buddy-panel')), findsNothing);
   });
 
@@ -482,7 +482,7 @@ GoRouter _router() => GoRouter(
       path: '/learn/subject/:id',
       builder: (_, _) => const _LearningPage(),
     ),
-    GoRoute(path: '/social', builder: (_, _) => const Scaffold()),
+    GoRoute(path: '/home', builder: (_, _) => const Scaffold()),
     GoRoute(path: '/auth/login', builder: (_, _) => const Scaffold()),
   ],
 );

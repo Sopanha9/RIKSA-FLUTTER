@@ -2620,7 +2620,7 @@ abstract class AppLocalizations {
   /// No description provided for @accountIdentifiersReadOnly.
   ///
   /// In en, this message translates to:
-  /// **'Email, phone, and username are secured account identifiers and cannot currently be changed here.'**
+  /// **'Your username and email are account identifiers and can\'t be changed here yet.'**
   String get accountIdentifiersReadOnly;
 
   /// No description provided for @chooseAvatar.
@@ -6114,6 +6114,594 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview'**
   String get composerPreview;
+
+  /// No description provided for @communityManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage community'**
+  String get communityManage;
+
+  /// No description provided for @communityRoleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get communityRoleOwner;
+
+  /// No description provided for @communityRoleModerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderator'**
+  String get communityRoleModerator;
+
+  /// No description provided for @communityRoleMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get communityRoleMember;
+
+  /// No description provided for @communityRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Community rules'**
+  String get communityRules;
+
+  /// No description provided for @communityRulesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No rules yet. Add a few so members know what belongs here.'**
+  String get communityRulesEmpty;
+
+  /// No description provided for @communityAddRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Add rule'**
+  String get communityAddRule;
+
+  /// No description provided for @communityRuleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule'**
+  String get communityRuleTitle;
+
+  /// No description provided for @communityRuleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Details (optional)'**
+  String get communityRuleBody;
+
+  /// No description provided for @communityEditRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit rule'**
+  String get communityEditRule;
+
+  /// No description provided for @communityTabSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get communityTabSettings;
+
+  /// No description provided for @communityTabRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules'**
+  String get communityTabRules;
+
+  /// No description provided for @communityTabMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get communityTabMembers;
+
+  /// No description provided for @communityTabBanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Banned'**
+  String get communityTabBanned;
+
+  /// No description provided for @communityFieldName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get communityFieldName;
+
+  /// No description provided for @communityFieldDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get communityFieldDescription;
+
+  /// No description provided for @communityWhoCanPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can post'**
+  String get communityWhoCanPost;
+
+  /// No description provided for @communityPostAllMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'All members'**
+  String get communityPostAllMembers;
+
+  /// No description provided for @communityPostAllMembersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Any member can start a post.'**
+  String get communityPostAllMembersBody;
+
+  /// No description provided for @communityPostModsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only moderators'**
+  String get communityPostModsOnly;
+
+  /// No description provided for @communityPostModsOnlyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Members can still comment and react.'**
+  String get communityPostModsOnlyBody;
+
+  /// No description provided for @communitySaveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get communitySaveChanges;
+
+  /// No description provided for @communitySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get communitySaved;
+
+  /// No description provided for @communitySearchMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Search members'**
+  String get communitySearchMembers;
+
+  /// No description provided for @communityMakeModerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Make moderator'**
+  String get communityMakeModerator;
+
+  /// No description provided for @communityRemoveModerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove moderator'**
+  String get communityRemoveModerator;
+
+  /// No description provided for @communityRemoveMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from community'**
+  String get communityRemoveMember;
+
+  /// No description provided for @communityBanMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Ban from community'**
+  String get communityBanMember;
+
+  /// No description provided for @communityBanReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (optional)'**
+  String get communityBanReason;
+
+  /// No description provided for @communityRemoveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}?'**
+  String communityRemoveConfirm(String name);
+
+  /// No description provided for @communityRemoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They can join again later.'**
+  String get communityRemoveBody;
+
+  /// No description provided for @communityBanConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Ban {name}?'**
+  String communityBanConfirm(String name);
+
+  /// No description provided for @communityBanBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They\'ll be removed and can\'t join again until you unban them.'**
+  String get communityBanBody;
+
+  /// No description provided for @communityRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get communityRemove;
+
+  /// No description provided for @communityBan.
+  ///
+  /// In en, this message translates to:
+  /// **'Ban'**
+  String get communityBan;
+
+  /// No description provided for @communityUnban.
+  ///
+  /// In en, this message translates to:
+  /// **'Unban'**
+  String get communityUnban;
+
+  /// No description provided for @communityNoBans.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody is banned.'**
+  String get communityNoBans;
+
+  /// No description provided for @communityNoMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'No members found.'**
+  String get communityNoMembers;
+
+  /// No description provided for @communityPinPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin to top'**
+  String get communityPinPost;
+
+  /// No description provided for @communityUnpinPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get communityUnpinPost;
+
+  /// No description provided for @communityPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get communityPinned;
+
+  /// No description provided for @communityRemovePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove post'**
+  String get communityRemovePost;
+
+  /// No description provided for @communityRemovePostConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this post from the community?'**
+  String get communityRemovePostConfirm;
+
+  /// No description provided for @communityModsOnlyNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Only moderators can post here.'**
+  String get communityModsOnlyNotice;
+
+  /// No description provided for @communityModTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderator tools'**
+  String get communityModTools;
+
+  /// No description provided for @communityStatRules.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 rule} other{{count} rules}}'**
+  String communityStatRules(int count);
+
+  /// No description provided for @communitySetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your community'**
+  String get communitySetupTitle;
+
+  /// No description provided for @communitySetupProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/{total}'**
+  String communitySetupProgress(int done, int total);
+
+  /// No description provided for @communitySetupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a description'**
+  String get communitySetupDescription;
+
+  /// No description provided for @communitySetupRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a few rules'**
+  String get communitySetupRules;
+
+  /// No description provided for @communitySetupPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin a welcome post from its menu'**
+  String get communitySetupPin;
+
+  /// No description provided for @communitySetupMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite your first {count} members'**
+  String communitySetupMembers(int count);
+
+  /// No description provided for @communityStartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the conversation'**
+  String get communityStartTitle;
+
+  /// No description provided for @communityStartOwnerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your community is brand new. Write the first post so people know what it\'s about.'**
+  String get communityStartOwnerBody;
+
+  /// No description provided for @communityLook.
+  ///
+  /// In en, this message translates to:
+  /// **'Look'**
+  String get communityLook;
+
+  /// No description provided for @communityBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Banner'**
+  String get communityBanner;
+
+  /// No description provided for @communityChangeBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Change banner'**
+  String get communityChangeBanner;
+
+  /// No description provided for @communityRemoveBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get communityRemoveBanner;
+
+  /// No description provided for @communityBannerColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Banner colour'**
+  String get communityBannerColor;
+
+  /// No description provided for @communityBannerAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get communityBannerAuto;
+
+  /// No description provided for @communityIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get communityIcon;
+
+  /// No description provided for @communityChangeIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Change icon'**
+  String get communityChangeIcon;
+
+  /// No description provided for @communityIconSubjectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject communities keep their subject icon.'**
+  String get communityIconSubjectHint;
+
+  /// No description provided for @codeBuddyStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the code and I\'ll check it with you!'**
+  String get codeBuddyStart;
+
+  /// No description provided for @codeBuddyCheckInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'I sent you a code! Check your email or Telegram'**
+  String get codeBuddyCheckInbox;
+
+  /// No description provided for @codeBuddyTelegram.
+  ///
+  /// In en, this message translates to:
+  /// **'Grab the code from the bot and paste it here!'**
+  String get codeBuddyTelegram;
+
+  /// No description provided for @codeBuddyLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Just 1 more!} other{{count} more to go…}}'**
+  String codeBuddyLeft(int count);
+
+  /// No description provided for @codeBuddyDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it! Let\'s go'**
+  String get codeBuddyDone;
+
+  /// No description provided for @codeBuddyWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Hmm, that one didn\'t work. Try again?'**
+  String get codeBuddyWrong;
+
+  /// No description provided for @phoneNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get phoneNotVerified;
+
+  /// No description provided for @phoneVerifyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get phoneVerifyAction;
+
+  /// No description provided for @phoneChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get phoneChange;
+
+  /// No description provided for @phoneVerifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your phone'**
+  String get phoneVerifyTitle;
+
+  /// No description provided for @phoneVerifyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No SMS needed. Telegram shares the number on your Telegram account with Riksa.'**
+  String get phoneVerifyBody;
+
+  /// No description provided for @phoneVerifyStepOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the Riksa bot in Telegram'**
+  String get phoneVerifyStepOpen;
+
+  /// No description provided for @phoneVerifyStepShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap \"Share my phone number\"'**
+  String get phoneVerifyStepShare;
+
+  /// No description provided for @phoneVerifyStepBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Come back here. We\'ll notice by ourselves'**
+  String get phoneVerifyStepBack;
+
+  /// No description provided for @phoneVerifyOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Telegram'**
+  String get phoneVerifyOpen;
+
+  /// No description provided for @phoneVerifyOpenAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Telegram again'**
+  String get phoneVerifyOpenAgain;
+
+  /// No description provided for @phoneVerifyWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Telegram…'**
+  String get phoneVerifyWaiting;
+
+  /// No description provided for @phoneVerifiedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone verified!'**
+  String get phoneVerifiedTitle;
+
+  /// No description provided for @phoneVerifyBuddyStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s prove it\'s really you. It takes 10 seconds!'**
+  String get phoneVerifyBuddyStart;
+
+  /// No description provided for @phoneVerifyBuddyWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m watching for it. Tap Share in Telegram!'**
+  String get phoneVerifyBuddyWaiting;
+
+  /// No description provided for @phoneVerifyBuddyDone.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re verified! High five!'**
+  String get phoneVerifyBuddyDone;
+
+  /// No description provided for @xpSourceDailyQuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily quest'**
+  String get xpSourceDailyQuest;
+
+  /// No description provided for @xpSourceQuestBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'All daily quests bonus'**
+  String get xpSourceQuestBonus;
+
+  /// No description provided for @xpSourceWeeklyQuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly quest'**
+  String get xpSourceWeeklyQuest;
+
+  /// No description provided for @xpSourceChest.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly chest'**
+  String get xpSourceChest;
+
+  /// No description provided for @xpSourceSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Account setup'**
+  String get xpSourceSetup;
+
+  /// No description provided for @xpSourceResourceSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone saved your resource'**
+  String get xpSourceResourceSaved;
+
+  /// No description provided for @xpSourceAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus from Riksa'**
+  String get xpSourceAdmin;
+
+  /// No description provided for @progressHistoryToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get progressHistoryToday;
+
+  /// No description provided for @progressHistoryYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get progressHistoryYesterday;
+
+  /// No description provided for @progressHistoryThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get progressHistoryThisWeek;
+
+  /// No description provided for @progressHistoryTodayTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP today'**
+  String progressHistoryTodayTotal(int xp);
+
+  /// No description provided for @progressHistoryRankedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranked up to {tier}!'**
+  String progressHistoryRankedUp(String tier);
+
+  /// No description provided for @progressHistoryRankedDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to {tier}'**
+  String progressHistoryRankedDown(String tier);
+
+  /// No description provided for @setupQuestsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get setupQuestsTitle;
 }
 
 class _AppLocalizationsDelegate

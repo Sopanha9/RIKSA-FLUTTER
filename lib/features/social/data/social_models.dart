@@ -111,6 +111,12 @@ class SocialCategory {
     required this.joined,
     this.description,
     this.iconUrl,
+    this.myRole,
+    this.postPermission = CommunityPostPermission.members,
+    this.pinnedPostId,
+    this.rules = const [],
+    this.bannerUrl,
+    this.bannerColor,
   });
 
   final String id;
@@ -121,6 +127,26 @@ class SocialCategory {
   final int memberCount;
   final bool joined;
 
+  /// The viewer's role here; null when they are not a member.
+  final CommunityRole? myRole;
+  final CommunityPostPermission postPermission;
+  final String? pinnedPostId;
+  final List<CommunityRule> rules;
+
+  /// A banner photo the owner uploaded.
+  final String? bannerUrl;
+
+  /// A #RRGGBB banner colour; null keeps the subject colour.
+  final String? bannerColor;
+
+  bool get canModerate => myRole?.canModerate ?? false;
+  bool get isOwner => myRole == CommunityRole.owner;
+
+  /// Whether the viewer may start a post here.
+  bool get canPost =>
+      joined &&
+      (postPermission == CommunityPostPermission.members || canModerate);
+
   factory SocialCategory.fromJson(Map<String, dynamic> json) => SocialCategory(
     id: json['id']?.toString() ?? '',
     name: json['name'] as String? ?? '',
@@ -129,7 +155,100 @@ class SocialCategory {
     iconUrl: json['iconUrl'] as String?,
     memberCount: (json['memberCount'] as num?)?.toInt() ?? 0,
     joined: json['joined'] as bool? ?? false,
+    myRole: CommunityRole.fromWire(json['myRole']),
+    postPermission: CommunityPostPermission.fromWire(json['postPermission']),
+    pinnedPostId: json['pinnedPostId']?.toString(),
+    bannerUrl: json['bannerUrl'] as String?,
+    bannerColor: json['bannerColor'] as String?,
+    rules: [
+      for (final item in (json['rules'] as List?) ?? const [])
+        if (item is Map) CommunityRule.fromJson(item.cast<String, dynamic>()),
+    ],
   );
+}
+
+enum CommunityRole {
+  owner('OWNER'),
+  moderator('MODERATOR'),
+  member('MEMBER');
+
+  const CommunityRole(this.wire);
+  final String wire;
+
+  bool get canModerate => this != member;
+
+  static CommunityRole? fromWire(Object? value) {
+    for (final role in values) {
+      if (role.wire == value) return role;
+    }
+    return null;
+  }
+}
+
+enum CommunityPostPermission {
+  members('MEMBERS'),
+  moderators('MODERATORS');
+
+  const CommunityPostPermission(this.wire);
+  final String wire;
+
+  static CommunityPostPermission fromWire(Object? value) =>
+      value == moderators.wire ? moderators : members;
+}
+
+class CommunityRule {
+  const CommunityRule({required this.title, this.body});
+
+  final String title;
+  final String? body;
+
+  factory CommunityRule.fromJson(Map<String, dynamic> json) => CommunityRule(
+    title: json['title'] as String? ?? '',
+    body: json['body'] as String?,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'title': title,
+    if (body != null && body!.trim().isNotEmpty) 'body': body,
+  };
+}
+
+class CommunityMember {
+  const CommunityMember({
+    required this.user,
+    required this.role,
+    this.joinedAt,
+  });
+
+  final SocialAuthor user;
+  final CommunityRole role;
+  final DateTime? joinedAt;
+
+  factory CommunityMember.fromJson(Map<String, dynamic> json) =>
+      CommunityMember(
+        user: SocialAuthor.fromJson(
+          (json['user'] as Map? ?? const {}).cast<String, dynamic>(),
+        ),
+        role: CommunityRole.fromWire(json['role']) ?? CommunityRole.member,
+        joinedAt: DateTime.tryParse(json['joinedAt']?.toString() ?? ''),
+      );
+}
+
+class CommunityBanEntry {
+  const CommunityBanEntry({required this.user, this.reason, this.createdAt});
+
+  final SocialAuthor user;
+  final String? reason;
+  final DateTime? createdAt;
+
+  factory CommunityBanEntry.fromJson(Map<String, dynamic> json) =>
+      CommunityBanEntry(
+        user: SocialAuthor.fromJson(
+          (json['user'] as Map? ?? const {}).cast<String, dynamic>(),
+        ),
+        reason: json['reason'] as String?,
+        createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? ''),
+      );
 }
 
 class SocialAuthor {

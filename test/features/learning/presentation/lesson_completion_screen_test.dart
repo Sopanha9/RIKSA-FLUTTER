@@ -155,7 +155,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('lesson-completion-options')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('lesson-completion-options')),
+      findsNothing,
+    );
     expect(find.text('Start next lesson'), findsOneWidget);
     expect(find.text('Finish for now'), findsOneWidget);
     final primary = tester.getRect(

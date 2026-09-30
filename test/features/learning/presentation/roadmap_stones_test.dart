@@ -59,15 +59,19 @@ void main() {
   group('buildRoadmapStones', () {
     test('makes one stone per unit and nests that unit\'s lessons', () {
       final stones = buildRoadmapStones(
-        _roadmap([
-          _unit('u1', 1, RoadmapUnitStatus.completed, [
-            _lesson('a', status: RoadmapLessonStatus.completed),
-          ], completed: 1),
-          _unit('u2', 2, RoadmapUnitStatus.current, [
-            _lesson('b', current: true),
-            _lesson('c', status: RoadmapLessonStatus.locked),
-          ]),
-        ], completed: 1, total: 3),
+        _roadmap(
+          [
+            _unit('u1', 1, RoadmapUnitStatus.completed, [
+              _lesson('a', status: RoadmapLessonStatus.completed),
+            ], completed: 1),
+            _unit('u2', 2, RoadmapUnitStatus.current, [
+              _lesson('b', current: true),
+              _lesson('c', status: RoadmapLessonStatus.locked),
+            ]),
+          ],
+          completed: 1,
+          total: 3,
+        ),
       );
 
       expect(stones.length, 2);
@@ -133,22 +137,25 @@ void main() {
       expect(stones.single.isOpenable, isTrue);
     });
 
-    test('marks the lesson the server flagged as current, even if AVAILABLE', () {
-      final stones = buildRoadmapStones(
-        _roadmap([
-          _unit('u1', 1, RoadmapUnitStatus.current, [
-            _lesson('a', status: RoadmapLessonStatus.completed),
-            // The seeded backend sends the resume target as AVAILABLE with
-            // current: true, never as IN_PROGRESS.
-            _lesson('b', current: true),
-            _lesson('c', status: RoadmapLessonStatus.locked),
+    test(
+      'marks the lesson the server flagged as current, even if AVAILABLE',
+      () {
+        final stones = buildRoadmapStones(
+          _roadmap([
+            _unit('u1', 1, RoadmapUnitStatus.current, [
+              _lesson('a', status: RoadmapLessonStatus.completed),
+              // The seeded backend sends the resume target as AVAILABLE with
+              // current: true, never as IN_PROGRESS.
+              _lesson('b', current: true),
+              _lesson('c', status: RoadmapLessonStatus.locked),
+            ]),
           ]),
-        ]),
-      );
+        );
 
-      expect(stones.single.lessons[1].status, LearningStatus.current);
-      expect(stones.single.resumableLesson!.id, 'b');
-    });
+        expect(stones.single.lessons[1].status, LearningStatus.current);
+        expect(stones.single.resumableLesson!.id, 'b');
+      },
+    );
 
     test('honours currentLessonId when no lesson carries the flag', () {
       final stones = buildRoadmapStones(
@@ -194,10 +201,16 @@ void main() {
 
   group('RoadmapSummary', () {
     test('reports the server totals, not a local recount', () {
-      final roadmap = _roadmap([
-        _unit('u1', 1, RoadmapUnitStatus.completed, [_lesson('a')], completed: 1),
-        _unit('u2', 2, RoadmapUnitStatus.current, [_lesson('b')]),
-      ], completed: 2, total: 13);
+      final roadmap = _roadmap(
+        [
+          _unit('u1', 1, RoadmapUnitStatus.completed, [
+            _lesson('a'),
+          ], completed: 1),
+          _unit('u2', 2, RoadmapUnitStatus.current, [_lesson('b')]),
+        ],
+        completed: 2,
+        total: 13,
+      );
       final summary = RoadmapSummary.of(roadmap, buildRoadmapStones(roadmap));
 
       expect(summary.completed, 2);

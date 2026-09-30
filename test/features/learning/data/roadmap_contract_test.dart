@@ -55,9 +55,9 @@ void main() {
     expect(roadmap.progress, inInclusiveRange(0, 1));
 
     // Khmer lesson titles survive the round trip intact.
-    final titles = roadmap.units.expand((unit) => unit.lessons).map(
-      (lesson) => lesson.title,
-    );
+    final titles = roadmap.units
+        .expand((unit) => unit.lessons)
+        .map((lesson) => lesson.title);
     expect(titles.any(RiksaTypographyProbe.containsKhmer), isTrue);
   });
 

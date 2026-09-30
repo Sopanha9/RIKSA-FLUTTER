@@ -1471,7 +1471,7 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get accountIdentifiersReadOnly =>
-      'អ៊ីមែល លេខទូរស័ព្ទ និងឈ្មោះអ្នកប្រើ គឺជាព័ត៌មានសុវត្ថិភាពដែលមិនអាចកែប្រែនៅទីនេះបានទេ។';
+      'ឈ្មោះអ្នកប្រើ និងអ៊ីមែល មិនអាចកែប្រែនៅទីនេះបានទេនៅពេលនេះ។';
 
   @override
   String get chooseAvatar => 'ជ្រើសរើសរូបតំណាង';
@@ -3494,4 +3494,336 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get composerPreview => 'មើលជាមុន';
+
+  @override
+  String get communityManage => 'គ្រប់គ្រងសហគមន៍';
+
+  @override
+  String get communityRoleOwner => 'ម្ចាស់';
+
+  @override
+  String get communityRoleModerator => 'អ្នកសម្របសម្រួល';
+
+  @override
+  String get communityRoleMember => 'សមាជិក';
+
+  @override
+  String get communityRules => 'ច្បាប់សហគមន៍';
+
+  @override
+  String get communityRulesEmpty =>
+      'មិនទាន់មានច្បាប់ទេ។ បន្ថែមខ្លះ ដើម្បីឱ្យសមាជិកដឹងថាអ្វីសមនឹងដាក់នៅទីនេះ។';
+
+  @override
+  String get communityAddRule => 'បន្ថែមច្បាប់';
+
+  @override
+  String get communityRuleTitle => 'ច្បាប់';
+
+  @override
+  String get communityRuleBody => 'ព័ត៌មានលម្អិត (ស្រេចចិត្ត)';
+
+  @override
+  String get communityEditRule => 'កែច្បាប់';
+
+  @override
+  String get communityTabSettings => 'ការកំណត់';
+
+  @override
+  String get communityTabRules => 'ច្បាប់';
+
+  @override
+  String get communityTabMembers => 'សមាជិក';
+
+  @override
+  String get communityTabBanned => 'បានហាមឃាត់';
+
+  @override
+  String get communityFieldName => 'ឈ្មោះ';
+
+  @override
+  String get communityFieldDescription => 'ការពិពណ៌នា';
+
+  @override
+  String get communityWhoCanPost => 'អ្នកណាអាចបង្ហោះ';
+
+  @override
+  String get communityPostAllMembers => 'សមាជិកទាំងអស់';
+
+  @override
+  String get communityPostAllMembersBody => 'សមាជិកណាក៏អាចបង្ហោះបាន។';
+
+  @override
+  String get communityPostModsOnly => 'តែអ្នកសម្របសម្រួល';
+
+  @override
+  String get communityPostModsOnlyBody =>
+      'សមាជិកនៅតែអាចបញ្ចេញមតិ និងប្រតិកម្មបាន។';
+
+  @override
+  String get communitySaveChanges => 'រក្សាទុកការផ្លាស់ប្ដូរ';
+
+  @override
+  String get communitySaved => 'បានរក្សាទុក';
+
+  @override
+  String get communitySearchMembers => 'ស្វែងរកសមាជិក';
+
+  @override
+  String get communityMakeModerator => 'តែងតាំងជាអ្នកសម្របសម្រួល';
+
+  @override
+  String get communityRemoveModerator => 'ដកចេញពីអ្នកសម្របសម្រួល';
+
+  @override
+  String get communityRemoveMember => 'ដកចេញពីសហគមន៍';
+
+  @override
+  String get communityBanMember => 'ហាមឃាត់ពីសហគមន៍';
+
+  @override
+  String get communityBanReason => 'មូលហេតុ (ស្រេចចិត្ត)';
+
+  @override
+  String communityRemoveConfirm(String name) {
+    return 'ដក $name ចេញ?';
+  }
+
+  @override
+  String get communityRemoveBody => 'គេអាចចូលរួមម្ដងទៀតនៅពេលក្រោយ។';
+
+  @override
+  String communityBanConfirm(String name) {
+    return 'ហាមឃាត់ $name?';
+  }
+
+  @override
+  String get communityBanBody =>
+      'គេនឹងត្រូវដកចេញ ហើយមិនអាចចូលរួមវិញបានទេ រហូតដល់អ្នកឈប់ហាមឃាត់។';
+
+  @override
+  String get communityRemove => 'ដកចេញ';
+
+  @override
+  String get communityBan => 'ហាមឃាត់';
+
+  @override
+  String get communityUnban => 'ឈប់ហាមឃាត់';
+
+  @override
+  String get communityNoBans => 'មិនមាននរណាត្រូវបានហាមឃាត់ទេ។';
+
+  @override
+  String get communityNoMembers => 'រកមិនឃើញសមាជិកទេ។';
+
+  @override
+  String get communityPinPost => 'ខ្ទាស់នៅខាងលើ';
+
+  @override
+  String get communityUnpinPost => 'ឈប់ខ្ទាស់';
+
+  @override
+  String get communityPinned => 'បានខ្ទាស់';
+
+  @override
+  String get communityRemovePost => 'ដកការបង្ហោះចេញ';
+
+  @override
+  String get communityRemovePostConfirm => 'ដកការបង្ហោះនេះចេញពីសហគមន៍?';
+
+  @override
+  String get communityModsOnlyNotice =>
+      'មានតែអ្នកសម្របសម្រួលទេដែលអាចបង្ហោះនៅទីនេះ។';
+
+  @override
+  String get communityModTools => 'ឧបករណ៍អ្នកសម្របសម្រួល';
+
+  @override
+  String communityStatRules(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ច្បាប់ $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get communitySetupTitle => 'រៀបចំសហគមន៍របស់អ្នក';
+
+  @override
+  String communitySetupProgress(int done, int total) {
+    return '$done/$total';
+  }
+
+  @override
+  String get communitySetupDescription => 'បន្ថែមការពិពណ៌នា';
+
+  @override
+  String get communitySetupRules => 'សរសេរច្បាប់ខ្លះៗ';
+
+  @override
+  String get communitySetupPin => 'ខ្ទាស់ការបង្ហោះស្វាគមន៍ពីម៉ឺនុយរបស់វា';
+
+  @override
+  String communitySetupMembers(int count) {
+    return 'អញ្ជើញសមាជិក $count នាក់ដំបូង';
+  }
+
+  @override
+  String get communityStartTitle => 'ចាប់ផ្ដើមការសន្ទនា';
+
+  @override
+  String get communityStartOwnerBody =>
+      'សហគមន៍របស់អ្នកទើបតែបង្កើត។ សរសេរការបង្ហោះដំបូង ដើម្បីឱ្យគេដឹងថាវានិយាយអំពីអ្វី។';
+
+  @override
+  String get communityLook => 'រូបរាង';
+
+  @override
+  String get communityBanner => 'បដា';
+
+  @override
+  String get communityChangeBanner => 'ប្ដូរបដា';
+
+  @override
+  String get communityRemoveBanner => 'ដករូបចេញ';
+
+  @override
+  String get communityBannerColor => 'ពណ៌បដា';
+
+  @override
+  String get communityBannerAuto => 'តាមមុខវិជ្ជា';
+
+  @override
+  String get communityIcon => 'រូបតំណាង';
+
+  @override
+  String get communityChangeIcon => 'ប្ដូររូបតំណាង';
+
+  @override
+  String get communityIconSubjectHint =>
+      'សហគមន៍មុខវិជ្ជារក្សារូបតំណាងមុខវិជ្ជារបស់វា។';
+
+  @override
+  String get codeBuddyStart => 'វាយលេខកូដ ហើយខ្ញុំនឹងពិនិត្យជាមួយអ្នក!';
+
+  @override
+  String get codeBuddyCheckInbox =>
+      'ខ្ញុំបានផ្ញើលេខកូដហើយ! មើលអ៊ីមែល ឬ Telegram របស់អ្នក';
+
+  @override
+  String get codeBuddyTelegram => 'យកលេខកូដពី bot ហើយបិទភ្ជាប់នៅទីនេះ!';
+
+  @override
+  String codeBuddyLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'នៅសល់ $count ទៀត…',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get codeBuddyDone => 'បានហើយ! តោះទៅ';
+
+  @override
+  String get codeBuddyWrong => 'អូ៎ លេខកូដនោះមិនត្រូវទេ។ សាកម្ដងទៀត?';
+
+  @override
+  String get phoneNotVerified => 'មិនទាន់ផ្ទៀងផ្ទាត់';
+
+  @override
+  String get phoneVerifyAction => 'ផ្ទៀងផ្ទាត់';
+
+  @override
+  String get phoneChange => 'ប្ដូរ';
+
+  @override
+  String get phoneVerifyTitle => 'ផ្ទៀងផ្ទាត់លេខទូរស័ព្ទរបស់អ្នក';
+
+  @override
+  String get phoneVerifyBody =>
+      'មិនត្រូវការ SMS ទេ។ Telegram ចែករំលែកលេខលើគណនី Telegram របស់អ្នកជាមួយ Riksa។';
+
+  @override
+  String get phoneVerifyStepOpen => 'បើក Riksa bot នៅក្នុង Telegram';
+
+  @override
+  String get phoneVerifyStepShare => 'ចុច \"Share my phone number\"';
+
+  @override
+  String get phoneVerifyStepBack => 'ត្រឡប់មកទីនេះវិញ យើងនឹងដឹងដោយខ្លួនឯង';
+
+  @override
+  String get phoneVerifyOpen => 'បើក Telegram';
+
+  @override
+  String get phoneVerifyOpenAgain => 'បើក Telegram ម្ដងទៀត';
+
+  @override
+  String get phoneVerifyWaiting => 'កំពុងរង់ចាំ Telegram…';
+
+  @override
+  String get phoneVerifiedTitle => 'បានផ្ទៀងផ្ទាត់លេខទូរស័ព្ទ!';
+
+  @override
+  String get phoneVerifyBuddyStart =>
+      'តោះបញ្ជាក់ថាជាអ្នកពិតប្រាកដ។ ចំណាយតែ ១០ វិនាទី!';
+
+  @override
+  String get phoneVerifyBuddyWaiting =>
+      'ខ្ញុំកំពុងរង់ចាំ។ ចុច Share នៅក្នុង Telegram!';
+
+  @override
+  String get phoneVerifyBuddyDone => 'អ្នកបានផ្ទៀងផ្ទាត់ហើយ! ទះដៃម្ដង!';
+
+  @override
+  String get xpSourceDailyQuest => 'បេសកកម្មប្រចាំថ្ងៃ';
+
+  @override
+  String get xpSourceQuestBonus => 'រង្វាន់បញ្ចប់បេសកកម្មទាំងអស់';
+
+  @override
+  String get xpSourceWeeklyQuest => 'បេសកកម្មប្រចាំសប្ដាហ៍';
+
+  @override
+  String get xpSourceChest => 'ហិបប្រចាំសប្ដាហ៍';
+
+  @override
+  String get xpSourceSetup => 'រៀបចំគណនី';
+
+  @override
+  String get xpSourceResourceSaved => 'មានគេរក្សាទុកឯកសាររបស់អ្នក';
+
+  @override
+  String get xpSourceAdmin => 'រង្វាន់ពី Riksa';
+
+  @override
+  String get progressHistoryToday => 'ថ្ងៃនេះ';
+
+  @override
+  String get progressHistoryYesterday => 'ម្សិលមិញ';
+
+  @override
+  String get progressHistoryThisWeek => '៧ ថ្ងៃចុងក្រោយ';
+
+  @override
+  String progressHistoryTodayTotal(int xp) {
+    return '$xp XP ថ្ងៃនេះ';
+  }
+
+  @override
+  String progressHistoryRankedUp(String tier) {
+    return 'ឡើងដល់ថ្នាក់ $tier!';
+  }
+
+  @override
+  String progressHistoryRankedDown(String tier) {
+    return 'ប្ដូរទៅថ្នាក់ $tier';
+  }
+
+  @override
+  String get setupQuestsTitle => 'ចាប់ផ្ដើម';
 }

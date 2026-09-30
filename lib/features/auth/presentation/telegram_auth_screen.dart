@@ -9,8 +9,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/otp_code_field.dart';
 import '../../../core/widgets/telegram_logo.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../mascot/presentation/widgets/code_buddy.dart';
 import '../data/auth_api.dart';
 import '../data/auth_models.dart';
 import '../data/auth_validators.dart';
@@ -606,42 +608,61 @@ class _TelegramAuthScreenState extends ConsumerState<TelegramAuthScreen>
         ),
       ],
       const SizedBox(height: 18),
-      TextField(
-        key: const Key('telegram_code_input'),
+      CodeBuddy(
+        key: const Key('telegram_code_buddy'),
         controller: _codeController,
-        enabled: !busy,
-        autocorrect: false,
-        enableSuggestions: false,
-        textCapitalization: TextCapitalization.characters,
-        textAlign: TextAlign.center,
-        textInputAction: TextInputAction.done,
-        autofillHints: const [AutofillHints.oneTimeCode],
-        style: theme.textTheme.headlineSmall?.copyWith(
-          letterSpacing: 6,
-          fontFeatures: const [FontFeature.tabularFigures()],
-        ),
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp('[A-Za-z0-9]')),
-          const _UpperCaseFormatter(),
-          LengthLimitingTextInputFormatter(_codeLength),
+        length: _codeLength,
+        hasError: _codeError != null,
+        startLine: strings.codeBuddyTelegram,
+        size: 80,
+      ),
+      const SizedBox(height: 14),
+      // Wraps under large text instead of squeezing the paste button.
+      Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8,
+        children: [
+          Text(
+            strings.telegramCodeLabel,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          TextButton.icon(
+            key: const Key('telegram_paste_code'),
+            onPressed: busy ? null : _pasteCode,
+            icon: const Icon(Icons.content_paste_rounded, size: 18),
+            label: Text(strings.telegramPasteCode),
+          ),
         ],
+      ),
+      const SizedBox(height: 6),
+      OtpCodeField(
+        fieldKey: const Key('telegram_code_input'),
+        controller: _codeController,
+        length: _codeLength,
+        alphanumeric: true,
+        groupSize: 4,
+        enabled: !busy,
+        hasError: _codeError != null,
+        semanticLabel: strings.telegramCodeLabel,
         onChanged: (value) {
           if (_codeError != null) setState(() => _codeError = null);
         },
-        onSubmitted: (_) => _redeemCode(),
-        decoration: InputDecoration(
-          labelText: strings.telegramCodeLabel,
-          hintText: strings.telegramCodeHint,
-          errorText: _codeError,
-          errorMaxLines: 3,
-          suffixIcon: IconButton(
-            key: const Key('telegram_paste_code'),
-            tooltip: strings.telegramPasteCode,
-            onPressed: busy ? null : _pasteCode,
-            icon: const Icon(Icons.content_paste_rounded),
+        onCompleted: (_) => _redeemCode(),
+      ),
+      if (_codeError != null) ...[
+        const SizedBox(height: 8),
+        Text(
+          _codeError!,
+          key: const Key('telegram_code_error'),
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.error,
           ),
         ),
-      ),
+      ],
       const SizedBox(height: 18),
       FilledButton(
         key: const Key('telegram_code_submit'),
@@ -767,16 +788,6 @@ class _TelegramAuthScreenState extends ConsumerState<TelegramAuthScreen>
       ),
     ];
   }
-}
-
-class _UpperCaseFormatter extends TextInputFormatter {
-  const _UpperCaseFormatter();
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) => newValue.copyWith(text: newValue.text.toUpperCase());
 }
 
 class _Step extends StatelessWidget {

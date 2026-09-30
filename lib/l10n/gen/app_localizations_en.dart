@@ -1520,7 +1520,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountIdentifiersReadOnly =>
-      'Email, phone, and username are secured account identifiers and cannot currently be changed here.';
+      'Your username and email are account identifiers and can\'t be changed here yet.';
 
   @override
   String get chooseAvatar => 'Choose an avatar';
@@ -3537,4 +3537,340 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get composerPreview => 'Preview';
+
+  @override
+  String get communityManage => 'Manage community';
+
+  @override
+  String get communityRoleOwner => 'Owner';
+
+  @override
+  String get communityRoleModerator => 'Moderator';
+
+  @override
+  String get communityRoleMember => 'Member';
+
+  @override
+  String get communityRules => 'Community rules';
+
+  @override
+  String get communityRulesEmpty =>
+      'No rules yet. Add a few so members know what belongs here.';
+
+  @override
+  String get communityAddRule => 'Add rule';
+
+  @override
+  String get communityRuleTitle => 'Rule';
+
+  @override
+  String get communityRuleBody => 'Details (optional)';
+
+  @override
+  String get communityEditRule => 'Edit rule';
+
+  @override
+  String get communityTabSettings => 'Settings';
+
+  @override
+  String get communityTabRules => 'Rules';
+
+  @override
+  String get communityTabMembers => 'Members';
+
+  @override
+  String get communityTabBanned => 'Banned';
+
+  @override
+  String get communityFieldName => 'Name';
+
+  @override
+  String get communityFieldDescription => 'Description';
+
+  @override
+  String get communityWhoCanPost => 'Who can post';
+
+  @override
+  String get communityPostAllMembers => 'All members';
+
+  @override
+  String get communityPostAllMembersBody => 'Any member can start a post.';
+
+  @override
+  String get communityPostModsOnly => 'Only moderators';
+
+  @override
+  String get communityPostModsOnlyBody =>
+      'Members can still comment and react.';
+
+  @override
+  String get communitySaveChanges => 'Save changes';
+
+  @override
+  String get communitySaved => 'Saved';
+
+  @override
+  String get communitySearchMembers => 'Search members';
+
+  @override
+  String get communityMakeModerator => 'Make moderator';
+
+  @override
+  String get communityRemoveModerator => 'Remove moderator';
+
+  @override
+  String get communityRemoveMember => 'Remove from community';
+
+  @override
+  String get communityBanMember => 'Ban from community';
+
+  @override
+  String get communityBanReason => 'Reason (optional)';
+
+  @override
+  String communityRemoveConfirm(String name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String get communityRemoveBody => 'They can join again later.';
+
+  @override
+  String communityBanConfirm(String name) {
+    return 'Ban $name?';
+  }
+
+  @override
+  String get communityBanBody =>
+      'They\'ll be removed and can\'t join again until you unban them.';
+
+  @override
+  String get communityRemove => 'Remove';
+
+  @override
+  String get communityBan => 'Ban';
+
+  @override
+  String get communityUnban => 'Unban';
+
+  @override
+  String get communityNoBans => 'Nobody is banned.';
+
+  @override
+  String get communityNoMembers => 'No members found.';
+
+  @override
+  String get communityPinPost => 'Pin to top';
+
+  @override
+  String get communityUnpinPost => 'Unpin';
+
+  @override
+  String get communityPinned => 'Pinned';
+
+  @override
+  String get communityRemovePost => 'Remove post';
+
+  @override
+  String get communityRemovePostConfirm =>
+      'Remove this post from the community?';
+
+  @override
+  String get communityModsOnlyNotice => 'Only moderators can post here.';
+
+  @override
+  String get communityModTools => 'Moderator tools';
+
+  @override
+  String communityStatRules(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rules',
+      one: '1 rule',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get communitySetupTitle => 'Set up your community';
+
+  @override
+  String communitySetupProgress(int done, int total) {
+    return '$done/$total';
+  }
+
+  @override
+  String get communitySetupDescription => 'Add a description';
+
+  @override
+  String get communitySetupRules => 'Write a few rules';
+
+  @override
+  String get communitySetupPin => 'Pin a welcome post from its menu';
+
+  @override
+  String communitySetupMembers(int count) {
+    return 'Invite your first $count members';
+  }
+
+  @override
+  String get communityStartTitle => 'Start the conversation';
+
+  @override
+  String get communityStartOwnerBody =>
+      'Your community is brand new. Write the first post so people know what it\'s about.';
+
+  @override
+  String get communityLook => 'Look';
+
+  @override
+  String get communityBanner => 'Banner';
+
+  @override
+  String get communityChangeBanner => 'Change banner';
+
+  @override
+  String get communityRemoveBanner => 'Remove photo';
+
+  @override
+  String get communityBannerColor => 'Banner colour';
+
+  @override
+  String get communityBannerAuto => 'Subject';
+
+  @override
+  String get communityIcon => 'Icon';
+
+  @override
+  String get communityChangeIcon => 'Change icon';
+
+  @override
+  String get communityIconSubjectHint =>
+      'Subject communities keep their subject icon.';
+
+  @override
+  String get codeBuddyStart => 'Type the code and I\'ll check it with you!';
+
+  @override
+  String get codeBuddyCheckInbox =>
+      'I sent you a code! Check your email or Telegram';
+
+  @override
+  String get codeBuddyTelegram =>
+      'Grab the code from the bot and paste it here!';
+
+  @override
+  String codeBuddyLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more to go…',
+      one: 'Just 1 more!',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get codeBuddyDone => 'Got it! Let\'s go';
+
+  @override
+  String get codeBuddyWrong => 'Hmm, that one didn\'t work. Try again?';
+
+  @override
+  String get phoneNotVerified => 'Not verified';
+
+  @override
+  String get phoneVerifyAction => 'Verify';
+
+  @override
+  String get phoneChange => 'Change';
+
+  @override
+  String get phoneVerifyTitle => 'Verify your phone';
+
+  @override
+  String get phoneVerifyBody =>
+      'No SMS needed. Telegram shares the number on your Telegram account with Riksa.';
+
+  @override
+  String get phoneVerifyStepOpen => 'Open the Riksa bot in Telegram';
+
+  @override
+  String get phoneVerifyStepShare => 'Tap \"Share my phone number\"';
+
+  @override
+  String get phoneVerifyStepBack =>
+      'Come back here. We\'ll notice by ourselves';
+
+  @override
+  String get phoneVerifyOpen => 'Open Telegram';
+
+  @override
+  String get phoneVerifyOpenAgain => 'Open Telegram again';
+
+  @override
+  String get phoneVerifyWaiting => 'Waiting for Telegram…';
+
+  @override
+  String get phoneVerifiedTitle => 'Phone verified!';
+
+  @override
+  String get phoneVerifyBuddyStart =>
+      'Let\'s prove it\'s really you. It takes 10 seconds!';
+
+  @override
+  String get phoneVerifyBuddyWaiting =>
+      'I\'m watching for it. Tap Share in Telegram!';
+
+  @override
+  String get phoneVerifyBuddyDone => 'You\'re verified! High five!';
+
+  @override
+  String get xpSourceDailyQuest => 'Daily quest';
+
+  @override
+  String get xpSourceQuestBonus => 'All daily quests bonus';
+
+  @override
+  String get xpSourceWeeklyQuest => 'Weekly quest';
+
+  @override
+  String get xpSourceChest => 'Weekly chest';
+
+  @override
+  String get xpSourceSetup => 'Account setup';
+
+  @override
+  String get xpSourceResourceSaved => 'Someone saved your resource';
+
+  @override
+  String get xpSourceAdmin => 'Bonus from Riksa';
+
+  @override
+  String get progressHistoryToday => 'Today';
+
+  @override
+  String get progressHistoryYesterday => 'Yesterday';
+
+  @override
+  String get progressHistoryThisWeek => 'Last 7 days';
+
+  @override
+  String progressHistoryTodayTotal(int xp) {
+    return '$xp XP today';
+  }
+
+  @override
+  String progressHistoryRankedUp(String tier) {
+    return 'Ranked up to $tier!';
+  }
+
+  @override
+  String progressHistoryRankedDown(String tier) {
+    return 'Moved to $tier';
+  }
+
+  @override
+  String get setupQuestsTitle => 'Get started';
 }

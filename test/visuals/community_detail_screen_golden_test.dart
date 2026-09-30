@@ -75,6 +75,10 @@ class _FakeSocialApi extends SocialApi {
   Future<List<SocialCategory>> categories() async => const [_community];
 
   @override
+  Future<SocialCategory?> community(String id) async =>
+      id == _community.id ? _community : null;
+
+  @override
   Future<SocialFeedPage> feed({
     String? categoryId,
     String? authorId,

@@ -12,6 +12,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../data/profile_media_storage.dart';
 import '../providers/profile_cover_provider.dart';
 import '../providers/profile_provider.dart';
+import 'widgets/phone_verify_sheet.dart';
 import 'widgets/profile_cover.dart';
 import 'widgets/profile_ui.dart';
 
@@ -265,11 +266,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   indent: 58,
                                   color: context.riksa.outline,
                                 ),
-                                _ReadOnlyAccountRow(
-                                  icon: Icons.phone_outlined,
-                                  label: l10n.phoneNumber,
-                                  value: user.phoneNumber ?? l10n.notProvided,
-                                ),
+                                _PhoneRow(user: user),
                               ],
                             ),
                           ),
@@ -704,4 +701,78 @@ class _ReadOnlyAccountRow extends StatelessWidget {
       size: 17,
     ),
   );
+}
+
+/// The phone number, verified through Telegram. Tapping starts (or redoes)
+/// the verification, which is also how the number is changed.
+class _PhoneRow extends StatelessWidget {
+  const _PhoneRow({required this.user});
+
+  final AuthUser user;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final palette = context.riksa;
+    final verified = user.hasVerifiedPhone;
+    final phone = user.phoneNumber?.trim() ?? '';
+    final number = phone.isEmpty ? null : phone;
+    const green = Color(0xFF22C55E);
+
+    Future<void> verify() async {
+      final done = await showPhoneVerifySheet(context);
+      if (done && context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(l10n.phoneVerifiedTitle)));
+      }
+    }
+
+    return ListTile(
+      key: const ValueKey('profile-phone-row'),
+      onTap: verify,
+      leading: Icon(Icons.phone_outlined, color: palette.inkMuted),
+      title: Text(
+        l10n.phoneNumber,
+        style: TextStyle(color: palette.inkMuted, fontSize: 12),
+      ),
+      subtitle: Row(
+        children: [
+          Flexible(
+            child: Text(
+              number ?? l10n.phoneNotVerified,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (verified) ...[
+            const SizedBox(width: 6),
+            const Icon(Icons.verified_rounded, size: 16, color: green),
+          ] else if (number != null) ...[
+            const SizedBox(width: 6),
+            Text(
+              l10n.phoneNotVerified,
+              style: const TextStyle(
+                color: Color(0xFFF59E0B),
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ],
+      ),
+      trailing: verified
+          ? TextButton(
+              key: const ValueKey('profile-phone-change'),
+              onPressed: verify,
+              child: Text(l10n.phoneChange),
+            )
+          : FilledButton.tonalIcon(
+              key: const ValueKey('profile-phone-verify'),
+              onPressed: verify,
+              icon: const Icon(Icons.verified_user_outlined, size: 18),
+              label: Text(l10n.phoneVerifyAction),
+            ),
+    );
+  }
 }

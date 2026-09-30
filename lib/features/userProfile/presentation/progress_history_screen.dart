@@ -6,10 +6,13 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/riksa_components.dart';
 import '../../../core/widgets/riksa_glass.dart';
+import '../../../core/widgets/riksa_rank_badge.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../mascot/domain/mascot.dart';
 import '../../mascot/presentation/widgets/buddy_companion.dart';
+import '../data/profile_models.dart';
 import '../providers/profile_provider.dart';
+import 'widgets/profile_ui.dart';
 
 /// Names an XP source in the learner's language.
 ///
@@ -17,24 +20,60 @@ import '../providers/profile_provider.dart';
 /// that raw, even tidied up, leaves English inside a Khmer screen, so known
 /// values are mapped and anything new falls back to a readable form of the
 /// code rather than an empty row.
-String xpSourceLabel(AppLocalizations l10n, String sourceType) =>
+String xpSourceLabel(
+  AppLocalizations l10n,
+  String sourceType,
+) => switch (sourceType.toUpperCase()) {
+  'LESSON' || 'LESSON_COMPLETE' || 'LESSON_COMPLETION' => l10n.xpSourceLesson,
+  'EXERCISE' || 'EXERCISE_CORRECT' => l10n.xpSourceExercise,
+  'ACHIEVEMENT' || 'ACHIEVEMENT_UNLOCK' => l10n.xpSourceAchievement,
+  'STREAK' || 'STREAK_BONUS' => l10n.xpSourceStreak,
+  'XP_REWARD' || 'REWARD' => l10n.xpSourceReward,
+  'QUEST' => l10n.xpSourceDailyQuest,
+  'QUEST_BONUS' => l10n.xpSourceQuestBonus,
+  'WEEKLY_QUEST' => l10n.xpSourceWeeklyQuest,
+  'QUEST_CHEST' => l10n.xpSourceChest,
+  'SETUP_TASK' => l10n.xpSourceSetup,
+  'RESOURCE_SAVED' => l10n.xpSourceResourceSaved,
+  'ADMIN_ADJUST' => l10n.xpSourceAdmin,
+  _ =>
+    sourceType
+        .replaceAll('_', ' ')
+        .toLowerCase()
+        .split(' ')
+        .map(
+          (word) => word.isEmpty
+              ? word
+              : '${word[0].toUpperCase()}${word.substring(1)}',
+        )
+        .join(' '),
+};
+
+/// An icon and colour per XP source, so a glance tells lessons from quests.
+(IconData, Color) xpSourceStyle(String sourceType) =>
     switch (sourceType.toUpperCase()) {
-      'LESSON' || 'LESSON_COMPLETE' => l10n.xpSourceLesson,
-      'EXERCISE' || 'EXERCISE_CORRECT' => l10n.xpSourceExercise,
-      'ACHIEVEMENT' => l10n.xpSourceAchievement,
-      'STREAK' || 'STREAK_BONUS' => l10n.xpSourceStreak,
-      'XP_REWARD' || 'REWARD' => l10n.xpSourceReward,
-      _ =>
-        sourceType
-            .replaceAll('_', ' ')
-            .toLowerCase()
-            .split(' ')
-            .map(
-              (word) => word.isEmpty
-                  ? word
-                  : '${word[0].toUpperCase()}${word.substring(1)}',
-            )
-            .join(' '),
+      'LESSON' ||
+      'LESSON_COMPLETE' ||
+      'LESSON_COMPLETION' => (Icons.menu_book_rounded, const Color(0xFF3B82F6)),
+      'EXERCISE' || 'EXERCISE_CORRECT' => (
+        Icons.check_circle_rounded,
+        const Color(0xFF22C55E),
+      ),
+      'ACHIEVEMENT' || 'ACHIEVEMENT_UNLOCK' => (
+        Icons.emoji_events_rounded,
+        const Color(0xFFF59E0B),
+      ),
+      'STREAK' || 'STREAK_BONUS' => (
+        Icons.local_fire_department_rounded,
+        const Color(0xFFF97316),
+      ),
+      'QUEST' ||
+      'WEEKLY_QUEST' ||
+      'QUEST_BONUS' => (Icons.flag_rounded, const Color(0xFF8B5CF6)),
+      'QUEST_CHEST' => (Icons.inventory_2_rounded, const Color(0xFFD97706)),
+      'SETUP_TASK' => (Icons.rocket_launch_rounded, const Color(0xFF14B8A6)),
+      'RESOURCE_SAVED' => (Icons.bookmark_rounded, const Color(0xFFEC4899)),
+      _ => (Icons.bolt_rounded, const Color(0xFFEAB308)),
     };
 
 /// Names a leaderboard scope in the learner's language.
@@ -116,125 +155,300 @@ class _XpHistory extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return ref
-        .watch(profileDashboardProvider)
+        .watch(xpHistoryProvider)
         .when(
           loading: () => const _Loading(),
           error: (_, _) => _HistoryError(
             message: l10n.progressHistoryXpFailed,
-            onRetry: () => ref.invalidate(profileDashboardProvider),
+            onRetry: () => ref.invalidate(xpHistoryProvider),
           ),
-          data: (data) => data.activities.isEmpty
+          data: (items) => items.isEmpty
               ? IllustratedEmptyState(
                   title: l10n.progressHistoryXpEmptyTitle,
                   body: l10n.progressHistoryXpEmptyBody,
                 )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: data.activities.length,
-                  itemBuilder: (context, i) {
-                    final item = data.activities[i];
-                    return ListTile(
-                      leading: const _PixelXpBadge(),
-                      title: Text(xpSourceLabel(l10n, item.sourceType)),
-                      subtitle: Text(
-                        item.createdAt == null
-                            ? ''
-                            : DateFormat.yMMMd(
-                                Localizations.localeOf(context).toString(),
-                              ).add_jm().format(item.createdAt!.toLocal()),
-                      ),
-                      trailing: Text(l10n.xpAmount(item.amount)),
-                    );
-                  },
+              : RefreshIndicator(
+                  onRefresh: () => ref.refresh(xpHistoryProvider.future),
+                  child: _XpList(items: items),
                 ),
         );
   }
 }
 
-class _PixelXpBadge extends StatelessWidget {
-  const _PixelXpBadge();
+class _XpList extends StatelessWidget {
+  const _XpList({required this.items});
+
+  final List<XpActivity> items;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    String dayLabel(DateTime day) {
+      final difference = today.difference(day).inDays;
+      if (difference == 0) return l10n.progressHistoryToday;
+      if (difference == 1) return l10n.progressHistoryYesterday;
+      return DateFormat.MMMEd(locale).format(day);
+    }
+
+    // Newest first, with a header whenever the day changes.
+    final children = <Widget>[_XpSummary(items: items, today: today)];
+    DateTime? currentDay;
+    for (final item in items) {
+      final at = item.createdAt?.toLocal();
+      final day = at == null ? null : DateTime(at.year, at.month, at.day);
+      if (day != null && day != currentDay) {
+        currentDay = day;
+        final total = items
+            .where((other) {
+              final t = other.createdAt?.toLocal();
+              return t != null &&
+                  t.year == day.year &&
+                  t.month == day.month &&
+                  t.day == day.day;
+            })
+            .fold<int>(0, (sum, other) => sum + other.amount);
+        children.add(
+          _DayHeader(label: dayLabel(day), total: l10n.xpAmount(total)),
+        );
+      }
+      children.add(_XpRow(item: item));
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      children: children,
+    );
+  }
+}
+
+/// This week's and today's totals, so the list starts with the big picture.
+class _XpSummary extends StatelessWidget {
+  const _XpSummary({required this.items, required this.today});
+
+  final List<XpActivity> items;
+  final DateTime today;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     final palette = context.riksa;
+    final weekStart = today.subtract(const Duration(days: 6));
+    var week = 0;
+    var todayTotal = 0;
+    final perDay = List<int>.filled(7, 0);
+    for (final item in items) {
+      final at = item.createdAt?.toLocal();
+      if (at == null) continue;
+      final day = DateTime(at.year, at.month, at.day);
+      if (day.isBefore(weekStart)) continue;
+      week += item.amount;
+      perDay[day.difference(weekStart).inDays.clamp(0, 6)] += item.amount;
+      if (day == today) todayTotal += item.amount;
+    }
+    final peak = perDay.fold<int>(1, (a, b) => b > a ? b : a);
+
     return Container(
-      width: 46,
-      height: 46,
+      key: const ValueKey('xp-summary'),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: palette.rewardSoft,
-        shape: BoxShape.circle,
+        borderRadius: AppRadii.mediumBorder,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [palette.rewardSoft, palette.brand.withValues(alpha: .12)],
+        ),
       ),
-      child: Center(
-        child: SizedBox.square(
-          dimension: 25,
-          child: CustomPaint(
-            painter: _PixelXpPainter(
-              color: palette.reward,
-              accent: palette.reward,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.progressHistoryThisWeek,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: palette.inkMuted,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.xpAmount(week),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.progressHistoryTodayTotal(todayTotal),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: palette.inkMuted,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
+          // One bar per day, oldest on the left.
+          SizedBox(
+            height: 56,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (var i = 0; i < 7; i++) ...[
+                  if (i > 0) const SizedBox(width: 4),
+                  Container(
+                    width: 10,
+                    height: 6 + 50 * perDay[i] / peak,
+                    decoration: BoxDecoration(
+                      color: i == 6
+                          ? palette.brand
+                          : palette.brand.withValues(alpha: .35),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _PixelXpPainter extends CustomPainter {
-  const _PixelXpPainter({required this.color, required this.accent});
+class _DayHeader extends StatelessWidget {
+  const _DayHeader({required this.label, required this.total});
 
-  final Color color;
-  final Color accent;
+  final String label;
+  final String total;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final unit = size.width / 16;
-    final outline = Paint()
-      ..color = Color.lerp(color, Colors.black, .26)!
-      ..style = PaintingStyle.fill;
-    final main = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    final shine = Paint()
-      ..color = Colors.white.withValues(alpha: .52)
-      ..style = PaintingStyle.fill;
-    final spark = Paint()
-      ..color = accent
-      ..style = PaintingStyle.fill;
-
-    void px(Paint paint, int x, int y, [int w = 1, int h = 1]) {
-      canvas.drawRect(
-        Rect.fromLTWH(x * unit, y * unit, w * unit, h * unit),
-        paint,
-      );
-    }
-
-    px(outline, 7, 1, 5, 1);
-    px(outline, 6, 2, 5, 2);
-    px(outline, 5, 4, 5, 2);
-    px(outline, 4, 6, 6, 2);
-    px(outline, 7, 8, 5, 2);
-    px(outline, 6, 10, 4, 2);
-    px(outline, 5, 12, 3, 2);
-
-    px(main, 7, 2, 3, 2);
-    px(main, 6, 4, 3, 2);
-    px(main, 5, 6, 4, 1);
-    px(main, 6, 7, 3, 1);
-    px(main, 8, 8, 3, 1);
-    px(main, 7, 9, 3, 2);
-    px(main, 6, 11, 2, 2);
-    px(main, 5, 13, 2, 1);
-
-    px(shine, 8, 2, 1, 2);
-    px(shine, 7, 4, 1, 1);
-    px(spark, 2, 3, 1, 1);
-    px(spark, 13, 4, 1, 1);
-    px(spark, 12, 12, 2, 1);
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = context.riksa;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 16, 4, 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          Text(
+            total,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: palette.inkMuted,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
   }
+}
+
+class _XpRow extends StatelessWidget {
+  const _XpRow({required this.item});
+
+  final XpActivity item;
 
   @override
-  bool shouldRepaint(covariant _PixelXpPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.accent != accent;
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final palette = context.riksa;
+    final language = Localizations.localeOf(context).languageCode;
+    final (icon, color) = xpSourceStyle(item.sourceType);
+    final detail = item.detailFor(language)?.trim() ?? '';
+    final time = item.createdAt == null
+        ? ''
+        : DateFormat.jm(
+            Localizations.localeOf(context).toString(),
+          ).format(item.createdAt!.toLocal());
+    final title = xpSourceLabel(l10n, item.sourceType);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: AppRadii.mediumBorder,
+        border: Border.all(color: palette.outline),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: .15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: RiksaTypography.bodyStyleFor(
+                    title,
+                    theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (detail.isNotEmpty)
+                  Text(
+                    detail,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: RiksaTypography.bodyStyleFor(
+                      detail,
+                      theme.textTheme.bodySmall,
+                    ),
+                  ),
+                Text(
+                  time,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: palette.inkMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: palette.rewardSoft,
+              borderRadius: AppRadii.fullBorder,
+            ),
+            child: Text(
+              l10n.xpAmount(item.amount),
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _RankHistory extends StatelessWidget {
@@ -258,42 +472,93 @@ class _RankHistory extends StatelessWidget {
                   body: l10n.progressHistoryRankEmptyBody,
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                   itemCount: items.length,
-                  itemBuilder: (context, i) {
-                    final item = items[i];
-                    final improved = item.newRank < item.oldRank;
-                    return ListTile(
-                      leading: i == 0 && improved
-                          ? const BuddyFaceReaction(
-                              face: MascotFace.proud,
-                              size: 42,
-                              loops: 1,
-                            )
-                          : CircleAvatar(
-                              child: Icon(
-                                improved
-                                    ? Icons.trending_up
-                                    : Icons.trending_down,
-                              ),
-                            ),
-                      title: Text(
-                        l10n.progressHistoryRankRow(
-                          rankScopeLabel(l10n, item.scope),
-                        ),
-                      ),
-                      subtitle: Text(
-                        item.changedAt == null
-                            ? ''
-                            : DateFormat.yMMMd(
-                                Localizations.localeOf(context).toString(),
-                              ).format(item.changedAt!.toLocal()),
-                      ),
-                      trailing: Text('#${item.oldRank} → #${item.newRank}'),
-                    );
-                  },
+                  itemBuilder: (context, i) =>
+                      _RankRow(item: items[i], latest: i == 0),
                 ),
         );
+  }
+}
+
+class _RankRow extends StatelessWidget {
+  const _RankRow({required this.item, required this.latest});
+
+  final RankHistoryEntry item;
+  final bool latest;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final palette = context.riksa;
+    final up = item.isPromotion;
+    final newName = readableProfileName(item.newRank);
+    final title = up
+        ? l10n.progressHistoryRankedUp(newName)
+        : l10n.progressHistoryRankedDown(newName);
+    final date = item.changedAt == null
+        ? ''
+        : DateFormat.yMMMd(
+            Localizations.localeOf(context).toString(),
+          ).format(item.changedAt!.toLocal());
+
+    return Container(
+      key: ValueKey('rank-change-${item.id}'),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: AppRadii.mediumBorder,
+        border: Border.all(
+          color: latest && up
+              ? palette.reward.withValues(alpha: .6)
+              : palette.outline,
+        ),
+      ),
+      child: Row(
+        children: [
+          RiksaRankBadge(
+            tier: item.oldRank,
+            size: 40,
+            semanticLabel: readableProfileName(item.oldRank),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Icon(
+              Icons.arrow_forward_rounded,
+              color: up ? const Color(0xFF22C55E) : palette.inkMuted,
+            ),
+          ),
+          RiksaRankBadge(tier: item.newRank, size: 52, semanticLabel: newName),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: RiksaTypography.bodyStyleFor(
+                    title,
+                    theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${rankScopeLabel(l10n, item.scope)} · $date',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: palette.inkMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (latest && up)
+            const BuddyFaceReaction(face: MascotFace.proud, size: 40, loops: 1),
+        ],
+      ),
+    );
   }
 }
 

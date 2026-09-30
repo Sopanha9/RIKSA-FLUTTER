@@ -148,6 +148,8 @@ class XpActivity {
     required this.runningBalance,
     required this.createdAt,
     this.sourceId,
+    this.detail,
+    this.detailKm,
   });
 
   final String id;
@@ -157,6 +159,16 @@ class XpActivity {
   final int runningBalance;
   final DateTime? createdAt;
 
+  /// What the XP was for, e.g. the lesson title; null when the server has
+  /// nothing more specific than [sourceType].
+  final String? detail;
+  final String? detailKm;
+
+  String? detailFor(String languageCode) =>
+      languageCode == 'km' && (detailKm?.trim().isNotEmpty ?? false)
+      ? detailKm
+      : detail;
+
   factory XpActivity.fromJson(Map<String, dynamic> json) => XpActivity(
     id: json['id']?.toString() ?? '',
     amount: (json['amount'] as num?)?.toInt() ?? 0,
@@ -164,6 +176,8 @@ class XpActivity {
     sourceId: json['sourceId']?.toString(),
     runningBalance: (json['runningBalance'] as num?)?.toInt() ?? 0,
     createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? ''),
+    detail: json['detail'] as String?,
+    detailKm: json['detailKm'] as String?,
   );
 }
 
@@ -199,15 +213,22 @@ class RankHistoryEntry {
   });
   final String id;
   final String scope;
-  final int oldRank;
-  final int newRank;
+
+  /// Tier names from the server's `TierType`, e.g. `BRONZE` and `SILVER`.
+  final String oldRank;
+  final String newRank;
   final DateTime? changedAt;
+
+  /// Moved up the ladder; unknown names count as no change.
+  bool get isPromotion =>
+      profileTierLadder.indexOf(newRank) > profileTierLadder.indexOf(oldRank);
+
   factory RankHistoryEntry.fromJson(Map<String, dynamic> json) =>
       RankHistoryEntry(
         id: json['id']?.toString() ?? '',
         scope: json['scope'] as String? ?? 'GLOBAL',
-        oldRank: (json['oldRank'] as num?)?.toInt() ?? 0,
-        newRank: (json['newRank'] as num?)?.toInt() ?? 0,
+        oldRank: json['oldRank']?.toString().toUpperCase() ?? '',
+        newRank: json['newRank']?.toString().toUpperCase() ?? '',
         changedAt: DateTime.tryParse(json['changedAt']?.toString() ?? ''),
       );
 }

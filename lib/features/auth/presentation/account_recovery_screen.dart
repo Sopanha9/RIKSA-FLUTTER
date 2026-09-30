@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/otp_code_field.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../mascot/presentation/widgets/code_buddy.dart';
 import '../data/auth_api.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_scaffold.dart';
@@ -181,7 +182,6 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
   Widget build(BuildContext context) {
     final palette = context.riksa;
     final l10n = AppLocalizations.of(context)!;
-    final textTheme = Theme.of(context).textTheme;
     final (title, subtitle) = switch (_step) {
       0 => (
         l10n.recoveryStepIdentifierTitle,
@@ -203,7 +203,16 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _RecoveryIllustration(step: _step),
+              if (_step == 1)
+                CodeBuddy(
+                  key: const ValueKey('recovery-code-buddy'),
+                  controller: _code,
+                  length: 6,
+                  hasError: _error != null,
+                  startLine: l10n.codeBuddyCheckInbox,
+                )
+              else
+                _RecoveryIllustration(step: _step),
               const SizedBox(height: 20),
               _StepProgress(step: _step),
               const SizedBox(height: 18),
@@ -228,22 +237,21 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
                   ),
                 ),
               if (_step == 1)
-                TextField(
-                  key: const ValueKey('recovery-code'),
+                OtpCodeField(
+                  fieldKey: const ValueKey('recovery-code'),
                   controller: _code,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  maxLength: 6,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  onSubmitted: (_) => _loading ? null : _continue(),
-                  style: textTheme.headlineSmall?.copyWith(
-                    letterSpacing: 10,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  decoration: const InputDecoration(
-                    hintText: '••••••',
-                    counterText: '',
-                  ),
+                  length: 6,
+                  autofocus: true,
+                  enabled: !_loading,
+                  hasError: _error != null,
+                  semanticLabel: l10n.recoveryStepCodeTitle,
+                  onChanged: (_) {
+                    if (_error != null) setState(() => _error = null);
+                  },
+                  // Like most apps: a full code moves on by itself.
+                  onCompleted: (_) {
+                    if (!_loading) _continue();
+                  },
                 ),
               if (_step == 2) ...[
                 TextField(

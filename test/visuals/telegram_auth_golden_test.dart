@@ -80,9 +80,10 @@ void main() {
     testWidgets('Telegram code sign-in $locale', (tester) async {
       await mount(tester, locale);
       await journey.openCodeStep(tester);
+      // One short of a full code, which would sign in by itself.
       await tester.enterText(
         find.byKey(const Key('telegram_code_input')),
-        'VE9BLZ8J',
+        'VE9BLZ8',
       );
       await tester.pumpAndSettle();
       FocusManager.instance.primaryFocus?.unfocus();
