@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/image_source_sheet.dart';
 import '../../../core/widgets/moderation_message.dart';
 import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/unsaved_changes_guard.dart';
@@ -102,9 +104,27 @@ class _ComposeCommunityPostScreenState
       }
     } else {
       _categoryId = widget.communityId;
+      unawaited(_recoverLostPhotos());
     }
     _titleController.addListener(_syncDirty);
     _contentController.addListener(_syncDirty);
+  }
+
+  /// Android can kill the app while the camera is open to free memory; the
+  /// app then restarts and the photo would be lost. image_picker keeps it, so
+  /// the next new post picks it back up.
+  Future<void> _recoverLostPhotos() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      final picker = widget.imagePicker ?? ImagePicker();
+      final lost = await picker.retrieveLostData();
+      if (lost.isEmpty || !mounted) return;
+      final files = lost.files ?? const <XFile>[];
+      if (files.isEmpty) return;
+      _addPicked(files, AppLocalizations.of(context)!);
+    } catch (_) {
+      // Nothing to recover is not an error the author needs to see.
+    }
   }
 
   @override
@@ -146,7 +166,7 @@ class _ComposeCommunityPostScreenState
     if (_photos.length >= 4 || _submitting) return;
     if (!requireAccount(context, ref, reason: 'post')) return;
     final l10n = AppLocalizations.of(context)!;
-    final source = await _askImageSource();
+    final source = await showImageSourceSheet(context);
     if (source == null || !mounted) return;
 
     final List<XFile> picked;
@@ -174,6 +194,13 @@ class _ComposeCommunityPostScreenState
       return;
     }
     if (picked.isEmpty || !mounted) return;
+    _addPicked(picked, l10n);
+  }
+
+  /// Adds picked files to the free slots and starts uploading them.
+  void _addPicked(List<XFile> picked, AppLocalizations l10n) {
+    final remaining = 4 - _photos.length;
+    if (remaining <= 0) return;
     final accepted = picked.take(remaining).toList(growable: false);
     final additions = <PostImageDraft>[];
     for (final photo in accepted) {
@@ -268,33 +295,6 @@ class _ComposeCommunityPostScreenState
     });
     _syncDirty();
   }
-
-  Future<ImageSource?> _askImageSource() => showModalBottomSheet<ImageSource>(
-    context: context,
-    showDragHandle: true,
-    builder: (sheetContext) {
-      final l10n = AppLocalizations.of(sheetContext)!;
-      return SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              key: const ValueKey('pick-from-gallery'),
-              leading: const Icon(Icons.photo_library_outlined),
-              title: Text(l10n.photoFromGallery),
-              onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
-            ),
-            ListTile(
-              key: const ValueKey('pick-from-camera'),
-              leading: const Icon(Icons.photo_camera_outlined),
-              title: Text(l10n.photoFromCamera),
-              onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
-            ),
-          ],
-        ),
-      );
-    },
-  );
 
   void _showMessage(String message) {
     if (!mounted) return;

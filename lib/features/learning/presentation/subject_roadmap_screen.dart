@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -58,19 +60,84 @@ class LearningRoadmapScreen extends ConsumerWidget {
   }
 }
 
-class _RoadmapBody extends StatelessWidget {
+class _RoadmapBody extends StatefulWidget {
   const _RoadmapBody({required this.roadmap});
 
   final LearningRoadmap roadmap;
 
   @override
+  State<_RoadmapBody> createState() => _RoadmapBodyState();
+}
+
+class _RoadmapBodyState extends State<_RoadmapBody> {
+  final _headerKey = GlobalKey();
+
+  /// Bottom edge of the floating header, measured after it lays out. The
+  /// first guess is close enough that the map barely moves when it lands.
+  double _headerBottom = 170;
+
+  void _measureHeader() {
+    final box = _headerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize || !mounted) return;
+    final bottom = box.size.height;
+    if ((bottom - _headerBottom).abs() > 1) {
+      setState(() => _headerBottom = bottom);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final roadmap = widget.roadmap;
     final l10n = AppLocalizations.of(context)!;
     final stones = buildRoadmapStones(roadmap);
     final summary = RoadmapSummary.of(roadmap, stones);
     final subject = stemSubjectFor(roadmap.categoryName);
     final mapArt = subjectMapArtFor(subject);
     final mapLessons = [for (final unit in stones) ...unit.lessons];
+
+    // The map runs to the top of the screen and the header floats over it as
+    // frosted glass, pinned, so progress stays in view along the whole road.
+    if (mapArt != null && mapLessons.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _measureHeader());
+      return Stack(
+        children: [
+          CustomScrollView(
+            key: const PageStorageKey('subject-roadmap-scroll'),
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                // Clears the floating navigation bar below the goal.
+                padding: const EdgeInsets.only(bottom: 132),
+                sliver: SliverToBoxAdapter(
+                  child: SubjectMap(
+                    art: mapArt,
+                    lessons: mapLessons,
+                    // Room for the buddy, who stands above the first stop.
+                    topInset: _headerBottom + 64,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: KeyedSubtree(
+              key: _headerKey,
+              child: _RoadmapHeader(
+                name: roadmap.categoryName,
+                subject: subject,
+                summary: summary,
+                floating: true,
+                // On the map the buddy stands at the current lesson instead.
+                showBuddy: false,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
     return CustomScrollView(
       key: const PageStorageKey('subject-roadmap-scroll'),
@@ -81,8 +148,6 @@ class _RoadmapBody extends StatelessWidget {
             name: roadmap.categoryName,
             subject: subject,
             summary: summary,
-            // On the map the buddy stands at the current lesson instead.
-            showBuddy: mapArt == null || mapLessons.isEmpty,
           ),
         ),
         if (stones.isEmpty)
@@ -94,14 +159,6 @@ class _RoadmapBody extends StatelessWidget {
                 title: l10n.roadmapEmpty,
                 body: l10n.roadmapEmptyBody,
               ),
-            ),
-          )
-        else if (mapArt != null && mapLessons.isNotEmpty)
-          SliverPadding(
-            // Clears the floating navigation bar below the goal.
-            padding: const EdgeInsets.only(bottom: 132),
-            sliver: SliverToBoxAdapter(
-              child: SubjectMap(art: mapArt, lessons: mapLessons),
             ),
           )
         else
@@ -143,6 +200,7 @@ class _RoadmapHeader extends StatelessWidget {
     required this.subject,
     required this.summary,
     this.showBuddy = true,
+    this.floating = false,
   });
 
   final String name;
@@ -150,108 +208,185 @@ class _RoadmapHeader extends StatelessWidget {
   final RoadmapSummary summary;
   final bool showBuddy;
 
+  /// Frosted glass over the map instead of a solid band above the list.
+  final bool floating;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final tone = subjectTone(context, subject);
     final theme = Theme.of(context);
+    final palette = context.riksa;
+    const radius = BorderRadius.all(Radius.circular(AppRadii.feature));
 
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(
-        bottom: Radius.circular(AppRadii.feature + 2),
-      ),
-      child: ColoredBox(
-        color: tone.surface,
+    final content = Row(
+      children: [
+        LearningCircleButton(
+          icon: Icons.arrow_back_rounded,
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onTap: () => leaveLearningScreen(context),
+        ),
+        const SizedBox(width: RiksaSpacing.sm + 2),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Icon(stemSubjectIcon(subject), size: 14, color: tone.accent),
+                  const SizedBox(width: RiksaSpacing.xxs + 1),
+                  Flexible(
+                    child: Text(
+                      l10n.gradeStemLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: tone.accent,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: RiksaTypography.titleStyleFor(
+                  name,
+                  theme.textTheme.titleLarge?.copyWith(
+                    fontSize: 20,
+                    height: 1.15,
+                    letterSpacing: 0,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  khmerHeight: 1.3,
+                ),
+              ),
+              const SizedBox(height: RiksaSpacing.xxs),
+              Text(
+                summary.total == 0
+                    ? l10n.roadmapEmpty
+                    : '${l10n.lessonsDoneOfTotal(summary.completed, summary.total)}'
+                          ' · '
+                          '${l10n.unitOfTotal(summary.currentUnit, summary.totalUnits)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: palette.inkMuted,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (summary.total > 0) ...[
+          const SizedBox(width: RiksaSpacing.sm),
+          if (showBuddy) ...[
+            BuddyFaceReaction(
+              face: summary.completed > 0
+                  ? MascotFace.proud
+                  : MascotFace.determined,
+              size: 36,
+              loops: 1,
+            ),
+            const SizedBox(width: RiksaSpacing.xs),
+          ],
+          _ProgressRing(
+            fraction: summary.fraction,
+            color: tone.accent,
+            background: tone.accent.withValues(alpha: .18),
+          ),
+        ],
+      ],
+    );
+
+    if (!floating) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: tone.surface,
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(AppRadii.feature + 2),
+          ),
+        ),
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                LearningCircleButton(
-                  icon: Icons.arrow_back_rounded,
-                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                  onTap: () => leaveLearningScreen(context),
-                ),
-                const SizedBox(height: RiksaSpacing.md + 2),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: RiksaTypography.titleStyleFor(
-                              name,
-                              theme.textTheme.headlineMedium?.copyWith(
-                                fontSize: 24,
-                                height: 1.12,
-                                letterSpacing: 0,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              khmerHeight: 1.28,
-                            ),
-                          ),
-                          const SizedBox(height: RiksaSpacing.xxs + 1),
-                          Text(
-                            l10n.gradeStemLabel,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: tone.accent,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: RiksaSpacing.xs + 1),
-                          Text(
-                            summary.total == 0
-                                ? l10n.roadmapEmpty
-                                : '${l10n.lessonsDoneOfTotal(summary.completed, summary.total)}'
-                                      ' · '
-                                      '${l10n.unitOfTotal(summary.currentUnit, summary.totalUnits)}',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: context.riksa.inkMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (summary.total > 0) ...[
-                      const SizedBox(width: RiksaSpacing.md),
-                      Column(
-                        children: [
-                          if (showBuddy) ...[
-                            BuddyFaceReaction(
-                              face: summary.completed > 0
-                                  ? MascotFace.proud
-                                  : MascotFace.determined,
-                              size: 42,
-                              loops: 1,
-                            ),
-                            const SizedBox(height: RiksaSpacing.xxs),
-                          ],
-                          _ProgressRing(
-                            fraction: summary.fraction,
-                            color: context.riksa.ink,
-                            background: tone.accent.withValues(alpha: .25),
-                          ),
-                        ],
-                      ),
-                    ],
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
+            child: content,
+          ),
+        ),
+      );
+    }
+
+    return Stack(
+      children: [
+        // Keeps the status bar readable over bright scenery.
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    palette.canvas.withValues(alpha: .75),
+                    palette.canvas.withValues(alpha: 0),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
+        SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: .14),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: radius,
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: radius,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          palette.surface.withValues(alpha: .9),
+                          Color.alphaBlend(
+                            tone.surface.withValues(alpha: .55),
+                            palette.surface,
+                          ).withValues(alpha: .86),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: .55),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
+                      child: content,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -274,12 +409,12 @@ class _ProgressRing extends StatelessWidget {
       label: '$percent%',
       excludeSemantics: true,
       child: SizedBox.square(
-        dimension: 78,
+        dimension: 58,
         child: Stack(
           alignment: Alignment.center,
           children: [
             SizedBox.square(
-              dimension: 78,
+              dimension: 58,
               // The ring sweeps to the learner's position instead of being
               // painted there, so the year's progress reads as ground covered.
               child: TweenAnimationBuilder<double>(
@@ -295,7 +430,7 @@ class _ProgressRing extends StatelessWidget {
                 builder: (context, animated, _) => CircularProgressIndicator(
                   key: const ValueKey('roadmap-progress-ring'),
                   value: animated,
-                  strokeWidth: 8,
+                  strokeWidth: 6,
                   strokeCap: StrokeCap.round,
                   color: color,
                   backgroundColor: background,
@@ -305,8 +440,8 @@ class _ProgressRing extends StatelessWidget {
             RiksaCountUp(
               value: percent,
               format: (value) => '$value%',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
                 letterSpacing: 0,
               ),
             ),

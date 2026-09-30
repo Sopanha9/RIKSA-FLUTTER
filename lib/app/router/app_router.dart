@@ -11,6 +11,7 @@ import '../../features/auth/presentation/auth_switcher_screen.dart';
 import '../../features/auth/presentation/account_recovery_screen.dart';
 import '../../features/auth/presentation/splash_animation_screen.dart';
 import '../../features/mascot/presentation/mascot_select_screen.dart';
+import '../../features/mascot/providers/buddy_care_provider.dart';
 import '../../features/market/presentation/market_screen.dart';
 import '../../features/market/presentation/wardrobe_screen.dart';
 import '../../features/auth/presentation/language_select_screen.dart';
@@ -83,12 +84,22 @@ final _authRouterRefreshProvider = Provider<ValueNotifier<AuthState>>((ref) {
   return refresh;
 });
 
+final _buddyPromptRouterRefreshProvider = Provider<ValueNotifier<bool>>((ref) {
+  final refresh = ValueNotifier<bool>(ref.read(buddyChoicePromptProvider));
+  ref.listen<bool>(buddyChoicePromptProvider, (previous, next) {
+    refresh.value = next;
+  });
+  ref.onDispose(refresh.dispose);
+  return refresh;
+});
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authRefresh = ref.watch(_authRouterRefreshProvider);
+  final buddyPromptRefresh = ref.watch(_buddyPromptRouterRefreshProvider);
 
   final router = GoRouter(
     initialLocation: '/splash',
-    refreshListenable: authRefresh,
+    refreshListenable: Listenable.merge([authRefresh, buddyPromptRefresh]),
     redirect: (context, state) {
       final authState = authRefresh.value;
       final isLoggedIn = authState is Authenticated;
@@ -125,6 +136,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         }
         return authenticatedLandingFor(state.uri);
       }
+      // A new account whose buddy is still the server default builds one
+      // first. The first-run steps finish before the prompt interrupts.
+      if (isLoggedIn &&
+          buddyPromptRefresh.value &&
+          !isMascot &&
+          !isSplash &&
+          !isOnboarding &&
+          !isProvince) {
+        return '/mascot-select?prompt=1';
+      }
       return null;
     },
     routes: [
@@ -135,7 +156,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/mascot-select',
-        builder: (context, state) => const MascotSelectScreen(),
+        builder: (context, state) => MascotSelectScreen(
+          serverPrompt: state.uri.queryParameters['prompt'] == '1',
+        ),
       ),
       GoRoute(
         path: '/language-select',

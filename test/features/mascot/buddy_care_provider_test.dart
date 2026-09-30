@@ -227,7 +227,38 @@ void main() {
     expect(api.submittedName, 'Mochi');
     expect(preferences.getBool(MascotNotifier.guestChoicePendingKey), isNull);
     expect(container.read(mascotProvider).profile?.name, 'Server buddy');
+    expect(container.read(buddyChoicePromptProvider), isFalse);
   });
+
+  test(
+    'a new account without a buddy choice prompts until one is saved',
+    () async {
+      final api = _FakeBuddyApi();
+      api.me = _withChosen(api.me, false);
+      final container = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          buddyApiProvider.overrideWithValue(api),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(buddyCareProvider);
+      await _flushAsyncWork();
+      expect(container.read(buddyChoicePromptProvider), isFalse);
+
+      (container.read(authProvider.notifier) as _TestAuthNotifier).signIn();
+      await _flushAsyncWork();
+      expect(api.updateCalls, 0);
+      expect(container.read(buddyChoicePromptProvider), isTrue);
+
+      await container
+          .read(mascotProvider.notifier)
+          .choose(MascotSpecies.capybara, 'Mochi');
+      await _flushAsyncWork();
+      expect(api.submittedSpecies, MascotSpecies.capybara);
+      expect(container.read(buddyChoicePromptProvider), isFalse);
+    },
+  );
 
   test(
     'cached look is visible first and is replaced by the server look',

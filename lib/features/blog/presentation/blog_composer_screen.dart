@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/network/moderation_error.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/image_source_sheet.dart';
 import '../../../core/widgets/riksa_avatar_image.dart';
 import '../../../core/widgets/riksa_back_button.dart';
 import '../../../core/widgets/moderation_message.dart';
@@ -15,6 +17,8 @@ import '../../../core/widgets/unsaved_changes_guard.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../auth/data/auth_api.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../social/data/social_api.dart';
+import '../../social/providers/social_feed_provider.dart';
 import '../data/blog_api.dart';
 import '../data/blog_models.dart';
 import '../providers/blog_provider.dart';
@@ -29,10 +33,13 @@ import 'widgets/markdown_toolbar.dart';
 ///
 /// Pops `true` when the feed behind it should reload.
 class BlogComposerScreen extends ConsumerStatefulWidget {
-  const BlogComposerScreen({super.key, this.post});
+  const BlogComposerScreen({super.key, this.post, this.imagePicker});
 
   /// The post being rewritten. Null starts a new draft.
   final BlogPost? post;
+
+  /// Injectable to exercise the cover photo flow in widget tests.
+  final ImagePicker? imagePicker;
 
   @override
   ConsumerState<BlogComposerScreen> createState() => _BlogComposerScreenState();
@@ -47,6 +54,7 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
   final _contentFocus = FocusNode();
   String? _categoryId;
   bool _showCoverField = false;
+  bool _uploadingCover = false;
   bool _submitting = false;
   bool _submitted = false;
   BlogStatus? _submittedStatus;
@@ -96,6 +104,7 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
 
   bool get _canSubmit =>
       !_submitting &&
+      !_uploadingCover &&
       _title.isNotEmpty &&
       _title.length <= _titleLimit &&
       _content.isNotEmpty &&
@@ -113,6 +122,54 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
         _content != post.markdownContent.trim() ||
         _cover != (post.coverUrl ?? '') ||
         _categoryId != post.categoryId;
+  }
+
+  /// Picks a cover from the gallery or camera, uploads it, and puts the
+  /// uploaded link in the cover field.
+  Future<void> _pickCover() async {
+    if (_uploadingCover || _submitting) return;
+    final l10n = AppLocalizations.of(context)!;
+    final source = await showImageSourceSheet(context);
+    if (source == null || !mounted) return;
+    final XFile? photo;
+    try {
+      photo = await (widget.imagePicker ?? ImagePicker()).pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 85,
+      );
+    } catch (_) {
+      _showCoverError(l10n.postPhotosUploadFailed);
+      return;
+    }
+    if (photo == null || !mounted) return;
+    setState(() => _uploadingCover = true);
+    try {
+      final media = await ref
+          .read(socialApiProvider)
+          .uploadMedia(photo.path, filename: photo.name);
+      if (!mounted) return;
+      setState(() {
+        _coverCtrl.text = media.url;
+        _showCoverField = true;
+      });
+    } catch (error) {
+      _showCoverError(
+        error is SocialApiException
+            ? error.message
+            : l10n.postPhotosUploadFailed,
+      );
+    } finally {
+      if (mounted) setState(() => _uploadingCover = false);
+    }
+  }
+
+  void _showCoverError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _submit() async {
@@ -496,7 +553,32 @@ class _BlogComposerScreenState extends ConsumerState<BlogComposerScreen> {
                   ),
                 ),
               ),
-              if (_cover.isNotEmpty)
+              if (_uploadingCover)
+                Padding(
+                  padding: const EdgeInsets.all(RiksaSpacing.sm),
+                  child: SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      semanticsLabel: l10n.photoUploading,
+                    ),
+                  ),
+                )
+              else
+                IconButton(
+                  key: const ValueKey('blog-cover-upload'),
+                  onPressed: _pickCover,
+                  tooltip: l10n.addPhoto,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: palette.inkMuted,
+                  ),
+                  icon: const Icon(
+                    Icons.add_photo_alternate_outlined,
+                    size: 20,
+                  ),
+                ),
+              if (_cover.isNotEmpty && !_uploadingCover)
                 IconButton(
                   onPressed: () => setState(() {
                     _coverCtrl.clear();
@@ -865,9 +947,8 @@ class _BlogPostEditScreenState extends ConsumerState<BlogPostEditScreen> {
                         child: Text(
                           l10n.blogOwnerEditFailed,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: context.riksa.inkMuted,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: context.riksa.inkMuted),
                         ),
                       ),
                     ),

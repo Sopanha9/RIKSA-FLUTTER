@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:riksa_app/core/theme/app_theme.dart';
 import 'package:riksa_app/features/auth/data/auth_models.dart';
@@ -12,6 +13,9 @@ import 'package:riksa_app/features/blog/data/blog_api.dart';
 import 'package:riksa_app/features/blog/data/blog_models.dart';
 import 'package:riksa_app/features/blog/presentation/blog_composer_screen.dart';
 import 'package:riksa_app/features/blog/providers/blog_provider.dart';
+import 'package:riksa_app/features/social/data/social_api.dart';
+import 'package:riksa_app/features/social/data/social_models.dart';
+import 'package:riksa_app/features/social/providers/social_feed_provider.dart';
 import 'package:riksa_app/l10n/gen/app_localizations.dart';
 
 /// The composer has to make markdown reachable without typing syntax, and
@@ -28,6 +32,30 @@ void main() {
         reason: '$action should be one tap away',
       );
     }
+  });
+
+  testWidgets('a cover photo is uploaded and its link fills the cover', (
+    tester,
+  ) async {
+    final social = _UploadApi();
+    await _pumpComposer(
+      tester,
+      socialApi: social,
+      imagePicker: _CameraPicker(XFile('/tmp/cover.jpg', name: 'cover.jpg')),
+    );
+
+    await tester.tap(find.byTooltip('Cover image'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('blog-cover-upload')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('pick-from-camera')));
+    await tester.pumpAndSettle();
+
+    expect(social.uploadedPaths, ['/tmp/cover.jpg']);
+    expect(
+      find.widgetWithText(TextField, 'https://example.org/cover.png'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('bold wraps the selected words in the body', (tester) async {
@@ -189,6 +217,8 @@ Future<void> _pumpComposer(
   List<BlogCategory> categories = const [],
   Locale locale = const Locale('en'),
   BlogPost? post,
+  SocialApi? socialApi,
+  ImagePicker? imagePicker,
 }) async {
   tester.view.physicalSize = const Size(430, 932);
   tester.view.devicePixelRatio = 1;
@@ -203,6 +233,7 @@ Future<void> _pumpComposer(
         blogFeedProvider.overrideWith(_BlogFeedStub.new),
         currentUserIdProvider.overrideWithValue('me'),
         authProvider.overrideWith(_AuthStub.new),
+        if (socialApi != null) socialApiProvider.overrideWithValue(socialApi),
       ],
       child: MaterialApp(
         theme: AppTheme.light,
@@ -214,7 +245,7 @@ Future<void> _pumpComposer(
         ],
         supportedLocales: const [Locale('en'), Locale('km')],
         locale: locale,
-        home: BlogComposerScreen(post: post),
+        home: BlogComposerScreen(post: post, imagePicker: imagePicker),
       ),
     ),
   );
@@ -310,4 +341,34 @@ class _AuthStub extends AuthNotifier {
       role: 'USER',
     ),
   );
+}
+
+class _CameraPicker extends ImagePicker {
+  _CameraPicker(this.photo);
+
+  final XFile photo;
+
+  @override
+  Future<XFile?> pickImage({
+    required ImageSource source,
+    double? maxWidth,
+    double? maxHeight,
+    int? imageQuality,
+    CameraDevice preferredCameraDevice = CameraDevice.rear,
+    bool requestFullMetadata = true,
+  }) async => photo;
+}
+
+class _UploadApi extends Mock implements SocialApi {
+  final List<String> uploadedPaths = [];
+
+  @override
+  Future<SocialPostMedia> uploadMedia(
+    String filePath, {
+    String? filename,
+    ProgressCallback? onSendProgress,
+  }) async {
+    uploadedPaths.add(filePath);
+    return const SocialPostMedia(url: 'https://example.org/cover.png');
+  }
 }

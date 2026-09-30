@@ -105,10 +105,13 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
         if (userId != _activeUserId && userId != _syncingUserId) {
           unawaited(_syncSignedIn(userId));
         }
-      } else if (_activeUserId != null || _syncingUserId != null) {
-        _activeUserId = null;
-        _syncingUserId = null;
-        unawaited(_restoreGuest());
+      } else {
+        ref.read(buddyChoicePromptProvider.notifier).set(false);
+        if (_activeUserId != null || _syncingUserId != null) {
+          _activeUserId = null;
+          _syncingUserId = null;
+          unawaited(_restoreGuest());
+        }
       }
     });
     ref.listen<MascotState>(mascotProvider, (previous, next) {
@@ -119,6 +122,9 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
           next.choiceConfirmedLocally &&
           auth is Authenticated &&
           _activeUserId == auth.userId;
+      if (confirmedForSignedInUser) {
+        ref.read(buddyChoicePromptProvider.notifier).set(false);
+      }
       if (state.species == profile.species &&
           state.name == profile.name &&
           (!confirmedForSignedInUser || state.chosen)) {
@@ -264,6 +270,7 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
         // The server response remains usable when its local cache cannot save.
       }
       _applyServerState(remote, userId, serverSynced: true);
+      ref.read(buddyChoicePromptProvider.notifier).set(!remote.chosen);
     } catch (_) {
       if (cachedJson == null && ref.mounted) {
         _activeUserId = userId;
@@ -470,6 +477,22 @@ class BuddyCareNotifier extends Notifier<BuddyCareState>
 final buddyCareProvider = NotifierProvider<BuddyCareNotifier, BuddyCareState>(
   BuddyCareNotifier.new,
 );
+
+/// True while the signed-in account's server buddy is still the silent
+/// default. The router then opens the buddy builder until a choice is saved.
+class BuddyChoicePromptNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void set(bool value) {
+    if (state != value) state = value;
+  }
+}
+
+final buddyChoicePromptProvider =
+    NotifierProvider<BuddyChoicePromptNotifier, bool>(
+      BuddyChoicePromptNotifier.new,
+    );
 
 final buddyLookProvider = Provider<PublicBuddyLook>((ref) {
   final buddy = ref.watch(buddyCareProvider);

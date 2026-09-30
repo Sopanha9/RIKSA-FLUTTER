@@ -49,11 +49,10 @@ class SubjectMapArt {
   static const double blend = 0.08;
 }
 
-/// The map for [subject], or null while it has no art and keeps the list.
-SubjectMapArt? subjectMapArtFor(StemSubject subject) => switch (subject) {
-  StemSubject.mathematics => _mathematicsMap,
-  _ => null,
-};
+/// The map for [subject]. Every subject walks the same countryside road
+/// until one gets art of its own; the return stays nullable so a subject can
+/// still opt back into the list.
+SubjectMapArt? subjectMapArtFor(StemSubject subject) => _countrysideMap;
 
 /// Where every piece and lesson sits, for a map drawn [width] wide.
 class SubjectMapLayout {
@@ -66,10 +65,14 @@ class SubjectMapLayout {
   });
 
   /// Lays [lessons] out evenly along the road, from the start gate to the goal.
+  ///
+  /// The scenery starts at the top, but no lesson sits above [topInset]: that
+  /// band is under the floating header.
   factory SubjectMapLayout.of(
     SubjectMapArt art, {
     required double width,
     required int lessons,
+    double topInset = 0,
   }) {
     // The start holds about three lessons and the goal one or two; every
     // middle section adds room for four more.
@@ -93,12 +96,19 @@ class SubjectMapLayout {
       }
     }
 
+    // Keep at least the last stretch, so a very tall header on a short map
+    // still leaves a road to walk.
+    final clear = road.where((point) => point.dy >= topInset).toList();
+    final walkable = clear.length >= 2
+        ? clear
+        : road.sublist(math.max(0, road.length - 2));
+
     return SubjectMapLayout._(
       pieces: pieces,
       pieceHeight: pieceHeight,
       pieceStep: pieceStep,
       height: (pieces.length - 1) * pieceStep + pieceHeight,
-      nodes: _spread(road, lessons),
+      nodes: _spread(walkable, lessons),
     );
   }
 
@@ -144,9 +154,17 @@ class SubjectMapLayout {
 /// The learner's buddy waits at the current lesson, and the map opens scrolled
 /// to it, so the next step is the first thing on screen.
 class SubjectMap extends ConsumerStatefulWidget {
-  const SubjectMap({super.key, required this.art, required this.lessons});
+  const SubjectMap({
+    super.key,
+    required this.art,
+    required this.lessons,
+    this.topInset = 0,
+  });
 
   final SubjectMapArt art;
+
+  /// Height at the top covered by the floating header; no lesson goes there.
+  final double topInset;
 
   /// Lesson stones in syllabus order.
   final List<RoadmapStone> lessons;
@@ -199,6 +217,7 @@ class _SubjectMapState extends ConsumerState<SubjectMap> {
           widget.art,
           width: width,
           lessons: lessons.length,
+          topInset: widget.topInset,
         );
         final cacheWidth = (width * MediaQuery.devicePixelRatioOf(context))
             .round();
@@ -577,7 +596,7 @@ class _PointerPainter extends CustomPainter {
 }
 
 // Road centrelines traced from the art in assets/images/maps/math/.
-const _mathematicsMap = SubjectMapArt(
+const _countrysideMap = SubjectMapArt(
   aspectRatio: 1672 / 941,
   start: MapPiece(
     asset: 'assets/images/maps/math/start.webp',

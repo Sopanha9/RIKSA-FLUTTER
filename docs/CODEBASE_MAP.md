@@ -91,6 +91,7 @@ Source of truth: `lib/app/router/app_router.dart` (`goRouterProvider`). Paths be
 - Guests can also view (`_guestCanView`): `/learn`, `/market`, `/learn/roadmap/*`, and `/learn/*` except `/learn/saved` and `/learn/completion`.
 - Any other route while logged out goes to `/auth/login?from=<encoded uri>`.
 - Logged in on `/auth/*` or `/language-select` goes to `?from=`, if it is safe, otherwise `/learn`. `onboardingReturning=true` marks onboarding complete.
+- Logged in with a server buddy that was never chosen (`buddyChoicePromptProvider`, set by the buddy sync in `buddy_care_provider.dart`) goes to `/mascot-select?prompt=1`. This doesn't apply on `/splash`, `/onboarding*` or `/province-select`. `prompt=1` opens `MascotSelectScreen(serverPrompt: true)`, which saves the choice and goes to `/learn`.
 - Bottom nav visibility: `app_shell.dart` counts screens in the match list. Tabs show only on the root paths `/home`, `/learn`, `/ai`, `/leaderboard`, `/profile`, `/notifications`.
 
 ## Navigation flow

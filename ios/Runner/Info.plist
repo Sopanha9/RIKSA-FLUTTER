@@ -9,6 +9,8 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Take a photo for a post, a blog cover or your RIKSA profile.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a profile photo or cover image for your RIKSA profile.</string>
 	<key>CFBundleDevelopmentRegion</key>

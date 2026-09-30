@@ -198,7 +198,7 @@ void main() {
     });
   });
 
-  testWidgets('draws the whole path, its position and its destination', (
+  testWidgets('every subject walks the same map, not just Mathematics', (
     tester,
   ) async {
     final router = _router();
@@ -207,51 +207,15 @@ void main() {
 
     expect(find.text('Physics'), findsOneWidget);
     expect(find.text('1 of 4 lessons · Unit 2 of 3'), findsOneWidget);
-    expect(find.byKey(const ValueKey('roadmap-progress-ring')), findsOneWidget);
-
-    // Units are the stones; only the current one opens to show its lessons.
-    for (final id in ['u1', 'u2', 'u3']) {
-      expect(find.byKey(ValueKey('roadmap-unit-$id')), findsOneWidget);
+    for (final id in ['one', 'two', 'three', 'four']) {
+      expect(find.byKey(ValueKey('map-lesson-$id')), findsOneWidget);
     }
-    expect(find.byKey(const ValueKey('roadmap-lesson-two')), findsOneWidget);
-    expect(find.byKey(const ValueKey('roadmap-lesson-three')), findsOneWidget);
-    expect(find.byKey(const ValueKey('roadmap-lesson-one')), findsNothing);
+    expect(find.byKey(const ValueKey('roadmap-unit-u1')), findsNothing);
 
-    // State is legible without reading a lesson title.
-    expect(find.text('Completed'), findsOneWidget);
-    expect(find.text('0 of 2 done'), findsOneWidget);
-    expect(find.text('Opens after Unit 2'), findsOneWidget);
-
-    // The path ends at the reason it exists.
-    expect(find.byKey(const ValueKey('roadmap-goal')), findsOneWidget);
-    expect(find.text('Ready for Bac II'), findsOneWidget);
-  });
-
-  testWidgets('only the current stone carries a primary action', (
-    tester,
-  ) async {
-    final router = _router();
-    addTearDown(router.dispose);
-    await _pump(tester, roadmap: () async => _roadmap, router: router);
-
-    expect(find.byKey(const ValueKey('roadmap-continue-u2')), findsOneWidget);
-    expect(find.byKey(const ValueKey('roadmap-continue-u1')), findsNothing);
-    expect(find.byKey(const ValueKey('roadmap-continue-u3')), findsNothing);
-  });
-
-  testWidgets('opens an available lesson and refuses a locked one', (
-    tester,
-  ) async {
-    final router = _router();
-    addTearDown(router.dispose);
-    await _pump(tester, roadmap: () async => _roadmap, router: router);
-
-    // A locked unit does not open, so its lessons are not even reachable.
-    await tester.tap(find.byKey(const ValueKey('roadmap-unit-u3')));
+    final open = find.byKey(const ValueKey('map-lesson-three'));
+    await tester.ensureVisible(open);
     await tester.pumpAndSettle();
-    expect(find.text('lesson-four'), findsNothing);
-
-    await tester.tap(find.byKey(const ValueKey('roadmap-lesson-three')));
+    await tester.tap(open);
     await tester.pumpAndSettle();
     expect(find.text('lesson-three'), findsOneWidget);
   });
