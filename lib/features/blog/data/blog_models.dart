@@ -1,6 +1,8 @@
 /// Blog data models for the Riksa API. See docs/BLOG_API.md.
 library;
 
+import '../../social/data/social_models.dart';
+
 enum BlogStatus {
   pending,
   approved,
@@ -9,9 +11,9 @@ enum BlogStatus {
   String get wire => name.toUpperCase();
 
   static BlogStatus fromWire(String? value) => BlogStatus.values.firstWhere(
-        (s) => s.wire == value,
-        orElse: () => BlogStatus.pending,
-      );
+    (s) => s.wire == value,
+    orElse: () => BlogStatus.pending,
+  );
 }
 
 class BlogPost {
@@ -29,6 +31,7 @@ class BlogPost {
     required this.liked,
     required this.createdAt,
     required this.updatedAt,
+    this.author,
   });
 
   final String id;
@@ -44,26 +47,38 @@ class BlogPost {
   final bool liked;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final SocialAuthor? author;
 
   bool get hasCover => coverUrl != null && coverUrl!.isNotEmpty;
 
+  /// Article body prepared for markdown rendering.
+  String get markdownContent => normalizeBlogMarkdown(content);
+
+  /// Flattened body used for timeline previews.
+  String get plainTextPreview => blogMarkdownPreview(content);
+
   factory BlogPost.fromJson(Map<String, dynamic> json) => BlogPost(
-        id: json['id']?.toString() ?? '',
-        authorId: json['authorId']?.toString() ?? '',
-        title: json['title'] as String? ?? '',
-        content: json['content'] as String? ?? '',
-        coverUrl: json['coverUrl'] as String?,
-        status: BlogStatus.fromWire(json['status'] as String?),
-        rejectionReason: json['rejectionReason'] as String?,
-        viewCount: (json['viewCount'] as num?)?.toInt() ?? 0,
-        likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
-        categoryId: json['categoryId']?.toString() ?? '',
-        liked: json['liked'] as bool? ?? false,
-        createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
-            DateTime.now(),
-        updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
-            DateTime.now(),
-      );
+    id: json['id']?.toString() ?? '',
+    authorId: json['authorId']?.toString() ?? '',
+    title: json['title'] as String? ?? '',
+    content: json['content'] as String? ?? '',
+    coverUrl: json['coverUrl'] as String?,
+    status: BlogStatus.fromWire(json['status'] as String?),
+    rejectionReason: json['rejectionReason'] as String?,
+    viewCount: (json['viewCount'] as num?)?.toInt() ?? 0,
+    likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
+    categoryId: json['categoryId']?.toString() ?? '',
+    liked: json['liked'] as bool? ?? false,
+    createdAt:
+        DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+        DateTime.now(),
+    updatedAt:
+        DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
+        DateTime.now(),
+    author: json['author'] != null
+        ? SocialAuthor.fromJson(json['author'] as Map<String, dynamic>)
+        : null,
+  );
 }
 
 /// Paginated list wrapper (`BlogListResponse`). Pages are 0-based.
@@ -83,18 +98,19 @@ class BlogPage {
   final int totalPages;
 
   factory BlogPage.fromJson(Map<String, dynamic> json) => BlogPage(
-        content: ((json['content'] as List?) ?? [])
-            .map((e) => BlogPost.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        page: (json['page'] as num?)?.toInt() ?? 0,
-        size: (json['size'] as num?)?.toInt() ?? 0,
-        totalElements: (json['totalElements'] as num?)?.toInt() ?? 0,
-        totalPages: (json['totalPages'] as num?)?.toInt() ?? 0,
-      );
+    content: ((json['content'] as List?) ?? [])
+        .map((e) => BlogPost.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    page: (json['page'] as num?)?.toInt() ?? 0,
+    size: (json['size'] as num?)?.toInt() ?? 0,
+    totalElements: (json['totalElements'] as num?)?.toInt() ?? 0,
+    totalPages: (json['totalPages'] as num?)?.toInt() ?? 0,
+  );
 }
 
-class CreateBlogPostRequest {
-  CreateBlogPostRequest({
+/// Body for both `POST /blog` (create) and `PUT /blog/{id}` (author edit).
+class BlogPostRequest {
+  BlogPostRequest({
     required this.title,
     required this.content,
     this.coverUrl,
@@ -107,11 +123,11 @@ class CreateBlogPostRequest {
   final String categoryId;
 
   Map<String, dynamic> toJson() => {
-        'title': title,
-        'content': content,
-        if (coverUrl != null) 'coverUrl': coverUrl,
-        'categoryId': categoryId,
-      };
+    'title': title,
+    'content': content,
+    if (coverUrl != null) 'coverUrl': coverUrl,
+    'categoryId': categoryId,
+  };
 }
 
 /// Category served over GraphQL (`POST /graphql`).
@@ -135,12 +151,27 @@ class BlogCategory {
   final bool joined;
 
   factory BlogCategory.fromJson(Map<String, dynamic> json) => BlogCategory(
-        id: json['id']?.toString() ?? '',
-        name: json['name'] as String? ?? '',
-        slug: json['slug'] as String? ?? '',
-        description: json['description'] as String?,
-        iconUrl: json['iconUrl'] as String?,
-        memberCount: (json['memberCount'] as num?)?.toInt() ?? 0,
-        joined: json['joined'] as bool? ?? false,
-      );
+    id: json['id']?.toString() ?? '',
+    name: json['name'] as String? ?? '',
+    slug: json['slug'] as String? ?? '',
+    description: json['description'] as String?,
+    iconUrl: json['iconUrl'] as String?,
+    memberCount: (json['memberCount'] as num?)?.toInt() ?? 0,
+    joined: json['joined'] as bool? ?? false,
+  );
 }
+
+/// Unescapes literal `\n` sequences some editors submit as plain text.
+String normalizeBlogMarkdown(String value) => value
+    .replaceAll(r'\r\n', '\n')
+    .replaceAll(r'\n', '\n')
+    .replaceAll(r'\t', '\t');
+
+/// Strips the markdown syntax that reads badly inside a one-line preview.
+String blogMarkdownPreview(String value) => normalizeBlogMarkdown(value)
+    .replaceAll(RegExp(r'^[ \t]{0,3}#{1,6}[ \t]+', multiLine: true), '')
+    .replaceAll(RegExp(r'^[ \t]*[-+][ \t]+', multiLine: true), '\u2022 ')
+    .replaceAll('**', '')
+    .replaceAll('__', '')
+    .replaceAll('`', '')
+    .trim();

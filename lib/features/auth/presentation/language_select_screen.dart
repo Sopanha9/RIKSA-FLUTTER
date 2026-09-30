@@ -5,8 +5,19 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_back_button.dart';
+import '../../../l10n/gen/app_localizations.dart';
+import '../../mascot/domain/mascot.dart';
+import '../../mascot/presentation/widgets/mascot_scene.dart';
+import '../../mascot/presentation/widgets/mascot_speech.dart';
+import '../../mascot/presentation/widgets/mascot_view.dart';
+import '../../mascot/providers/mascot_provider.dart';
 
-/// First-run language selection shown before the illustrated onboarding pages.
+/// Language selection, framed as the language the learner's buddy speaks.
+///
+/// Each option previews what the buddy would say in it, and the whole page
+/// switches to the highlighted language as it is tapped, so it can be read
+/// before it is chosen. Nothing is saved until Continue.
 class LanguageSelectScreen extends ConsumerStatefulWidget {
   const LanguageSelectScreen({super.key});
 
@@ -16,203 +27,360 @@ class LanguageSelectScreen extends ConsumerStatefulWidget {
 }
 
 class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
-  String _selected = 'km';
+  final _buddy = MascotController();
+  late String _selected = ref.read(localeProvider).hasSelection
+      ? ref.read(localeProvider).locale.languageCode
+      : 'km';
   bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _buddy.react(MascotMood.greeting);
+    });
+  }
+
+  void _pick(String code) {
+    if (code != _selected) setState(() => _selected = code);
+    _buddy.react(MascotMood.greeting);
+  }
 
   Future<void> _confirmSelection() async {
     if (_submitting) return;
     setState(() => _submitting = true);
     await ref.read(localeProvider.notifier).setLocale(Locale(_selected));
-    if (mounted) context.go('/onboarding');
+    if (!mounted) return;
+    final router = GoRouter.maybeOf(context);
+    if (router == null) return;
+    if (router.canPop()) {
+      router.pop();
+    } else {
+      router.go('/onboarding/setup');
+    }
+  }
+
+  @override
+  void dispose() {
+    _buddy.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final profile = ref.watch(mascotProvider).profile;
+    final species = profile?.species ?? MascotSpecies.crocodile;
+    final name = profile?.name ?? MascotProfile.defaultName(species);
+    // Preview the page in the highlighted language.
+    return Localizations.override(
+      context: context,
+      locale: Locale(_selected),
+      child: Builder(
+        builder: (context) => _page(context, species: species, name: name),
+      ),
+    );
+  }
+
+  Widget _page(
+    BuildContext context, {
+    required MascotSpecies species,
+    required String name,
+  }) {
+    final strings = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final palette = context.riksa;
+    final isDark = theme.brightness == Brightness.dark;
+    final title = strings.languageSelectTitle(name);
+    final subtitle = strings.languageSelectSubtitle(name);
 
     return Scaffold(
-      backgroundColor: colors.surface,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) => SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
+      backgroundColor: palette.canvas,
+      body: Stack(
+        children: [
+          Positioned.fill(child: MascotSceneBackdrop(species: species)),
+          Column(
+            children: [
+              Expanded(
+                child: SafeArea(
+                  bottom: false,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                          child: _SpeakingBuddy(
+                            species: species,
+                            controller: _buddy,
+                            line: strings.languageMascotGreeting(name),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        left: 12,
+                        child: RiksaBackButton(
+                          key: const ValueKey('language-select-back'),
+                          fallbackLocation: '/mascot-select',
+                          style: IconButton.styleFrom(
+                            backgroundColor: palette.surface.withValues(
+                              alpha: .92,
+                            ),
+                            foregroundColor: palette.ink,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              MascotSceneSheet(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SizedBox(height: constraints.maxHeight < 700 ? 54 : 96),
                     Text(
-                      'Select your preferred\nlanguage',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        height: 1.05,
-                        letterSpacing: -.5,
+                      title,
+                      key: const Key('language_title'),
+                      style: RiksaTypography.titleStyleFor(
+                        title,
+                        theme.textTheme.headlineMedium,
+                        khmerHeight: 1.4,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 4),
                     Text(
-                      'This helps us show content and features in your language.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                        height: 1.4,
+                      subtitle,
+                      style: RiksaTypography.bodyStyleFor(
+                        subtitle,
+                        theme.textTheme.bodyMedium?.copyWith(
+                          color: palette.inkMuted,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    _LanguageCard(
-                      flagAsset: 'assets/images/logos/Flag_of_Cambodia.svg',
-                      languageName: 'Khmer',
-                      languageNameNative: 'ភាសាខ្មែរ',
-                      isSelected: _selected == 'km',
-                      onTap: () => setState(() => _selected = 'km'),
-                    ),
-                    const SizedBox(height: 14),
-                    _LanguageCard(
-                      flagAsset:
-                          'assets/images/logos/Flag_of_the_United_Kingdom.svg.png',
-                      languageName: 'English',
-                      languageNameNative: 'English',
-                      isSelected: _selected == 'en',
-                      onTap: () => setState(() => _selected = 'en'),
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      'You can change the language later in your settings.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
+                    for (final (code, flag, label) in const [
+                      (
+                        'km',
+                        'assets/images/logos/Flag_of_Cambodia.svg',
+                        'ខ្មែរ',
                       ),
-                    ),
-                    const Spacer(),
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      height: 52,
-                      child: FilledButton(
-                        key: const Key('language_continue'),
-                        onPressed: _submitting ? null : _confirmSelection,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.lightTextPrimary,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: AppColors.lightTextPrimary,
-                          disabledForegroundColor: Colors.white70,
-                          shape: const StadiumBorder(),
-                        ),
-                        child: _submitting
-                            ? const SizedBox.square(
-                                dimension: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
+                      (
+                        'en',
+                        'assets/images/logos/Flag_of_the_United_Kingdom.svg.png',
+                        'English',
+                      ),
+                    ]) ...[
+                      _LanguageCard(
+                        key: Key('language_$code'),
+                        flagAsset: flag,
+                        languageName: label,
+                        // Each card quotes the buddy in its own language,
+                        // whatever language the page is previewing.
+                        quote: lookupAppLocalizations(
+                          Locale(code),
+                        ).languageMascotGreeting(name),
+                        isSelected: _selected == code,
+                        onTap: () => _pick(code),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                    const SizedBox(height: 6),
+                    FilledButton(
+                      key: const Key('language_continue'),
+                      onPressed: _submitting ? null : _confirmSelection,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: isDark
+                            ? palette.brand
+                            : palette.brandStrong,
+                        foregroundColor: palette.onBrand,
+                        shadowColor: Colors.transparent,
+                        elevation: 0,
+                        side: BorderSide.none,
+                        shape: const StadiumBorder(),
+                        minimumSize: const Size.fromHeight(52),
+                      ),
+                      child: _submitting
+                          ? const SizedBox.square(
+                              dimension: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(
+                              strings.continueLabel,
+                              style: RiksaTypography.bodyStyleFor(
+                                strings.continueLabel,
+                                const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                              )
-                            : const Text(
-                                'Continue',
-                                style: TextStyle(fontWeight: FontWeight.w700),
                               ),
-                      ),
+                            ),
                     ),
-                    const SizedBox(height: 18),
                   ],
                 ),
               ),
-            ),
+            ],
           ),
-        ),
+        ],
       ),
+    );
+  }
+}
+
+/// The buddy with a speech bubble that types out [line] whenever it
+/// changes.
+class _SpeakingBuddy extends StatelessWidget {
+  const _SpeakingBuddy({
+    required this.species,
+    required this.controller,
+    required this.line,
+  });
+
+  final MascotSpecies species;
+  final MascotController controller;
+  final String line;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        final roomy = box.maxHeight >= 200;
+        final bubbleRoom = roomy ? 84.0 : 0.0;
+        final size = ((box.maxHeight - bubbleRoom) / MascotView.heightFactor)
+            .clamp(0.0, 190.0);
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            // The buddy's box keeps headroom for hops; tuck the bubble into
+            // it so the tail points at the head, not at empty space.
+            if (roomy)
+              Transform.translate(
+                offset: Offset(0, size * .2),
+                child: MascotSpeechBubble(line: line),
+              ),
+            MascotView(
+              species: species,
+              size: size,
+              controller: controller,
+              interactive: true,
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
 class _LanguageCard extends StatelessWidget {
   const _LanguageCard({
+    super.key,
     required this.flagAsset,
     required this.languageName,
-    required this.languageNameNative,
+    required this.quote,
     required this.isSelected,
     required this.onTap,
   });
 
   final String flagAsset;
   final String languageName;
-  final String languageNameNative;
+  final String quote;
   final bool isSelected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final palette = context.riksa;
+    final duration = RiksaMotion.resolve(context, RiksaMotion.standard);
     return Semantics(
       button: true,
       selected: isSelected,
       label: languageName,
-      child: InkWell(
-        borderRadius: AppRadii.mediumBorder,
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          height: 76,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: isSelected ? colors.primaryContainer : colors.surface,
-            borderRadius: AppRadii.mediumBorder,
-            border: Border.all(
-              color: isSelected ? colors.primary : colors.outlineVariant,
-              width: isSelected ? 1.5 : 1,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: AppRadii.largeBorder,
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: duration,
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            decoration: BoxDecoration(
+              color: palette.surface,
+              borderRadius: AppRadii.largeBorder,
+              border: Border.all(
+                color: isSelected ? palette.brand : palette.outline,
+                width: isSelected ? 1.6 : 1,
+              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: palette.brand.withValues(alpha: .12),
+                        blurRadius: 18,
+                        offset: const Offset(0, 6),
+                      ),
+                    ]
+                  : null,
             ),
-          ),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: SizedBox(
-                  width: 42,
-                  height: 28,
-                  child: flagAsset.endsWith('.svg')
-                      ? SvgPicture.asset(flagAsset, fit: BoxFit.cover)
-                      : Image.asset(flagAsset, fit: BoxFit.cover),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      languageName,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+            child: ExcludeSemantics(
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(5),
+                    child: SizedBox(
+                      width: 38,
+                      height: 26,
+                      child: flagAsset.endsWith('.svg')
+                          ? SvgPicture.asset(flagAsset, fit: BoxFit.cover)
+                          : Image.asset(flagAsset, fit: BoxFit.cover),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      languageNameNative,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: isSelected ? colors.primary : Colors.transparent,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected ? colors.primary : colors.outlineVariant,
-                    width: 1.5,
                   ),
-                ),
-                child: isSelected
-                    ? const Icon(Icons.check, color: Colors.white, size: 14)
-                    : null,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          languageName,
+                          style: RiksaTypography.bodyStyleFor(
+                            languageName,
+                            theme.textTheme.titleSmallBold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '“$quote”',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: RiksaTypography.bodyStyleFor(
+                            quote,
+                            theme.textTheme.bodySmall?.copyWith(
+                              color: palette.inkMuted,
+                              // Khmer has no italic; a synthetic slant reads
+                              // as broken.
+                              fontStyle: RiksaTypography.containsKhmer(quote)
+                                  ? FontStyle.normal
+                                  : FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  AnimatedContainer(
+                    duration: duration,
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected ? palette.brand : palette.inkFaint,
+                        width: isSelected ? 6.5 : 1.6,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

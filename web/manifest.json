@@ -1,6 +1,6 @@
 {
-    "name": "riksa_app",
-    "short_name": "riksa_app",
+    "name": "Riksa",
+    "short_name": "Riksa",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

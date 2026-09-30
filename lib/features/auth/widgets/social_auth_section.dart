@@ -15,12 +15,17 @@ import 'google_provider_button.dart';
 class SocialAuthSection extends ConsumerStatefulWidget {
   const SocialAuthSection({
     super.key,
-    required this.isRegistration,
     this.showDivider = true,
+    this.compact = false,
+    this.cleanPills = false,
   });
 
-  final bool isRegistration;
   final bool showDivider;
+
+  /// Puts Telegram and Google side by side with just the provider names, as
+  /// under the login form. The full-width buttons read better on sign-up.
+  final bool compact;
+  final bool cleanPills;
 
   @override
   ConsumerState<SocialAuthSection> createState() => _SocialAuthSectionState();
@@ -92,7 +97,66 @@ class _SocialAuthSectionState extends ConsumerState<SocialAuthSection> {
     final loading = ref.watch(authProvider) is AuthLoading;
     final locale = Localizations.localeOf(context).languageCode;
 
-    return Column(
+    // One flow for sign-in and sign-up: the server signs existing Telegram
+    // accounts in and asks new ones for a username afterwards.
+    final palette = context.riksa;
+    final cleanStyle = OutlinedButton.styleFrom(
+      backgroundColor: palette.canvas,
+      foregroundColor: palette.ink,
+      shadowColor: Colors.transparent,
+      elevation: 0,
+      side: BorderSide(color: palette.outline),
+      shape: const StadiumBorder(),
+      minimumSize: const Size.fromHeight(48),
+    );
+
+    Widget telegram(String label) => widget.cleanPills
+        ? FilledButton.icon(
+            key: const Key('telegram_auth_button'),
+            onPressed: loading ? null : () => context.push('/auth/telegram'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.telegram,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: AppColors.telegram,
+              disabledForegroundColor: Colors.white.withValues(alpha: .6),
+              shadowColor: Colors.transparent,
+              elevation: 0,
+              side: BorderSide.none,
+              shape: const StadiumBorder(),
+              minimumSize: const Size.fromHeight(48),
+            ),
+            icon: const TelegramLogo(),
+            label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          )
+        : OutlinedButton.icon(
+            key: const Key('telegram_auth_button'),
+            onPressed: loading ? null : () => context.push('/auth/telegram'),
+            icon: const TelegramLogo(),
+            label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          );
+
+    Widget google(String label) => _googleReady
+        ? buildGoogleProviderButton(
+            label: label,
+            locale: locale,
+            loading: loading,
+            onPressed: _authenticateWithGoogle,
+          )
+        : OutlinedButton.icon(
+            key: const Key('google_auth_button'),
+            onPressed: loading || _preparingGoogle
+                ? null
+                : _authenticateWithGoogle,
+            icon: _preparingGoogle
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2.2),
+                  )
+                : const GoogleLogo(),
+            label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          );
+
+    final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (widget.showDivider) ...[
@@ -104,8 +168,7 @@ class _SocialAuthSectionState extends ConsumerState<SocialAuthSection> {
                 child: Text(
                   strings.orContinueWith,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.muted,
-                    fontWeight: FontWeight.w600,
+                    color: context.riksa.inkMuted,
                   ),
                 ),
               ),
@@ -114,38 +177,19 @@ class _SocialAuthSectionState extends ConsumerState<SocialAuthSection> {
           ),
           const SizedBox(height: 16),
         ],
-        if (_googleReady)
-          buildGoogleProviderButton(
-            label: strings.signInWithGoogle,
-            locale: locale,
-            loading: loading,
-            onPressed: _authenticateWithGoogle,
+        if (widget.compact)
+          Row(
+            children: [
+              Expanded(child: telegram('Telegram')),
+              const SizedBox(width: 12),
+              Expanded(child: google('Google')),
+            ],
           )
-        else
-          OutlinedButton.icon(
-            key: const Key('google_auth_button'),
-            onPressed: loading || _preparingGoogle
-                ? null
-                : _authenticateWithGoogle,
-            icon: _preparingGoogle
-                ? const SizedBox.square(
-                    dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2.2),
-                  )
-                : const GoogleLogo(),
-            label: Text(strings.signInWithGoogle),
-          ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          key: const Key('telegram_auth_button'),
-          onPressed: loading
-              ? null
-              : () => context.push(
-                  '/auth/telegram?register=${widget.isRegistration}',
-                ),
-          icon: const TelegramLogo(),
-          label: Text(strings.signInWithTelegram),
-        ),
+        else ...[
+          telegram(strings.signInWithTelegram),
+          const SizedBox(height: 12),
+          google(strings.signInWithGoogle),
+        ],
         if (_localError != null) ...[
           const SizedBox(height: 12),
           Semantics(
@@ -163,5 +207,11 @@ class _SocialAuthSectionState extends ConsumerState<SocialAuthSection> {
         ],
       ],
     );
+    return widget.cleanPills
+        ? OutlinedButtonTheme(
+            data: OutlinedButtonThemeData(style: cleanStyle),
+            child: content,
+          )
+        : content;
   }
 }

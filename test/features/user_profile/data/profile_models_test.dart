@@ -2,7 +2,55 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/features/userProfile/data/profile_models.dart';
 
 void main() {
-  test('parses the gamification profile and next-tier progress', () {
+  test('measures progress through the current tier, not from zero XP', () {
+    // Diamond starts at 2,500 and Legend at 5,000, so 4,050 XP is 1,550 into
+    // a 2,500 band: 62%. Measuring from zero would claim 81%.
+    final profile = GamificationProfile.fromJson({
+      'totalXp': 4050,
+      'currentStreak': 20,
+      'highestStreak': 20,
+      'currentTier': 'DIAMOND',
+      'currentTierMinXp': 2500,
+      'nextTier': 'LEGEND',
+      'nextTierMinXp': 5000,
+      'xpToNext': 950,
+    });
+
+    expect(profile.xpIntoTier, 1550);
+    expect(profile.tierBandXp, 2500);
+    expect(profile.nextTierProgress, closeTo(.62, .001));
+    expect(profile.isTopTier, isFalse);
+  });
+
+  test('a learner who just entered a tier has not climbed any of it', () {
+    final profile = GamificationProfile.fromJson({
+      'totalXp': 2500,
+      'currentTier': 'DIAMOND',
+      'currentTierMinXp': 2500,
+      'nextTier': 'LEGEND',
+      'nextTierMinXp': 5000,
+      'xpToNext': 2500,
+    });
+
+    expect(profile.xpIntoTier, 0);
+    expect(profile.nextTierProgress, 0);
+  });
+
+  test('the top of the ladder reports no band and no next tier', () {
+    final profile = GamificationProfile.fromJson({
+      'totalXp': 6200,
+      'currentTier': 'LEGEND',
+      'currentTierMinXp': 5000,
+      'nextTierMinXp': 0,
+      'xpToNext': 0,
+    });
+
+    expect(profile.isTopTier, isTrue);
+    expect(profile.tierBandXp, 0);
+    expect(profile.nextTierProgress, 1);
+  });
+
+  test('falls back to the old measure when the server omits tier floors', () {
     final profile = GamificationProfile.fromJson({
       'totalXp': 1520,
       'currentStreak': 14,
@@ -67,4 +115,29 @@ void main() {
     expect(rank.provinceRank, 3);
     expect(rank.countryTier, 'GOLD');
   });
+
+  test(
+    'leaderboard rows tolerate old payloads and parse public buddy looks',
+    () {
+      final oldRow = LeaderboardRow.fromJson({
+        'rank': 5,
+        'userId': 'old-user',
+        'score': 120,
+      });
+      final row = LeaderboardRow.fromJson({
+        'rank': 1,
+        'userId': 'new-user',
+        'score': 1500,
+        'buddy': {
+          'species': 'crocodile',
+          'name': 'Rex',
+          'equipped': {'EYEWEAR': 'glasses_round'},
+        },
+      });
+
+      expect(oldRow.buddy, isNull);
+      expect(row.buddy?.species.name, 'crocodile');
+      expect(row.buddy?.equipped.values, contains('glasses_round'));
+    },
+  );
 }

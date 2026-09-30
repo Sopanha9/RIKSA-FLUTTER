@@ -1,8 +1,13 @@
 # Google and Telegram authentication setup
 
-The Flutter and Spring Boot code is complete, but provider-owned IDs and bot
-credentials must be created in your own Google Cloud and Telegram accounts.
-Never commit a bot token, JWT secret, or release signing key.
+For the Google-specific console findings and local Flutter setup, see
+[`GOOGLE_SIGN_IN_SETUP.md`](GOOGLE_SIGN_IN_SETUP.md).
+
+Google OAuth clients are configured for this checkout. The Google-specific
+guide records their current settings, the staging variables, and the Android
+debug fingerprint. Telegram bot credentials still need to be created in your
+own Telegram account. Never commit a bot token, JWT secret, or release signing
+key.
 
 ## 1. Google Cloud
 
@@ -11,8 +16,8 @@ Use one Google Cloud project and configure its OAuth consent screen. Create:
 1. A **Web application** OAuth client. This is the common backend audience.
 2. An **Android** OAuth client:
    - package: `com.riksa.riksa_app`
-   - current local debug SHA-1:
-     `D3:AA:29:77:EC:14:49:C7:F1:5A:DF:5C:F6:03:CE:97:5A:EB:FA:FD`
+   - current local Windows debug SHA-1 (checked 2026-09-30):
+     `A6:01:1D:CC:58:1B:71:09:12:B0:94:9B:88:55:D1:FB:03:65:15:C9`
    - add the SHA-1 for the real release/upload key before publishing.
 3. An **iOS** OAuth client:
    - bundle ID: `com.riksa.riksaApp`
@@ -67,17 +72,16 @@ returns the Riksa token pair that the app stores in secure storage.
 TELEGRAM_ENABLED=true
 TELEGRAM_BOT_TOKEN=YOUR_BOT_TOKEN
 TELEGRAM_BOT_USERNAME=YOUR_BOT_USERNAME
+# Local development (no public HTTPS needed):
+TELEGRAM_POLLING_ENABLED=true
 ```
 
 3. Restart the API after changing `.env`.
-4. Each tester must start the bot before requesting a code, then enter their
-   numeric Telegram chat ID in Riksa. Telegram will reject bot messages until
-   that user has opened the bot.
 
-The app requests a code from `POST /api/v1/auth/otp/send`, then exchanges the
-chat ID and code at `POST /api/v1/auth/telegram`. Existing Telegram accounts
-are logged in; the registration route creates a passwordless Riksa account and
-returns the same token pair used by all other login methods.
+Users never enter a Telegram ID. They choose **Open Telegram** (confirm in the
+bot) or **Log in with code** (paste the code the bot sends after Start). New
+Telegram users then pick a username and display name. See
+[`TELEGRAM_AUTH_FLOW.md`](TELEGRAM_AUTH_FLOW.md).
 
 ## 3. Start and verify locally
 
@@ -90,6 +94,6 @@ Verify all four paths:
 
 - existing user: Continue with Google;
 - new user: Continue with Google (automatic registration);
-- existing user: Continue with Telegram and enter the OTP;
-- new user: open registration, Continue with Telegram, choose a username and
-  display name, and enter the OTP.
+- Telegram, existing user: Open Telegram → Confirm in bot → Home, and
+  Log in with code → paste code → Home;
+- Telegram, new user: either option → choose a username and display name → Home.

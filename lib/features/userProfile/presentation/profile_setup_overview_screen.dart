@@ -2,9 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_components.dart';
+import '../../../core/widgets/riksa_back_button.dart';
+import '../../../l10n/gen/app_localizations.dart';
 
 /// Entry screen for the four-step profile setup flow.
 ///
@@ -14,32 +16,31 @@ class ProfileSetupOverviewScreen extends StatelessWidget {
 
   final VoidCallback onSetUpProfile;
 
-  static const _background = AppColors.lightCanvas;
-  static const _primary = AppColors.brandPrimary;
-  static const _text = AppColors.neutralInk;
-
-  static const _steps = <({String title, String description})>[
-    (
-      title: 'Avatar',
-      description: 'Add a profile picture so people recognize you.',
-    ),
-    (
-      title: 'Username',
-      description: 'Pick a username, this is how others will find you.',
-    ),
-    (
-      title: 'Gender',
-      description: 'Let us know how to personalize your experience.',
-    ),
-    (title: 'Bio', description: 'Share a little about yourself.'),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final topInset = MediaQuery.paddingOf(context).top;
+    final steps = <({String title, String description})>[
+      (
+        title: l10n.profileSetupStepPhotoTitle,
+        description: l10n.profileSetupStepPhotoBody,
+      ),
+      (
+        title: l10n.profileSetupStepNameTitle,
+        description: l10n.profileSetupStepNameBody,
+      ),
+      (
+        title: l10n.profileSetupStepBioTitle,
+        description: l10n.profileSetupStepBioBody,
+      ),
+      (
+        title: l10n.profileSetupStepProvinceTitle,
+        description: l10n.profileSetupStepProvinceBody,
+      ),
+    ];
 
     return Scaffold(
-      backgroundColor: _background,
+      backgroundColor: context.riksa.canvas,
       body: SafeArea(
         minimum: const EdgeInsets.only(bottom: 20),
         child: Center(
@@ -56,64 +57,53 @@ class ProfileSetupOverviewScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           SizedBox(height: math.max(28.0, 84.0 - topInset)),
-                          const Text(
-                            'Set up your profile',
-                            style: TextStyle(
-                              color: _text,
-                              fontFamily: 'Poppins',
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
-                              height: 32 / 24,
-                              letterSpacing: .48,
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: RiksaBackButton(
+                              key: const ValueKey('profile-setup-back'),
+                              fallbackLocation: '/profile',
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Get started with your profile.',
-                            style: TextStyle(
-                              color: _text,
-                              fontFamily: 'Poppins',
-                              fontSize: 12,
-                              fontWeight: FontWeight.w300,
-                              letterSpacing: -.24,
+                          const SizedBox(height: RiksaSpacing.md),
+                          Text(
+                            l10n.profileSetupTitle,
+                            style: Theme.of(context).textTheme.headlineLarge,
+                          ),
+                          const SizedBox(height: RiksaSpacing.xs),
+                          Text(
+                            l10n.profileSetupSubtitle,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: RiksaSpacing.xl),
+                          RiksaPastelCard(
+                            tone: RiksaPastelTone.jade,
+                            padding: const EdgeInsets.all(RiksaSpacing.lg),
+                            child: Column(
+                              children: [
+                                for (
+                                  var index = 0;
+                                  index < steps.length;
+                                  index++
+                                )
+                                  _ProfileStep(
+                                    number: index + 1,
+                                    title: steps[index].title,
+                                    description: steps[index].description,
+                                    showConnector: index < steps.length - 1,
+                                  ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 63),
-                          for (var index = 0; index < _steps.length; index++)
-                            _ProfileStep(
-                              number: index + 1,
-                              title: _steps[index].title,
-                              description: _steps[index].description,
-                              showConnector: index < _steps.length - 1,
-                              height: index == 0 ? 100 : 109,
-                            ),
                           const Spacer(),
-                          Semantics(
-                            button: true,
-                            label: 'Set up profile',
-                            child: SizedBox(
-                              height: 52,
-                              child: FilledButton(
-                                key: const Key('profile_setup_start'),
-                                onPressed: () {
-                                  HapticFeedback.lightImpact();
-                                  onSetUpProfile();
-                                },
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: _primary,
-                                  foregroundColor: _background,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: AppRadii.mediumBorder,
-                                  ),
-                                  textStyle: const TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    height: 24 / 16,
-                                  ),
-                                ),
-                                child: const Text('Set up Profile'),
-                              ),
+                          SizedBox(
+                            height: 52,
+                            child: FilledButton(
+                              key: const Key('profile_setup_start'),
+                              onPressed: () {
+                                HapticFeedback.lightImpact();
+                                onSetUpProfile();
+                              },
+                              child: Text(l10n.profileSetupCta),
                             ),
                           ),
                         ],
@@ -136,88 +126,63 @@ class _ProfileStep extends StatelessWidget {
     required this.title,
     required this.description,
     required this.showConnector,
-    required this.height,
   });
 
   final int number;
   final String title;
   final String description;
   final bool showConnector;
-  final double height;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
-      child: Stack(
-        clipBehavior: Clip.none,
+    // The row grows with its text: a fixed height clipped the description at
+    // large text sizes, which is where it matters most.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned(
-            top: 9,
-            left: 0,
-            child: Container(
-              width: 24,
-              height: 24,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: ProfileSetupOverviewScreen._primary,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '$number',
-                style: const TextStyle(
-                  color: ProfileSetupOverviewScreen._background,
-                  fontFamily: 'Poppins',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  height: 16 / 14,
-                  letterSpacing: -.28,
+          Column(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: context.riksa.brand,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '$number',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
                 ),
               ),
-            ),
+              if (showConnector)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    color: context.riksa.brand.withValues(alpha: .55),
+                  ),
+                ),
+            ],
           ),
-          if (showConnector)
-            Positioned(
-              top: 39,
-              left: 11,
-              child: RotatedBox(
-                quarterTurns: 1,
-                child: SvgPicture.asset(
-                  'assets/images/profile/profile_step_connector.svg',
-                  width: 64,
-                  height: 2,
-                ),
+          const SizedBox(width: 24),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
               ),
-            ),
-          Positioned.fill(
-            left: 48,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: ProfileSetupOverviewScreen._text,
-                    fontFamily: 'Poppins',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    height: 24 / 18,
-                    letterSpacing: -.36,
-                  ),
-                ),
-                Text(
-                  description,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: ProfileSetupOverviewScreen._text,
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w300,
-                    letterSpacing: -.24,
-                  ),
-                ),
-              ],
             ),
           ),
         ],

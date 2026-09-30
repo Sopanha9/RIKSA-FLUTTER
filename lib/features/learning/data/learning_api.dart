@@ -1,5 +1,6 @@
 import '../../../core/network/api_config.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/network/json_response.dart';
 import 'learning_models.dart';
 
 class LearningApi {
@@ -19,14 +20,16 @@ class LearningApi {
       queryParameters: {
         'page': page,
         'size': size,
-        'categoryId': ?categoryId,
+        // ignore: use_null_aware_elements
+        if (categoryId != null) 'categoryId': categoryId,
         if (difficulty != null) 'difficulty': difficulty.wire,
         // Forward-compatible: Spring currently ignores this parameter. Once
         // the API accepts grade, no Flutter contract change is required.
-        'grade': ?grade,
+        // ignore: use_null_aware_elements
+        if (grade != null) 'grade': grade,
       },
     );
-    return LessonPage.fromJson(response.data as Map<String, dynamic>);
+    return LessonPage.fromJson(jsonMap(response));
   }
 
   Future<List<LearningCategory>> categories() async {
@@ -34,7 +37,7 @@ class LearningApi {
       '${ApiConfig.baseUrl}/graphql',
       data: const {'query': '{ categories { id name } }'},
     );
-    final body = response.data as Map<String, dynamic>;
+    final body = jsonMap(response);
     final categories =
         (body['data'] as Map<String, dynamic>?)?['categories'] as List? ??
         const [];
@@ -45,5 +48,62 @@ class LearningApi {
         )
         .where((category) => category.id.isNotEmpty)
         .toList();
+  }
+
+  /// `GET /lessons/roadmap` returns the syllabus grouped into ordered units,
+  /// each carrying its own lessons and the learner's state for them. It is the
+  /// only endpoint that knows both the size of a subject and how far into it
+  /// the learner is, so the home screen and the roadmap screen share it.
+  Future<LearningRoadmap> roadmap(String categoryId) async {
+    final response = await _client.dio.get(
+      '/lessons/roadmap',
+      queryParameters: {'categoryId': categoryId},
+    );
+    return LearningRoadmap.fromJson(jsonMap(response));
+  }
+
+  Future<LessonDetail> lesson(String lessonId) async {
+    final response = await _client.dio.get('/lessons/$lessonId');
+    return LessonDetail.fromJson(jsonMap(response));
+  }
+
+  Future<LessonAnswerResult> submitAnswer({
+    required String lessonId,
+    required String exerciseId,
+    required String answer,
+  }) async {
+    final response = await _client.dio.post(
+      '/lessons/$lessonId/exercises/$exerciseId/attempt',
+      data: {'answer': answer},
+    );
+    return LessonAnswerResult.fromJson(jsonMap(response));
+  }
+
+  Future<LessonAnswerResult> checkAnswer({
+    required String lessonId,
+    required String exerciseId,
+    required String answer,
+  }) async {
+    final response = await _client.dio.post(
+      '/learning/lessons/$lessonId/exercises/$exerciseId/check',
+      data: {'answer': answer},
+    );
+    return LessonAnswerResult.fromJson(jsonMap(response));
+  }
+
+  Future<LessonCompletionResult> completeLesson({
+    required String lessonId,
+    required String reflectionText,
+  }) async {
+    final response = await _client.dio.post(
+      '/lessons/$lessonId/complete',
+      data: {'reflectionText': reflectionText},
+    );
+    return LessonCompletionResult.fromJson(jsonMap(response));
+  }
+
+  Future<ContinueLearningResponse> continueLearning() async {
+    final response = await _client.dio.get('/learning/me/continue');
+    return ContinueLearningResponse.fromJson(jsonMap(response));
   }
 }

@@ -13,59 +13,10 @@ void main() {
     expect(socialAvatarPalette('bopha'), isNot(socialAvatarPalette('sokha')));
   });
 
-  test('recognizes the reserved RIKSA admin account', () {
-    expect(
-      isOfficialRiksaAuthor(
-        const SocialAuthor(
-          id: 'admin-1',
-          username: 'riksa.admin',
-          displayName: 'Riksa Admin',
-          avatarUrl: '',
-        ),
-      ),
-      isTrue,
-    );
-    expect(
-      isOfficialRiksaAuthor(
-        const SocialAuthor(
-          id: 'user-1',
-          username: 'riksa.student',
-          displayName: 'Riksa Student',
-          avatarUrl: '',
-        ),
-      ),
-      isFalse,
-    );
-  });
-
-  test('maps core RIKSA categories to compact metadata prefixes', () {
-    const cases = <String, String>{
-      'Mathematics': 'math/',
-      'Biology': 'bio/',
-      'Chemistry': 'chem/',
-      'Computer Science': 'cs/',
-      'Study Skills': 'study/',
-    };
-
-    for (final entry in cases.entries) {
-      expect(
-        categoryPrefix(
-          SocialCategory(
-            id: entry.key,
-            name: entry.key,
-            slug: entry.key.toLowerCase().replaceAll(' ', '-'),
-            memberCount: 0,
-            joined: false,
-          ),
-        ),
-        entry.value,
-      );
-    }
-  });
-
   testWidgets('opens the post when the card body is tapped', (tester) async {
     await initializeDateFormatting('en');
     var opened = false;
+    var authorOpens = 0;
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
@@ -81,8 +32,8 @@ void main() {
             child: SocialPostCard(
               post: SocialPost(
                 id: 'post-1',
-                title: 'A useful study loop',
-                content: 'Recall, check, and explain.',
+                title: 'របៀបរៀនមានប្រសិទ្ធភាព',
+                content: r'សង្ខេបមេរៀន។\n\n- រំលឹកឡើងវិញ',
                 reactionCount: 12,
                 commentCount: 4,
                 shareCount: 2,
@@ -103,6 +54,7 @@ void main() {
                 updatedAt: DateTime.utc(2026, 8, 22),
               ),
               onTap: () => opened = true,
+              onAuthorTap: () => authorOpens++,
               onReact: () {},
               onShare: () {},
             ),
@@ -111,26 +63,219 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('A useful study loop'));
+    await tester.tap(find.byKey(const ValueKey('author-avatar-user-1')));
+    expect(authorOpens, 1);
+    expect(opened, isFalse);
+
+    await tester.tap(find.byKey(const ValueKey('author-name-user-1')));
+    expect(authorOpens, 2);
+    expect(opened, isFalse);
+
+    final title = tester.widget<Text>(find.text('របៀបរៀនមានប្រសិទ្ធភាព'));
+    final content = tester.widget<Text>(
+      // Previews fold blank lines so they don't spend the 4-line budget.
+      find.text('សង្ខេបមេរៀន។\n• រំលឹកឡើងវិញ'),
+    );
+    expect(title.style?.fontFamily, RiksaTypography.khmerBodyFamily);
+    expect(content.style?.fontFamily, RiksaTypography.khmerBodyFamily);
+    expect(find.textContaining(r'\n'), findsNothing);
+
+    await tester.tap(find.text('របៀបរៀនមានប្រសិទ្ធភាព'));
 
     expect(opened, isTrue);
-    expect(
-      find.byKey(const ValueKey('official-account-badge')),
-      findsOneWidget,
-    );
-    expect(find.text('Official'), findsOneWidget);
+    expect(find.byKey(const ValueKey('react-post-1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('comment-post-1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('share-post-1')), findsOneWidget);
 
-    final reaction = find.byKey(const ValueKey('react-post-1'));
-    final reactionMaterials = tester.widgetList<Material>(
-      find.descendant(of: reaction, matching: find.byType(Material)),
+    opened = false;
+    await tester.tap(find.byKey(const ValueKey('comment-post-1')));
+    expect(opened, isTrue);
+
+    // A timeline row, not a boxed card: no shape, no fill of its own.
+    final row = tester.widget<Material>(
+      find.byKey(const ValueKey('post-post-1')),
     );
-    expect(reactionMaterials, isNotEmpty);
-    expect(
-      reactionMaterials.every(
-        (material) => material.color == Colors.transparent,
-      ),
-      isTrue,
-      reason: 'The like action should not render a filled pill background.',
-    );
+    expect(row.shape, isNull);
+    expect(row.color, Colors.transparent);
   });
+
+  testWidgets('shows the owner menu only when the reader owns the post', (
+    tester,
+  ) async {
+    await initializeDateFormatting('en');
+    var edits = 0;
+    var deletes = 0;
+
+    Future<void> pump({required bool owned}) => tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('km')],
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: SocialPostCard(
+              post: _ownedPost,
+              onTap: () {},
+              onReact: () {},
+              onShare: () {},
+              onEdit: owned ? () => edits++ : null,
+              onDelete: owned ? () => deletes++ : null,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await pump(owned: false);
+    expect(find.byKey(const ValueKey('post-options-post-9')), findsNothing);
+
+    await pump(owned: true);
+    final menu = find.byKey(const ValueKey('post-options-post-9'));
+    expect(menu, findsOneWidget);
+
+    await tester.tap(menu);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Edit post'));
+    await tester.pumpAndSettle();
+    expect(edits, 1);
+
+    await tester.tap(menu);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete post'));
+    await tester.pumpAndSettle();
+    expect(deletes, 1);
+  });
+
+  testWidgets('an empty title uses the body preview as the main text', (
+    tester,
+  ) async {
+    await initializeDateFormatting('en');
+    final untitled = SocialPost(
+      id: 'untitled',
+      title: '',
+      content: 'First body line',
+      reactionCount: 0,
+      commentCount: 0,
+      shareCount: 0,
+      author: _ownedPost.author,
+      category: _ownedPost.category,
+      createdAt: _ownedPost.createdAt,
+      updatedAt: _ownedPost.updatedAt,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('km')],
+        home: Scaffold(
+          body: SocialPostCard(
+            post: untitled,
+            onTap: () {},
+            onReact: () {},
+            onShare: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('First body line'), findsOneWidget);
+  });
+
+  testWidgets(
+    'an official post shows its verified mark only when highlighted',
+    (tester) async {
+      await initializeDateFormatting('en');
+
+      Future<void> pump({required bool highlight}) => tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('km')],
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: SocialPostCard(
+                post: _officialPost,
+                onTap: () {},
+                onReact: () {},
+                onShare: () {},
+                highlightOfficial: highlight,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final badge = find.byKey(const ValueKey('official-account-badge'));
+
+      await pump(highlight: true);
+      expect(badge, findsOneWidget);
+
+      // The author's own list must look like the rows readers see elsewhere.
+      await pump(highlight: false);
+      expect(badge, findsNothing);
+    },
+  );
 }
+
+final _ownedPost = SocialPost(
+  id: 'post-9',
+  title: 'What I learned building a solar oven',
+  content: 'Foil, a cardboard box, and one very sunny afternoon.',
+  reactionCount: 5,
+  commentCount: 1,
+  shareCount: 0,
+  author: const SocialAuthor(
+    id: 'me',
+    username: 'sopanha',
+    displayName: 'Sopanha',
+    avatarUrl: '',
+  ),
+  category: const SocialCategory(
+    id: 'category-1',
+    name: 'Science',
+    slug: 'science',
+    memberCount: 40,
+    joined: true,
+  ),
+  createdAt: DateTime.utc(2026, 8, 22),
+  updatedAt: DateTime.utc(2026, 8, 22),
+);
+
+final _officialPost = SocialPost(
+  id: 'post-10',
+  title: 'Welcome to Riksa',
+  content: 'Official announcements land here.',
+  reactionCount: 0,
+  commentCount: 0,
+  shareCount: 0,
+  author: const SocialAuthor(
+    id: 'riksa',
+    username: 'riksa',
+    displayName: 'Riksa Platform',
+    avatarUrl: '',
+  ),
+  category: const SocialCategory(
+    id: 'category-1',
+    name: 'Science',
+    slug: 'science',
+    memberCount: 40,
+    joined: true,
+  ),
+  createdAt: DateTime.utc(2026, 8, 22),
+  updatedAt: DateTime.utc(2026, 8, 22),
+);

@@ -11,6 +11,7 @@ final profileApiProvider = Provider<ProfileApi>((ref) {
 final profileDashboardProvider = FutureProvider<ProfileDashboardData>((
   ref,
 ) async {
+  watchCurrentUserId(ref);
   final api = ref.watch(profileApiProvider);
   final results = await Future.wait<Object>([
     api.gamificationProfile(),
@@ -30,3 +31,38 @@ final profileRankProvider = FutureProvider<LeaderboardRank>((ref) {
   final provinceId = auth is Authenticated ? auth.user.provinceId : null;
   return ref.watch(profileApiProvider).leaderboardRank(provinceId: provinceId);
 });
+
+/// The learner's recent XP grants for the progress history (one page of 50).
+final xpHistoryProvider = FutureProvider<List<XpActivity>>((ref) async {
+  watchCurrentUserId(ref);
+  final page = await ref.watch(profileApiProvider).xpActivity(limit: 50);
+  return page.activities;
+});
+
+final rankHistoryProvider = FutureProvider<List<RankHistoryEntry>>((ref) {
+  watchCurrentUserId(ref);
+  return ref.watch(profileApiProvider).rankHistory();
+});
+
+/// Ranked board rows for a scope, sourced from `GET /leaderboard`.
+///
+/// The country board is scoped to `CAMBODIA`; the province board uses the
+/// signed-in user's `provinceId`. Returns an empty list when the province
+/// board is requested but the user has no province set.
+final leaderboardProvider =
+    FutureProvider.family<List<LeaderboardRow>, LeaderboardScope>((ref, scope) {
+      final auth = ref.watch(authProvider);
+      final provinceId = auth is Authenticated ? auth.user.provinceId : null;
+
+      final String scopeId;
+      if (scope == LeaderboardScope.province) {
+        if (provinceId == null || provinceId.isEmpty) return const [];
+        scopeId = provinceId;
+      } else {
+        scopeId = 'CAMBODIA';
+      }
+
+      return ref
+          .watch(profileApiProvider)
+          .leaderboard(scope: scope, scopeId: scopeId);
+    });

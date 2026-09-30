@@ -2,6 +2,135 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riksa_app/features/social/data/social_models.dart';
 
 void main() {
+  test('social markdown previews flatten common markdown structures', () {
+    final cases = <({String name, String markdown, String preview})>[
+      (
+        name: 'bold, italic, asterisks, and underscores',
+        markdown: '**bold** _italic_ *star* __under__',
+        preview: 'bold italic star under',
+      ),
+      (
+        name: 'links keep their visible text',
+        markdown: 'Read [the notes](https://example.org/notes).',
+        preview: 'Read the notes.',
+      ),
+      (
+        name: 'images become a photo marker',
+        markdown: 'See ![the diagram](https://example.org/image.png).',
+        preview: 'See [photo].',
+      ),
+      (
+        name: 'blockquote markers are omitted',
+        markdown: '> Keep the units consistent.',
+        preview: 'Keep the units consistent.',
+      ),
+      (
+        name: 'numbered lists become bullets',
+        markdown: '1. first\n2. second',
+        preview: '• first\n• second',
+      ),
+      (
+        name: 'asterisk lists become bullets',
+        markdown: '* first\n* second',
+        preview: '• first\n• second',
+      ),
+      (
+        name: 'headings retain their text',
+        markdown: '# Main\n\n## Follow up',
+        preview: 'Main\nFollow up',
+      ),
+      (
+        name: 'code fences keep their contents',
+        markdown: '```dart\nfinal answer = 42;\n```',
+        preview: 'final answer = 42;',
+      ),
+      (
+        name: 'blank lines collapse to a single break',
+        markdown: 'First\n\n\nSecond',
+        preview: 'First\nSecond',
+      ),
+      (
+        name: 'Khmer text is preserved',
+        markdown: 'សូមពិនិត្យចម្លើយម្ដងទៀត។',
+        preview: 'សូមពិនិត្យចម្លើយម្ដងទៀត។',
+      ),
+    ];
+
+    for (final testCase in cases) {
+      expect(
+        socialMarkdownPreview(testCase.markdown),
+        testCase.preview,
+        reason: testCase.name,
+      );
+    }
+  });
+
+  test(
+    'old posts default to USER while milestone data parses when present',
+    () {
+      final legacy = SocialPost.fromJson({
+        'id': 'legacy',
+        'author': {'id': 'u1', 'displayName': 'Dara'},
+        'category': {'id': 'c1', 'name': 'Wins', 'slug': 'wins'},
+      });
+      final milestone = SocialPost.fromJson({
+        'id': 'win',
+        'kind': 'MILESTONE',
+        'milestone': {
+          'type': 'STREAK',
+          'title': '7-day streak',
+          'titleKm': '៧ ថ្ងៃជាប់គ្នា',
+          'value': 7,
+        },
+        'author': {'id': 'u1', 'displayName': 'Dara'},
+        'category': {'id': 'c1', 'name': 'Wins', 'slug': 'wins'},
+      });
+
+      expect(legacy.kind, SocialPostKind.user);
+      expect(legacy.milestone, isNull);
+      expect(milestone.kind, SocialPostKind.milestone);
+      expect(milestone.milestone?.type, SocialMilestoneType.streak);
+      expect(milestone.milestone?.value, 7);
+    },
+  );
+
+  test('legacy mediaUrl payloads still expose one media item', () {
+    final post = SocialPost.fromJson({
+      'id': 'old-photo',
+      'mediaUrl': 'old.png',
+    });
+
+    expect(post.media, hasLength(1));
+    expect(post.media.single.url, 'old.png');
+    expect(post.mediaUrl, 'old.png');
+    expect(post.hasMedia, isTrue);
+  });
+
+  test('new media payloads preserve order and server dimensions', () {
+    final post = SocialPost.fromJson({
+      'id': 'multi-photo',
+      'mediaUrl': 'first.png',
+      'media': [
+        {'url': 'first.png', 'width': 1200, 'height': 800},
+        {'url': 'second.png', 'width': 600, 'height': 900},
+      ],
+    });
+
+    expect(post.media.map((photo) => photo.url), ['first.png', 'second.png']);
+    expect(post.media.first.aspectRatio, 1.5);
+    expect(post.media.last.aspectRatio, closeTo(2 / 3, .001));
+    expect(post.mediaUrl, 'first.png');
+    expect(post.copyWith(reactionCount: 4).media, post.media);
+  });
+
+  test('an explicit empty media list clears a stale compatibility URL', () {
+    final post = SocialPost.fromJson({'mediaUrl': 'old.png', 'media': []});
+
+    expect(post.media, isEmpty);
+    expect(post.mediaUrl, isNull);
+    expect(post.hasMedia, isFalse);
+  });
+
   test('SocialFeedPage parses GraphQL feed and reaction state', () {
     final page = SocialFeedPage.fromJson({
       'edges': [

@@ -1,0 +1,14 @@
+Khmer OS Siemreap
+
+Source: KhmerOS Fonts 5.0, Khmer Software Initiative
+Font file: KhmerOS_siemreap.ttf
+Copyright 2007 Danh Hong
+
+The font metadata states:
+
+This font is free software; you can redistribute it and/or modify it under the
+terms of the GNU Lesser General Public License as published by the Free Software
+Foundation; either version 2.1 of the License, or (at your option) any later
+version.
+
+See: https://www.gnu.org/licenses/lgpl-2.1.html

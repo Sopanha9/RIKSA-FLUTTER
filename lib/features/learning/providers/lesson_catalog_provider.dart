@@ -75,15 +75,24 @@ class LessonCatalogState {
 
 class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
   static const _pageSize = 20;
+  int _requestVersion = 0;
 
   @override
   LessonCatalogState build() {
-    unawaited(load());
+    watchCurrentUserId(ref);
+    // Notifier state is not initialized until build returns. Defer the first
+    // load so load() can safely read and update state.
+    unawaited(Future<void>.microtask(load));
     return const LessonCatalogState(isLoading: true);
   }
 
   Future<void> load() async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    final requestVersion = ++_requestVersion;
+    state = state.copyWith(
+      isLoading: true,
+      isLoadingMore: false,
+      clearError: true,
+    );
     try {
       final api = ref.read(learningApiProvider);
       final results = await Future.wait<Object>([
@@ -99,9 +108,16 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
           Future<List<LearningCategory>>.value(state.categories),
       ]);
       final page = results[0] as LessonPage;
+      final learningLessons = page.content
+          .where((lesson) => isLearningCategory(lesson.categoryName))
+          .toList(growable: false);
+      final learningCategories = (results[1] as List<LearningCategory>)
+          .where((category) => isLearningCategory(category.name))
+          .toList(growable: false);
+      if (requestVersion != _requestVersion) return;
       state = state.copyWith(
-        lessons: page.content,
-        categories: results[1] as List<LearningCategory>,
+        lessons: learningLessons,
+        categories: learningCategories,
         page: page.page,
         totalPages: page.totalPages,
         isLoading: false,
@@ -109,6 +125,7 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
         clearError: true,
       );
     } catch (error) {
+      if (requestVersion != _requestVersion) return;
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,
@@ -138,9 +155,27 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
     await load();
   }
 
+  /// Applies the bottom-sheet selection atomically, resulting in one reload.
+  Future<void> applyFilters({
+    int? grade,
+    String? categoryId,
+    LessonDifficulty? difficulty,
+  }) async {
+    state = state.copyWith(
+      selectedGrade: grade,
+      clearGrade: grade == null,
+      selectedCategoryId: categoryId,
+      clearCategory: categoryId == null,
+      selectedDifficulty: difficulty,
+      clearDifficulty: difficulty == null,
+    );
+    await load();
+  }
+
   Future<void> loadMore() async {
-    if (state.isLoadingMore || !state.hasMore) return;
+    if (state.isLoading || state.isLoadingMore || !state.hasMore) return;
     final snapshot = state;
+    final requestVersion = _requestVersion;
     state = state.copyWith(isLoadingMore: true);
     try {
       final page = await ref
@@ -152,14 +187,22 @@ class LessonCatalogNotifier extends Notifier<LessonCatalogState> {
             page: snapshot.page + 1,
             size: _pageSize,
           );
+      if (requestVersion != _requestVersion) return;
       state = state.copyWith(
-        lessons: [...snapshot.lessons, ...page.content],
+        lessons: [
+          ...state.lessons,
+          ...page.content.where(
+            (lesson) => isLearningCategory(lesson.categoryName),
+          ),
+        ],
         page: page.page,
         totalPages: page.totalPages,
         isLoadingMore: false,
       );
     } catch (_) {
-      state = state.copyWith(isLoadingMore: false);
+      if (requestVersion == _requestVersion) {
+        state = state.copyWith(isLoadingMore: false);
+      }
     }
   }
 

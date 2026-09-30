@@ -1,12 +1,26 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
+import '../../../app/router/app_shell.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_bottom_navigation_bar.dart';
+import '../../../core/widgets/riksa_components.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../userProfile/data/public_profile.dart';
+import '../../userProfile/presentation/public_profile_navigation.dart';
+import '../data/blog_api.dart';
 import '../data/blog_models.dart';
 import '../providers/blog_provider.dart';
+import 'widgets/blog_ui.dart';
+import '../../../l10n/gen/app_localizations.dart';
 
+/// Timeline of approved community articles.
+///
+/// The layout follows a social timeline rather than a card grid: one sheet,
+/// author-first rows, and a hairline between posts. Colour, type, and radii
+/// all come from the Riksa palette.
 class BlogFeedScreen extends ConsumerStatefulWidget {
   const BlogFeedScreen({super.key});
 
@@ -15,175 +29,182 @@ class BlogFeedScreen extends ConsumerStatefulWidget {
 }
 
 class _BlogFeedScreenState extends ConsumerState<BlogFeedScreen> {
-  final _scrollCtrl = ScrollController();
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _scrollCtrl.addListener(_onScroll);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _scrollCtrl.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   void _onScroll() {
-    if (_scrollCtrl.position.pixels >=
-        _scrollCtrl.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       ref.read(blogFeedProvider.notifier).loadMore();
     }
   }
 
+  Future<void> _createPost() async {
+    final created = await context.push<bool>('/blog/create');
+    if (created == true) ref.read(blogFeedProvider.notifier).load();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final openDrawer = AppShellScope.maybeOf(context)?.openDrawer;
     final feedState = ref.watch(blogFeedProvider);
-    final categoriesAsync = ref.watch(blogCategoriesProvider);
     final selectedCategoryId = feedState is BlogFeedLoaded
         ? feedState.categoryId
         : null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Blog'),
-        actions: [
-          IconButton(
-            onPressed: () => context.push('/blog/my-posts'),
-            icon: const Icon(Icons.article_outlined),
-            tooltip: 'My posts',
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final created = await context.push<bool>('/blog/create');
-          if (created == true) {
-            ref.read(blogFeedProvider.notifier).load();
-          }
-        },
-        backgroundColor: AppTheme.primary,
-        child: const Icon(Icons.edit_outlined, color: AppTheme.onPrimary),
+      backgroundColor: blogSheetColor(context),
+      floatingActionButton: AboveBottomNavigation(
+        context: context,
+        child: FloatingActionButton(
+          onPressed: _createPost,
+          tooltip: l10n.blogWritePost,
+          child: const Icon(Icons.edit_outlined),
+        ),
       ),
       body: Column(
         children: [
-          _CategoryChips(
-            categoriesAsync: categoriesAsync,
-            selectedCategoryId: selectedCategoryId,
+          BlogTopBar(
+            title: l10n.blogTitle,
+            fallbackLocation: '/home',
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (openDrawer != null)
+                  IconButton(
+                    key: const ValueKey('blog-sidebar-menu-button'),
+                    onPressed: openDrawer,
+                    tooltip: l10n.openProfileMenu,
+                    icon: const Icon(Icons.menu_rounded, size: 22),
+                  ),
+                IconButton(
+                  onPressed: () => context.push('/blog/my-posts'),
+                  tooltip: l10n.blogYourPosts,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: context.riksa.ink,
+                  ),
+                  icon: const Icon(Icons.article_outlined, size: 22),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
+          _CategoryTabs(selectedCategoryId: selectedCategoryId),
           Expanded(child: _buildBody(feedState)),
         ],
       ),
     );
   }
 
-  Widget _buildBody(BlogFeedState feedState) {
-    return switch (feedState) {
-      BlogFeedLoading() => const Center(child: CircularProgressIndicator()),
-      BlogFeedError(:final message) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppTheme.muted),
-              ),
-              const SizedBox(height: 16),
-              OutlinedButton(
-                onPressed: () => ref.read(blogFeedProvider.notifier).load(),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
+  Widget _buildBody(BlogFeedState state) {
+    final l10n = AppLocalizations.of(context)!;
+    return switch (state) {
+      BlogFeedLoading() => ListView.separated(
+        padding: EdgeInsets.zero,
+        itemCount: 5,
+        separatorBuilder: (_, _) => const BlogDivider(),
+        itemBuilder: (_, _) => const BlogRowSkeleton(),
+      ),
+      BlogFeedError(:final message) => BlogNotice(
+        title: l10n.blogFeedFailedTitle,
+        body: message,
+        icon: Icons.cloud_off_outlined,
+        actionLabel: l10n.tryAgain,
+        onAction: () => ref.read(blogFeedProvider.notifier).load(),
       ),
       BlogFeedLoaded(:final posts, :final hasMore, :final isLoadingMore) =>
         posts.isEmpty
-            ? Center(
-                child: Text(
-                  'No posts yet',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: AppTheme.muted),
-                ),
+            ? BlogNotice(
+                title: l10n.blogFeedEmptyTitle,
+                body: l10n.blogFeedEmptyBody,
+                icon: Icons.menu_book_outlined,
+                actionLabel: l10n.blogWritePost,
+                onAction: _createPost,
               )
-            : ListView.builder(
-                controller: _scrollCtrl,
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 96),
-                itemCount: posts.length + (hasMore ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == posts.length) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Center(
-                        child: SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: isLoadingMore
-                                ? AppTheme.primary
-                                : Colors.transparent,
-                          ),
+            : RefreshIndicator(
+                onRefresh: () => ref.read(blogFeedProvider.notifier).load(),
+                child: ListView.separated(
+                  key: const PageStorageKey('blog-feed-scroll'),
+                  controller: _scrollController,
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                  itemCount: posts.length + (hasMore ? 1 : 0),
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    if (index == posts.length) {
+                      return Padding(
+                        padding: const EdgeInsets.all(RiksaSpacing.lg),
+                        child: Center(
+                          child: isLoadingMore
+                              ? const SizedBox.square(
+                                  dimension: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
                         ),
-                      ),
-                    );
-                  }
-                  return _PostCard(post: posts[index]);
-                },
+                      );
+                    }
+                    return BlogTimelineRow(post: posts[index]);
+                  },
+                ),
               ),
     };
   }
 }
 
-class _CategoryChips extends ConsumerWidget {
-  const _CategoryChips({
-    required this.categoriesAsync,
-    required this.selectedCategoryId,
-  });
+/// Horizontal tab strip. `All` plus one tab per category, with the underline
+/// indicator marking the active feed.
+class _CategoryTabs extends ConsumerWidget {
+  const _CategoryTabs({required this.selectedCategoryId});
 
-  final AsyncValue<List<BlogCategory>> categoriesAsync;
   final String? selectedCategoryId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final categories = ref.watch(blogCategoriesProvider);
     return SizedBox(
-      height: 44,
-      child: categoriesAsync.when(
-        loading: () => const Center(
-          child: SizedBox(
-            height: 20,
-            width: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
+      height: 48,
+      child: categories.when(
+        loading: () => const Padding(
+          padding: EdgeInsets.fromLTRB(BlogMetrics.gutter, 12, 0, 16),
+          child: Row(
+            children: [
+              RiksaSkeleton(height: 14, width: 54, radius: AppRadii.full),
+              SizedBox(width: 26),
+              RiksaSkeleton(height: 14, width: 78, radius: AppRadii.full),
+              SizedBox(width: 26),
+              RiksaSkeleton(height: 14, width: 62, radius: AppRadii.full),
+            ],
           ),
         ),
         error: (_, _) => const SizedBox.shrink(),
-        data: (categories) => ListView.separated(
+        data: (items) => ListView.builder(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: categories.length + 1,
-          separatorBuilder: (_, _) => const SizedBox(width: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          itemCount: items.length + 1,
           itemBuilder: (context, index) {
-            if (index == 0) {
-              return _Chip(
-                label: 'All',
-                selected: selectedCategoryId == null,
-                onTap: () => ref.read(blogFeedProvider.notifier).load(),
-              );
-            }
-            final category = categories[index - 1];
-            return _Chip(
-              label: category.name,
-              selected: selectedCategoryId == category.id,
-              onTap: () => ref
-                  .read(blogFeedProvider.notifier)
-                  .load(categoryId: category.id),
+            final category = index == 0 ? null : items[index - 1];
+            final id = category?.id;
+            return BlogTab(
+              label: category?.name ?? 'All',
+              selected: selectedCategoryId == id,
+              onTap: () =>
+                  ref.read(blogFeedProvider.notifier).load(categoryId: id),
             );
           },
         ),
@@ -192,153 +213,163 @@ class _CategoryChips extends ConsumerWidget {
   }
 }
 
-class _Chip extends StatelessWidget {
-  const _Chip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.primary : AppTheme.surface,
-          borderRadius: AppRadii.mediumBorder,
-          border: Border.all(
-            color: selected ? AppTheme.primary : AppTheme.outline,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: selected ? AppTheme.onPrimary : AppTheme.onBackground,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PostCard extends ConsumerWidget {
-  const _PostCard({required this.post});
+/// One post in the timeline: author line, headline, preview, cover, actions.
+class BlogTimelineRow extends ConsumerWidget {
+  const BlogTimelineRow({super.key, required this.post});
 
   final BlogPost post;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return GestureDetector(
-      onTap: () => context.push('/blog/${post.id}'),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: AppRadii.smallBorder,
-          border: Border.all(color: AppTheme.outline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (post.hasCover)
-              Image.network(
-                post.coverUrl!,
-                height: 160,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final palette = context.riksa;
+    final profile = ref.watch(blogAuthorProvider(post.authorId)).value;
+    final isOwner = ref.watch(currentUserIdProvider) == post.authorId;
+    final preview = post.plainTextPreview;
+
+    return Material(
+      color: palette.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: AppRadii.largeBorder,
+        side: BorderSide(color: palette.outline),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/blog/${post.id}'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 14, 10, 6),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              BlogAvatar(
+                profile: profile,
+                size: BlogMetrics.rowAvatar,
+                onTap: () => _openProfile(context, profile),
               ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    post.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.onBackground,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: BlogAuthorMetaLine(
+                            profile: profile,
+                            createdAt: post.createdAt,
+                          ),
+                        ),
+                        if (isOwner)
+                          BlogOwnerMenu(
+                            onEdit: () => _edit(context, ref),
+                            onDelete: () => _delete(context, ref),
+                          ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    post.content,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: AppTheme.muted),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
+                    const SizedBox(height: 4),
+                    Text(
+                      post.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: RiksaTypography.bodyStyleFor(
+                        post.title,
+                        theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          height: 1.3,
+                          letterSpacing: 0,
+                          color: palette.ink,
+                        ),
+                      ),
+                    ),
+                    if (preview.isNotEmpty) ...[
+                      const SizedBox(height: 4),
                       Text(
-                        DateFormat.yMMMd().format(post.createdAt),
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: AppTheme.muted),
-                      ),
-                      const SizedBox(width: 12),
-                      const Icon(
-                        Icons.visibility_outlined,
-                        size: 14,
-                        color: AppTheme.muted,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${post.viewCount}',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: AppTheme.muted),
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () => ref
-                            .read(blogFeedProvider.notifier)
-                            .toggleLike(post.id),
-                        child: Row(
-                          children: [
-                            Icon(
-                              post.liked
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              size: 16,
-                              color: post.liked
-                                  ? AppTheme.secondary
-                                  : AppTheme.muted,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${post.likeCount}',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: post.liked
-                                        ? AppTheme.secondary
-                                        : AppTheme.muted,
-                                  ),
-                            ),
-                          ],
+                        preview,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: RiksaTypography.bodyStyleFor(
+                          preview,
+                          theme.textTheme.bodyMedium?.copyWith(
+                            color: palette.inkMuted,
+                            height: 1.5,
+                          ),
                         ),
                       ),
                     ],
-                  ),
-                ],
+                    if (post.hasCover) ...[
+                      const SizedBox(height: 12),
+                      BlogCoverImage(url: post.coverUrl!),
+                    ],
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        BlogAction(
+                          icon: Icons.favorite_border_rounded,
+                          activeIcon: Icons.favorite_rounded,
+                          label: blogCountLabel(post.likeCount),
+                          semanticLabel: post.liked
+                              ? l10n.blogUnlikeLabel(post.likeCount)
+                              : l10n.blogLikeLabel(post.likeCount),
+                          selected: post.liked,
+                          selectedColor: theme.colorScheme.error,
+                          onTap: () => ref
+                              .read(blogFeedProvider.notifier)
+                              .toggleLike(post.id),
+                        ),
+                        const SizedBox(width: RiksaSpacing.md),
+                        BlogAction(
+                          icon: Icons.bar_chart_rounded,
+                          label: blogCountLabel(post.viewCount),
+                          semanticLabel: '${post.viewCount} views',
+                        ),
+                        const Spacer(),
+                        Flexible(
+                          child: BlogCategoryTag(categoryId: post.categoryId),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> _edit(BuildContext context, WidgetRef ref) async {
+    final saved = await context.push<bool>(
+      '/blog/${post.id}/edit',
+      extra: post,
+    );
+    if (saved == true && context.mounted) {
+      await ref.read(blogFeedProvider.notifier).load();
+    }
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    if (!await confirmBlogPostDeletion(context)) return;
+    if (!context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ref.read(blogApiProvider).deletePost(post.id);
+      ref.read(blogFeedProvider.notifier).removePost(post.id);
+      messenger.showSnackBar(SnackBar(content: Text(l10n.blogPostDeleted)));
+    } on DioException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            blogOwnerActionError(e, BlogOwnerAction.delete, l10n: l10n),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _openProfile(BuildContext context, PublicProfile? profile) {
+    openUserProfile(context, profile?.id ?? post.authorId);
   }
 }

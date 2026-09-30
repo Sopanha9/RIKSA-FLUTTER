@@ -16,7 +16,6 @@ class LanguageToggle extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final languageCode = ref.watch(localeProvider).locale.languageCode;
     final isEnglish = languageCode == 'en';
-    final theme = Theme.of(context);
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     final duration = reduceMotion
@@ -35,9 +34,9 @@ class LanguageToggle extends ConsumerWidget {
       height: _height + 10,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: context.riksa.surface.withValues(alpha: .7),
         borderRadius: AppRadii.fullBorder,
-        border: Border.all(color: theme.colorScheme.outline),
+        border: Border.all(color: context.riksa.outline),
       ),
       child: Stack(
         children: [
@@ -50,15 +49,11 @@ class LanguageToggle extends ConsumerWidget {
               width: _segmentWidth,
               height: _height,
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
+                color: context.riksa.brandSoft,
                 borderRadius: AppRadii.fullBorder,
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: .18),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
+                border: Border.all(
+                  color: context.riksa.brand.withValues(alpha: .35),
+                ),
               ),
             ),
           ),
@@ -107,7 +102,6 @@ class _LanguageSegment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Semantics(
       button: true,
       selected: selected,
@@ -124,10 +118,17 @@ class _LanguageSegment extends StatelessWidget {
               child: AnimatedDefaultTextStyle(
                 duration: duration,
                 curve: Curves.easeOutCubic,
+                // AnimatedDefaultTextStyle replaces the inherited style, so
+                // the families have to be named here or Khmer loses its font.
                 style: TextStyle(
+                  fontFamily: RiksaTypography.latinFamily,
+                  fontFamilyFallback: const [
+                    RiksaTypography.khmerBodyFamily,
+                    RiksaTypography.khmerFamily,
+                  ],
                   color: selected
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurface,
+                      ? context.riksa.brand
+                      : context.riksa.inkMuted,
                   fontSize: 13,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),

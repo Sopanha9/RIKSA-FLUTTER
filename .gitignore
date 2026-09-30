@@ -32,6 +32,7 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+**/failures/
 /ios/Flutter/GoogleAuth.xcconfig
 
 # Symbolication related
@@ -52,3 +53,25 @@ app.*.map.json
 # Generated Dart files
 *.g.dart
 *.freezed.dart
+
+.env
+.dart-defines.local.json
+# In app ScreenShot
+/screenshots/
+screenshots_redesign_reference
+UI_HANDOFF.md
+ui_map.json
+
+# Android signing keys, never commit
+*.jks
+*.keystore
+*.b64
+key.properties
+
+# AI assistant tooling (kept locally, not part of the product)
+.agents/
+.claude/
+CLAUDE.md
+skills-lock.json
+.mcp.json
+.art_incoming/

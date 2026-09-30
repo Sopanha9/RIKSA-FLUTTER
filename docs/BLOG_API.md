@@ -121,6 +121,47 @@ GET /api/v1/blog/{id}
 Returns `BlogPostResponse`. **Automatically records a view** for the current user.
 Non-moderators requesting a non-approved post get `400 Blog post not found`.
 
+### 4b. Update own post — **required by the app, not yet documented server-side**
+
+```
+PUT /api/v1/blog/{id}
+```
+
+Same body as create:
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `title` | String | Yes | 1–200 chars |
+| `content` | String | Yes | not blank |
+| `coverUrl` | String | No | max 2000 chars; omitted means "no cover" |
+| `categoryId` | UUID | Yes | must exist |
+
+Expected responses:
+
+- `200` with the updated `BlogPostResponse`. The client reads `status` off the
+  response, so the server is free to send an edited `APPROVED` post back to
+  `PENDING` for re-moderation — the composer shows a "Back in review" state
+  when it does and returns straight to the feed when it does not.
+- `403` when the caller is not the author.
+- `404` when the post is gone.
+- `400` for prohibited words / unknown category, as with create.
+
+### 4c. Delete own post — **required by the app, not yet documented server-side**
+
+```
+DELETE /api/v1/blog/{id}
+```
+
+No body. Expected responses:
+
+- `200` or `204` on success.
+- `403` when the caller is not the author.
+- `404` when the post is already gone.
+
+Until both endpoints ship, the app degrades honestly: `405`/`501` surfaces
+"Editing/Deleting is not available on this server yet" and nothing else
+changes locally.
+
 ### 5. Toggle like
 
 ```
@@ -193,4 +234,9 @@ curl -s "http://localhost:8080/api/v1/blog/my-posts" -H "Authorization: Bearer $
 - After submitting, show a "pending review" state — the post will NOT appear in the
   feed until a moderator approves it.
 - On `REJECTED` items from `/my-posts`, surface `rejectionReason` to the author.
+- Ownership is client-side: blog responses carry only `authorId`, so edit and
+  delete are offered when `authorId` equals the signed-in user's id, and the
+  server is still the authority (`403`).
+- Author display names and avatars come from `GET /profiles/{authorId}`; the
+  blog payload has no embedded author object.
 - Auth requests are rate-limited (5/min): cache tokens and refresh instead of re-logging in.

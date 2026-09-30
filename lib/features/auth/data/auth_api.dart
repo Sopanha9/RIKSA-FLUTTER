@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/network/dio_client.dart';
+import '../../../core/network/json_response.dart';
 import 'auth_models.dart';
 
 /// Wraps the `/api/v1/auth` endpoints.
@@ -12,45 +13,71 @@ class AuthApi {
   Future<AuthResponse> login(LoginRequest req) async {
     return _guard(() async {
       final res = await _client.dio.post('/auth/login', data: req.toJson());
-      return AuthResponse.fromJson(_json(res.data));
+      return AuthResponse.fromJson(jsonMap(res));
     });
   }
 
   Future<AuthResponse> register(RegisterRequest req) async {
     return _guard(() async {
       final res = await _client.dio.post('/auth/register', data: req.toJson());
-      return AuthResponse.fromJson(_json(res.data));
+      return AuthResponse.fromJson(jsonMap(res));
     });
   }
 
   Future<AuthResponse> googleAuth(GoogleAuthRequest req) async {
     return _guard(() async {
       final res = await _client.dio.post('/auth/google', data: req.toJson());
-      return AuthResponse.fromJson(_json(res.data));
+      return AuthResponse.fromJson(jsonMap(res));
     });
   }
 
-  Future<AuthResponse> telegramAuth(TelegramAuthRequest req) async {
+  /// Bot handle and links for the "Log in with code" option. See
+  /// `docs/TELEGRAM_AUTH_FLOW.md` for the server contract.
+  Future<TelegramBotInfo> telegramBotInfo() async {
     return _guard(() async {
-      final res = await _client.dio.post('/auth/telegram', data: req.toJson());
-      return AuthResponse.fromJson(_json(res.data));
+      final res = await _client.dio.get('/auth/telegram/bot');
+      return TelegramBotInfo.fromJson(jsonMap(res));
     });
   }
 
-  Future<OtpResult> sendOtp(OtpSendRequest req) async {
+  /// Starts a one-tap "Open Telegram" authorization.
+  Future<TelegramAuthChallenge> startTelegramAuth() async {
     return _guard(() async {
-      final res = await _client.dio.post('/auth/otp/send', data: req.toJson());
-      return OtpResult.fromJson(_json(res.data), successOverride: true);
+      final res = await _client.dio.post('/auth/telegram/start');
+      return TelegramAuthChallenge.fromJson(jsonMap(res));
     });
   }
 
-  Future<OtpResult> verifyOtp(OtpVerifyRequest req) async {
+  Future<TelegramAuthPoll> pollTelegramAuth(
+    TelegramAuthChallenge challenge,
+  ) async {
     return _guard(() async {
       final res = await _client.dio.post(
-        '/auth/otp/verify',
+        '/auth/telegram/status',
+        data: {'requestToken': challenge.requestToken},
+      );
+      return TelegramAuthPoll.fromJson(jsonMap(res));
+    });
+  }
+
+  /// Exchanges the code the bot sent after /start or /code.
+  Future<TelegramAuthPoll> redeemTelegramCode(String code) async {
+    return _guard(() async {
+      final res = await _client.dio.post(
+        '/auth/telegram/code',
+        data: {'code': code},
+      );
+      return TelegramAuthPoll.fromJson(jsonMap(res));
+    });
+  }
+
+  Future<AuthResponse> completeTelegramAuth(TelegramCompleteRequest req) async {
+    return _guard(() async {
+      final res = await _client.dio.post(
+        '/auth/telegram/complete',
         data: req.toJson(),
       );
-      return OtpResult.fromJson(_json(res.data));
+      return AuthResponse.fromJson(jsonMap(res));
     });
   }
 
@@ -63,29 +90,48 @@ class AuthApi {
     );
   }
 
+  /// Starts phone verification through the Telegram bot; returns its links.
+  Future<({Uri botUrl, Uri? botAppUrl})> startPhoneVerification() async {
+    return _guard(() async {
+      final res = await _client.dio.post('/auth/phone/verify/start');
+      final json = jsonMap(res);
+      return (
+        botUrl: Uri.parse(json['botUrl'] as String),
+        botAppUrl: Uri.tryParse(json['botAppUrl'] as String? ?? ''),
+      );
+    });
+  }
+
   /// Fetch current user profile. Requires bearer token.
   Future<AuthUser> getProfile() async {
     return _guard(() async {
       final res = await _client.dio.get('/auth/me');
-      return AuthUser.fromJson(_json(res.data));
+      return AuthUser.fromJson(jsonMap(res));
     });
   }
 
   /// Public province catalog used before authentication during first run.
   Future<List<ProvinceOption>> listProvinces() async {
-    return _guard(() async {
-      final res = await _client.dio.get('/auth/provinces');
-      final values = res.data;
-      if (values is! List) {
-        throw const FormatException('Expected a province list');
-      }
-      return values
-          .map(
-            (value) =>
-                ProvinceOption.fromJson((value as Map).cast<String, dynamic>()),
-          )
-          .toList();
-    });
+    try {
+      return await _guard(() async {
+        final res = await _client.dio.get('/auth/provinces');
+        final values = res.data;
+        if (values is! List) {
+          throw const FormatException('Expected a province list');
+        }
+        final list = values
+            .map(
+              (value) => ProvinceOption.fromJson(
+                (value as Map).cast<String, dynamic>(),
+              ),
+            )
+            .toList();
+        if (list.isEmpty) return defaultProvinces;
+        return list;
+      });
+    } catch (_) {
+      return defaultProvinces;
+    }
   }
 
   /// Saves a province on the authenticated user profile.
@@ -95,16 +141,49 @@ class AuthApi {
         '/auth/me',
         data: {'provinceId': provinceId},
       );
-      return AuthUser.fromJson(_json(res.data));
+      return AuthUser.fromJson(jsonMap(res));
     });
   }
 
   Future<AuthUser> updateProfile(UpdateProfileRequest request) async {
     return _guard(() async {
       final res = await _client.dio.put('/auth/me', data: request.toJson());
-      return AuthUser.fromJson(_json(res.data));
+      return AuthUser.fromJson(jsonMap(res));
     });
   }
+
+  Future<String> forgotPassword(String identifier) async => _guard(() async {
+    final res = await _client.dio.post(
+      '/auth/forgot-password',
+      data: {'identifier': identifier},
+    );
+    return jsonMap(res)['message'] as String? ??
+        'A verification code has been sent.';
+  });
+
+  Future<String> resetPassword({
+    required String identifier,
+    required String code,
+    required String newPassword,
+  }) async => _guard(() async {
+    final res = await _client.dio.post(
+      '/auth/reset-password',
+      data: {
+        'identifier': identifier,
+        'code': code,
+        'newPassword': newPassword,
+      },
+    );
+    return jsonMap(res)['message'] as String? ?? 'Password reset successfully.';
+  });
+
+  Future<bool> verifyEmail(String token) async => _guard(() async {
+    final res = await _client.dio.post(
+      '/auth/verify-email',
+      data: {'token': token},
+    );
+    return jsonMap(res)['verified'] as bool? ?? false;
+  });
 
   Future<T> _guard<T>(Future<T> Function() request) async {
     try {
@@ -124,12 +203,6 @@ class AuthApi {
         cause: error,
       );
     }
-  }
-
-  Map<String, dynamic> _json(Object? value) {
-    if (value is Map<String, dynamic>) return value;
-    if (value is Map) return Map<String, dynamic>.from(value);
-    throw const FormatException('Expected a JSON object');
   }
 }
 

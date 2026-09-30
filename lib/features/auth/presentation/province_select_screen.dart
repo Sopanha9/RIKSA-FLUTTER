@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_router.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/riksa_components.dart';
+import '../../../core/widgets/riksa_back_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../data/auth_models.dart';
 import '../providers/auth_provider.dart';
@@ -38,21 +41,48 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
     final provinceId = _selectedId;
     if (provinceId == null || _saving) return;
     setState(() => _saving = true);
-    final success = await ref
-        .read(authProvider.notifier)
-        .saveProvinceSelection(provinceId);
-    if (!mounted) return;
-    if (!success) {
+
+    try {
+      final success = await ref
+          .read(authProvider.notifier)
+          .saveProvinceSelection(provinceId);
+
+      if (!mounted) return;
+      if (!success) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.provinceSaveFailed),
+          ),
+        );
+        return;
+      }
+
+      final authenticated = ref.read(authProvider) is Authenticated;
+      context.go(authenticated ? kLandingLocation : '/auth/login');
+    } catch (e) {
+      if (!mounted) return;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.provinceSaveFailed),
         ),
       );
-      return;
     }
+  }
+
+  /// Province only personalises communities and rankings, so it must not
+  /// stand between a learner and the app.
+  Future<void> _skip() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    await ref.read(localeProvider.notifier).completeOnboarding();
+    if (!mounted) return;
     final authenticated = ref.read(authProvider) is Authenticated;
-    context.go(authenticated ? '/home' : '/auth/login');
+    await RiksaBackButton.navigateBack(
+      context,
+      fallbackLocation: authenticated ? kLandingLocation : '/auth/login',
+    );
   }
 
   @override
@@ -64,33 +94,39 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
     final provinces = ref.watch(provinceOptionsProvider);
 
     return Scaffold(
-      backgroundColor: colors.surface,
+      backgroundColor: context.riksa.canvas,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 30, 20, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  borderRadius: AppRadii.mediumBorder,
-                ),
-                child: Icon(
-                  Icons.location_on_rounded,
-                  color: colors.onPrimaryContainer,
-                ),
+              Row(
+                children: [
+                  RiksaBackButton(
+                    key: const ValueKey('province-select-back'),
+                    fallbackLocation: '/leaderboard',
+                  ),
+                  const Spacer(),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: context.riksa.brandSoft,
+                      borderRadius: AppRadii.largeBorder,
+                    ),
+                    child: Icon(
+                      Icons.location_on_rounded,
+                      color: colors.onPrimaryContainer,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
               Text(
                 l10n.selectProvinceTitle,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -.4,
-                ),
+                style: theme.textTheme.headlineLarge,
               ),
               const SizedBox(height: 9),
               Text(
@@ -101,30 +137,32 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              TextField(
+              RiksaSearchField(
                 key: const Key('province_search'),
                 controller: _searchController,
+                hintText: l10n.searchProvince,
                 onChanged: (value) => setState(() => _query = value.trim()),
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: l10n.searchProvince,
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _query.isEmpty
-                      ? null
-                      : IconButton(
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _query = '');
-                          },
-                          icon: const Icon(Icons.close_rounded),
-                        ),
-                ),
+                trailing: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).deleteButtonTooltip,
+                        icon: const Icon(Icons.close_rounded),
+                      ),
               ),
               const SizedBox(height: 14),
               Expanded(
                 child: provinces.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => RiksaStateView(
+                    title: l10n.loadingProvincesTitle,
+                    body: l10n.loadingProvincesBody,
+                    loading: true,
+                  ),
                   error: (error, stackTrace) => _ProvinceError(
                     message: l10n.provinceLoadFailed,
                     retryLabel: l10n.tryAgain,
@@ -138,7 +176,11 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
                           province.nameKhmer.contains(_query);
                     }).toList();
                     if (filtered.isEmpty) {
-                      return Center(child: Text(l10n.noProvinceResults));
+                      return RiksaStateView(
+                        title: l10n.noProvinceResults,
+                        body: l10n.searchProvince,
+                        icon: Icons.search_off_rounded,
+                      );
                     }
                     return ListView.separated(
                       key: const Key('province_list'),
@@ -166,18 +208,11 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
                 child: FilledButton(
                   key: const Key('province_continue'),
                   onPressed: _selectedId == null || _saving ? null : _continue,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.lightTextPrimary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: colors.surfaceContainerHighest,
-                    disabledForegroundColor: colors.onSurfaceVariant,
-                    shape: const StadiumBorder(),
-                  ),
                   child: _saving
-                      ? const SizedBox.square(
+                      ? SizedBox.square(
                           dimension: 20,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
+                            color: context.riksa.canvas,
                             strokeWidth: 2,
                           ),
                         )
@@ -186,6 +221,16 @@ class _ProvinceSelectScreenState extends ConsumerState<ProvinceSelectScreen> {
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                 ),
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                key: const Key('province_skip'),
+                onPressed: _saving ? null : _skip,
+                style: TextButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  foregroundColor: context.riksa.inkMuted,
+                ),
+                child: Text(l10n.notNow),
               ),
             ],
           ),
@@ -223,17 +268,13 @@ class _ProvinceTile extends StatelessWidget {
       selected: selected,
       child: InkWell(
         onTap: onTap,
-        borderRadius: AppRadii.mediumBorder,
+        borderRadius: AppRadii.extraLargeBorder,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
           decoration: BoxDecoration(
-            color: selected ? colors.primaryContainer : colors.surface,
-            borderRadius: AppRadii.mediumBorder,
-            border: Border.all(
-              color: selected ? colors.primary : colors.outline,
-              width: selected ? 1.5 : 1,
-            ),
+            color: selected ? context.riksa.jadeSoft : context.riksa.surface,
+            borderRadius: AppRadii.extraLargeBorder,
           ),
           child: Row(
             children: [
@@ -244,7 +285,7 @@ class _ProvinceTile extends StatelessWidget {
                     Text(
                       primaryName,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 2),

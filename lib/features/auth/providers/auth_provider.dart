@@ -10,6 +10,9 @@ import '../../../core/storage/session_store.dart';
 import '../data/auth_api.dart';
 import '../data/google_auth_client.dart';
 import '../data/auth_models.dart';
+import '../../ai/data/ai_chat_cache.dart';
+
+export '../../../core/providers/current_user_provider.dart';
 
 final googleAuthClientProvider = Provider<GoogleAuthClient>((ref) {
   return GoogleAuthClient.instance;
@@ -82,12 +85,15 @@ class AuthUnavailable extends AuthState {
 }
 
 class AuthNotifier extends Notifier<AuthState> {
+  static const _minimumAuthenticationLoading = Duration(milliseconds: 500);
+
   StreamSubscription<void>? _sessionExpiredSubscription;
   StreamSubscription<GoogleAuthEvent>? _googleAuthSubscription;
   Future<void>? _bootstrapOperation;
 
   @override
   AuthState build() {
+    unawaited(AiChatCache.clearLegacyKeysOnce());
     final client = ref.read(dioClientProvider);
     _sessionExpiredSubscription = client.sessionExpired.listen((_) {
       state = const Unauthenticated();
@@ -123,14 +129,13 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> _performBootstrap() async {
     state = const AuthInitial();
     final client = ref.read(dioClientProvider);
-    if (!await client.hasSession()) {
-      // Remove a half-written session if only one token survived.
-      await client.clearSession();
-      state = const Unauthenticated();
-      return;
-    }
-
     try {
+      if (!await client.hasSession()) {
+        // Remove a half-written session if only one token survived.
+        await client.clearSession();
+        state = const Unauthenticated();
+        return;
+      }
       final user = await _hydrateProfile();
       _requireProfile(user);
       state = Authenticated(user);
@@ -159,11 +164,12 @@ class AuthNotifier extends Notifier<AuthState> {
     required String password,
   }) async {
     state = const AuthLoading();
+    final minimumLoading = Future<void>.delayed(_minimumAuthenticationLoading);
     try {
       final response = await ref
           .read(authApiProvider)
           .login(LoginRequest(username: username, password: password));
-      await _completeAuthentication(response);
+      await _completeAuthentication(response, minimumLoading: minimumLoading);
     } catch (error) {
       await _handleAuthenticationFailure(error);
     }
@@ -171,9 +177,10 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> register(RegisterRequest request) async {
     state = const AuthLoading();
+    final minimumLoading = Future<void>.delayed(_minimumAuthenticationLoading);
     try {
       final response = await ref.read(authApiProvider).register(request);
-      await _completeAuthentication(response);
+      await _completeAuthentication(response, minimumLoading: minimumLoading);
     } catch (error) {
       await _handleAuthenticationFailure(error);
     }
@@ -191,22 +198,50 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> telegramSignIn(TelegramAuthRequest request) async {
+  /// Signs in with the token pair returned once an existing Telegram account
+  /// confirms in the bot.
+  Future<void> acceptTelegramSession(AuthResponse response) async {
     state = const AuthLoading();
     try {
-      final response = await ref.read(authApiProvider).telegramAuth(request);
       await _completeAuthentication(response);
     } catch (error) {
       await _handleAuthenticationFailure(error);
     }
   }
 
-  Future<void> _completeAuthentication(AuthResponse response) async {
+  /// Creates the account for a newly confirmed Telegram user.
+  ///
+  /// Returns the failure instead of only moving to [AuthError] so the profile
+  /// form can tell a taken username apart from an expired signup token.
+  Future<AuthFailure?> completeTelegramSignup(
+    TelegramCompleteRequest request,
+  ) async {
+    state = const AuthLoading();
+    try {
+      final response = await ref
+          .read(authApiProvider)
+          .completeTelegramAuth(request);
+      await _completeAuthentication(response);
+      return null;
+    } on AuthFailure catch (failure) {
+      state = const Unauthenticated();
+      return failure;
+    } catch (error) {
+      await _handleAuthenticationFailure(error);
+      return null;
+    }
+  }
+
+  Future<void> _completeAuthentication(
+    AuthResponse response, {
+    Future<void>? minimumLoading,
+  }) async {
     final client = ref.read(dioClientProvider);
     try {
       await client.persistSession(response.toJson());
       final user = await _hydrateProfile();
       _requireProfile(user);
+      await minimumLoading;
       state = Authenticated(user);
     } on AuthFailure catch (failure) {
       if (failure.kind == AuthFailureKind.network ||
@@ -238,7 +273,13 @@ class AuthNotifier extends Notifier<AuthState> {
     var user = await api.getProfile();
     final pendingProvinceId = ref.read(localeProvider).pendingProvinceId;
     if (pendingProvinceId != null && pendingProvinceId.isNotEmpty) {
-      user = await api.updateProvince(pendingProvinceId);
+      // A province picked during onboarding only fills an empty profile. An
+      // existing account keeps its saved province; changing it is an explicit
+      // action from the profile, not a side effect of signing in elsewhere.
+      final savedProvinceId = user.provinceId;
+      if (savedProvinceId == null || savedProvinceId.isEmpty) {
+        user = await api.updateProvince(pendingProvinceId);
+      }
       await ref.read(localeProvider.notifier).completeOnboarding();
     }
     return user;
@@ -250,15 +291,31 @@ class AuthNotifier extends Notifier<AuthState> {
     if (current is! Authenticated) return true;
 
     state = const AuthLoading();
+    late final AuthUser user;
     try {
-      final user = await ref.read(authApiProvider).updateProvince(provinceId);
+      user = await ref.read(authApiProvider).updateProvince(provinceId);
       _requireProfile(user);
-      await ref.read(localeProvider.notifier).completeOnboarding();
-      state = Authenticated(user);
-      return true;
     } catch (error) {
+      if (kDebugMode) debugPrint('Profile province update failed: $error');
       state = current;
       return false;
+    }
+    await ref.read(localeProvider.notifier).completeOnboarding();
+    state = Authenticated(user);
+    return true;
+  }
+
+  /// Re-reads the signed-in profile, e.g. after verifying in Telegram.
+  Future<AuthUser?> refreshProfile() async {
+    if (state is! Authenticated) return null;
+    try {
+      final user = await ref.read(authApiProvider).getProfile();
+      _requireProfile(user);
+      if (state is Authenticated) state = Authenticated(user);
+      return user;
+    } catch (error) {
+      if (kDebugMode) debugPrint('Profile refresh failed: $error');
+      return null;
     }
   }
 
@@ -287,9 +344,23 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> logout() async {
     final client = ref.read(dioClientProvider);
-    final refreshToken = await client.getRefreshToken();
-    await client.clearSession();
+    final auth = state;
+    final signedOutUserId = auth is Authenticated ? auth.userId : null;
+    String? refreshToken;
+    try {
+      refreshToken = await client.getRefreshToken();
+    } catch (_) {
+      // Continue to clear local auth state if secure storage is unavailable.
+    }
+    try {
+      await client.clearSession();
+    } catch (_) {
+      // Local state still has to leave the authenticated state.
+    }
     state = const Unauthenticated();
+    if (signedOutUserId != null) {
+      await AiChatCache.clearForUser(signedOutUserId);
+    }
     try {
       if (refreshToken != null && refreshToken.isNotEmpty) {
         await ref.read(authApiProvider).logout(refreshToken);

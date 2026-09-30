@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/data/auth_api.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../quests/providers/today_quests_provider.dart';
 import '../../userProfile/providers/profile_provider.dart';
 import '../data/social_api.dart';
 import '../data/social_models.dart';
@@ -13,7 +14,11 @@ final socialApiProvider = Provider<SocialApi>((ref) {
   return SocialApi(ref.watch(dioClientProvider));
 });
 
+/// The XP ledger source the server's streak counts (see StreakService).
+const lessonCompletionSource = 'LESSON_COMPLETION';
+
 final communityStreakProvider = FutureProvider<CommunityStreak>((ref) async {
+  watchCurrentUserId(ref);
   final streak = await ref.watch(socialApiProvider).streak();
   if (streak.lastTrackedDate != null ||
       (streak.activityDates?.isNotEmpty ?? false)) {
@@ -22,10 +27,15 @@ final communityStreakProvider = FutureProvider<CommunityStreak>((ref) async {
 
   // The streak summary endpoint currently omits dates. Use real XP activity as
   // a non-blocking history fallback until the endpoint exposes them directly.
+  // Only lesson completions count: the server's streak grows on those alone,
+  // so a day with just a post or a quest must not be marked as kept.
   try {
     final activity = await ref.watch(profileApiProvider).xpActivity(limit: 50);
     return streak.withActivityDates(
-      activity.activities.map((item) => item.createdAt).whereType<DateTime>(),
+      activity.activities
+          .where((item) => item.sourceType == lessonCompletionSource)
+          .map((item) => item.createdAt)
+          .whereType<DateTime>(),
     );
   } on Object {
     return streak;
@@ -36,6 +46,7 @@ final userPostsProvider = FutureProvider.family<SocialFeedPage, String>((
   ref,
   userId,
 ) {
+  watchCurrentUserId(ref);
   return ref.watch(socialApiProvider).feed(authorId: userId, limit: 50);
 });
 
@@ -92,14 +103,18 @@ class SocialFeedFailure extends SocialFeedState {
 
 class SocialFeedNotifier extends Notifier<SocialFeedState> {
   static const _pageSize = 20;
+  int _requestVersion = 0;
 
   @override
   SocialFeedState build() {
+    watchCurrentUserId(ref);
+    _requestVersion++;
     unawaited(load());
     return const SocialFeedLoading();
   }
 
   Future<void> load({String? categoryId}) async {
+    final requestVersion = ++_requestVersion;
     state = const SocialFeedLoading();
     try {
       final api = ref.read(socialApiProvider);
@@ -109,6 +124,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
       ]);
       final categories = results[0] as List<SocialCategory>;
       final page = results[1] as SocialFeedPage;
+      if (requestVersion != _requestVersion) return;
       state = SocialFeedLoaded(
         categories: categories,
         posts: page.posts,
@@ -117,6 +133,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
         selectedCategoryId: categoryId,
       );
     } catch (error) {
+      if (requestVersion != _requestVersion) return;
       state = SocialFeedFailure(_message(error));
     }
   }
@@ -126,6 +143,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
 
   Future<void> loadMore() async {
     final current = state;
+    final requestVersion = _requestVersion;
     if (current is! SocialFeedLoaded ||
         current.isLoadingMore ||
         !current.hasNextPage) {
@@ -140,14 +158,23 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
             cursor: current.endCursor,
             limit: _pageSize,
           );
-      state = current.copyWith(
-        posts: [...current.posts, ...page.posts],
+      final latest = state;
+      if (requestVersion != _requestVersion ||
+          latest is! SocialFeedLoaded ||
+          latest.selectedCategoryId != current.selectedCategoryId ||
+          latest.endCursor != current.endCursor) {
+        return;
+      }
+      state = latest.copyWith(
+        posts: _appendUnique(latest.posts, page.posts),
         hasNextPage: page.hasNextPage,
         endCursor: page.endCursor,
         isLoadingMore: false,
       );
     } catch (_) {
-      state = current.copyWith(isLoadingMore: false);
+      if (requestVersion == _requestVersion && state is SocialFeedLoaded) {
+        state = (state as SocialFeedLoaded).copyWith(isLoadingMore: false);
+      }
     }
   }
 
@@ -157,6 +184,7 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
   }) async {
     final current = state;
     if (current is! SocialFeedLoaded) return false;
+    final requestVersion = _requestVersion;
     final index = current.posts.indexWhere((post) => post.id == postId);
     if (index < 0) return false;
 
@@ -177,71 +205,191 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
       final updated = await ref
           .read(socialApiProvider)
           .react(postId: postId, reaction: reaction);
+      if (!removing) ref.read(questProgressSyncProvider).nudge();
+      if (requestVersion != _requestVersion) return false;
       final latest = state;
-      if (latest is SocialFeedLoaded) {
-        state = latest.copyWith(posts: _replace(latest.posts, updated));
-      }
+      if (latest is! SocialFeedLoaded) return false;
+      state = latest.copyWith(posts: _replace(latest.posts, updated));
       return true;
     } catch (_) {
+      if (requestVersion != _requestVersion) return false;
       final latest = state;
-      if (latest is SocialFeedLoaded) {
-        state = latest.copyWith(posts: _replace(latest.posts, original));
-      }
+      if (latest is! SocialFeedLoaded) return false;
+      state = latest.copyWith(posts: _replace(latest.posts, original));
       return false;
     }
   }
 
-  Future<bool> createPost({
+  /// Publishes a new post. Returns null on success, or a message to show the
+  /// author when the server refuses.
+  Future<String?> createPost({
     required String title,
     required String content,
     required String categoryId,
+    List<SocialPostMedia> media = const [],
   }) async {
     final current = state;
-    if (current is! SocialFeedLoaded) return false;
+    if (current is! SocialFeedLoaded) {
+      return 'The community feed is still loading. Try again in a moment.';
+    }
 
     final category = current.categories
         .where((item) => item.id == categoryId)
         .firstOrNull;
-    if (category == null) return false;
+    if (category == null) return 'Pick a community for this post.';
+
+    // Posting is for members; the composer only offers joined communities.
+    if (!category.joined) return 'Join ${category.name} before posting.';
 
     try {
-      var categories = current.categories;
-      var latest = current;
-      if (!category.joined) {
-        final joined = await ref
-            .read(socialApiProvider)
-            .setCategoryJoined(categoryId, joined: true);
-        categories = [
-          for (final item in categories)
-            if (item.id == categoryId) joined else item,
-        ];
-        latest = current.copyWith(categories: categories);
-        state = latest;
-      }
+      final requestVersion = _requestVersion;
       final created = await ref
           .read(socialApiProvider)
-          .createPost(title: title, content: content, categoryId: categoryId);
+          .createPostWithMedia(
+            title: title,
+            content: content,
+            categoryId: categoryId,
+            media: media,
+          );
+      if (requestVersion != _requestVersion) return null;
+      final latest = state;
+      if (latest is! SocialFeedLoaded) return null;
       state = latest.copyWith(
-        categories: categories,
-        posts: [created, ...latest.posts],
+        posts: [
+          created,
+          ...latest.posts.where((post) => post.id != created.id),
+        ],
       );
+      return null;
+    } catch (error) {
+      return _message(error);
+    }
+  }
+
+  /// Rewrites a post the signed-in user owns. Returns null on success, or a
+  /// message to show the author when the server refuses.
+  Future<String?> updatePost({
+    required String id,
+    required String title,
+    required String content,
+    List<SocialPostMedia>? media,
+  }) async {
+    final requestVersion = _requestVersion;
+    try {
+      final updated = await ref
+          .read(socialApiProvider)
+          .updatePostWithMedia(
+            id: id,
+            title: title,
+            content: content,
+            media: media,
+          );
+      if (requestVersion != _requestVersion) return null;
+      final latest = state;
+      if (latest is SocialFeedLoaded &&
+          latest.posts.any((post) => post.id == updated.id)) {
+        state = latest.copyWith(posts: _replace(latest.posts, updated));
+      }
+      // The author's profile tab reads its own copy of the feed.
+      ref.invalidate(userPostsProvider);
+      return null;
+    } catch (error) {
+      return _message(error);
+    }
+  }
+
+  /// Deletes a post the signed-in user owns. Returns null on success, or a
+  /// message to show the author when the server refuses.
+  Future<String?> deletePost(String id) async {
+    final requestVersion = _requestVersion;
+    try {
+      await ref.read(socialApiProvider).deletePost(id);
+      if (requestVersion != _requestVersion) return null;
+      final latest = state;
+      if (latest is SocialFeedLoaded &&
+          latest.posts.any((post) => post.id == id)) {
+        state = latest.copyWith(
+          posts: [
+            for (final post in latest.posts)
+              if (post.id != id) post,
+          ],
+        );
+      }
+      ref.invalidate(userPostsProvider);
+      return null;
+    } catch (error) {
+      return _message(error);
+    }
+  }
+
+  /// Drops a deleted post from the cached feed.
+  void removePost(String postId) {
+    final current = state;
+    if (current is! SocialFeedLoaded) return;
+    if (!current.posts.any((post) => post.id == postId)) return;
+    state = current.copyWith(
+      posts: [
+        for (final post in current.posts)
+          if (post.id != postId) post,
+      ],
+    );
+  }
+
+  Future<bool> sharePost(String postId) async {
+    final requestVersion = _requestVersion;
+    try {
+      final updated = await ref.read(socialApiProvider).share(postId);
+      if (requestVersion != _requestVersion) return false;
+      final current = state;
+      if (current is! SocialFeedLoaded) return false;
+      state = current.copyWith(posts: _replace(current.posts, updated));
       return true;
     } catch (_) {
       return false;
     }
   }
 
-  Future<bool> sharePost(String postId) async {
-    try {
-      final updated = await ref.read(socialApiProvider).share(postId);
-      final current = state;
-      if (current is SocialFeedLoaded) {
-        state = current.copyWith(posts: _replace(current.posts, updated));
-      }
-      return true;
-    } catch (_) {
-      return false;
+  /// Refetches one post the feed is showing, after the server says its
+  /// reactions or comments changed. A post the feed does not hold is ignored.
+  Future<void> refreshPost(String postId) async {
+    final current = state;
+    if (current is! SocialFeedLoaded ||
+        !current.posts.any((post) => post.id == postId)) {
+      return;
     }
+    final requestVersion = _requestVersion;
+    try {
+      final post = await ref.read(socialApiProvider).post(postId);
+      if (requestVersion == _requestVersion) syncPost(post);
+    } catch (_) {
+      // Hidden or deleted since; the next load settles it.
+    }
+  }
+
+  /// Puts a post published elsewhere at the top of the feed, if it belongs in
+  /// the community being viewed and is not already there.
+  Future<void> addIncomingPost(String postId) async {
+    final current = state;
+    if (current is! SocialFeedLoaded ||
+        current.posts.any((post) => post.id == postId)) {
+      return;
+    }
+    final requestVersion = _requestVersion;
+    final SocialPost post;
+    try {
+      post = await ref.read(socialApiProvider).post(postId);
+    } catch (_) {
+      return;
+    }
+    final latest = state;
+    if (requestVersion != _requestVersion ||
+        latest is! SocialFeedLoaded ||
+        latest.posts.any((item) => item.id == post.id)) {
+      return;
+    }
+    final category = latest.selectedCategoryId;
+    if (category != null && post.category.id != category) return;
+    state = latest.copyWith(posts: [post, ...latest.posts]);
   }
 
   void syncPost(SocialPost post) {
@@ -252,6 +400,21 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
     }
   }
 
+  /// Takes in a membership change or a new community from another screen, so
+  /// the composer's list of joined communities stays current.
+  void syncCategory(SocialCategory category) {
+    final current = state;
+    if (current is! SocialFeedLoaded) return;
+    final known = current.categories.any((item) => item.id == category.id);
+    state = current.copyWith(
+      categories: [
+        for (final item in current.categories)
+          if (item.id == category.id) category else item,
+        if (!known) category,
+      ],
+    );
+  }
+
   Future<bool> toggleCategoryMembership(String categoryId) async {
     final current = state;
     if (current is! SocialFeedLoaded) return false;
@@ -259,19 +422,20 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
         .where((item) => item.id == categoryId)
         .firstOrNull;
     if (category == null) return false;
+    final requestVersion = _requestVersion;
     try {
       final updated = await ref
           .read(socialApiProvider)
           .setCategoryJoined(categoryId, joined: !category.joined);
+      if (requestVersion != _requestVersion) return false;
       final latest = state;
-      if (latest is SocialFeedLoaded) {
-        state = latest.copyWith(
-          categories: [
-            for (final item in latest.categories)
-              if (item.id == categoryId) updated else item,
-          ],
-        );
-      }
+      if (latest is! SocialFeedLoaded) return false;
+      state = latest.copyWith(
+        categories: [
+          for (final item in latest.categories)
+            if (item.id == categoryId) updated else item,
+        ],
+      );
       return true;
     } catch (_) {
       return false;
@@ -282,6 +446,14 @@ class SocialFeedNotifier extends Notifier<SocialFeedState> {
     for (final post in posts)
       if (post.id == replacement.id) replacement else post,
   ];
+
+  List<SocialPost> _appendUnique(
+    List<SocialPost> current,
+    List<SocialPost> incoming,
+  ) {
+    final ids = current.map((post) => post.id).toSet();
+    return [...current, ...incoming.where((post) => ids.add(post.id))];
+  }
 
   String _message(Object error) {
     if (error is SocialApiException) return error.message;

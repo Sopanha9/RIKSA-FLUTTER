@@ -86,7 +86,9 @@ class GoogleAuthClient {
           : defaultTargetPlatform == TargetPlatform.iOS
           ? GoogleAuthConfig.iosClientId
           : null,
-      serverClientId: GoogleAuthConfig.serverClientId,
+      // google_sign_in_web asserts this is null; the web client ID above is
+      // already the token audience there.
+      serverClientId: kIsWeb ? null : GoogleAuthConfig.serverClientId,
     );
     signIn.authenticationEvents.listen(
       (event) {
