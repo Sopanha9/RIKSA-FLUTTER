@@ -15,6 +15,8 @@
 	<string>Choose a profile photo or cover image for your RIKSA profile.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -23,6 +25,16 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>$(GOOGLE_REVERSED_CLIENT_ID)</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>com.riksa.riksa_app.return</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>riksa</string>
 			</array>
 		</dict>
 	</array>

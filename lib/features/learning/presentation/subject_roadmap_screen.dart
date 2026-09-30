@@ -105,16 +105,15 @@ class _RoadmapBodyState extends State<_RoadmapBody> {
             key: const PageStorageKey('subject-roadmap-scroll'),
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              SliverPadding(
-                // Clears the floating navigation bar below the goal.
-                padding: const EdgeInsets.only(bottom: 132),
-                sliver: SliverToBoxAdapter(
-                  child: SubjectMap(
-                    art: mapArt,
-                    lessons: mapLessons,
-                    // Room for the buddy, who stands above the first stop.
-                    topInset: _headerBottom + 64,
-                  ),
+              SliverToBoxAdapter(
+                child: SubjectMap(
+                  art: mapArt,
+                  lessons: mapLessons,
+                  // Room for the buddy, who stands above the first stop.
+                  topInset: _headerBottom + 64,
+                  // Clears the floating navigation bar below the goal, with
+                  // scenery rather than a blank strip.
+                  bottomExtension: 132 + MediaQuery.paddingOf(context).bottom,
                 ),
               ),
             ],

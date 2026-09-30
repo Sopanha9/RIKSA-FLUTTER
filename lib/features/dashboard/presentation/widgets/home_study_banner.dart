@@ -148,7 +148,7 @@ class HomeStudyBanner extends ConsumerWidget {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.play_arrow_rounded,
+                          Icons.arrow_forward_rounded,
                           color: palette.onBrand,
                         ),
                       ),

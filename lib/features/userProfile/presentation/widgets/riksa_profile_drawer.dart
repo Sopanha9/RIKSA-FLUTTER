@@ -333,7 +333,7 @@ class _DrawerIdentity extends ConsumerWidget {
                   style: RiksaTypography.titleStyleFor(
                     name,
                     theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -427,8 +427,10 @@ class _Count extends StatelessWidget {
   );
 }
 
-/// One destination. Main destinations are large and bold, as on X; [small]
-/// rows (settings, help, about) sit quieter below the rule.
+/// One destination. Main destinations are a step larger than the [small]
+/// rows (settings, help, about) below the rule. Both languages use the same
+/// medium weight: the Khmer font has no bold, so a heavier English label
+/// would make the two menus look like different apps.
 class _DrawerItem extends StatelessWidget {
   const _DrawerItem({
     required this.itemKey,
@@ -448,35 +450,27 @@ class _DrawerItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.riksa;
     final text = Theme.of(context).textTheme;
-    final style = small
-        ? text.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: palette.ink,
-          )
-        : text.titleLarge?.copyWith(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: palette.ink,
-            letterSpacing: -.2,
-          );
+    final style = text.titleMedium?.copyWith(
+      fontSize: small ? 14.5 : 16.5,
+      fontWeight: FontWeight.w500,
+      height: 1.35,
+      color: palette.ink,
+    );
     return InkWell(
       key: itemKey,
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: 24,
-          vertical: small ? 10 : 11,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: small ? 9 : 11),
         child: Row(
           children: [
-            Icon(icon, size: small ? 22 : 26, color: palette.ink),
-            SizedBox(width: small ? 16 : 20),
+            Icon(icon, size: small ? 20 : 23, color: palette.ink),
+            SizedBox(width: small ? 16 : 18),
             Expanded(
               child: Text(
                 label,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: RiksaTypography.titleStyleFor(label, style),
+                style: RiksaTypography.bodyStyleFor(label, style),
               ),
             ),
           ],

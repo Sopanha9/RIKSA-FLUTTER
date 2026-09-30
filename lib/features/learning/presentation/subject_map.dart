@@ -159,12 +159,17 @@ class SubjectMap extends ConsumerStatefulWidget {
     required this.art,
     required this.lessons,
     this.topInset = 0,
+    this.bottomExtension = 0,
   });
 
   final SubjectMapArt art;
 
   /// Height at the top covered by the floating header; no lesson goes there.
   final double topInset;
+
+  /// Scenery drawn past the goal, under the floating navigation bar, so the
+  /// map runs to the bottom of the screen instead of ending on a blank strip.
+  final double bottomExtension;
 
   /// Lesson stones in syllabus order.
   final List<RoadmapStone> lessons;
@@ -222,12 +227,38 @@ class _SubjectMapState extends ConsumerState<SubjectMap> {
         final cacheWidth = (width * MediaQuery.devicePixelRatioOf(context))
             .round();
 
+        final goal = layout.pieces.last;
         return SizedBox(
           width: width,
-          height: layout.height,
+          height: layout.height + widget.bottomExtension,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
+              if (widget.bottomExtension > 0)
+                // The goal's bottom edge mirrored, so the seam is invisible.
+                Positioned(
+                  top: layout.height - 1,
+                  left: 0,
+                  width: width,
+                  height: widget.bottomExtension + 1,
+                  child: ExcludeSemantics(
+                    child: ClipRect(
+                      child: OverflowBox(
+                        alignment: Alignment.topCenter,
+                        minHeight: layout.pieceHeight,
+                        maxHeight: layout.pieceHeight,
+                        child: Transform.flip(
+                          flipY: true,
+                          child: _PieceImage(
+                            asset: goal.asset,
+                            cacheWidth: cacheWidth,
+                            fadeIn: false,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               for (final (index, piece) in layout.pieces.indexed)
                 Positioned(
                   top: index * layout.pieceStep,
