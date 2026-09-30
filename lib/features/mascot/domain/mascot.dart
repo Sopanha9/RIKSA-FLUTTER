@@ -27,11 +27,11 @@ enum MascotMood {
 /// dropping in a longer animation strip only needs the files and the count
 /// below. Timing is set per loop, so more frames play smoother, not slower.
 abstract final class MascotSprites {
-  /// Natural pixel height of each species' idle pose (`idle_1.png`), used to
+  /// Pixel height of each species' upscaled idle pose (`idle_1.png`), used to
   /// draw every frame at the same character scale regardless of canvas size.
   static const idlePixelHeights = {
-    MascotSpecies.crocodile: 125,
-    MascotSpecies.capybara: 112,
+    MascotSpecies.crocodile: 375,
+    MascotSpecies.capybara: 336,
   };
 
   static int idlePixelHeight(MascotSpecies species) =>
@@ -42,27 +42,27 @@ abstract final class MascotSprites {
   static const _frameCounts = {
     MascotSpecies.crocodile: {
       MascotMood.idle: 3,
-      MascotMood.happy: 8,
+      MascotMood.happy: 10,
       MascotMood.sad: 6,
-      MascotMood.thinking: 6,
-      MascotMood.sleep: 6,
+      MascotMood.thinking: 7,
+      MascotMood.sleep: 9,
       MascotMood.celebrate: 8,
-      MascotMood.greeting: 9,
+      MascotMood.greeting: 10,
       MascotMood.treat: 6,
-      MascotMood.love: 6,
+      MascotMood.love: 8,
       MascotMood.walk: 8,
       MascotMood.trophy: 6,
     },
     MascotSpecies.capybara: {
       MascotMood.idle: 3,
-      MascotMood.happy: 9,
-      MascotMood.sad: 6,
-      MascotMood.thinking: 6,
-      MascotMood.sleep: 6,
+      MascotMood.happy: 10,
+      MascotMood.sad: 7,
+      MascotMood.thinking: 7,
+      MascotMood.sleep: 9,
       MascotMood.celebrate: 9,
-      MascotMood.greeting: 8,
-      MascotMood.treat: 6,
-      MascotMood.love: 6,
+      MascotMood.greeting: 9,
+      MascotMood.treat: 7,
+      MascotMood.love: 7,
       MascotMood.walk: 8,
       MascotMood.trophy: 6,
     },
