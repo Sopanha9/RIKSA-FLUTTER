@@ -952,9 +952,15 @@ class _LessonExperienceScreenState
     return false;
   }
 
-  void _safePop() {
+  // [force] skips the PopScope guard; maybePop would re-trigger the exit
+  // dialog after the user already confirmed leaving.
+  void _safePop({bool force = false}) {
     unawaited(
-      RiksaBackButton.navigateBack(context, fallbackLocation: '/learn'),
+      RiksaBackButton.navigateBack(
+        context,
+        fallbackLocation: '/learn',
+        saved: force,
+      ),
     );
   }
 
@@ -973,7 +979,7 @@ class _LessonExperienceScreenState
     }
     final shouldLeave = await _showExitConfirmationDialog();
     if (shouldLeave && mounted) {
-      _safePop();
+      _safePop(force: true);
     }
   }
 

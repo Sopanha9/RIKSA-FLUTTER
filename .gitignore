@@ -55,6 +55,7 @@ app.*.map.json
 *.freezed.dart
 
 .env
+.dart-defines.local.json
 # In app ScreenShot
 /screenshots/
 screenshots_redesign_reference

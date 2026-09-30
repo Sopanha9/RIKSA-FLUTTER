@@ -1,8 +1,13 @@
 # Google and Telegram authentication setup
 
-The Flutter and Spring Boot code is complete, but provider-owned IDs and bot
-credentials must be created in your own Google Cloud and Telegram accounts.
-Never commit a bot token, JWT secret, or release signing key.
+For the Google-specific console findings and local Flutter setup, see
+[`GOOGLE_SIGN_IN_SETUP.md`](GOOGLE_SIGN_IN_SETUP.md).
+
+Google OAuth clients are configured for this checkout. The Google-specific
+guide records their current settings, the staging variables, and the Android
+debug fingerprint. Telegram bot credentials still need to be created in your
+own Telegram account. Never commit a bot token, JWT secret, or release signing
+key.
 
 ## 1. Google Cloud
 
@@ -11,8 +16,8 @@ Use one Google Cloud project and configure its OAuth consent screen. Create:
 1. A **Web application** OAuth client. This is the common backend audience.
 2. An **Android** OAuth client:
    - package: `com.riksa.riksa_app`
-   - current local debug SHA-1:
-     `D3:AA:29:77:EC:14:49:C7:F1:5A:DF:5C:F6:03:CE:97:5A:EB:FA:FD`
+   - current local Windows debug SHA-1 (checked 2026-09-30):
+     `A6:01:1D:CC:58:1B:71:09:12:B0:94:9B:88:55:D1:FB:03:65:15:C9`
    - add the SHA-1 for the real release/upload key before publishing.
 3. An **iOS** OAuth client:
    - bundle ID: `com.riksa.riksaApp`

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -702,10 +704,12 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       final fakeApi = _FakeLearningApiWithExercises();
+      final navigatorKey = GlobalKey<NavigatorState>();
       await tester.pumpWidget(
         ProviderScope(
           overrides: [learningApiProvider.overrideWithValue(fakeApi)],
           child: MaterialApp(
+            navigatorKey: navigatorKey,
             builder: _stillBuddy,
             theme: AppTheme.light,
             localizationsDelegates: const [
@@ -715,7 +719,14 @@ void main() {
               GlobalCupertinoLocalizations.delegate,
             ],
             supportedLocales: const [Locale('en'), Locale('km')],
-            home: const Scaffold(
+            home: const Scaffold(body: Text('learn-home')),
+          ),
+        ),
+      );
+      unawaited(
+        navigatorKey.currentState!.push(
+          MaterialPageRoute<void>(
+            builder: (_) => const Scaffold(
               body: LessonExperienceScreen(lessonId: 'biology-1'),
             ),
           ),
@@ -761,6 +772,11 @@ void main() {
         find.byKey(const ValueKey('leave-lesson-confirm-button')),
       );
       await tester.pumpAndSettle();
+
+      // Confirming must actually leave, not reopen the dialog.
+      expect(find.text('Leave this lesson?'), findsNothing);
+      expect(find.byType(LessonExperienceScreen), findsNothing);
+      expect(find.text('learn-home'), findsOneWidget);
     },
   );
 
